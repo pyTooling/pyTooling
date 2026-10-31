@@ -4,7 +4,7 @@
 ############
 
 The :mod:`pyTooling.Cartesian2D` package implements points, offsets, sizes and line segments in a 2-dimensional
-cartesian coordinate system, plus the four-cornered shapes built from them.
+cartesian coordinate system, plus the shapes built from them.
 
 .. seealso::
 
@@ -31,9 +31,12 @@ Features
 * **Points and offsets as separate types**, with the arithmetic relating them: a point plus an offset is a point, a
   point minus a point is an offset - in both the copying and the in-place form.
 * **Distances measured** - a line segment reports its length and its angle.
-* **Shapes placed by their corners**, so a shape is positioned by the points it is built from.
-* Shapes validated on construction: :class:`~pyTooling.Cartesian2D.Shapes.Trapezium`,
-  :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` and :class:`~pyTooling.Cartesian2D.Shapes.Square`.
+* **Shapes placed by their corners**, so a shape is positioned by the points it is built from - a circle by its
+  center.
+* Shapes validated on construction: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with any number of corners, the
+  four-cornered :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` narrowed down to a
+  :class:`~pyTooling.Cartesian2D.Shapes.Square`, and a :class:`~pyTooling.Cartesian2D.Shapes.Circle`.
+* **A circle measured** - it reports its diameter, circumference and area.
 * Conversion to plain tuples through ``ToTuple``, for handing coordinates to a library that expects them.
 
 
@@ -45,9 +48,9 @@ Missing Features
 * Moving a shape as a whole. A point can be shifted, but a shape holds its corners and offers no way to translate
   them together.
 * Rotation, scaling and mirroring - a point can be shifted, but not transformed.
-* Polygons with a number of corners other than four, and shapes with curved edges.
+* Shapes with curved edges other than a circle (ellipses, arcs).
 * Containment and intersection tests (*is this point inside that rectangle?*).
-* Area and perimeter of a shape.
+* Area and perimeter of a polygon.
 
 
 .. _STRUCT/Cartesian2D/PlannedFeatures:
@@ -55,7 +58,7 @@ Missing Features
 Planned Features
 ================
 
-* An area per shape, and a perimeter derived from its segments.
+* An area per polygon, and a perimeter derived from its segments.
 * The 3-dimensional volumes, which currently exist as empty classes - see :ref:`STRUCT/Cartesian3D/Volumes`.
 
 
@@ -233,9 +236,9 @@ measurements:
 Shapes
 ******
 
-The shapes live in :mod:`pyTooling.Cartesian2D.Shapes` and form a chain in which **each class is the one above it
-with one more constraint**. The constraint is checked in the constructor, so an object that exists is an object of
-that shape.
+The shapes live in :mod:`pyTooling.Cartesian2D.Shapes`. The four-cornered shapes form a chain in which **each class
+is the one above it with one more constraint**. The constraint is checked in the constructor, so an object that exists
+is an object of that shape. A polygon and a circle stand beside that chain.
 
 
 .. _STRUCT/Cartesian2D/Shape:
@@ -250,6 +253,39 @@ exists so a function can accept *a shape*.
 
    :ref:`STRUCT/Cartesian3D/Volume`
       |rarr| Its counterpart, the base-class of the 3-dimensional volumes.
+
+
+.. _STRUCT/Cartesian2D/Polygon:
+
+Polygon
+=======
+
+A :class:`~pyTooling.Cartesian2D.Shapes.Polygon` is a closed shape with three or more corners, given as one iterable
+of :class:`~pyTooling.Cartesian2D.Point2D` in drawing order. The edges connect the corners in that order, the last
+corner back to the first one.
+
+Like a trapezium, it keeps both views: ``points``, the corners as a tuple, and ``segments``, one
+:class:`~pyTooling.Cartesian2D.LineSegment2D` edge per corner, with consecutive edges sharing a corner object. The
+corners are copied by default; ``copyPoints=False`` keeps the given points instead, as for a
+:ref:`segment <STRUCT/Cartesian2D/Segment2D>`.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D
+   from pyTooling.Cartesian2D.Shapes import Polygon
+
+   triangle = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+   str(triangle)                      # ((0, 0) → (4, 0) → (2, 3) → (0, 0))
+
+A corner that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`, fewer than three corners
+raise :exc:`ValueError`. The corners are not checked any further: edges may cross each other.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Shape`
+      |rarr| Its base-class, the base-class of the 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/Trapezium`
+      |rarr| The polygon with exactly four corners, given as four parameters.
 
 
 .. _STRUCT/Cartesian2D/Trapezium:
@@ -270,6 +306,8 @@ A corner that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeE
 
    :ref:`STRUCT/Cartesian2D/Shape`
       |rarr| Its base-class, the base-class of the 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/Polygon`
+      |rarr| The closed shape with any number of corners.
 
 
 .. _STRUCT/Cartesian2D/Rectangle:
@@ -305,6 +343,39 @@ comparison, one more :exc:`ValueError`. A rhombus has four equally long edges, b
       |rarr| Its base-class, the trapezium with four right angles.
    :ref:`STRUCT/Cartesian3D/Cube`
       |rarr| Its counterpart, the volume a square corresponds to.
+
+
+.. _STRUCT/Cartesian2D/Circle:
+
+Circle
+======
+
+A :class:`~pyTooling.Cartesian2D.Shapes.Circle` is placed by its ``center``, a
+:class:`~pyTooling.Cartesian2D.Point2D`, and sized by its ``radius``, a positive :class:`int` or :class:`float`. The
+center is copied by default; ``copyPoints=False`` keeps the given point instead.
+
+Three read-only properties measure it:
+
+* :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Diameter` - twice the radius, in the radius' type;
+* :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Circumference` - the length of its outline, a :class:`float`;
+* :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Area` - the area it encloses, a :class:`float`.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D
+   from pyTooling.Cartesian2D.Shapes import Circle
+
+   bubble = Circle(Point2D(10, 5), 2)
+   bubble.Diameter                    # 4
+   bubble.Area                        # 12.566...
+
+A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D` or a radius that isn't a number raises
+:exc:`TypeError`; a radius of 0 or below raises :exc:`ValueError`.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Shape`
+      |rarr| Its base-class, the base-class of the 2-dimensional shapes.
 
 
 .. _STRUCT/Cartesian3D:
