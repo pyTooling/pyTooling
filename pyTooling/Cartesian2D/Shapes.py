@@ -31,9 +31,9 @@
 """An implementation of 2D cartesian shapes for Python."""
 
 from math                  import degrees, isclose, pi
-from typing                import Generic
+from typing                import Generic, Iterable
 
-from pyTooling.Decorators  import export
+from pyTooling.Decorators  import export, readonly
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, LineSegment2D
 
@@ -41,6 +41,82 @@ from pyTooling.Cartesian2D import Coordinate, Point2D, LineSegment2D
 @export
 class Shape(Generic[Coordinate]):
 	"""Base-class for all 2D cartesian shapes."""
+
+
+@export
+class Polygon(Shape[Coordinate], Generic[Coordinate]):
+	"""
+	A polygon is a closed shape, having three or more corners (vertices) connected by straight edges (sides).
+	"""
+	points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the polygon's corners.
+	segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the polygon's edges.
+
+	def __init__(self, points: Iterable[Point2D[Coordinate]], copyPoints: bool = True) -> None:
+		"""
+		Initializes a polygon from its corners.
+
+		The corners are connected in the given order, the last one back to the first one.
+
+		:param points:      Corners of the polygon.
+		:param copyPoints:  Optional, if ``True``, the given points are copied instead of referenced. Default: ``True``.
+		:raises ValueError: If parameter 'points' is None.
+		:raises TypeError:  If parameter 'points' is not iterable.
+		:raises ValueError: If an element of parameter 'points' is None.
+		:raises TypeError:  If an element of parameter 'points' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If parameter 'points' has fewer than 3 points.
+		:raises ValueError: If parameter 'copyPoints' is None.
+		:raises TypeError:  If parameter 'copyPoints' is not of type :class:`bool`.
+		"""
+		if points is None:
+			raise ValueError("Parameter 'points' is None.")
+		elif not isinstance(points, Iterable):
+			ex = TypeError("Parameter 'points' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(points)}'.")
+			raise ex
+
+		if copyPoints is None:
+			raise ValueError("Parameter 'copyPoints' is None.")
+		elif not isinstance(copyPoints, bool):
+			ex = TypeError("Parameter 'copyPoints' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
+			raise ex
+
+		pointList = []
+		for point in points:
+			if point is None:
+				raise ValueError("An element of parameter 'points' is None.")
+			elif not isinstance(point, Point2D):
+				ex = TypeError("An element of parameter 'points' is not of type 'Point2D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+				raise ex
+
+			pointList.append(point.Copy() if copyPoints else point)
+
+		if len(pointList) < 3:
+			ex = ValueError("Parameter 'points' has fewer than 3 points.")
+			ex.add_note(f"Got {len(pointList)} points.")
+			raise ex
+
+		self.points =   corners = tuple(pointList)
+		self.segments = tuple(
+			LineSegment2D(start, end, copyPoints=False) for start, end in zip(corners, (*corners[1:], corners[0]))
+		)
+
+	def __repr__(self) -> str:
+		"""
+		Returns the polygon's string representation.
+
+		:returns: The string representation of the polygon.
+		"""
+		return f"Polygon({', '.join(str(point) for point in self.points)})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the polygon's string equivalent.
+
+		:returns: The string equivalent of the polygon, its outline from the first corner back to the first corner.
+		"""
+		return f"({' → '.join(str(point) for point in (*self.points, self.points[0]))})"
 
 
 @export
@@ -178,3 +254,98 @@ class Square(Rectangle[Coordinate]):
 			ex = ValueError("Line segments (edges) between corners have different lengths.")
 			ex.add_note(f"Got lengths {edge.Length} and {nextEdge.Length}.")
 			raise ex
+
+
+@export
+class Circle(Shape[Coordinate], Generic[Coordinate]):
+	"""
+	A circle is a round shape, where every point of its outline has the same distance (radius) to its center.
+	"""
+	center: Point2D[Coordinate]  #: Center point of the circle.
+	radius: Coordinate           #: Radius of the circle.
+
+	def __init__(self, center: Point2D[Coordinate], radius: Coordinate, copyPoints: bool = True) -> None:
+		"""
+		Initializes a circle by its center and radius.
+
+		:param center:      Center point of the circle.
+		:param radius:      Radius of the circle.
+		:param copyPoints:  Optional, if ``True``, the given center is copied instead of referenced. Default: ``True``.
+		:raises ValueError: If parameter 'center' is None.
+		:raises TypeError:  If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If parameter 'radius' is None.
+		:raises TypeError:  If parameter 'radius' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'radius' isn't positive.
+		:raises ValueError: If parameter 'copyPoints' is None.
+		:raises TypeError:  If parameter 'copyPoints' is not of type :class:`bool`.
+		"""
+		if center is None:
+			raise ValueError("Parameter 'center' is None.")
+		elif not isinstance(center, Point2D):
+			ex = TypeError("Parameter 'center' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(center)}'.")
+			raise ex
+
+		if radius is None:
+			raise ValueError("Parameter 'radius' is None.")
+		elif not isinstance(radius, (int, float)):
+			ex = TypeError("Parameter 'radius' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(radius)}'.")
+			raise ex
+		elif radius <= 0:
+			ex = ValueError("Parameter 'radius' isn't positive.")
+			ex.add_note(f"Got value '{radius}'.")
+			raise ex
+
+		if copyPoints is None:
+			raise ValueError("Parameter 'copyPoints' is None.")
+		elif not isinstance(copyPoints, bool):
+			ex = TypeError("Parameter 'copyPoints' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
+			raise ex
+
+		self.center = center.Copy() if copyPoints else center
+		self.radius = radius
+
+	@readonly
+	def Diameter(self) -> Coordinate:
+		"""
+		Read-only property to return the circle's diameter, twice its :attr:`radius`.
+
+		:returns: Diameter of the circle.
+		"""
+		return 2 * self.radius
+
+	@readonly
+	def Circumference(self) -> float:
+		"""
+		Read-only property to return the circle's circumference, the length of its outline.
+
+		:returns: Circumference of the circle.
+		"""
+		return 2 * pi * self.radius
+
+	@readonly
+	def Area(self) -> float:
+		"""
+		Read-only property to return the circle's area.
+
+		:returns: Area of the circle.
+		"""
+		return pi * self.radius ** 2
+
+	def __repr__(self) -> str:
+		"""
+		Returns the circle's string representation.
+
+		:returns: The string representation of the circle.
+		"""
+		return f"Circle({self.center}, {self.radius})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the circle's string equivalent.
+
+		:returns: The string equivalent of the circle.
+		"""
+		return f"({self.center}, r={self.radius})"

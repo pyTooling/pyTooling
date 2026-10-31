@@ -29,12 +29,12 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - trapezium, rectangle and square.
+Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - polygon, trapezium, rectangle, square and circle.
 """
-from math                         import cos, isclose, radians, sin, sqrt
+from math                         import cos, isclose, pi, radians, sin, sqrt
 
 from pyTooling.Cartesian2D        import Point2D, LineSegment2D
-from pyTooling.Cartesian2D.Shapes import Shape, Trapezium, Rectangle, Square
+from pyTooling.Cartesian2D.Shapes import Shape, Polygon, Trapezium, Rectangle, Square, Circle
 from pyTooling.Testing            import Testcase
 
 
@@ -45,6 +45,77 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Instantiation(Testcase):
+	def test_Polygon(self) -> None:
+		point0 = Point2D(0, 0)
+		point1 = Point2D(4, 0)
+		point2 = Point2D(2, 3)
+
+		polygon = Polygon((point0, point1, point2))
+
+		self.assertIsInstance(polygon, Shape)
+		self.assertEqual(3, len(polygon.points))
+		self.assertEqual(3, len(polygon.segments))
+
+	def test_Polygon_Pentagon(self) -> None:
+		points = [Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5), Point2D(-1, 3)]
+
+		polygon = Polygon(points)
+
+		self.assertEqual(5, len(polygon.points))
+		self.assertEqual(5, len(polygon.segments))
+
+	def test_Polygon_Generator(self) -> None:
+		"""The corners are consumed from any iterable, also from a generator."""
+		polygon = Polygon(Point2D(x, y) for x, y in ((0, 0), (4, 0), (2, 3)))
+
+		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in polygon.points))
+
+	def test_Polygon_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Polygon(None)
+
+		self.assertEqual("Parameter 'points' is None.", str(context.exception))
+
+	def test_Polygon_int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Polygon(3)
+
+		self.assertEqual("Parameter 'points' is not iterable.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Polygon_NoneElement(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Polygon((Point2D(0, 0), None, Point2D(2, 3)))
+
+		self.assertEqual("An element of parameter 'points' is None.", str(context.exception))
+
+	def test_Polygon_strElement(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Polygon((Point2D(0, 0), "4, 0", Point2D(2, 3)))
+
+		self.assertEqual("An element of parameter 'points' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Polygon_TwoPoints(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0)))
+
+		self.assertEqual("Parameter 'points' has fewer than 3 points.", str(context.exception))
+		self.assertListEqual(["Got 2 points."], context.exception.__notes__)
+
+	def test_Polygon_copyPointsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), copyPoints=None)
+
+		self.assertEqual("Parameter 'copyPoints' is None.", str(context.exception))
+
+	def test_Polygon_copyPointsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), copyPoints=1)
+
+		self.assertEqual("Parameter 'copyPoints' is not of type 'bool'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
 	def test_Trapezium(self) -> None:
 		point00 = Point2D(1, 1)
 		point01 = Point2D(3, 1)
@@ -279,8 +350,134 @@ class Instantiation(Testcase):
 		self.assertEqual("Parameter 'p00' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
+	def test_Circle_int(self) -> None:
+		center = Point2D(1, 2)
+
+		circle = Circle(center, 3)
+
+		self.assertIsInstance(circle, Shape)
+		self.assertTupleEqual((1, 2), circle.center.ToTuple())
+		self.assertEqual(3, circle.radius)
+
+	def test_Circle_float(self) -> None:
+		center = Point2D(1.5, 2.5)
+
+		circle = Circle(center, 0.5)
+
+		self.assertTupleEqual((1.5, 2.5), circle.center.ToTuple())
+		self.assertEqual(0.5, circle.radius)
+
+	def test_Circle_CenterNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Circle(None, 3)
+
+		self.assertEqual("Parameter 'center' is None.", str(context.exception))
+
+	def test_Circle_CenterStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Circle("1, 2", 3)
+
+		self.assertEqual("Parameter 'center' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Circle_RadiusNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Circle(Point2D(1, 2), None)
+
+		self.assertEqual("Parameter 'radius' is None.", str(context.exception))
+
+	def test_Circle_RadiusStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Circle(Point2D(1, 2), "3")
+
+		self.assertEqual("Parameter 'radius' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Circle_RadiusZero(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Circle(Point2D(1, 2), 0)
+
+		self.assertEqual("Parameter 'radius' isn't positive.", str(context.exception))
+		self.assertListEqual(["Got value '0'."], context.exception.__notes__)
+
+	def test_Circle_RadiusNegative(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Circle(Point2D(1, 2), -1.5)
+
+		self.assertEqual("Parameter 'radius' isn't positive.", str(context.exception))
+		self.assertListEqual(["Got value '-1.5'."], context.exception.__notes__)
+
+	def test_Circle_copyPointsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Circle(Point2D(1, 2), 3, copyPoints=None)
+
+		self.assertEqual("Parameter 'copyPoints' is None.", str(context.exception))
+
+	def test_Circle_copyPointsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Circle(Point2D(1, 2), 3, copyPoints=1)
+
+		self.assertEqual("Parameter 'copyPoints' is not of type 'bool'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
 
 class Corners(Testcase):
+	def test_Polygon(self) -> None:
+		points = (Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5), Point2D(-1, 3))
+
+		polygon = Polygon(points)
+
+		for point in polygon.points:
+			self.assertIsInstance(point, Point2D)
+
+		self.assertTupleEqual(
+			((0, 0), (4, 0), (5, 3), (2, 5), (-1, 3)),
+			tuple(point.ToTuple() for point in polygon.points)
+		)
+
+	def test_Polygon_Copy(self) -> None:
+		"""The corners are copies: moving a given point afterwards doesn't change the shape."""
+		point0 = Point2D(0, 0)
+		point1 = Point2D(4, 0)
+		point2 = Point2D(2, 3)
+
+		polygon = Polygon((point0, point1, point2))
+		point0 += (5, 5)
+
+		for given, corner in zip((point0, point1, point2), polygon.points):
+			self.assertIsNot(given, corner)
+
+		self.assertTupleEqual((5, 5), point0.ToTuple())
+		self.assertTupleEqual((0, 0), polygon.points[0].ToTuple())
+
+	def test_Polygon_Reference(self) -> None:
+		"""With ``copyPoints=False``, the corners are the given points."""
+		points = (Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))
+
+		polygon = Polygon(points, copyPoints=False)
+
+		for given, corner in zip(points, polygon.points):
+			self.assertIs(given, corner)
+
+	def test_Circle_Copy(self) -> None:
+		"""The center is a copy: moving the given point afterwards doesn't change the circle."""
+		center = Point2D(1, 2)
+
+		circle = Circle(center, 3)
+		center += (5, 5)
+
+		self.assertIsNot(center, circle.center)
+		self.assertTupleEqual((6, 7), center.ToTuple())
+		self.assertTupleEqual((1, 2), circle.center.ToTuple())
+
+	def test_Circle_Reference(self) -> None:
+		"""With ``copyPoints=False``, the center is the given point."""
+		center = Point2D(1, 2)
+
+		circle = Circle(center, 3, copyPoints=False)
+
+		self.assertIs(center, circle.center)
+
 	def test_Trapezium(self) -> None:
 		point00 = Point2D(1, 1)
 		point01 = Point2D(3, 1)
@@ -312,6 +509,35 @@ class Corners(Testcase):
 
 
 class Edges(Testcase):
+	def test_Polygon(self) -> None:
+		points = (Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5), Point2D(-1, 3))
+
+		polygon = Polygon(points)
+
+		for segment in polygon.segments:
+			self.assertIsInstance(segment, LineSegment2D)
+
+		self.assertTupleEqual(
+			(
+				((0, 0), (4, 0)),
+				((4, 0), (5, 3)),
+				((5, 3), (2, 5)),
+				((2, 5), (-1, 3)),
+				((-1, 3), (0, 0))
+			),
+			tuple(segment.ToTuple() for segment in polygon.segments)
+		)
+
+	def test_Polygon_SharedCorners(self) -> None:
+		"""Each edge ends in the corner the next edge starts in, and both are the shape's corner object."""
+		points = (Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5))
+
+		polygon = Polygon(points)
+
+		for index, segment in enumerate(polygon.segments):
+			self.assertIs(polygon.points[index], segment.start)
+			self.assertIs(polygon.points[(index + 1) % 4], segment.end)
+
 	def test_Trapezium(self) -> None:
 		point00 = Point2D(1, 1)
 		point01 = Point2D(3, 1)
@@ -345,3 +571,48 @@ class Edges(Testcase):
 		for index, segment in enumerate(trapezium.segments):
 			self.assertIs(trapezium.points[index], segment.start)
 			self.assertIs(trapezium.points[(index + 1) % 4], segment.end)
+
+
+class Measurements(Testcase):
+	def test_Circle_Diameter(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		self.assertEqual(6, circle.Diameter)
+		self.assertIsInstance(circle.Diameter, int)
+
+	def test_Circle_Diameter_float(self) -> None:
+		circle = Circle(Point2D(1.0, 2.0), 1.25)
+
+		self.assertEqual(2.5, circle.Diameter)
+
+	def test_Circle_Circumference(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		self.assertTrue(isclose(6 * pi, circle.Circumference))
+
+	def test_Circle_Area(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		self.assertTrue(isclose(9 * pi, circle.Area))
+
+
+class Representation(Testcase):
+	def test_Polygon_repr(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		self.assertEqual("Polygon((0, 0), (4, 0), (2, 3))", repr(polygon))
+
+	def test_Polygon_str(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		self.assertEqual("((0, 0) → (4, 0) → (2, 3) → (0, 0))", str(polygon))
+
+	def test_Circle_repr(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		self.assertEqual("Circle((1, 2), 3)", repr(circle))
+
+	def test_Circle_str(self) -> None:
+		circle = Circle(Point2D(1.5, 2), 0.5)
+
+		self.assertEqual("((1.5, 2), r=0.5)", str(circle))
