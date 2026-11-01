@@ -48,8 +48,8 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 	"""
 	A polygon is a closed shape, having three or more corners (vertices) connected by straight edges (sides).
 	"""
-	points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the polygon's corners.
-	segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the polygon's edges.
+	_points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the polygon's corners.
+	_segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the polygon's edges.
 
 	def __init__(self, points: Iterable[Point2D[Coordinate]], copyPoints: bool = True) -> None:
 		"""
@@ -97,10 +97,28 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got {len(pointList)} points.")
 			raise ex
 
-		self.points =   corners = tuple(pointList)
-		self.segments = tuple(
+		self._points =   corners = tuple(pointList)
+		self._segments = tuple(
 			LineSegment2D(start, end, copyPoints=False) for start, end in zip(corners, (*corners[1:], corners[0]))
 		)
+
+	@readonly
+	def Points(self) -> tuple[Point2D[Coordinate], ...]:
+		"""
+		Read-only property to access the polygon's corners (:attr:`_points`).
+
+		:returns: Tuple of corners, in drawing order.
+		"""
+		return self._points
+
+	@readonly
+	def Segments(self) -> tuple[LineSegment2D[Coordinate], ...]:
+		"""
+		Read-only property to access the polygon's edges (:attr:`_segments`).
+
+		:returns: Tuple of edges, the last one connecting the last corner back to the first one.
+		"""
+		return self._segments
 
 	def __repr__(self) -> str:
 		"""
@@ -108,7 +126,7 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 
 		:returns: The string representation of the polygon.
 		"""
-		return f"Polygon({', '.join(str(point) for point in self.points)})"
+		return f"Polygon({', '.join(str(point) for point in self._points)})"
 
 	def __str__(self) -> str:
 		"""
@@ -116,7 +134,7 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 
 		:returns: The string equivalent of the polygon, its outline from the first corner back to the first corner.
 		"""
-		return f"({' → '.join(str(point) for point in (*self.points, self.points[0]))})"
+		return f"({' → '.join(str(point) for point in (*self._points, self._points[0]))})"
 
 
 @export
@@ -261,8 +279,8 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 	"""
 	A circle is a round shape, where every point of its outline has the same distance (radius) to its center.
 	"""
-	center: Point2D[Coordinate]  #: Center point of the circle.
-	radius: Coordinate           #: Radius of the circle.
+	_center: Point2D[Coordinate]  #: Center point of the circle.
+	_radius: Coordinate           #: Radius of the circle.
 
 	def __init__(self, center: Point2D[Coordinate], radius: Coordinate, copyPoints: bool = True) -> None:
 		"""
@@ -304,17 +322,35 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
 			raise ex
 
-		self.center = center.Copy() if copyPoints else center
-		self.radius = radius
+		self._center = center.Copy() if copyPoints else center
+		self._radius = radius
+
+	@readonly
+	def Center(self) -> Point2D[Coordinate]:
+		"""
+		Read-only property to access the circle's center point (:attr:`_center`).
+
+		:returns: Center point of the circle.
+		"""
+		return self._center
+
+	@readonly
+	def Radius(self) -> Coordinate:
+		"""
+		Read-only property to access the circle's radius (:attr:`_radius`).
+
+		:returns: Radius of the circle.
+		"""
+		return self._radius
 
 	@readonly
 	def Diameter(self) -> Coordinate:
 		"""
-		Read-only property to return the circle's diameter, twice its :attr:`radius`.
+		Read-only property to return the circle's diameter, twice its :attr:`Radius`.
 
 		:returns: Diameter of the circle.
 		"""
-		return 2 * self.radius
+		return 2 * self._radius
 
 	@readonly
 	def Circumference(self) -> float:
@@ -323,7 +359,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 
 		:returns: Circumference of the circle.
 		"""
-		return 2 * pi * self.radius
+		return 2 * pi * self._radius
 
 	@readonly
 	def Area(self) -> float:
@@ -332,7 +368,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 
 		:returns: Area of the circle.
 		"""
-		return pi * self.radius ** 2
+		return pi * self._radius ** 2
 
 	def __repr__(self) -> str:
 		"""
@@ -340,7 +376,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 
 		:returns: The string representation of the circle.
 		"""
-		return f"Circle({self.center}, {self.radius})"
+		return f"Circle({self._center}, {self._radius})"
 
 	def __str__(self) -> str:
 		"""
@@ -348,4 +384,4 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 
 		:returns: The string equivalent of the circle.
 		"""
-		return f"({self.center}, r={self.radius})"
+		return f"({self._center}, r={self._radius})"

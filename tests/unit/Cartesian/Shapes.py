@@ -53,22 +53,22 @@ class Instantiation(Testcase):
 		polygon = Polygon((point0, point1, point2))
 
 		self.assertIsInstance(polygon, Shape)
-		self.assertEqual(3, len(polygon.points))
-		self.assertEqual(3, len(polygon.segments))
+		self.assertEqual(3, len(polygon.Points))
+		self.assertEqual(3, len(polygon.Segments))
 
 	def test_Polygon_Pentagon(self) -> None:
 		points = [Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5), Point2D(-1, 3)]
 
 		polygon = Polygon(points)
 
-		self.assertEqual(5, len(polygon.points))
-		self.assertEqual(5, len(polygon.segments))
+		self.assertEqual(5, len(polygon.Points))
+		self.assertEqual(5, len(polygon.Segments))
 
 	def test_Polygon_Generator(self) -> None:
 		"""The corners are consumed from any iterable, also from a generator."""
 		polygon = Polygon(Point2D(x, y) for x, y in ((0, 0), (4, 0), (2, 3)))
 
-		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in polygon.points))
+		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
 
 	def test_Polygon_None(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -356,16 +356,16 @@ class Instantiation(Testcase):
 		circle = Circle(center, 3)
 
 		self.assertIsInstance(circle, Shape)
-		self.assertTupleEqual((1, 2), circle.center.ToTuple())
-		self.assertEqual(3, circle.radius)
+		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
+		self.assertEqual(3, circle.Radius)
 
 	def test_Circle_float(self) -> None:
 		center = Point2D(1.5, 2.5)
 
 		circle = Circle(center, 0.5)
 
-		self.assertTupleEqual((1.5, 2.5), circle.center.ToTuple())
-		self.assertEqual(0.5, circle.radius)
+		self.assertTupleEqual((1.5, 2.5), circle.Center.ToTuple())
+		self.assertEqual(0.5, circle.Radius)
 
 	def test_Circle_CenterNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -427,12 +427,12 @@ class Corners(Testcase):
 
 		polygon = Polygon(points)
 
-		for point in polygon.points:
+		for point in polygon.Points:
 			self.assertIsInstance(point, Point2D)
 
 		self.assertTupleEqual(
 			((0, 0), (4, 0), (5, 3), (2, 5), (-1, 3)),
-			tuple(point.ToTuple() for point in polygon.points)
+			tuple(point.ToTuple() for point in polygon.Points)
 		)
 
 	def test_Polygon_Copy(self) -> None:
@@ -444,11 +444,11 @@ class Corners(Testcase):
 		polygon = Polygon((point0, point1, point2))
 		point0 += (5, 5)
 
-		for given, corner in zip((point0, point1, point2), polygon.points):
+		for given, corner in zip((point0, point1, point2), polygon.Points):
 			self.assertIsNot(given, corner)
 
 		self.assertTupleEqual((5, 5), point0.ToTuple())
-		self.assertTupleEqual((0, 0), polygon.points[0].ToTuple())
+		self.assertTupleEqual((0, 0), polygon.Points[0].ToTuple())
 
 	def test_Polygon_Reference(self) -> None:
 		"""With ``copyPoints=False``, the corners are the given points."""
@@ -456,7 +456,7 @@ class Corners(Testcase):
 
 		polygon = Polygon(points, copyPoints=False)
 
-		for given, corner in zip(points, polygon.points):
+		for given, corner in zip(points, polygon.Points):
 			self.assertIs(given, corner)
 
 	def test_Circle_Copy(self) -> None:
@@ -466,9 +466,9 @@ class Corners(Testcase):
 		circle = Circle(center, 3)
 		center += (5, 5)
 
-		self.assertIsNot(center, circle.center)
+		self.assertIsNot(center, circle.Center)
 		self.assertTupleEqual((6, 7), center.ToTuple())
-		self.assertTupleEqual((1, 2), circle.center.ToTuple())
+		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
 
 	def test_Circle_Reference(self) -> None:
 		"""With ``copyPoints=False``, the center is the given point."""
@@ -476,7 +476,7 @@ class Corners(Testcase):
 
 		circle = Circle(center, 3, copyPoints=False)
 
-		self.assertIs(center, circle.center)
+		self.assertIs(center, circle.Center)
 
 	def test_Trapezium(self) -> None:
 		point00 = Point2D(1, 1)
@@ -514,7 +514,7 @@ class Edges(Testcase):
 
 		polygon = Polygon(points)
 
-		for segment in polygon.segments:
+		for segment in polygon.Segments:
 			self.assertIsInstance(segment, LineSegment2D)
 
 		self.assertTupleEqual(
@@ -525,7 +525,7 @@ class Edges(Testcase):
 				((2, 5), (-1, 3)),
 				((-1, 3), (0, 0))
 			),
-			tuple(segment.ToTuple() for segment in polygon.segments)
+			tuple(segment.ToTuple() for segment in polygon.Segments)
 		)
 
 	def test_Polygon_SharedCorners(self) -> None:
@@ -534,9 +534,9 @@ class Edges(Testcase):
 
 		polygon = Polygon(points)
 
-		for index, segment in enumerate(polygon.segments):
-			self.assertIs(polygon.points[index], segment.start)
-			self.assertIs(polygon.points[(index + 1) % 4], segment.end)
+		for index, segment in enumerate(polygon.Segments):
+			self.assertIs(polygon.Points[index], segment.start)
+			self.assertIs(polygon.Points[(index + 1) % 4], segment.end)
 
 	def test_Trapezium(self) -> None:
 		point00 = Point2D(1, 1)

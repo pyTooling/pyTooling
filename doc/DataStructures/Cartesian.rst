@@ -264,10 +264,10 @@ A :class:`~pyTooling.Cartesian2D.Shapes.Polygon` is a closed shape with three or
 of :class:`~pyTooling.Cartesian2D.Point2D` in drawing order. The edges connect the corners in that order, the last
 corner back to the first one.
 
-Like a trapezium, it keeps both views: ``points``, the corners as a tuple, and ``segments``, one
-:class:`~pyTooling.Cartesian2D.LineSegment2D` edge per corner, with consecutive edges sharing a corner object. The
-corners are copied by default; ``copyPoints=False`` keeps the given points instead, as for a
-:ref:`segment <STRUCT/Cartesian2D/Segment2D>`.
+It keeps both views: :attr:`~pyTooling.Cartesian2D.Shapes.Polygon.Points`, the corners as a tuple, and
+:attr:`~pyTooling.Cartesian2D.Shapes.Polygon.Segments`, one :class:`~pyTooling.Cartesian2D.LineSegment2D` edge per
+corner, with consecutive edges sharing a corner object. The corners are copied by default; ``copyPoints=False`` keeps
+the given points instead, as for a :ref:`segment <STRUCT/Cartesian2D/Segment2D>`.
 
 .. code-block:: Python
 
@@ -350,9 +350,10 @@ comparison, one more :exc:`ValueError`. A rhombus has four equally long edges, b
 Circle
 ======
 
-A :class:`~pyTooling.Cartesian2D.Shapes.Circle` is placed by its ``center``, a
-:class:`~pyTooling.Cartesian2D.Point2D`, and sized by its ``radius``, a positive :class:`int` or :class:`float`. The
-center is copied by default; ``copyPoints=False`` keeps the given point instead.
+A :class:`~pyTooling.Cartesian2D.Shapes.Circle` is placed by its :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Center`, a
+:class:`~pyTooling.Cartesian2D.Point2D`, and sized by its :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Radius`, a
+positive :class:`int` or :class:`float`. The center is copied by default; ``copyPoints=False`` keeps the given
+point instead.
 
 Three read-only properties measure it:
 
