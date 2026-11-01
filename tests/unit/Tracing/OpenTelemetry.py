@@ -33,6 +33,7 @@ Unit tests for the **OTLP/JSON** export and import of :mod:`pyTooling.Tracing`.
 from datetime             import datetime, timedelta, timezone
 from json                 import dumps as json_dumps, loads as json_loads
 from math                 import inf, isnan
+from os                   import environ, name as osName
 from pathlib              import Path
 from tempfile             import TemporaryDirectory
 from time                 import sleep
@@ -1258,6 +1259,23 @@ class ReadTimestamps(Testcase):
 
 		self.assertEqual(second + timedelta(microseconds=2), TraceElement._FromUnixNanoseconds(1_000_001_500))
 		self.assertEqual(second + timedelta(microseconds=1), TraceElement._FromUnixNanoseconds(1_000_001_499))
+
+	@mark.skipif(osName == "nt", reason="Changing the local time zone needs 'time.tzset()', which Windows lacks.")
+	def test_RepeatedHour(self) -> None:
+		"""A local time in the hour repeated at the end of daylight saving time converts back to the same instant."""
+		from time import tzset
+
+		nanoseconds = 1_793_526_182_123_456_000  # 2026-11-01 01:43:02.123456 PST, the second 01:43 in US/Pacific
+		try:
+			with mock.patch.dict(environ, {"TZ": "America/Los_Angeles"}):
+				tzset()
+				timestamp =    TraceElement._FromUnixNanoseconds(nanoseconds)
+				roundTripped = TraceElement._ToUnixNanoseconds(timestamp)
+		finally:
+			tzset()
+
+		self.assertEqual(1, timestamp.fold)
+		self.assertEqual(nanoseconds, roundTripped)
 
 
 @skipWithoutJSONSchema
