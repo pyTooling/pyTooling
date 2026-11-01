@@ -160,55 +160,167 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 	"""
 	A Trapezium is a four-sided polygon, having four edges (sides) and four corners (vertices).
 	"""
-	points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the trapezium.
-	segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the trapezium.
+	_points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the trapezium.
+	_segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the trapezium.
 
 	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
 		"""
 		Initializes a trapezium with 4 corners.
 
-		:param p00:        First corner.
-		:param p01:        Second corner.
-		:param p11:        Third corner.
-		:param p10:        Fourth corner.
-		:raises TypeError: If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError: If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError: If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError: If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:param p00:         First corner.
+		:param p01:         Second corner.
+		:param p11:         Third corner.
+		:param p10:         Fourth corner.
+		:raises ValueError: If parameter 'p00' is None.
+		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If parameter 'p01' is None.
+		:raises TypeError:  If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If parameter 'p11' is None.
+		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If parameter 'p10' is None.
+		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		"""
-		if not isinstance(p00, Point2D):
+		if p00 is None:
+			raise ValueError("Parameter 'p00' is None.")
+		elif not isinstance(p00, Point2D):
 			ex = TypeError("Parameter 'p00' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p00)}'.")
 			raise ex
 
-		if not isinstance(p01, Point2D):
+		if p01 is None:
+			raise ValueError("Parameter 'p01' is None.")
+		elif not isinstance(p01, Point2D):
 			ex = TypeError("Parameter 'p01' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p01)}'.")
 			raise ex
 
-		if not isinstance(p11, Point2D):
+		if p11 is None:
+			raise ValueError("Parameter 'p11' is None.")
+		elif not isinstance(p11, Point2D):
 			ex = TypeError("Parameter 'p11' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p11)}'.")
 			raise ex
 
-		if not isinstance(p10, Point2D):
+		if p10 is None:
+			raise ValueError("Parameter 'p10' is None.")
+		elif not isinstance(p10, Point2D):
 			ex = TypeError("Parameter 'p10' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(p10)}'.")
 			raise ex
 
-		self.points = (
+		self._points = (
 			_p00 := p00.Copy(),
 			_p01 := p01.Copy(),
 			_p11 := p11.Copy(),
 			_p10 := p10.Copy(),
 		)
 
-		self.segments = (
+		self._segments = (
 			LineSegment2D(_p00, _p01, copyPoints=False),
 			LineSegment2D(_p01, _p11, copyPoints=False),
 			LineSegment2D(_p11, _p10, copyPoints=False),
 			LineSegment2D(_p10, _p00, copyPoints=False)
 		)
+
+	@readonly
+	def Points(self) -> tuple[Point2D[Coordinate], ...]:
+		"""
+		Read-only property to access the trapezium's corners (:attr:`_points`).
+
+		``points`` is a deprecated, assignable alias of this property; it is removed in v11.0.0.
+
+		:returns: Tuple of corners, in drawing order.
+		"""
+		return self._points
+
+	@property
+	def points(self) -> tuple[Point2D[Coordinate], ...]:
+		"""
+		Property to access the trapezium's corners (:attr:`_points`).
+
+		Deprecated alias of :attr:`Points`, which is read-only; it is removed in v11.0.0.
+
+		An assigned iterable is stored as a tuple. Its elements are referenced, not copied, and the edges in
+		:attr:`Segments` aren't updated.
+
+		:returns:           Tuple of corners, in drawing order.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not iterable.
+		:raises ValueError: If an element of an assigned iterable is None.
+		:raises TypeError:  If an element of an assigned iterable is not of type
+		                    :class:`~pyTooling.Cartesian2D.Point2D`.
+		"""
+		return self._points
+
+	@points.setter
+	def points(self, points: Iterable[Point2D[Coordinate]]) -> None:
+		if points is None:
+			raise ValueError("Parameter 'points' is None.")
+		elif not isinstance(points, Iterable):
+			ex = TypeError("Parameter 'points' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(points)}'.")
+			raise ex
+
+		corners = tuple(points)
+		for point in corners:
+			if point is None:
+				raise ValueError("An element of parameter 'points' is None.")
+			elif not isinstance(point, Point2D):
+				ex = TypeError("An element of parameter 'points' is not of type 'Point2D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+				raise ex
+
+		self._points = corners
+
+	@readonly
+	def Segments(self) -> tuple[LineSegment2D[Coordinate], ...]:
+		"""
+		Read-only property to access the trapezium's edges (:attr:`_segments`).
+
+		``segments`` is a deprecated, assignable alias of this property; it is removed in v11.0.0.
+
+		:returns: Tuple of edges, the last one connecting the last corner back to the first one.
+		"""
+		return self._segments
+
+	@property
+	def segments(self) -> tuple[LineSegment2D[Coordinate], ...]:
+		"""
+		Property to access the trapezium's edges (:attr:`_segments`).
+
+		Deprecated alias of :attr:`Segments`, which is read-only; it is removed in v11.0.0.
+
+		An assigned iterable is stored as a tuple. Its elements are referenced, not copied, and the corners in
+		:attr:`Points` aren't updated.
+
+		:returns:           Tuple of edges, the last one connecting the last corner back to the first one.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not iterable.
+		:raises ValueError: If an element of an assigned iterable is None.
+		:raises TypeError:  If an element of an assigned iterable is not of type
+		                    :class:`~pyTooling.Cartesian2D.LineSegment2D`.
+		"""
+		return self._segments
+
+	@segments.setter
+	def segments(self, segments: Iterable[LineSegment2D[Coordinate]]) -> None:
+		if segments is None:
+			raise ValueError("Parameter 'segments' is None.")
+		elif not isinstance(segments, Iterable):
+			ex = TypeError("Parameter 'segments' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(segments)}'.")
+			raise ex
+
+		edges = tuple(segments)
+		for segment in edges:
+			if segment is None:
+				raise ValueError("An element of parameter 'segments' is None.")
+			elif not isinstance(segment, LineSegment2D):
+				ex = TypeError("An element of parameter 'segments' is not of type 'LineSegment2D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(segment)}'.")
+				raise ex
+
+		self._segments = edges
 
 	def Copy(self) -> Self:
 		"""
@@ -219,7 +331,7 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 
 		:returns: Copy of this trapezium.
 		"""
-		return self.__class__(*self.points)
+		return self.__class__(*self._points)
 
 	def __copy__(self) -> Self:
 		"""
@@ -244,9 +356,13 @@ class Rectangle(Trapezium[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
+		:raises ValueError: If parameter 'p00' is None.
 		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If parameter 'p01' is None.
 		:raises TypeError:  If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If parameter 'p11' is None.
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If opposite edges have different lengths.
 		:raises ValueError: If two consecutive corners are the same point.
@@ -255,26 +371,26 @@ class Rectangle(Trapezium[Coordinate]):
 		super().__init__(p00, p01, p11, p10)
 
 		for index in range(2):
-			edge =         self.segments[index]
-			oppositeEdge = self.segments[index + 2]
+			edge =         self._segments[index]
+			oppositeEdge = self._segments[index + 2]
 			if not isclose(edge.Length, oppositeEdge.Length):
 				ex = ValueError("Opposite line segments (edges) have different lengths.")
 				ex.add_note(f"Got lengths {edge.Length} and {oppositeEdge.Length}.")
 				raise ex
 
-		for edge in self.segments[:2]:
+		for edge in self._segments[:2]:
 			if edge.Length == 0.0:
 				ex = ValueError("Line segment (edge) has length 0.")
-				ex.add_note(f"Got corners {edge.start} and {edge.end}.")
+				ex.add_note(f"Got corners {edge._start} and {edge._end}.")
 				raise ex
 
 		for index in range(2):
-			edge =     self.segments[index]
-			nextEdge = self.segments[index + 1]
+			edge =     self._segments[index]
+			nextEdge = self._segments[index + 1]
 			angle =    pi - edge.AngleTo(nextEdge)
 			if not isclose(angle, pi / 2):
 				ex = ValueError("Inner angle of a rectangle is not 90°.")
-				ex.add_note(f"Got {degrees(angle):.2f}° at corner {edge.end}.")
+				ex.add_note(f"Got {degrees(angle):.2f}° at corner {edge._end}.")
 				raise ex
 
 
@@ -292,9 +408,13 @@ class Square(Rectangle[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
+		:raises ValueError: If parameter 'p00' is None.
 		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If parameter 'p01' is None.
 		:raises TypeError:  If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If parameter 'p11' is None.
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If opposite edges have different lengths.
 		:raises ValueError: If two consecutive corners are the same point.
@@ -303,8 +423,8 @@ class Square(Rectangle[Coordinate]):
 		"""
 		super().__init__(p00, p01, p11, p10)
 
-		edge =     self.segments[0]
-		nextEdge = self.segments[1]
+		edge =     self._segments[0]
+		nextEdge = self._segments[1]
 		if not isclose(edge.Length, nextEdge.Length):
 			ex = ValueError("Line segments (edges) between corners have different lengths.")
 			ex.add_note(f"Got lengths {edge.Length} and {nextEdge.Length}.")

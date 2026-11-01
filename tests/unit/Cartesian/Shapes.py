@@ -126,8 +126,8 @@ class Instantiation(Testcase):
 		trapezium = Trapezium(point00, point01, point11, point10)
 
 		self.assertIsInstance(trapezium, Shape)
-		self.assertEqual(4, len(trapezium.points))
-		self.assertEqual(4, len(trapezium.segments))
+		self.assertEqual(4, len(trapezium.Points))
+		self.assertEqual(4, len(trapezium.Segments))
 
 	def test_Trapezium_str1(self) -> None:
 		point01 = Point2D(3, 1)
@@ -173,6 +173,46 @@ class Instantiation(Testcase):
 		self.assertEqual("Parameter 'p10' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
+	def test_Trapezium_None1(self) -> None:
+		point01 = Point2D(1, 1)
+		point11 = Point2D(2, 2)
+		point10 = Point2D(3, 3)
+
+		with self.assertRaises(ValueError) as context:
+			_ = Trapezium(None, point01, point11, point10)
+
+		self.assertEqual("Parameter 'p00' is None.", str(context.exception))
+
+	def test_Trapezium_None2(self) -> None:
+		point00 = Point2D(0, 0)
+		point11 = Point2D(2, 2)
+		point10 = Point2D(3, 3)
+
+		with self.assertRaises(ValueError) as context:
+			_ = Trapezium(point00, None, point11, point10)
+
+		self.assertEqual("Parameter 'p01' is None.", str(context.exception))
+
+	def test_Trapezium_None3(self) -> None:
+		point00 = Point2D(0, 0)
+		point01 = Point2D(1, 1)
+		point10 = Point2D(3, 3)
+
+		with self.assertRaises(ValueError) as context:
+			_ = Trapezium(point00, point01, None, point10)
+
+		self.assertEqual("Parameter 'p11' is None.", str(context.exception))
+
+	def test_Trapezium_None4(self) -> None:
+		point00 = Point2D(0, 0)
+		point01 = Point2D(1, 1)
+		point11 = Point2D(2, 2)
+
+		with self.assertRaises(ValueError) as context:
+			_ = Trapezium(point00, point01, point11, None)
+
+		self.assertEqual("Parameter 'p10' is None.", str(context.exception))
+
 	def test_Rectangle(self) -> None:
 		"""A rectangle rotated against the axes: edges 4/2 and -1/2 are perpendicular."""
 		point00 = Point2D(0, 0)
@@ -185,7 +225,7 @@ class Instantiation(Testcase):
 		self.assertIsInstance(rectangle, Trapezium)
 		self.assertTupleEqual(
 			((0, 0), (4, 2), (3, 4), (-1, 2)),
-			tuple(point.ToTuple() for point in rectangle.points)
+			tuple(point.ToTuple() for point in rectangle.Points)
 		)
 
 	def test_Rectangle_AxisAligned(self) -> None:
@@ -197,8 +237,8 @@ class Instantiation(Testcase):
 
 		rectangle = Rectangle(point00, point01, point11, point10)
 
-		self.assertEqual(4, len(rectangle.segments))
-		self.assertTupleEqual((4.0, 2.0, 4.0, 2.0), tuple(segment.Length for segment in rectangle.segments))
+		self.assertEqual(4, len(rectangle.Segments))
+		self.assertTupleEqual((4.0, 2.0, 4.0, 2.0), tuple(segment.Length for segment in rectangle.Segments))
 
 	def test_Rectangle_OppositeEdges(self) -> None:
 		point00 = Point2D(0, 0)
@@ -222,8 +262,8 @@ class Instantiation(Testcase):
 
 		rectangle = Rectangle(point00, point01, point11, point10)
 
-		self.assertEqual(4, len(rectangle.segments))
-		for segment, length in zip(rectangle.segments, (4.0, 2.0, 4.0, 2.0)):
+		self.assertEqual(4, len(rectangle.Segments))
+		for segment, length in zip(rectangle.Segments, (4.0, 2.0, 4.0, 2.0)):
 			self.assertTrue(isclose(length, segment.Length))
 
 	def test_Rectangle_Parallelogram(self) -> None:
@@ -288,7 +328,7 @@ class Instantiation(Testcase):
 		self.assertIsInstance(square, Rectangle)
 		self.assertTupleEqual(
 			((0, 0), (1, 1), (0, 2), (-1, 1)),
-			tuple(point.ToTuple() for point in square.points)
+			tuple(point.ToTuple() for point in square.Points)
 		)
 
 	def test_Square_AxisAligned(self) -> None:
@@ -299,8 +339,8 @@ class Instantiation(Testcase):
 
 		square = Square(point00, point01, point11, point10)
 
-		self.assertEqual(4, len(square.segments))
-		self.assertTupleEqual((2.0, 2.0, 2.0, 2.0), tuple(segment.Length for segment in square.segments))
+		self.assertEqual(4, len(square.Segments))
+		self.assertTupleEqual((2.0, 2.0, 2.0, 2.0), tuple(segment.Length for segment in square.Segments))
 
 	def test_Square_Rotated(self) -> None:
 		"""A square rotated against the axes: all edges are sqrt(5) long, their x-differences are 2 and 1."""
@@ -311,8 +351,8 @@ class Instantiation(Testcase):
 
 		square = Square(point00, point01, point11, point10)
 
-		self.assertEqual(4, len(square.segments))
-		for segment in square.segments:
+		self.assertEqual(4, len(square.Segments))
+		for segment in square.Segments:
 			self.assertTrue(isclose(sqrt(5), segment.Length))
 
 	def test_Square_Rectangle(self) -> None:
@@ -487,10 +527,10 @@ class Corners(Testcase):
 
 		trapezium = Trapezium(point00, point01, point11, point10)
 
-		for point in trapezium.points:
+		for point in trapezium.Points:
 			self.assertIsInstance(point, Point2D)
 
-		self.assertTupleEqual(((1, 1), (3, 1), (4, 3), (0, 3)), tuple(point.ToTuple() for point in trapezium.points))
+		self.assertTupleEqual(((1, 1), (3, 1), (4, 3), (0, 3)), tuple(point.ToTuple() for point in trapezium.Points))
 
 	def test_Trapezium_Copy(self) -> None:
 		"""The corners are copies: moving a given point afterwards doesn't change the shape."""
@@ -502,11 +542,11 @@ class Corners(Testcase):
 		trapezium = Trapezium(point00, point01, point11, point10)
 		point00 += (5, 5)
 
-		for given, corner in zip((point00, point01, point11, point10), trapezium.points):
+		for given, corner in zip((point00, point01, point11, point10), trapezium.Points):
 			self.assertIsNot(given, corner)
 
 		self.assertTupleEqual((6, 6), point00.ToTuple())
-		self.assertTupleEqual((1, 1), trapezium.points[0].ToTuple())
+		self.assertTupleEqual((1, 1), trapezium.Points[0].ToTuple())
 
 
 class Edges(Testcase):
@@ -536,8 +576,8 @@ class Edges(Testcase):
 		polygon = Polygon(points)
 
 		for index, segment in enumerate(polygon.Segments):
-			self.assertIs(polygon.Points[index], segment.start)
-			self.assertIs(polygon.Points[(index + 1) % 4], segment.end)
+			self.assertIs(polygon.Points[index], segment.Start)
+			self.assertIs(polygon.Points[(index + 1) % 4], segment.End)
 
 	def test_Trapezium(self) -> None:
 		point00 = Point2D(1, 1)
@@ -547,7 +587,7 @@ class Edges(Testcase):
 
 		trapezium = Trapezium(point00, point01, point11, point10)
 
-		for segment in trapezium.segments:
+		for segment in trapezium.Segments:
 			self.assertIsInstance(segment, LineSegment2D)
 
 		self.assertTupleEqual(
@@ -557,7 +597,7 @@ class Edges(Testcase):
 				((4, 3), (0, 3)),
 				((0, 3), (1, 1))
 			),
-			tuple(segment.ToTuple() for segment in trapezium.segments)
+			tuple(segment.ToTuple() for segment in trapezium.Segments)
 		)
 
 	def test_Trapezium_SharedCorners(self) -> None:
@@ -569,9 +609,143 @@ class Edges(Testcase):
 
 		trapezium = Trapezium(point00, point01, point11, point10)
 
-		for index, segment in enumerate(trapezium.segments):
-			self.assertIs(trapezium.points[index], segment.start)
-			self.assertIs(trapezium.points[(index + 1) % 4], segment.end)
+		for index, segment in enumerate(trapezium.Segments):
+			self.assertIs(trapezium.Points[index], segment.Start)
+			self.assertIs(trapezium.Points[(index + 1) % 4], segment.End)
+
+
+class Properties(Testcase):
+	def test_Trapezium_Points(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		with self.assertRaises(AttributeError):
+			trapezium.Points = (Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
+
+		self.assertTupleEqual(((1, 1), (3, 1), (4, 3), (0, 3)), tuple(point.ToTuple() for point in trapezium.Points))
+
+	def test_Trapezium_Segments(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		segments =  trapezium.Segments
+
+		with self.assertRaises(AttributeError):
+			trapezium.Segments = ()
+
+		self.assertIs(segments, trapezium.Segments)
+
+
+class Aliases(Testcase):
+	def test_Trapezium_SameValue(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		self.assertIs(trapezium.Points, trapezium.points)
+		self.assertIs(trapezium.Segments, trapezium.segments)
+
+	def test_Trapezium_points(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		corners =   [Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2)]
+
+		trapezium.points = corners
+
+		self.assertIsInstance(trapezium.points, tuple)
+		self.assertEqual(4, len(trapezium.points))
+		for given, corner in zip(corners, trapezium.points):
+			self.assertIs(given, corner)
+
+	def test_Trapezium_points_None(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		points =    trapezium.points
+
+		with self.assertRaises(ValueError) as context:
+			trapezium.points = None
+
+		self.assertEqual("Parameter 'points' is None.", str(context.exception))
+		self.assertIs(points, trapezium.points)
+
+	def test_Trapezium_points_int(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		points =    trapezium.points
+
+		with self.assertRaises(TypeError) as context:
+			trapezium.points = 4
+
+		self.assertEqual("Parameter 'points' is not iterable.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIs(points, trapezium.points)
+
+	def test_Trapezium_points_NoneElement(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		points =    trapezium.points
+
+		with self.assertRaises(ValueError) as context:
+			trapezium.points = (points[0], None, points[2], points[3])
+
+		self.assertEqual("An element of parameter 'points' is None.", str(context.exception))
+		self.assertIs(points, trapezium.points)
+
+	def test_Trapezium_points_strElement(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		points =    trapezium.points
+
+		with self.assertRaises(TypeError) as context:
+			trapezium.points = (points[0], "3, 1", points[2], points[3])
+
+		self.assertEqual("An element of parameter 'points' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertIs(points, trapezium.points)
+
+	def test_Trapezium_segments(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		edges =     [LineSegment2D(Point2D(0, 0), Point2D(2, 0)), LineSegment2D(Point2D(2, 0), Point2D(2, 2)),
+		             LineSegment2D(Point2D(2, 2), Point2D(0, 2)), LineSegment2D(Point2D(0, 2), Point2D(0, 0))]
+
+		trapezium.segments = edges
+
+		self.assertIsInstance(trapezium.segments, tuple)
+		self.assertEqual(4, len(trapezium.segments))
+		for given, edge in zip(edges, trapezium.segments):
+			self.assertIs(given, edge)
+
+	def test_Trapezium_segments_None(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		segments =    trapezium.segments
+
+		with self.assertRaises(ValueError) as context:
+			trapezium.segments = None
+
+		self.assertEqual("Parameter 'segments' is None.", str(context.exception))
+		self.assertIs(segments, trapezium.segments)
+
+	def test_Trapezium_segments_int(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		segments =    trapezium.segments
+
+		with self.assertRaises(TypeError) as context:
+			trapezium.segments = 4
+
+		self.assertEqual("Parameter 'segments' is not iterable.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIs(segments, trapezium.segments)
+
+	def test_Trapezium_segments_NoneElement(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		segments =    trapezium.segments
+
+		with self.assertRaises(ValueError) as context:
+			trapezium.segments = (segments[0], None, segments[2], segments[3])
+
+		self.assertEqual("An element of parameter 'segments' is None.", str(context.exception))
+		self.assertIs(segments, trapezium.segments)
+
+	def test_Trapezium_segments_strElement(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		segments =    trapezium.segments
+
+		with self.assertRaises(TypeError) as context:
+			trapezium.segments = (segments[0], "(3, 1) → (4, 3)", segments[2], segments[3])
+
+		self.assertEqual("An element of parameter 'segments' is not of type 'LineSegment2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertIs(segments, trapezium.segments)
 
 
 class Measurements(Testcase):
@@ -620,8 +794,8 @@ class Copy(Testcase):
 
 		points = newPolygon.Points
 		for index, segment in enumerate(newPolygon.Segments):
-			self.assertIs(points[index], segment.start)
-			self.assertIs(points[(index + 1) % len(points)], segment.end)
+			self.assertIs(points[index], segment.Start)
+			self.assertIs(points[(index + 1) % len(points)], segment.End)
 
 	def test_Polygon_copy(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
@@ -645,33 +819,33 @@ class Copy(Testcase):
 
 		points = newPolygon.Points
 		for index, segment in enumerate(newPolygon.Segments):
-			self.assertIs(points[index], segment.start)
-			self.assertIs(points[(index + 1) % len(points)], segment.end)
+			self.assertIs(points[index], segment.Start)
+			self.assertIs(points[(index + 1) % len(points)], segment.End)
 
 	def test_Trapezium(self) -> None:
 		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
 
 		newTrapezium = trapezium.Copy()
-		movedCorner =  newTrapezium.points[0]
+		movedCorner =  newTrapezium.Points[0]
 		movedCorner += (1, 1)
 
 		self.assertIs(Trapezium, type(newTrapezium))
 		self.assertIsNot(trapezium, newTrapezium)
-		for corner, newCorner in zip(trapezium.points, newTrapezium.points):
+		for corner, newCorner in zip(trapezium.Points, newTrapezium.Points):
 			self.assertIsNot(corner, newCorner)
 
-		self.assertTupleEqual((1, 1), trapezium.points[0].ToTuple())
-		self.assertTupleEqual((2, 2), newTrapezium.points[0].ToTuple())
+		self.assertTupleEqual((1, 1), trapezium.Points[0].ToTuple())
+		self.assertTupleEqual((2, 2), newTrapezium.Points[0].ToTuple())
 
 	def test_Trapezium_SharedCorners(self) -> None:
 		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
 
 		newTrapezium = trapezium.Copy()
 
-		points = newTrapezium.points
-		for index, segment in enumerate(newTrapezium.segments):
-			self.assertIs(points[index], segment.start)
-			self.assertIs(points[(index + 1) % 4], segment.end)
+		points = newTrapezium.Points
+		for index, segment in enumerate(newTrapezium.Segments):
+			self.assertIs(points[index], segment.Start)
+			self.assertIs(points[(index + 1) % 4], segment.End)
 
 	def test_Trapezium_copy(self) -> None:
 		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
@@ -679,8 +853,8 @@ class Copy(Testcase):
 		newTrapezium = copy(trapezium)
 
 		self.assertIs(Trapezium, type(newTrapezium))
-		self.assertTupleEqual(((1, 1), (3, 1), (4, 3), (0, 3)), tuple(point.ToTuple() for point in newTrapezium.points))
-		for corner, newCorner in zip(trapezium.points, newTrapezium.points):
+		self.assertTupleEqual(((1, 1), (3, 1), (4, 3), (0, 3)), tuple(point.ToTuple() for point in newTrapezium.Points))
+		for corner, newCorner in zip(trapezium.Points, newTrapezium.Points):
 			self.assertIsNot(corner, newCorner)
 
 	def test_Trapezium_deepcopy(self) -> None:
@@ -689,14 +863,14 @@ class Copy(Testcase):
 		newTrapezium = deepcopy(trapezium)
 
 		self.assertIs(Trapezium, type(newTrapezium))
-		self.assertTupleEqual(((1, 1), (3, 1), (4, 3), (0, 3)), tuple(point.ToTuple() for point in newTrapezium.points))
-		for corner, newCorner in zip(trapezium.points, newTrapezium.points):
+		self.assertTupleEqual(((1, 1), (3, 1), (4, 3), (0, 3)), tuple(point.ToTuple() for point in newTrapezium.Points))
+		for corner, newCorner in zip(trapezium.Points, newTrapezium.Points):
 			self.assertIsNot(corner, newCorner)
 
-		points = newTrapezium.points
-		for index, segment in enumerate(newTrapezium.segments):
-			self.assertIs(points[index], segment.start)
-			self.assertIs(points[(index + 1) % 4], segment.end)
+		points = newTrapezium.Points
+		for index, segment in enumerate(newTrapezium.Segments):
+			self.assertIs(points[index], segment.Start)
+			self.assertIs(points[(index + 1) % 4], segment.End)
 
 	def test_Rectangle(self) -> None:
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
@@ -704,7 +878,7 @@ class Copy(Testcase):
 		newRectangle = rectangle.Copy()
 
 		self.assertIs(Rectangle, type(newRectangle))
-		self.assertTupleEqual(((0, 0), (4, 0), (4, 2), (0, 2)), tuple(point.ToTuple() for point in newRectangle.points))
+		self.assertTupleEqual(((0, 0), (4, 0), (4, 2), (0, 2)), tuple(point.ToTuple() for point in newRectangle.Points))
 
 	def test_Rectangle_copy(self) -> None:
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
@@ -712,7 +886,7 @@ class Copy(Testcase):
 		newRectangle = copy(rectangle)
 
 		self.assertIs(Rectangle, type(newRectangle))
-		self.assertTupleEqual(((0, 0), (4, 0), (4, 2), (0, 2)), tuple(point.ToTuple() for point in newRectangle.points))
+		self.assertTupleEqual(((0, 0), (4, 0), (4, 2), (0, 2)), tuple(point.ToTuple() for point in newRectangle.Points))
 
 	def test_Rectangle_deepcopy(self) -> None:
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
@@ -720,12 +894,12 @@ class Copy(Testcase):
 		newRectangle = deepcopy(rectangle)
 
 		self.assertIs(Rectangle, type(newRectangle))
-		self.assertTupleEqual(((0, 0), (4, 0), (4, 2), (0, 2)), tuple(point.ToTuple() for point in newRectangle.points))
+		self.assertTupleEqual(((0, 0), (4, 0), (4, 2), (0, 2)), tuple(point.ToTuple() for point in newRectangle.Points))
 
 	def test_Rectangle_MovedCorner(self) -> None:
 		"""A copy checks the corners again: a rectangle whose corner was moved isn't a rectangle anymore."""
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
-		corner =    rectangle.points[2]
+		corner =    rectangle.Points[2]
 		corner +=   (1, 0)
 
 		with self.assertRaises(ValueError):
@@ -737,7 +911,7 @@ class Copy(Testcase):
 		newSquare = square.Copy()
 
 		self.assertIs(Square, type(newSquare))
-		self.assertTupleEqual(((0, 0), (2, 0), (2, 2), (0, 2)), tuple(point.ToTuple() for point in newSquare.points))
+		self.assertTupleEqual(((0, 0), (2, 0), (2, 2), (0, 2)), tuple(point.ToTuple() for point in newSquare.Points))
 
 	def test_Square_copy(self) -> None:
 		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
@@ -745,7 +919,7 @@ class Copy(Testcase):
 		newSquare = copy(square)
 
 		self.assertIs(Square, type(newSquare))
-		self.assertTupleEqual(((0, 0), (2, 0), (2, 2), (0, 2)), tuple(point.ToTuple() for point in newSquare.points))
+		self.assertTupleEqual(((0, 0), (2, 0), (2, 2), (0, 2)), tuple(point.ToTuple() for point in newSquare.Points))
 
 	def test_Square_deepcopy(self) -> None:
 		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
@@ -753,7 +927,7 @@ class Copy(Testcase):
 		newSquare = deepcopy(square)
 
 		self.assertIs(Square, type(newSquare))
-		self.assertTupleEqual(((0, 0), (2, 0), (2, 2), (0, 2)), tuple(point.ToTuple() for point in newSquare.points))
+		self.assertTupleEqual(((0, 0), (2, 0), (2, 2), (0, 2)), tuple(point.ToTuple() for point in newSquare.Points))
 
 	def test_Circle(self) -> None:
 		circle = Circle(Point2D(1, 2), 3)

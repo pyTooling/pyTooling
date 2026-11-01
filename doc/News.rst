@@ -21,6 +21,16 @@ Version 10.x (2026)
      :func:`copy.copy` and :func:`copy.deepcopy`, and segments and shapes have a ``Copy()`` method. A copy shares no
      point with the original.
 
+   .. rubric:: Changes
+
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: coordinates, offsets, sizes and segment end points
+     are CamelCase properties (:attr:`~pyTooling.Cartesian2D.Point2D.X`,
+     :attr:`~pyTooling.Cartesian2D.Offset2D.XOffset`, :attr:`~pyTooling.Cartesian2D.Size2D.Width`,
+     :attr:`~pyTooling.Cartesian2D.Segment2D.Start`, ...). Constructors and setters check their values: ``None``
+     raises :exc:`ValueError`, a wrong type :exc:`TypeError`. A trapezium's
+     :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Points` and :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Segments`
+     are read-only. The lower-case names (``x``, ``points``, ...) stay as deprecated aliases until v11.0.0.
+
    .. rubric:: Bug Fixes
 
    * :mod:`pyTooling.Tracing`: an OTLP timestamp in the hour repeated at the end of daylight saving time was read
