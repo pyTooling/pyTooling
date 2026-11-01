@@ -95,6 +95,23 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.x, self.y)
 
+	def __copy__(self) -> Self:
+		"""
+		Returns a copy of this 2D-point for :func:`copy.copy`.
+
+		:returns: Copy of this 2D-point.
+		"""
+		return self.Copy()
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this 2D-point for :func:`copy.deepcopy`.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this 2D-point.
+		"""
+		return self.Copy()
+
 	def ToTuple(self) -> tuple[Coordinate, Coordinate]:
 		"""
 		Convert this 2D-Point to a simple 2-element tuple.
@@ -273,6 +290,23 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		     Create a new 2D-offset moved by a negative 2D-offset.
 		"""
 		return self.__class__(self.xOffset, self.yOffset)
+
+	def __copy__(self) -> Self:
+		"""
+		Returns a copy of this 2D-offset for :func:`copy.copy`.
+
+		:returns: Copy of this 2D-offset.
+		"""
+		return self.Copy()
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this 2D-offset for :func:`copy.deepcopy`.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this 2D-offset.
+		"""
+		return self.Copy()
 
 	def ToTuple(self) -> tuple[Coordinate, Coordinate]:
 		"""
@@ -462,6 +496,23 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.__class__(self.width, self.height)
 
+	def __copy__(self) -> Self:
+		"""
+		Returns a copy of this 2D-size for :func:`copy.copy`.
+
+		:returns: Copy of this 2D-size.
+		"""
+		return self.Copy()
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this 2D-size for :func:`copy.deepcopy`.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this 2D-size.
+		"""
+		return self.Copy()
+
 	def ToTuple(self) -> tuple[Coordinate, Coordinate]:
 		"""
 		Convert this 2D-size to a simple 2-element tuple.
@@ -516,6 +567,24 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self.start = start.Copy() if copyPoints else start
 		self.end =   end.Copy()   if copyPoints else end
+
+	def Copy(self) -> Self:
+		"""
+		Create a new 2D-segment as a copy of this 2D-segment.
+
+		The copy holds copies of the start and end point.
+
+		:returns: Copy of this 2D-segment.
+		"""
+		return self.__class__(self.start, self.end)
+
+	def __copy__(self) -> Self:
+		"""
+		Returns a copy of this 2D-segment for :func:`copy.copy`.
+
+		:returns: Copy of this 2D-segment.
+		"""
+		return self.Copy()
 
 
 @export

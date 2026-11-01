@@ -31,6 +31,7 @@
 """
 Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - polygon, trapezium, rectangle, square and circle.
 """
+from copy                         import copy, deepcopy
 from math                         import cos, isclose, pi, radians, sin, sqrt
 
 from pyTooling.Cartesian2D        import Point2D, LineSegment2D
@@ -594,6 +595,199 @@ class Measurements(Testcase):
 		circle = Circle(Point2D(1, 2), 3)
 
 		self.assertTrue(isclose(9 * pi, circle.Area))
+
+
+class Copy(Testcase):
+	def test_Polygon(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5), Point2D(-1, 3)))
+
+		newPolygon =   polygon.Copy()
+		movedCorner =  newPolygon.Points[0]
+		movedCorner += (1, 1)
+
+		self.assertIs(Polygon, type(newPolygon))
+		self.assertIsNot(polygon, newPolygon)
+		for corner, newCorner in zip(polygon.Points, newPolygon.Points):
+			self.assertIsNot(corner, newCorner)
+
+		self.assertTupleEqual((0, 0), polygon.Points[0].ToTuple())
+		self.assertTupleEqual((1, 1), newPolygon.Points[0].ToTuple())
+
+	def test_Polygon_SharedCorners(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5), Point2D(-1, 3)))
+
+		newPolygon = polygon.Copy()
+
+		points = newPolygon.Points
+		for index, segment in enumerate(newPolygon.Segments):
+			self.assertIs(points[index], segment.start)
+			self.assertIs(points[(index + 1) % len(points)], segment.end)
+
+	def test_Polygon_copy(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		newPolygon = copy(polygon)
+
+		self.assertIs(Polygon, type(newPolygon))
+		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in newPolygon.Points))
+		for corner, newCorner in zip(polygon.Points, newPolygon.Points):
+			self.assertIsNot(corner, newCorner)
+
+	def test_Polygon_deepcopy(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		newPolygon = deepcopy(polygon)
+
+		self.assertIs(Polygon, type(newPolygon))
+		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in newPolygon.Points))
+		for corner, newCorner in zip(polygon.Points, newPolygon.Points):
+			self.assertIsNot(corner, newCorner)
+
+		points = newPolygon.Points
+		for index, segment in enumerate(newPolygon.Segments):
+			self.assertIs(points[index], segment.start)
+			self.assertIs(points[(index + 1) % len(points)], segment.end)
+
+	def test_Trapezium(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		newTrapezium = trapezium.Copy()
+		movedCorner =  newTrapezium.points[0]
+		movedCorner += (1, 1)
+
+		self.assertIs(Trapezium, type(newTrapezium))
+		self.assertIsNot(trapezium, newTrapezium)
+		for corner, newCorner in zip(trapezium.points, newTrapezium.points):
+			self.assertIsNot(corner, newCorner)
+
+		self.assertTupleEqual((1, 1), trapezium.points[0].ToTuple())
+		self.assertTupleEqual((2, 2), newTrapezium.points[0].ToTuple())
+
+	def test_Trapezium_SharedCorners(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		newTrapezium = trapezium.Copy()
+
+		points = newTrapezium.points
+		for index, segment in enumerate(newTrapezium.segments):
+			self.assertIs(points[index], segment.start)
+			self.assertIs(points[(index + 1) % 4], segment.end)
+
+	def test_Trapezium_copy(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		newTrapezium = copy(trapezium)
+
+		self.assertIs(Trapezium, type(newTrapezium))
+		self.assertTupleEqual(((1, 1), (3, 1), (4, 3), (0, 3)), tuple(point.ToTuple() for point in newTrapezium.points))
+		for corner, newCorner in zip(trapezium.points, newTrapezium.points):
+			self.assertIsNot(corner, newCorner)
+
+	def test_Trapezium_deepcopy(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		newTrapezium = deepcopy(trapezium)
+
+		self.assertIs(Trapezium, type(newTrapezium))
+		self.assertTupleEqual(((1, 1), (3, 1), (4, 3), (0, 3)), tuple(point.ToTuple() for point in newTrapezium.points))
+		for corner, newCorner in zip(trapezium.points, newTrapezium.points):
+			self.assertIsNot(corner, newCorner)
+
+		points = newTrapezium.points
+		for index, segment in enumerate(newTrapezium.segments):
+			self.assertIs(points[index], segment.start)
+			self.assertIs(points[(index + 1) % 4], segment.end)
+
+	def test_Rectangle(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+
+		newRectangle = rectangle.Copy()
+
+		self.assertIs(Rectangle, type(newRectangle))
+		self.assertTupleEqual(((0, 0), (4, 0), (4, 2), (0, 2)), tuple(point.ToTuple() for point in newRectangle.points))
+
+	def test_Rectangle_copy(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+
+		newRectangle = copy(rectangle)
+
+		self.assertIs(Rectangle, type(newRectangle))
+		self.assertTupleEqual(((0, 0), (4, 0), (4, 2), (0, 2)), tuple(point.ToTuple() for point in newRectangle.points))
+
+	def test_Rectangle_deepcopy(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+
+		newRectangle = deepcopy(rectangle)
+
+		self.assertIs(Rectangle, type(newRectangle))
+		self.assertTupleEqual(((0, 0), (4, 0), (4, 2), (0, 2)), tuple(point.ToTuple() for point in newRectangle.points))
+
+	def test_Rectangle_MovedCorner(self) -> None:
+		"""A copy checks the corners again: a rectangle whose corner was moved isn't a rectangle anymore."""
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		corner =    rectangle.points[2]
+		corner +=   (1, 0)
+
+		with self.assertRaises(ValueError):
+			_ = rectangle.Copy()
+
+	def test_Square(self) -> None:
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
+
+		newSquare = square.Copy()
+
+		self.assertIs(Square, type(newSquare))
+		self.assertTupleEqual(((0, 0), (2, 0), (2, 2), (0, 2)), tuple(point.ToTuple() for point in newSquare.points))
+
+	def test_Square_copy(self) -> None:
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
+
+		newSquare = copy(square)
+
+		self.assertIs(Square, type(newSquare))
+		self.assertTupleEqual(((0, 0), (2, 0), (2, 2), (0, 2)), tuple(point.ToTuple() for point in newSquare.points))
+
+	def test_Square_deepcopy(self) -> None:
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
+
+		newSquare = deepcopy(square)
+
+		self.assertIs(Square, type(newSquare))
+		self.assertTupleEqual(((0, 0), (2, 0), (2, 2), (0, 2)), tuple(point.ToTuple() for point in newSquare.points))
+
+	def test_Circle(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		newCircle =  circle.Copy()
+		newCenter =  newCircle.Center
+		newCenter += (1, 1)
+
+		self.assertIs(Circle, type(newCircle))
+		self.assertIsNot(circle, newCircle)
+		self.assertIsNot(circle.Center, newCircle.Center)
+		self.assertEqual(3, newCircle.Radius)
+		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
+		self.assertTupleEqual((2, 3), newCircle.Center.ToTuple())
+
+	def test_Circle_copy(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		newCircle = copy(circle)
+
+		self.assertIs(Circle, type(newCircle))
+		self.assertIsNot(circle.Center, newCircle.Center)
+		self.assertEqual(3, newCircle.Radius)
+		self.assertTupleEqual((1, 2), newCircle.Center.ToTuple())
+
+	def test_Circle_deepcopy(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		newCircle = deepcopy(circle)
+
+		self.assertIs(Circle, type(newCircle))
+		self.assertIsNot(circle.Center, newCircle.Center)
+		self.assertEqual(3, newCircle.Radius)
+		self.assertTupleEqual((1, 2), newCircle.Center.ToTuple())
 
 
 class Representation(Testcase):
