@@ -61,24 +61,33 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 3-dimensional point.
 
-		:param x:          X-coordinate.
-		:param y:          Y-coordinate.
-		:param z:          Z-coordinate.
-		:raises TypeError: If parameter 'x' is not of type :class:`float` or :class:`int`.
-		:raises TypeError: If parameter 'y' is not of type :class:`float` or :class:`int`.
-		:raises TypeError: If parameter 'z' is not of type :class:`float` or :class:`int`.
+		:param x:           X-coordinate.
+		:param y:           Y-coordinate.
+		:param z:           Z-coordinate.
+		:raises ValueError: If parameter 'x' is None.
+		:raises TypeError:  If parameter 'x' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'y' is None.
+		:raises TypeError:  If parameter 'y' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'z' is None.
+		:raises TypeError:  If parameter 'z' is not of type :class:`float` or :class:`int`.
 		"""
-		if not isinstance(x, (int, float)):
+		if x is None:
+			raise ValueError("Parameter 'x' is None.")
+		elif not isinstance(x, (int, float)):
 			ex = TypeError("Parameter 'x' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(x)}'.")
 			raise ex
 
-		if not isinstance(y, (int, float)):
+		if y is None:
+			raise ValueError("Parameter 'y' is None.")
+		elif not isinstance(y, (int, float)):
 			ex = TypeError("Parameter 'y' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
 			raise ex
 
-		if not isinstance(z, (int, float)):
+		if z is None:
+			raise ValueError("Parameter 'z' is None.")
+		elif not isinstance(z, (int, float)):
 			ex = TypeError("Parameter 'z' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(z)}'.")
 			raise ex
@@ -88,9 +97,11 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._z = z
 
 	@property
-	def x(self) -> Coordinate:
+	def X(self) -> Coordinate:
 		"""
 		Property to access the x-direction coordinate (:attr:`_x`).
+
+		``x`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The x-direction coordinate.
 		:raises ValueError: If ``None`` is assigned.
@@ -98,8 +109,8 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._x
 
-	@x.setter
-	def x(self, x: Coordinate) -> None:
+	@X.setter
+	def X(self, x: Coordinate) -> None:
 		if x is None:
 			raise ValueError("Parameter 'x' is None.")
 		elif not isinstance(x, (int, float)):
@@ -109,10 +120,14 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._x = x
 
+	x = X
+
 	@property
-	def y(self) -> Coordinate:
+	def Y(self) -> Coordinate:
 		"""
 		Property to access the y-direction coordinate (:attr:`_y`).
+
+		``y`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The y-direction coordinate.
 		:raises ValueError: If ``None`` is assigned.
@@ -120,8 +135,8 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._y
 
-	@y.setter
-	def y(self, y: Coordinate) -> None:
+	@Y.setter
+	def Y(self, y: Coordinate) -> None:
 		if y is None:
 			raise ValueError("Parameter 'y' is None.")
 		elif not isinstance(y, (int, float)):
@@ -131,10 +146,14 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._y = y
 
+	y = Y
+
 	@property
-	def z(self) -> Coordinate:
+	def Z(self) -> Coordinate:
 		"""
 		Property to access the z-direction coordinate (:attr:`_z`).
+
+		``z`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The z-direction coordinate.
 		:raises ValueError: If ``None`` is assigned.
@@ -142,8 +161,8 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._z
 
-	@z.setter
-	def z(self, z: Coordinate) -> None:
+	@Z.setter
+	def Z(self, z: Coordinate) -> None:
 		if z is None:
 			raise ValueError("Parameter 'z' is None.")
 		elif not isinstance(z, (int, float)):
@@ -152,6 +171,8 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._z = z
+
+	z = Z
 
 	def Copy(self) -> Self:
 		"""
@@ -231,9 +252,9 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self._y += other._yOffset
 			self._z += other._zOffset
 		elif isinstance(other, tuple):
-			self.x += other[0]
-			self.y += other[1]
-			self.z += other[2]
+			self.X += other[0]
+			self.Y += other[1]
+			self.Z += other[2]
 		else:
 			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -273,9 +294,9 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self._y -= other._yOffset
 			self._z -= other._zOffset
 		elif isinstance(other, tuple):
-			self.x -= other[0]
-			self.y -= other[1]
-			self.z -= other[2]
+			self.X -= other[0]
+			self.Y -= other[1]
+			self.Z -= other[2]
 		else:
 			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -339,24 +360,33 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 3-dimensional offset.
 
-		:param xOffset:    x-direction offset.
-		:param yOffset:    y-direction offset.
-		:param zOffset:    z-direction offset.
-		:raises TypeError: If parameter 'xOffset' is not of type :class:`float` or :class:`int`.
-		:raises TypeError: If parameter 'yOffset' is not of type :class:`float` or :class:`int`.
-		:raises TypeError: If parameter 'zOffset' is not of type :class:`float` or :class:`int`.
+		:param xOffset:     x-direction offset.
+		:param yOffset:     y-direction offset.
+		:param zOffset:     z-direction offset.
+		:raises ValueError: If parameter 'xOffset' is None.
+		:raises TypeError:  If parameter 'xOffset' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'yOffset' is None.
+		:raises TypeError:  If parameter 'yOffset' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'zOffset' is None.
+		:raises TypeError:  If parameter 'zOffset' is not of type :class:`float` or :class:`int`.
 		"""
-		if not isinstance(xOffset, (int, float)):
+		if xOffset is None:
+			raise ValueError("Parameter 'xOffset' is None.")
+		elif not isinstance(xOffset, (int, float)):
 			ex = TypeError("Parameter 'xOffset' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(xOffset)}'.")
 			raise ex
 
-		if not isinstance(yOffset, (int, float)):
+		if yOffset is None:
+			raise ValueError("Parameter 'yOffset' is None.")
+		elif not isinstance(yOffset, (int, float)):
 			ex = TypeError("Parameter 'yOffset' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(yOffset)}'.")
 			raise ex
 
-		if not isinstance(zOffset, (int, float)):
+		if zOffset is None:
+			raise ValueError("Parameter 'zOffset' is None.")
+		elif not isinstance(zOffset, (int, float)):
 			ex = TypeError("Parameter 'zOffset' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(zOffset)}'.")
 			raise ex
@@ -366,9 +396,11 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._zOffset = zOffset
 
 	@property
-	def xOffset(self) -> Coordinate:
+	def XOffset(self) -> Coordinate:
 		"""
 		Property to access the x-direction offset (:attr:`_xOffset`).
+
+		``xOffset`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The x-direction offset.
 		:raises ValueError: If ``None`` is assigned.
@@ -376,8 +408,8 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._xOffset
 
-	@xOffset.setter
-	def xOffset(self, xOffset: Coordinate) -> None:
+	@XOffset.setter
+	def XOffset(self, xOffset: Coordinate) -> None:
 		if xOffset is None:
 			raise ValueError("Parameter 'xOffset' is None.")
 		elif not isinstance(xOffset, (int, float)):
@@ -387,10 +419,14 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._xOffset = xOffset
 
+	xOffset = XOffset
+
 	@property
-	def yOffset(self) -> Coordinate:
+	def YOffset(self) -> Coordinate:
 		"""
 		Property to access the y-direction offset (:attr:`_yOffset`).
+
+		``yOffset`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The y-direction offset.
 		:raises ValueError: If ``None`` is assigned.
@@ -398,8 +434,8 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._yOffset
 
-	@yOffset.setter
-	def yOffset(self, yOffset: Coordinate) -> None:
+	@YOffset.setter
+	def YOffset(self, yOffset: Coordinate) -> None:
 		if yOffset is None:
 			raise ValueError("Parameter 'yOffset' is None.")
 		elif not isinstance(yOffset, (int, float)):
@@ -409,10 +445,14 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._yOffset = yOffset
 
+	yOffset = YOffset
+
 	@property
-	def zOffset(self) -> Coordinate:
+	def ZOffset(self) -> Coordinate:
 		"""
 		Property to access the z-direction offset (:attr:`_zOffset`).
+
+		``zOffset`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The z-direction offset.
 		:raises ValueError: If ``None`` is assigned.
@@ -420,8 +460,8 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._zOffset
 
-	@zOffset.setter
-	def zOffset(self, zOffset: Coordinate) -> None:
+	@ZOffset.setter
+	def ZOffset(self, zOffset: Coordinate) -> None:
 		if zOffset is None:
 			raise ValueError("Parameter 'zOffset' is None.")
 		elif not isinstance(zOffset, (int, float)):
@@ -430,6 +470,8 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._zOffset = zOffset
+
+	zOffset = ZOffset
 
 	def Copy(self) -> Self:
 		"""
@@ -548,9 +590,9 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self._yOffset += other._yOffset
 			self._zOffset += other._zOffset
 		elif isinstance(other, tuple):
-			self.xOffset += other[0]
-			self.yOffset += other[1]
-			self.zOffset += other[2]
+			self.XOffset += other[0]
+			self.YOffset += other[1]
+			self.ZOffset += other[2]
 		else:
 			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -596,9 +638,9 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self._yOffset -= other._yOffset
 			self._zOffset -= other._zOffset
 		elif isinstance(other, tuple):
-			self.xOffset -= other[0]
-			self.yOffset -= other[1]
-			self.zOffset -= other[2]
+			self.XOffset -= other[0]
+			self.YOffset -= other[1]
+			self.ZOffset -= other[2]
 		else:
 			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -635,24 +677,33 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 2-dimensional size.
 
-		:param width:      width in x-direction.
-		:param height:     height in y-direction.
-		:param depth:      depth in z-direction.
-		:raises TypeError: If parameter 'width' is not of type :class:`float` or :class:`int`.
-		:raises TypeError: If parameter 'height' is not of type :class:`float` or :class:`int`.
-		:raises TypeError: If parameter 'depth' is not of type :class:`float` or :class:`int`.
+		:param width:       width in x-direction.
+		:param height:      height in y-direction.
+		:param depth:       depth in z-direction.
+		:raises ValueError: If parameter 'width' is None.
+		:raises TypeError:  If parameter 'width' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'height' is None.
+		:raises TypeError:  If parameter 'height' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'depth' is None.
+		:raises TypeError:  If parameter 'depth' is not of type :class:`float` or :class:`int`.
 		"""
-		if not isinstance(width, (int, float)):
+		if width is None:
+			raise ValueError("Parameter 'width' is None.")
+		elif not isinstance(width, (int, float)):
 			ex = TypeError("Parameter 'width' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(width)}'.")
 			raise ex
 
-		if not isinstance(height, (int, float)):
+		if height is None:
+			raise ValueError("Parameter 'height' is None.")
+		elif not isinstance(height, (int, float)):
 			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
 			raise ex
 
-		if not isinstance(depth, (int, float)):
+		if depth is None:
+			raise ValueError("Parameter 'depth' is None.")
+		elif not isinstance(depth, (int, float)):
 			ex = TypeError("Parameter 'depth' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(depth)}'.")
 			raise ex
@@ -662,9 +713,11 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._depth =  depth
 
 	@property
-	def width(self) -> Coordinate:
+	def Width(self) -> Coordinate:
 		"""
 		Property to access the width in x-direction (:attr:`_width`).
+
+		``width`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The width in x-direction.
 		:raises ValueError: If ``None`` is assigned.
@@ -672,8 +725,8 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._width
 
-	@width.setter
-	def width(self, width: Coordinate) -> None:
+	@Width.setter
+	def Width(self, width: Coordinate) -> None:
 		if width is None:
 			raise ValueError("Parameter 'width' is None.")
 		elif not isinstance(width, (int, float)):
@@ -683,10 +736,14 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._width = width
 
+	width = Width
+
 	@property
-	def height(self) -> Coordinate:
+	def Height(self) -> Coordinate:
 		"""
 		Property to access the height in y-direction (:attr:`_height`).
+
+		``height`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The height in y-direction.
 		:raises ValueError: If ``None`` is assigned.
@@ -694,8 +751,8 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._height
 
-	@height.setter
-	def height(self, height: Coordinate) -> None:
+	@Height.setter
+	def Height(self, height: Coordinate) -> None:
 		if height is None:
 			raise ValueError("Parameter 'height' is None.")
 		elif not isinstance(height, (int, float)):
@@ -705,10 +762,14 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._height = height
 
+	height = Height
+
 	@property
-	def depth(self) -> Coordinate:
+	def Depth(self) -> Coordinate:
 		"""
 		Property to access the depth in z-direction (:attr:`_depth`).
+
+		``depth`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The depth in z-direction.
 		:raises ValueError: If ``None`` is assigned.
@@ -716,8 +777,8 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._depth
 
-	@depth.setter
-	def depth(self, depth: Coordinate) -> None:
+	@Depth.setter
+	def Depth(self, depth: Coordinate) -> None:
 		if depth is None:
 			raise ValueError("Parameter 'depth' is None.")
 		elif not isinstance(depth, (int, float)):
@@ -726,6 +787,8 @@ class Size3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._depth = depth
+
+	depth = Depth
 
 	def Copy(self) -> Self:
 		"""
@@ -788,18 +851,24 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 3-dimensional segment.
 
-		:param start:      Start point of the segment.
-		:param end:        End point of the segment.
-		:param copyPoints: Optional, if ``True``, the given points are copied instead of referenced.
-		:raises TypeError: If parameter 'start' is not of type :class:`Point3D`.
-		:raises TypeError: If parameter 'end' is not of type :class:`Point3D`.
+		:param start:       Start point of the segment.
+		:param end:         End point of the segment.
+		:param copyPoints:  Optional, if ``True``, the given points are copied instead of referenced.
+		:raises ValueError: If parameter 'start' is None.
+		:raises TypeError:  If parameter 'start' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'end' is None.
+		:raises TypeError:  If parameter 'end' is not of type :class:`Point3D`.
 		"""
-		if not isinstance(start, Point3D):
+		if start is None:
+			raise ValueError("Parameter 'start' is None.")
+		elif not isinstance(start, Point3D):
 			ex = TypeError("Parameter 'start' is not of type 'Point3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
 			raise ex
 
-		if not isinstance(end, Point3D):
+		if end is None:
+			raise ValueError("Parameter 'end' is None.")
+		elif not isinstance(end, Point3D):
 			ex = TypeError("Parameter 'end' is not of type 'Point3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")
 			raise ex
@@ -808,11 +877,13 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._end =   end.Copy()   if copyPoints else end
 
 	@property
-	def start(self) -> Point3D[Coordinate]:
+	def Start(self) -> Point3D[Coordinate]:
 		"""
 		Property to access the segment's start point (:attr:`_start`).
 
 		An assigned point is referenced, not copied.
+
+		``start`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           Start point of the segment.
 		:raises ValueError: If ``None`` is assigned.
@@ -820,8 +891,8 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._start
 
-	@start.setter
-	def start(self, start: Point3D[Coordinate]) -> None:
+	@Start.setter
+	def Start(self, start: Point3D[Coordinate]) -> None:
 		if start is None:
 			raise ValueError("Parameter 'start' is None.")
 		elif not isinstance(start, Point3D):
@@ -831,12 +902,16 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._start = start
 
+	start = Start
+
 	@property
-	def end(self) -> Point3D[Coordinate]:
+	def End(self) -> Point3D[Coordinate]:
 		"""
 		Property to access the segment's end point (:attr:`_end`).
 
 		An assigned point is referenced, not copied.
+
+		``end`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           End point of the segment.
 		:raises ValueError: If ``None`` is assigned.
@@ -844,8 +919,8 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._end
 
-	@end.setter
-	def end(self, end: Point3D[Coordinate]) -> None:
+	@End.setter
+	def End(self, end: Point3D[Coordinate]) -> None:
 		if end is None:
 			raise ValueError("Parameter 'end' is None.")
 		elif not isinstance(end, Point3D):
@@ -854,6 +929,8 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._end = end
+
+	end = End
 
 	def Copy(self) -> Self:
 		"""

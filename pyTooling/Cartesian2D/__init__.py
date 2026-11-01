@@ -62,17 +62,23 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 2-dimensional point.
 
-		:param x:          X-coordinate.
-		:param y:          Y-coordinate.
-		:raises TypeError: If parameter 'x' is not of type :class:`float` or :class:`int`.
-		:raises TypeError: If parameter 'y' is not of type :class:`float` or :class:`int`.
+		:param x:           X-coordinate.
+		:param y:           Y-coordinate.
+		:raises ValueError: If parameter 'x' is None.
+		:raises TypeError:  If parameter 'x' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'y' is None.
+		:raises TypeError:  If parameter 'y' is not of type :class:`float` or :class:`int`.
 		"""
-		if not isinstance(x, (int, float)):
+		if x is None:
+			raise ValueError("Parameter 'x' is None.")
+		elif not isinstance(x, (int, float)):
 			ex = TypeError("Parameter 'x' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(x)}'.")
 			raise ex
 
-		if not isinstance(y, (int, float)):
+		if y is None:
+			raise ValueError("Parameter 'y' is None.")
+		elif not isinstance(y, (int, float)):
 			ex = TypeError("Parameter 'y' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
 			raise ex
@@ -81,9 +87,11 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._y = y
 
 	@property
-	def x(self) -> Coordinate:
+	def X(self) -> Coordinate:
 		"""
 		Property to access the x-direction coordinate (:attr:`_x`).
+
+		``x`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The x-direction coordinate.
 		:raises ValueError: If ``None`` is assigned.
@@ -91,8 +99,8 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._x
 
-	@x.setter
-	def x(self, x: Coordinate) -> None:
+	@X.setter
+	def X(self, x: Coordinate) -> None:
 		if x is None:
 			raise ValueError("Parameter 'x' is None.")
 		elif not isinstance(x, (int, float)):
@@ -102,10 +110,14 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._x = x
 
+	x = X
+
 	@property
-	def y(self) -> Coordinate:
+	def Y(self) -> Coordinate:
 		"""
 		Property to access the y-direction coordinate (:attr:`_y`).
+
+		``y`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The y-direction coordinate.
 		:raises ValueError: If ``None`` is assigned.
@@ -113,8 +125,8 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._y
 
-	@y.setter
-	def y(self, y: Coordinate) -> None:
+	@Y.setter
+	def Y(self, y: Coordinate) -> None:
 		if y is None:
 			raise ValueError("Parameter 'y' is None.")
 		elif not isinstance(y, (int, float)):
@@ -123,6 +135,8 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._y = y
+
+	y = Y
 
 	def Copy(self) -> Self:
 		"""
@@ -199,8 +213,8 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self._x += other._xOffset
 			self._y += other._yOffset
 		elif isinstance(other, tuple):
-			self.x += other[0]
-			self.y += other[1]
+			self.X += other[0]
+			self.Y += other[1]
 		else:
 			ex = TypeError("Parameter 'other' is not of type 'Offset2D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -238,8 +252,8 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self._x -= other._xOffset
 			self._y -= other._yOffset
 		elif isinstance(other, tuple):
-			self.x -= other[0]
-			self.y -= other[1]
+			self.X -= other[0]
+			self.Y -= other[1]
 		else:
 			ex = TypeError("Parameter 'other' is not of type 'Offset2D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -302,17 +316,23 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 2-dimensional offset.
 
-		:param xOffset:    x-direction offset.
-		:param yOffset:    y-direction offset.
-		:raises TypeError: If parameter 'xOffset' is not of type :class:`float` or :class:`int`.
-		:raises TypeError: If parameter 'yOffset' is not of type :class:`float` or :class:`int`.
+		:param xOffset:     x-direction offset.
+		:param yOffset:     y-direction offset.
+		:raises ValueError: If parameter 'xOffset' is None.
+		:raises TypeError:  If parameter 'xOffset' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'yOffset' is None.
+		:raises TypeError:  If parameter 'yOffset' is not of type :class:`float` or :class:`int`.
 		"""
-		if not isinstance(xOffset, (int, float)):
+		if xOffset is None:
+			raise ValueError("Parameter 'xOffset' is None.")
+		elif not isinstance(xOffset, (int, float)):
 			ex = TypeError("Parameter 'xOffset' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(xOffset)}'.")
 			raise ex
 
-		if not isinstance(yOffset, (int, float)):
+		if yOffset is None:
+			raise ValueError("Parameter 'yOffset' is None.")
+		elif not isinstance(yOffset, (int, float)):
 			ex = TypeError("Parameter 'yOffset' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(yOffset)}'.")
 			raise ex
@@ -321,9 +341,11 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._yOffset = yOffset
 
 	@property
-	def xOffset(self) -> Coordinate:
+	def XOffset(self) -> Coordinate:
 		"""
 		Property to access the x-direction offset (:attr:`_xOffset`).
+
+		``xOffset`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The x-direction offset.
 		:raises ValueError: If ``None`` is assigned.
@@ -331,8 +353,8 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._xOffset
 
-	@xOffset.setter
-	def xOffset(self, xOffset: Coordinate) -> None:
+	@XOffset.setter
+	def XOffset(self, xOffset: Coordinate) -> None:
 		if xOffset is None:
 			raise ValueError("Parameter 'xOffset' is None.")
 		elif not isinstance(xOffset, (int, float)):
@@ -342,10 +364,14 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._xOffset = xOffset
 
+	xOffset = XOffset
+
 	@property
-	def yOffset(self) -> Coordinate:
+	def YOffset(self) -> Coordinate:
 		"""
 		Property to access the y-direction offset (:attr:`_yOffset`).
+
+		``yOffset`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The y-direction offset.
 		:raises ValueError: If ``None`` is assigned.
@@ -353,8 +379,8 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._yOffset
 
-	@yOffset.setter
-	def yOffset(self, yOffset: Coordinate) -> None:
+	@YOffset.setter
+	def YOffset(self, yOffset: Coordinate) -> None:
 		if yOffset is None:
 			raise ValueError("Parameter 'yOffset' is None.")
 		elif not isinstance(yOffset, (int, float)):
@@ -363,6 +389,8 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._yOffset = yOffset
+
+	yOffset = YOffset
 
 	def Copy(self) -> Self:
 		"""
@@ -477,8 +505,8 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self._xOffset += other._xOffset
 			self._yOffset += other._yOffset
 		elif isinstance(other, tuple):
-			self.xOffset += other[0]
-			self.yOffset += other[1]
+			self.XOffset += other[0]
+			self.YOffset += other[1]
 		else:
 			ex = TypeError("Parameter 'other' is not of type 'Offset2D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -521,8 +549,8 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self._xOffset -= other._xOffset
 			self._yOffset -= other._yOffset
 		elif isinstance(other, tuple):
-			self.xOffset -= other[0]
-			self.yOffset -= other[1]
+			self.XOffset -= other[0]
+			self.YOffset -= other[1]
 		else:
 			ex = TypeError("Parameter 'other' is not of type 'Offset2D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
@@ -558,17 +586,23 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 2-dimensional size.
 
-		:param width:      width in x-direction.
-		:param height:     height in y-direction.
-		:raises TypeError: If parameter 'width' is not of type :class:`float` or :class:`int`.
-		:raises TypeError: If parameter 'height' is not of type :class:`float` or :class:`int`.
+		:param width:       width in x-direction.
+		:param height:      height in y-direction.
+		:raises ValueError: If parameter 'width' is None.
+		:raises TypeError:  If parameter 'width' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'height' is None.
+		:raises TypeError:  If parameter 'height' is not of type :class:`float` or :class:`int`.
 		"""
-		if not isinstance(width, (int, float)):
+		if width is None:
+			raise ValueError("Parameter 'width' is None.")
+		elif not isinstance(width, (int, float)):
 			ex = TypeError("Parameter 'width' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(width)}'.")
 			raise ex
 
-		if not isinstance(height, (int, float)):
+		if height is None:
+			raise ValueError("Parameter 'height' is None.")
+		elif not isinstance(height, (int, float)):
 			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
 			raise ex
@@ -577,9 +611,11 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._height = height
 
 	@property
-	def width(self) -> Coordinate:
+	def Width(self) -> Coordinate:
 		"""
 		Property to access the width in x-direction (:attr:`_width`).
+
+		``width`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The width in x-direction.
 		:raises ValueError: If ``None`` is assigned.
@@ -587,8 +623,8 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._width
 
-	@width.setter
-	def width(self, width: Coordinate) -> None:
+	@Width.setter
+	def Width(self, width: Coordinate) -> None:
 		if width is None:
 			raise ValueError("Parameter 'width' is None.")
 		elif not isinstance(width, (int, float)):
@@ -598,10 +634,14 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._width = width
 
+	width = Width
+
 	@property
-	def height(self) -> Coordinate:
+	def Height(self) -> Coordinate:
 		"""
 		Property to access the height in y-direction (:attr:`_height`).
+
+		``height`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           The height in y-direction.
 		:raises ValueError: If ``None`` is assigned.
@@ -609,8 +649,8 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._height
 
-	@height.setter
-	def height(self, height: Coordinate) -> None:
+	@Height.setter
+	def Height(self, height: Coordinate) -> None:
 		if height is None:
 			raise ValueError("Parameter 'height' is None.")
 		elif not isinstance(height, (int, float)):
@@ -619,6 +659,8 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._height = height
+
+	height = Height
 
 	def Copy(self) -> Self:
 		"""
@@ -681,18 +723,24 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a 2-dimensional segment.
 
-		:param start:      Start point of the segment.
-		:param end:        End point of the segment.
-		:param copyPoints: Optional, if ``True``, the given points are copied instead of referenced.
-		:raises TypeError: If parameter 'start' is not of type :class:`Point2D`.
-		:raises TypeError: If parameter 'end' is not of type :class:`Point2D`.
+		:param start:       Start point of the segment.
+		:param end:         End point of the segment.
+		:param copyPoints:  Optional, if ``True``, the given points are copied instead of referenced.
+		:raises ValueError: If parameter 'start' is None.
+		:raises TypeError:  If parameter 'start' is not of type :class:`Point2D`.
+		:raises ValueError: If parameter 'end' is None.
+		:raises TypeError:  If parameter 'end' is not of type :class:`Point2D`.
 		"""
-		if not isinstance(start, Point2D):
+		if start is None:
+			raise ValueError("Parameter 'start' is None.")
+		elif not isinstance(start, Point2D):
 			ex = TypeError("Parameter 'start' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
 			raise ex
 
-		if not isinstance(end, Point2D):
+		if end is None:
+			raise ValueError("Parameter 'end' is None.")
+		elif not isinstance(end, Point2D):
 			ex = TypeError("Parameter 'end' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")
 			raise ex
@@ -701,11 +749,13 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._end =   end.Copy()   if copyPoints else end
 
 	@property
-	def start(self) -> Point2D[Coordinate]:
+	def Start(self) -> Point2D[Coordinate]:
 		"""
 		Property to access the segment's start point (:attr:`_start`).
 
 		An assigned point is referenced, not copied.
+
+		``start`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           Start point of the segment.
 		:raises ValueError: If ``None`` is assigned.
@@ -713,8 +763,8 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._start
 
-	@start.setter
-	def start(self, start: Point2D[Coordinate]) -> None:
+	@Start.setter
+	def Start(self, start: Point2D[Coordinate]) -> None:
 		if start is None:
 			raise ValueError("Parameter 'start' is None.")
 		elif not isinstance(start, Point2D):
@@ -724,12 +774,16 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._start = start
 
+	start = Start
+
 	@property
-	def end(self) -> Point2D[Coordinate]:
+	def End(self) -> Point2D[Coordinate]:
 		"""
 		Property to access the segment's end point (:attr:`_end`).
 
 		An assigned point is referenced, not copied.
+
+		``end`` is a deprecated alias of this property; it is removed in v11.0.0.
 
 		:returns:           End point of the segment.
 		:raises ValueError: If ``None`` is assigned.
@@ -737,8 +791,8 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self._end
 
-	@end.setter
-	def end(self, end: Point2D[Coordinate]) -> None:
+	@End.setter
+	def End(self, end: Point2D[Coordinate]) -> None:
 		if end is None:
 			raise ValueError("Parameter 'end' is None.")
 		elif not isinstance(end, Point2D):
@@ -747,6 +801,8 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._end = end
+
+	end = End
 
 	def Copy(self) -> Self:
 		"""

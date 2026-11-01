@@ -97,8 +97,9 @@ Basic Classes
 All of them are generic in ``Coordinate``, a type variable bound to :class:`int` or :class:`float`, so the coordinate
 type is chosen once and then checked throughout.
 
-Their coordinates, offsets, sizes and end points are properties. An assignment is checked like the constructor
-parameter of the same name: ``None`` raises :exc:`ValueError`, a value of another type raises :exc:`TypeError`.
+Their coordinates, offsets, sizes and end points are properties. A constructor parameter and an assignment are
+checked alike: ``None`` raises :exc:`ValueError`, a value of another type raises :exc:`TypeError`. The lower-case names
+(``x``, ``xOffset``, ``width``, ``start``, ...) are deprecated aliases of these properties; they are removed in v11.0.0.
 
 
 .. _STRUCT/Cartesian2D/Point2D:
@@ -106,8 +107,8 @@ parameter of the same name: ``None`` raises :exc:`ValueError`, a value of anothe
 Point2D
 =======
 
-A :class:`~pyTooling.Cartesian2D.Point2D` is a **position**: properties :attr:`~pyTooling.Cartesian2D.Point2D.x` and
-:attr:`~pyTooling.Cartesian2D.Point2D.y`, and the arithmetic that keeps a position distinct from a displacement.
+A :class:`~pyTooling.Cartesian2D.Point2D` is a **position**: properties :attr:`~pyTooling.Cartesian2D.Point2D.X` and
+:attr:`~pyTooling.Cartesian2D.Point2D.Y`, and the arithmetic that keeps a position distinct from a displacement.
 
 .. list-table::
    :header-rows: 1
@@ -169,7 +170,7 @@ Offset2D
 ========
 
 An :class:`~pyTooling.Cartesian2D.Offset2D` is a **displacement**: properties
-:attr:`~pyTooling.Cartesian2D.Offset2D.xOffset` and :attr:`~pyTooling.Cartesian2D.Offset2D.yOffset`. Offsets add and
+:attr:`~pyTooling.Cartesian2D.Offset2D.XOffset` and :attr:`~pyTooling.Cartesian2D.Offset2D.YOffset`. Offsets add and
 subtract with each other, and negate:
 
 .. code-block:: Python
@@ -183,7 +184,7 @@ Unlike a point, an offset compares with ``==`` and ``!=`` - two displacements ar
 .. seealso::
 
    :ref:`STRUCT/Cartesian3D/Offset3D`
-      |rarr| Its counterpart, the offset with a ``zOffset``.
+      |rarr| Its counterpart, the offset with a ``ZOffset``.
 
 
 .. _STRUCT/Cartesian2D/Size2D:
@@ -191,8 +192,9 @@ Unlike a point, an offset compares with ``==`` and ``!=`` - two displacements ar
 Size2D
 ======
 
-A :class:`~pyTooling.Cartesian2D.Size2D` is an **extent**: ``width`` and ``height``. It is deliberately not an
-offset - adding a size to a point is meaningless, and keeping the types apart is what prevents it.
+A :class:`~pyTooling.Cartesian2D.Size2D` is an **extent**: :attr:`~pyTooling.Cartesian2D.Size2D.Width` and
+:attr:`~pyTooling.Cartesian2D.Size2D.Height`. It is deliberately not an offset - adding a size to a point is
+meaningless, and keeping the types apart is what prevents it.
 
 .. seealso::
 
@@ -205,12 +207,13 @@ offset - adding a size to a point is meaningless, and keeping the types apart is
 Segment2D
 =========
 
-A :class:`~pyTooling.Cartesian2D.Segment2D` is a ``start`` and an ``end`` point.
+A :class:`~pyTooling.Cartesian2D.Segment2D` is a :attr:`~pyTooling.Cartesian2D.Segment2D.Start` and an
+:attr:`~pyTooling.Cartesian2D.Segment2D.End` point.
 
 Its constructor **copies both points by default**, so a segment doesn't change when the points it was built from
 move later. ``copyPoints=False`` keeps the references instead, which is what
 :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` uses to let consecutive edges share a corner. A point assigned to
-:attr:`~pyTooling.Cartesian2D.Segment2D.start` or :attr:`~pyTooling.Cartesian2D.Segment2D.end` is referenced, not
+:attr:`~pyTooling.Cartesian2D.Segment2D.Start` or :attr:`~pyTooling.Cartesian2D.Segment2D.End` is referenced, not
 copied.
 
 .. seealso::
@@ -306,14 +309,14 @@ Trapezium
 A :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` is a four-sided polygon, built from four corners given in the
 order ``p00``, ``p01``, ``p11``, ``p10`` - around the outline, not across it.
 
-It keeps both views: :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.points`, the four corners it copied, and
-:attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.segments`, the four :class:`~pyTooling.Cartesian2D.LineSegment2D` edges
+It keeps both views: :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Points`, the four corners it copied, and
+:attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Segments`, the four :class:`~pyTooling.Cartesian2D.LineSegment2D` edges
 between them. The segments are built with ``copyPoints=False``, so consecutive edges share a corner object and the
 outline stays closed.
 
-Both properties are assignable, but an assignment replaces only its own tuple: the other one isn't updated, and the
-shape of a :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` or :class:`~pyTooling.Cartesian2D.Shapes.Square` isn't
-checked again.
+Both properties are read-only. Their deprecated aliases ``points`` and ``segments`` are assignable until v11.0.0, but
+an assignment replaces only its own tuple: the other one isn't updated, and the shape of a
+:class:`~pyTooling.Cartesian2D.Shapes.Rectangle` or :class:`~pyTooling.Cartesian2D.Shapes.Square` isn't checked again.
 
 A corner that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`.
 
@@ -420,8 +423,9 @@ Basic Classes
 Point3D
 =======
 
-A :class:`~pyTooling.Cartesian3D.Point3D` has ``x``, ``y`` and ``z``, and the same arithmetic against an
-:class:`~pyTooling.Cartesian3D.Offset3D`. A plain 3-tuple is accepted wherever an offset is.
+A :class:`~pyTooling.Cartesian3D.Point3D` has :attr:`~pyTooling.Cartesian3D.Point3D.X`,
+:attr:`~pyTooling.Cartesian3D.Point3D.Y` and :attr:`~pyTooling.Cartesian3D.Point3D.Z`, and the same arithmetic against
+an :class:`~pyTooling.Cartesian3D.Offset3D`. A plain 3-tuple is accepted wherever an offset is.
 
 .. seealso::
 
@@ -449,7 +453,8 @@ Origin3D
 Offset3D
 ========
 
-:class:`~pyTooling.Cartesian3D.Offset3D` holds ``xOffset``, ``yOffset`` and ``zOffset``, and negates, adds,
+:class:`~pyTooling.Cartesian3D.Offset3D` holds :attr:`~pyTooling.Cartesian3D.Offset3D.XOffset`,
+:attr:`~pyTooling.Cartesian3D.Offset3D.YOffset` and :attr:`~pyTooling.Cartesian3D.Offset3D.ZOffset`, and negates, adds,
 subtracts and compares as its 2D counterpart does.
 
 .. seealso::
@@ -463,7 +468,8 @@ subtracts and compares as its 2D counterpart does.
 Size3D
 ======
 
-:class:`~pyTooling.Cartesian3D.Size3D` is ``width``, ``height`` and ``depth``.
+:class:`~pyTooling.Cartesian3D.Size3D` is :attr:`~pyTooling.Cartesian3D.Size3D.Width`,
+:attr:`~pyTooling.Cartesian3D.Size3D.Height` and :attr:`~pyTooling.Cartesian3D.Size3D.Depth`.
 
 .. seealso::
 
@@ -476,7 +482,8 @@ Size3D
 Segment3D
 =========
 
-:class:`~pyTooling.Cartesian3D.Segment3D` is a ``start`` and an ``end`` point, copied on construction unless
+:class:`~pyTooling.Cartesian3D.Segment3D` is a :attr:`~pyTooling.Cartesian3D.Segment3D.Start` and an
+:attr:`~pyTooling.Cartesian3D.Segment3D.End` point, copied on construction unless
 ``copyPoints=False``.
 
 .. seealso::

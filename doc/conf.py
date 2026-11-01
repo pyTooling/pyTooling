@@ -1,7 +1,7 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-from sys      import path as sys_path
+from sys      import modules, path as sys_path
 from os       import environ
 from os.path  import abspath
 from pathlib  import Path
@@ -370,7 +370,39 @@ for directory in [mod for mod in Path(f"../{directoryName}").iterdir() if mod.is
 	}
 
 
+# ==============================================================================
+# Sphinx.Ext.AutoDoc - deprecated aliases
+# ==============================================================================
+def skipDeprecatedAliases(app, what: str, name: str, obj, skip: bool, options) -> bool | None:
+	"""
+	Skip a lower-case property, if its class has the same property in CamelCase.
+
+	The lower-case property is a deprecated alias, e.g. ``Point2D.x`` of ``Point2D.X``.
+
+	:param app:     Sphinx application.
+	:param what:    Type of the object the member belongs to.
+	:param name:    Name of the member.
+	:param obj:     The member.
+	:param skip:    ``True``, if autodoc skips the member already.
+	:param options: Options of the autodoc directive.
+	:returns:       ``True`` to skip a deprecated alias, else ``None`` to keep autodoc's decision.
+	"""
+	if not isinstance(obj, property) or not name[:1].islower() or obj.fget is None:
+		return None
+
+	owner = modules.get(obj.fget.__module__)
+	for part in obj.fget.__qualname__.split(".")[:-1]:
+		owner = getattr(owner, part, None)
+
+	if isinstance(getattr(owner, name[0].upper() + name[1:], None), property):
+		return True
+
+	return None
+
+
 def setup(app) -> None:
+	app.connect("autodoc-skip-member", skipDeprecatedAliases)
+
 	# Installed beside this checkout, pyTooling.Sphinx is a portion of the namespace package pyTooling, and AutoAPI would
 	# document it as a subpackage. Its extension is loaded by now, so the namespace is narrowed to this checkout.
 	import pyTooling
