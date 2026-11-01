@@ -32,6 +32,7 @@
 Unit tests for :mod:`pyTooling.Cartesian2D`: points, offsets and sizes, their copies, comparisons and
 arithmetic.
 """
+from copy                  import copy, deepcopy
 from math                  import isclose, pi, sqrt
 
 from pyTooling.Cartesian2D import Origin2D, Point2D, Offset2D, Size2D, LineSegment2D
@@ -334,6 +335,122 @@ class Copy(Testcase):
 		self.assertEqual(2.0, newSize.height)
 		self.assertTupleEqual((1.0, 2.0), newSize.ToTuple())
 		self.assertEqual("Size2D(1.0, 2.0)", repr(newSize))
+
+	def test_Origin_copy(self) -> None:
+		origin = Origin2D()
+
+		with self.assertRaises(RuntimeError):
+			_ = copy(origin)
+
+	def test_Origin_deepcopy(self) -> None:
+		origin = Origin2D()
+
+		with self.assertRaises(RuntimeError):
+			_ = deepcopy(origin)
+
+	def test_Point_Independent(self) -> None:
+		point = Point2D(1, 2)
+
+		newPoint =  point.Copy()
+		newPoint += (5, 5)
+
+		self.assertIsNot(point, newPoint)
+		self.assertTupleEqual((1, 2), point.ToTuple())
+		self.assertTupleEqual((6, 7), newPoint.ToTuple())
+
+	def test_Point_copy(self) -> None:
+		point = Point2D(1, 2)
+
+		newPoint = copy(point)
+
+		self.assertIs(Point2D, type(newPoint))
+		self.assertIsNot(point, newPoint)
+		self.assertTupleEqual((1, 2), newPoint.ToTuple())
+
+	def test_Point_deepcopy(self) -> None:
+		point = Point2D(1, 2)
+
+		newPoint = deepcopy(point)
+
+		self.assertIs(Point2D, type(newPoint))
+		self.assertIsNot(point, newPoint)
+		self.assertTupleEqual((1, 2), newPoint.ToTuple())
+
+	def test_Offset_copy(self) -> None:
+		offset = Offset2D(1, 2)
+
+		newOffset = copy(offset)
+
+		self.assertIs(Offset2D, type(newOffset))
+		self.assertIsNot(offset, newOffset)
+		self.assertEqual(offset, newOffset)
+
+	def test_Offset_deepcopy(self) -> None:
+		offset = Offset2D(1, 2)
+
+		newOffset = deepcopy(offset)
+
+		self.assertIs(Offset2D, type(newOffset))
+		self.assertIsNot(offset, newOffset)
+		self.assertEqual(offset, newOffset)
+
+	def test_Size_copy(self) -> None:
+		size = Size2D(1, 2)
+
+		newSize = copy(size)
+
+		self.assertIs(Size2D, type(newSize))
+		self.assertIsNot(size, newSize)
+		self.assertTupleEqual((1, 2), newSize.ToTuple())
+
+	def test_Size_deepcopy(self) -> None:
+		size = Size2D(1, 2)
+
+		newSize = deepcopy(size)
+
+		self.assertIs(Size2D, type(newSize))
+		self.assertIsNot(size, newSize)
+		self.assertTupleEqual((1, 2), newSize.ToTuple())
+
+	def test_LineSegment(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(2, 3))
+
+		newLine =       line.Copy()
+		newLine.start += (5, 5)
+		newLine.end +=   (5, 5)
+
+		self.assertIs(LineSegment2D, type(newLine))
+		self.assertIsNot(line, newLine)
+		self.assertIsNot(line.start, newLine.start)
+		self.assertIsNot(line.end, newLine.end)
+		self.assertTupleEqual(((1, 2), (2, 3)), line.ToTuple())
+		self.assertTupleEqual(((6, 7), (7, 8)), newLine.ToTuple())
+
+	def test_LineSegment_copy(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(2, 3))
+
+		newLine = copy(line)
+
+		self.assertIs(LineSegment2D, type(newLine))
+		self.assertIsNot(line.start, newLine.start)
+		self.assertIsNot(line.end, newLine.end)
+		self.assertTupleEqual(((1, 2), (2, 3)), newLine.ToTuple())
+
+	def test_LineSegment_deepcopy(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(2, 3))
+
+		newLine = deepcopy(line)
+
+		self.assertIs(LineSegment2D, type(newLine))
+		self.assertIsNot(line.start, newLine.start)
+		self.assertIsNot(line.end, newLine.end)
+		self.assertTupleEqual(((1, 2), (2, 3)), newLine.ToTuple())
+
+	def test_LineSegment_Origin(self) -> None:
+		line = LineSegment2D(Origin2D(), Point2D(2, 3), copyPoints=False)
+
+		with self.assertRaises(RuntimeError):
+			_ = line.Copy()
 
 
 class Comparison(Testcase):

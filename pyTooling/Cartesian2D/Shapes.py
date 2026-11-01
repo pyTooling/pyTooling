@@ -31,7 +31,7 @@
 """An implementation of 2D cartesian shapes for Python."""
 
 from math                  import degrees, isclose, pi
-from typing                import Generic, Iterable
+from typing                import Generic, Iterable, Self
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Common      import getFullyQualifiedName
@@ -101,6 +101,24 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		self._segments = tuple(
 			LineSegment2D(start, end, copyPoints=False) for start, end in zip(corners, (*corners[1:], corners[0]))
 		)
+
+	def Copy(self) -> Self:
+		"""
+		Create a new polygon as a copy of this polygon.
+
+		The copy holds copies of the corners, shared by its edges.
+
+		:returns: Copy of this polygon.
+		"""
+		return self.__class__(self._points)
+
+	def __copy__(self) -> Self:
+		"""
+		Returns a copy of this polygon for :func:`copy.copy`.
+
+		:returns: Copy of this polygon.
+		"""
+		return self.Copy()
 
 	@readonly
 	def Points(self) -> tuple[Point2D[Coordinate], ...]:
@@ -191,6 +209,25 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 			LineSegment2D(_p11, _p10, copyPoints=False),
 			LineSegment2D(_p10, _p00, copyPoints=False)
 		)
+
+	def Copy(self) -> Self:
+		"""
+		Create a new trapezium as a copy of this trapezium.
+
+		The copy holds copies of the corners, shared by its edges. A copy of a derived shape, like a
+		:class:`Rectangle`, is of the same class, and its corners are checked again.
+
+		:returns: Copy of this trapezium.
+		"""
+		return self.__class__(*self.points)
+
+	def __copy__(self) -> Self:
+		"""
+		Returns a copy of this trapezium for :func:`copy.copy`.
+
+		:returns: Copy of this trapezium.
+		"""
+		return self.Copy()
 
 
 @export
@@ -324,6 +361,24 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 
 		self._center = center.Copy() if copyPoints else center
 		self._radius = radius
+
+	def Copy(self) -> Self:
+		"""
+		Create a new circle as a copy of this circle.
+
+		The copy holds a copy of the center point.
+
+		:returns: Copy of this circle.
+		"""
+		return self.__class__(self._center, self._radius)
+
+	def __copy__(self) -> Self:
+		"""
+		Returns a copy of this circle for :func:`copy.copy`.
+
+		:returns: Copy of this circle.
+		"""
+		return self.Copy()
 
 	@readonly
 	def Center(self) -> Point2D[Coordinate]:

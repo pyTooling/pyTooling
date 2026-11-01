@@ -37,6 +37,8 @@ Features
   four-cornered :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` narrowed down to a
   :class:`~pyTooling.Cartesian2D.Shapes.Square`, and a :class:`~pyTooling.Cartesian2D.Shapes.Circle`.
 * **A circle measured** - it reports its diameter, circumference and area.
+* **Independent copies** - ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` return an object sharing no point
+  with the original. A shape's copy is of the same class, and its edges share the copied corners.
 * Conversion to plain tuples through ``ToTuple``, for handing coordinates to a library that expects them.
 
 
@@ -147,6 +149,8 @@ Origin2D
 An :class:`~pyTooling.Cartesian2D.Origin2D` is a :class:`~pyTooling.Cartesian2D.Point2D` fixed at ``(0, 0)`` - its
 constructor takes no coordinates. It exists so a function needing *the* origin can say so in its signature instead
 of checking two numbers.
+
+An origin can't be copied: ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` raise :exc:`RuntimeError`.
 
 .. seealso::
 
