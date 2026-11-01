@@ -10,6 +10,15 @@ release.
 Version 10.x (2026)
 *******************
 
+.. topic:: :gh:`v10.2.0 - unreleased <pyTooling/pyTooling/releases/v10.2.0>`
+
+   .. rubric:: New Features
+
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with three or more
+     corners, and a :class:`~pyTooling.Cartesian2D.Shapes.Circle` by center and radius, measuring its diameter,
+     circumference and area.
+
+
 .. topic:: :gh:`v10.1.1 - 29.10.2026 <pyTooling/pyTooling/releases/v10.1.1>`
 
    .. rubric:: Bug Fixes
