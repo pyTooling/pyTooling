@@ -171,6 +171,226 @@ class Instantiation(Testcase):
 		self.assertTupleEqual(((1, 2), (2, 3)), line.ToTuple())
 
 
+class Properties(Testcase):
+	def test_Point_x(self) -> None:
+		point = Point2D(1, 2)
+
+		point.x = 3.5
+
+		self.assertEqual(3.5, point.x)
+		self.assertTupleEqual((3.5, 2), point.ToTuple())
+
+	def test_Point_x_None(self) -> None:
+		point = Point2D(1, 2)
+
+		with self.assertRaises(ValueError) as context:
+			point.x = None
+
+		self.assertEqual("Parameter 'x' is None.", str(context.exception))
+		self.assertTupleEqual((1, 2), point.ToTuple())
+
+	def test_Point_x_str(self) -> None:
+		point = Point2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			point.x = "3.5"
+
+		self.assertEqual("Parameter 'x' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2), point.ToTuple())
+
+	def test_Point_y(self) -> None:
+		point = Point2D(1, 2)
+
+		point.y = 3.5
+
+		self.assertEqual(3.5, point.y)
+		self.assertTupleEqual((1, 3.5), point.ToTuple())
+
+	def test_Point_y_None(self) -> None:
+		point = Point2D(1, 2)
+
+		with self.assertRaises(ValueError) as context:
+			point.y = None
+
+		self.assertEqual("Parameter 'y' is None.", str(context.exception))
+		self.assertTupleEqual((1, 2), point.ToTuple())
+
+	def test_Point_y_str(self) -> None:
+		point = Point2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			point.y = "3.5"
+
+		self.assertEqual("Parameter 'y' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2), point.ToTuple())
+
+	def test_Offset_xOffset(self) -> None:
+		offset = Offset2D(1, 2)
+
+		offset.xOffset = 3.5
+
+		self.assertEqual(3.5, offset.xOffset)
+		self.assertTupleEqual((3.5, 2), offset.ToTuple())
+
+	def test_Offset_xOffset_None(self) -> None:
+		offset = Offset2D(1, 2)
+
+		with self.assertRaises(ValueError) as context:
+			offset.xOffset = None
+
+		self.assertEqual("Parameter 'xOffset' is None.", str(context.exception))
+		self.assertTupleEqual((1, 2), offset.ToTuple())
+
+	def test_Offset_xOffset_str(self) -> None:
+		offset = Offset2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			offset.xOffset = "3.5"
+
+		self.assertEqual("Parameter 'xOffset' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2), offset.ToTuple())
+
+	def test_Offset_yOffset(self) -> None:
+		offset = Offset2D(1, 2)
+
+		offset.yOffset = 3.5
+
+		self.assertEqual(3.5, offset.yOffset)
+		self.assertTupleEqual((1, 3.5), offset.ToTuple())
+
+	def test_Offset_yOffset_None(self) -> None:
+		offset = Offset2D(1, 2)
+
+		with self.assertRaises(ValueError) as context:
+			offset.yOffset = None
+
+		self.assertEqual("Parameter 'yOffset' is None.", str(context.exception))
+		self.assertTupleEqual((1, 2), offset.ToTuple())
+
+	def test_Offset_yOffset_str(self) -> None:
+		offset = Offset2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			offset.yOffset = "3.5"
+
+		self.assertEqual("Parameter 'yOffset' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2), offset.ToTuple())
+
+	def test_Size_width(self) -> None:
+		size = Size2D(1, 2)
+
+		size.width = 3.5
+
+		self.assertEqual(3.5, size.width)
+		self.assertTupleEqual((3.5, 2), size.ToTuple())
+
+	def test_Size_width_None(self) -> None:
+		size = Size2D(1, 2)
+
+		with self.assertRaises(ValueError) as context:
+			size.width = None
+
+		self.assertEqual("Parameter 'width' is None.", str(context.exception))
+		self.assertTupleEqual((1, 2), size.ToTuple())
+
+	def test_Size_width_str(self) -> None:
+		size = Size2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			size.width = "3.5"
+
+		self.assertEqual("Parameter 'width' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2), size.ToTuple())
+
+	def test_Size_height(self) -> None:
+		size = Size2D(1, 2)
+
+		size.height = 3.5
+
+		self.assertEqual(3.5, size.height)
+		self.assertTupleEqual((1, 3.5), size.ToTuple())
+
+	def test_Size_height_None(self) -> None:
+		size = Size2D(1, 2)
+
+		with self.assertRaises(ValueError) as context:
+			size.height = None
+
+		self.assertEqual("Parameter 'height' is None.", str(context.exception))
+		self.assertTupleEqual((1, 2), size.ToTuple())
+
+	def test_Size_height_str(self) -> None:
+		size = Size2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			size.height = "3.5"
+
+		self.assertEqual("Parameter 'height' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2), size.ToTuple())
+
+	def test_LineSegment_start(self) -> None:
+		line =  LineSegment2D(Point2D(1, 2), Point2D(4, 5))
+		point = Point2D(7, 8)
+
+		line.start = point
+
+		self.assertIs(point, line.start)
+		self.assertTupleEqual(((7, 8), (4, 5)), line.ToTuple())
+
+	def test_LineSegment_start_None(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 5))
+
+		with self.assertRaises(ValueError) as context:
+			line.start = None
+
+		self.assertEqual("Parameter 'start' is None.", str(context.exception))
+		self.assertTupleEqual(((1, 2), (4, 5)), line.ToTuple())
+
+	def test_LineSegment_start_tuple(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 5))
+
+		with self.assertRaises(TypeError) as context:
+			line.start = (7, 8)
+
+		self.assertEqual("Parameter 'start' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2), (4, 5)), line.ToTuple())
+
+	def test_LineSegment_end(self) -> None:
+		line =  LineSegment2D(Point2D(1, 2), Point2D(4, 5))
+		point = Point2D(7, 8)
+
+		line.end = point
+
+		self.assertIs(point, line.end)
+		self.assertTupleEqual(((1, 2), (7, 8)), line.ToTuple())
+
+	def test_LineSegment_end_None(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 5))
+
+		with self.assertRaises(ValueError) as context:
+			line.end = None
+
+		self.assertEqual("Parameter 'end' is None.", str(context.exception))
+		self.assertTupleEqual(((1, 2), (4, 5)), line.ToTuple())
+
+	def test_LineSegment_end_tuple(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 5))
+
+		with self.assertRaises(TypeError) as context:
+			line.end = (7, 8)
+
+		self.assertEqual("Parameter 'end' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2), (4, 5)), line.ToTuple())
+
+
 class LineSegment(Testcase):
 	def test_Length_Horizontal(self) -> None:
 		line = LineSegment2D(Point2D(0, 0), Point2D(3, 0))
@@ -524,6 +744,15 @@ class PointArithmetic(Testcase):
 		self.assertEqual(3, point.x)
 		self.assertEqual(5, point.y)
 
+	def test_Point_InplacePlus_TupleComplex(self) -> None:
+		point = Point2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			point += (1j, 1)
+
+		self.assertEqual("Parameter 'x' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'complex'."], context.exception.__notes__)
+
 	def test_Point_InplacePlus_Int(self) -> None:
 		point = Point2D(1, 2)
 
@@ -571,6 +800,15 @@ class PointArithmetic(Testcase):
 
 		self.assertEqual(-1, point.x)
 		self.assertEqual(-1, point.y)
+
+	def test_Point_InplaceMinus_TupleComplex(self) -> None:
+		point = Point2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			point -= (1j, 1)
+
+		self.assertEqual("Parameter 'x' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'complex'."], context.exception.__notes__)
 
 	def test_Point_InplaceMinus_Int(self) -> None:
 		point = Point2D(1, 2)
@@ -623,6 +861,15 @@ class OffsetArithmetic(Testcase):
 		self.assertEqual(3, offset1.xOffset)
 		self.assertEqual(5, offset1.yOffset)
 
+	def test_Offset_InplacePlus_TupleComplex(self) -> None:
+		offset = Offset2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			offset += (1j, 1)
+
+		self.assertEqual("Parameter 'xOffset' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'complex'."], context.exception.__notes__)
+
 	def test_Offset_InplacePlus_Int(self) -> None:
 		offset = Offset2D(1, 2)
 
@@ -671,6 +918,15 @@ class OffsetArithmetic(Testcase):
 
 		self.assertEqual(-1, offset1.xOffset)
 		self.assertEqual(-1, offset1.yOffset)
+
+	def test_Offset_InplaceMinus_TupleComplex(self) -> None:
+		offset = Offset2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			offset -= (1j, 1)
+
+		self.assertEqual("Parameter 'xOffset' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'complex'."], context.exception.__notes__)
 
 	def test_Offset_InplaceMinus_Int(self) -> None:
 		offset = Offset2D(1, 2)

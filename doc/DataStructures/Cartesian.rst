@@ -97,14 +97,17 @@ Basic Classes
 All of them are generic in ``Coordinate``, a type variable bound to :class:`int` or :class:`float`, so the coordinate
 type is chosen once and then checked throughout.
 
+Their coordinates, offsets, sizes and end points are properties. An assignment is checked like the constructor
+parameter of the same name: ``None`` raises :exc:`ValueError`, a value of another type raises :exc:`TypeError`.
+
 
 .. _STRUCT/Cartesian2D/Point2D:
 
 Point2D
 =======
 
-A :class:`~pyTooling.Cartesian2D.Point2D` is a **position**: fields ``x`` and ``y``, and the arithmetic that keeps a
-position distinct from a displacement.
+A :class:`~pyTooling.Cartesian2D.Point2D` is a **position**: properties :attr:`~pyTooling.Cartesian2D.Point2D.x` and
+:attr:`~pyTooling.Cartesian2D.Point2D.y`, and the arithmetic that keeps a position distinct from a displacement.
 
 .. list-table::
    :header-rows: 1
@@ -165,8 +168,9 @@ An origin can't be copied: ``Copy()``, :func:`copy.copy` and :func:`copy.deepcop
 Offset2D
 ========
 
-An :class:`~pyTooling.Cartesian2D.Offset2D` is a **displacement**: fields ``xOffset`` and ``yOffset``. Offsets add
-and subtract with each other, and negate:
+An :class:`~pyTooling.Cartesian2D.Offset2D` is a **displacement**: properties
+:attr:`~pyTooling.Cartesian2D.Offset2D.xOffset` and :attr:`~pyTooling.Cartesian2D.Offset2D.yOffset`. Offsets add and
+subtract with each other, and negate:
 
 .. code-block:: Python
 
@@ -205,7 +209,9 @@ A :class:`~pyTooling.Cartesian2D.Segment2D` is a ``start`` and an ``end`` point.
 
 Its constructor **copies both points by default**, so a segment doesn't change when the points it was built from
 move later. ``copyPoints=False`` keeps the references instead, which is what
-:class:`~pyTooling.Cartesian2D.Shapes.Trapezium` uses to let consecutive edges share a corner.
+:class:`~pyTooling.Cartesian2D.Shapes.Trapezium` uses to let consecutive edges share a corner. A point assigned to
+:attr:`~pyTooling.Cartesian2D.Segment2D.start` or :attr:`~pyTooling.Cartesian2D.Segment2D.end` is referenced, not
+copied.
 
 .. seealso::
 
@@ -300,9 +306,14 @@ Trapezium
 A :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` is a four-sided polygon, built from four corners given in the
 order ``p00``, ``p01``, ``p11``, ``p10`` - around the outline, not across it.
 
-It keeps both views: ``points``, the four corners it copied, and ``segments``, the four
-:class:`~pyTooling.Cartesian2D.LineSegment2D` edges between them. The segments are built with ``copyPoints=False``,
-so consecutive edges share a corner object and the outline stays closed.
+It keeps both views: :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.points`, the four corners it copied, and
+:attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.segments`, the four :class:`~pyTooling.Cartesian2D.LineSegment2D` edges
+between them. The segments are built with ``copyPoints=False``, so consecutive edges share a corner object and the
+outline stays closed.
+
+Both properties are assignable, but an assignment replaces only its own tuple: the other one isn't updated, and the
+shape of a :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` or :class:`~pyTooling.Cartesian2D.Shapes.Square` isn't
+checked again.
 
 A corner that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`.
 

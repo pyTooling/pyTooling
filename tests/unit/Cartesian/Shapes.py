@@ -574,6 +574,115 @@ class Edges(Testcase):
 			self.assertIs(trapezium.points[(index + 1) % 4], segment.end)
 
 
+class Properties(Testcase):
+	def test_Trapezium_points(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		corners =   [Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2)]
+
+		trapezium.points = corners
+
+		self.assertIsInstance(trapezium.points, tuple)
+		self.assertEqual(4, len(trapezium.points))
+		for given, corner in zip(corners, trapezium.points):
+			self.assertIs(given, corner)
+
+	def test_Trapezium_points_None(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		points =    trapezium.points
+
+		with self.assertRaises(ValueError) as context:
+			trapezium.points = None
+
+		self.assertEqual("Parameter 'points' is None.", str(context.exception))
+		self.assertIs(points, trapezium.points)
+
+	def test_Trapezium_points_int(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		points =    trapezium.points
+
+		with self.assertRaises(TypeError) as context:
+			trapezium.points = 4
+
+		self.assertEqual("Parameter 'points' is not iterable.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIs(points, trapezium.points)
+
+	def test_Trapezium_points_NoneElement(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		points =    trapezium.points
+
+		with self.assertRaises(ValueError) as context:
+			trapezium.points = (points[0], None, points[2], points[3])
+
+		self.assertEqual("An element of parameter 'points' is None.", str(context.exception))
+		self.assertIs(points, trapezium.points)
+
+	def test_Trapezium_points_strElement(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		points =    trapezium.points
+
+		with self.assertRaises(TypeError) as context:
+			trapezium.points = (points[0], "3, 1", points[2], points[3])
+
+		self.assertEqual("An element of parameter 'points' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertIs(points, trapezium.points)
+
+	def test_Trapezium_segments(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		edges =     [LineSegment2D(Point2D(0, 0), Point2D(2, 0)), LineSegment2D(Point2D(2, 0), Point2D(2, 2)),
+		             LineSegment2D(Point2D(2, 2), Point2D(0, 2)), LineSegment2D(Point2D(0, 2), Point2D(0, 0))]
+
+		trapezium.segments = edges
+
+		self.assertIsInstance(trapezium.segments, tuple)
+		self.assertEqual(4, len(trapezium.segments))
+		for given, edge in zip(edges, trapezium.segments):
+			self.assertIs(given, edge)
+
+	def test_Trapezium_segments_None(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		segments =    trapezium.segments
+
+		with self.assertRaises(ValueError) as context:
+			trapezium.segments = None
+
+		self.assertEqual("Parameter 'segments' is None.", str(context.exception))
+		self.assertIs(segments, trapezium.segments)
+
+	def test_Trapezium_segments_int(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		segments =    trapezium.segments
+
+		with self.assertRaises(TypeError) as context:
+			trapezium.segments = 4
+
+		self.assertEqual("Parameter 'segments' is not iterable.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIs(segments, trapezium.segments)
+
+	def test_Trapezium_segments_NoneElement(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		segments =    trapezium.segments
+
+		with self.assertRaises(ValueError) as context:
+			trapezium.segments = (segments[0], None, segments[2], segments[3])
+
+		self.assertEqual("An element of parameter 'segments' is None.", str(context.exception))
+		self.assertIs(segments, trapezium.segments)
+
+	def test_Trapezium_segments_strElement(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		segments =    trapezium.segments
+
+		with self.assertRaises(TypeError) as context:
+			trapezium.segments = (segments[0], "(3, 1) → (4, 3)", segments[2], segments[3])
+
+		self.assertEqual("An element of parameter 'segments' is not of type 'LineSegment2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertIs(segments, trapezium.segments)
+
+
 class Measurements(Testcase):
 	def test_Circle_Diameter(self) -> None:
 		circle = Circle(Point2D(1, 2), 3)

@@ -21,6 +21,12 @@ Version 10.x (2026)
      :func:`copy.copy` and :func:`copy.deepcopy`, and segments and shapes have a ``Copy()`` method. A copy shares no
      point with the original.
 
+   .. rubric:: Changes
+
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: coordinates, offsets, sizes, segment end points
+     and a trapezium's corners and edges are properties checking an assigned value: ``None`` raises
+     :exc:`ValueError`, a wrong type :exc:`TypeError`. Their names stay in lower case.
+
    .. rubric:: Bug Fixes
 
    * :mod:`pyTooling.Tracing`: an OTLP timestamp in the hour repeated at the end of daylight saving time was read
