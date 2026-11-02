@@ -796,8 +796,23 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(points)}'.")
 			raise ex
 
-		minX = None
-		for point in points:
+		iterator = iter(points)
+		try:
+			point = next(iterator)
+		except StopIteration as ex:
+			raise ValueError("Parameter 'points' is empty.") from ex
+
+		if point is None:
+			raise ValueError("An element of parameter 'points' is None.")
+		elif not isinstance(point, Point2D):
+			ex = TypeError("An element of parameter 'points' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		minX = maxX = point._x
+		minY = maxY = point._y
+
+		for point in iterator:
 			if point is None:
 				raise ValueError("An element of parameter 'points' is None.")
 			elif not isinstance(point, Point2D):
@@ -807,11 +822,6 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 			x = point._x
 			y = point._y
-			if minX is None:
-				minX = maxX = x
-				minY = maxY = y
-				continue
-
 			if x < minX:
 				minX = x
 			elif x > maxX:
@@ -821,9 +831,6 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				minY = y
 			elif y > maxY:
 				maxY = y
-
-		if minX is None:
-			raise ValueError("Parameter 'points' is empty.")
 
 		return cls(minX, minY, maxX, maxY)
 
