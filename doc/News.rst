@@ -20,6 +20,8 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: points, offsets, sizes, segments and shapes support
      :func:`copy.copy` and :func:`copy.deepcopy`, and segments and shapes have a ``Copy()`` method. A copy shares no
      point with the original.
+   * :mod:`pyTooling.Cartesian2D`: a :class:`~pyTooling.Cartesian2D.BoundingBox` value (union, intersection, point
+     containment). Every shape and segment returns its ``BoundingBox`` and moves in place with ``Move(offset)``.
 
    .. rubric:: Changes
 

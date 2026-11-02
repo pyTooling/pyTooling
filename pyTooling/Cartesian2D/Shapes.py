@@ -29,24 +29,42 @@
 # ==================================================================================================================== #
 #
 """An implementation of 2D cartesian shapes for Python."""
+from __future__            import annotations
 
 from math                  import degrees, isclose, pi
 from typing                import Generic, Iterable, Self
 
 from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType, abstractclass
+from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Cartesian2D import Coordinate, Point2D, LineSegment2D
+from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox, LineSegment2D
 
 
 @export
-@abstractclass
 class Shape(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""
 	Abstract base-class for all 2D cartesian shapes.
 
-	A derived class declares its fields as slots, so a class derived from a shape can use slots too.
+	A derived class declares its fields as slots, so a class derived from a shape can use slots too. It implements
+	:attr:`BoundingBox` and :meth:`Move`.
 	"""
+
+	@readonly
+	@abstractmethod
+	def BoundingBox(self) -> BoundingBox[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the shape.
+
+		:returns: A new bounding box.
+		"""
+
+	@abstractmethod
+	def Move(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the shape by moving all its points (inplace).
+
+		:param offset: The 2D-offset to move by.
+		"""
 
 
 @export
@@ -143,6 +161,35 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		:returns: Tuple of edges, the last one connecting the last corner back to the first one.
 		"""
 		return self._segments
+
+	@readonly
+	def BoundingBox(self) -> BoundingBox[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the polygon's corners.
+
+		:returns: A new bounding box.
+		"""
+		return BoundingBox.FromPoints(self._points)
+
+	def Move(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the polygon by moving all its corners (inplace).
+
+		Its edges share the corners, so they move along.
+
+		:param offset:      The 2D-offset to move by.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		"""
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, Offset2D):
+			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		for point in self._points:
+			point += offset
 
 	def __repr__(self) -> str:
 		"""
@@ -327,6 +374,35 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 				raise ex
 
 		self._segments = edges
+
+	@readonly
+	def BoundingBox(self) -> BoundingBox[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the trapezium's corners.
+
+		:returns: A new bounding box.
+		"""
+		return BoundingBox.FromPoints(self._points)
+
+	def Move(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the trapezium by moving all its corners (inplace).
+
+		Its edges share the corners, so they move along.
+
+		:param offset:      The 2D-offset to move by.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		"""
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, Offset2D):
+			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		for point in self._points:
+			point += offset
 
 	def Copy(self) -> Self:
 		"""
@@ -550,6 +626,36 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		:returns: Area of the circle.
 		"""
 		return pi * self._radius ** 2
+
+	@readonly
+	def BoundingBox(self) -> BoundingBox[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the circle.
+
+		The box reaches :attr:`Radius` from the :attr:`Center` in each direction.
+
+		:returns: A new bounding box.
+		"""
+		center = self._center
+		radius = self._radius
+		return BoundingBox(center._x - radius, center._y - radius, center._x + radius, center._y + radius)
+
+	def Move(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the circle by moving its center (inplace).
+
+		:param offset:      The 2D-offset to move by.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		"""
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, Offset2D):
+			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		self._center += offset
 
 	def __repr__(self) -> str:
 		"""

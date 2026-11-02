@@ -34,7 +34,7 @@ Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - polygon, trapezium, rectang
 from copy                         import copy, deepcopy
 from math                         import cos, isclose, pi, radians, sin, sqrt
 
-from pyTooling.Cartesian2D        import Point2D, LineSegment2D
+from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox, LineSegment2D
 from pyTooling.Cartesian2D.Shapes import Shape, Polygon, Trapezium, Rectangle, Square, Circle
 from pyTooling.MetaClasses        import ExtendedType, AbstractClassError
 from pyTooling.Testing            import Testcase
@@ -51,7 +51,11 @@ class Instantiation(Testcase):
 		with self.assertRaises(AbstractClassError) as context:
 			_ = Shape()
 
-		self.assertEqual("Class 'Shape' is abstract and needs to be derived.", str(context.exception))
+		self.assertEqual(
+			"Class 'Shape' is abstract. The following methods: 'BoundingBox', 'Move' need to be overridden in a derived "
+			"class.",
+			str(context.exception)
+		)
 
 	def test_Polygon(self) -> None:
 		point0 = Point2D(0, 0)
@@ -855,6 +859,139 @@ class Measurements(Testcase):
 		circle = Circle(Point2D(1, 2), 3)
 
 		self.assertTrue(isclose(9 * pi, circle.Area))
+
+
+class Bounds(Testcase):
+	def test_Polygon(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, -1), Point2D(5, 3), Point2D(-2, 5)))
+
+		box = polygon.BoundingBox
+
+		self.assertIs(BoundingBox, type(box))
+		self.assertTupleEqual((-2, -1, 5, 5), box.ToTuple())
+
+	def test_Polygon_Moved(self) -> None:
+		"""The bounding box is computed on every access: it follows a moved corner."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		corner =  polygon.Points[2]
+
+		corner += (0, 2)
+
+		self.assertTupleEqual((0, 0, 4, 5), polygon.BoundingBox.ToTuple())
+
+	def test_Trapezium(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		self.assertTupleEqual((0, 1, 4, 3), trapezium.BoundingBox.ToTuple())
+
+	def test_Rectangle(self) -> None:
+		"""A rectangle rotated against the axes: its bounding box is larger than the rectangle."""
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 2), Point2D(3, 4), Point2D(-1, 2))
+
+		self.assertTupleEqual((-1, 0, 4, 4), rectangle.BoundingBox.ToTuple())
+
+	def test_Circle(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		self.assertTupleEqual((-2, -1, 4, 5), circle.BoundingBox.ToTuple())
+
+	def test_ReadOnly(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(AttributeError):
+			circle.BoundingBox = BoundingBox(0, 0, 1, 1)
+
+
+class Moving(Testcase):
+	def test_Polygon(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		corners = polygon.Points
+
+		polygon.Move(Offset2D(1, 2))
+
+		for corner, newCorner in zip(corners, polygon.Points):
+			self.assertIs(corner, newCorner)
+
+		self.assertTupleEqual(((1, 2), (5, 2), (3, 5)), tuple(point.ToTuple() for point in polygon.Points))
+		self.assertTupleEqual(((1, 2), (5, 2)), polygon.Segments[0].ToTuple())
+
+	def test_Polygon_None(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		with self.assertRaises(ValueError) as context:
+			polygon.Move(None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+
+	def test_Polygon_tuple(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		with self.assertRaises(TypeError) as context:
+			polygon.Move((1, 2))
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
+
+	def test_Trapezium(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		trapezium.Move(Offset2D(-1, -1))
+
+		self.assertTupleEqual(((0, 0), (2, 0), (3, 2), (-1, 2)), tuple(point.ToTuple() for point in trapezium.Points))
+		self.assertTupleEqual(((-1, 2), (0, 0)), trapezium.Segments[3].ToTuple())
+
+	def test_Trapezium_None(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		with self.assertRaises(ValueError) as context:
+			trapezium.Move(None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+
+	def test_Trapezium_tuple(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		with self.assertRaises(TypeError) as context:
+			trapezium.Move((1, 2))
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Square(self) -> None:
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
+
+		square.Move(Offset2D(0.5, 1))
+
+		self.assertTupleEqual((0.5, 1, 2.5, 3), square.BoundingBox.ToTuple())
+
+	def test_Circle(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+		center = circle.Center
+
+		circle.Move(Offset2D(2, -2))
+
+		self.assertIs(center, circle.Center)
+		self.assertTupleEqual((3, 0), circle.Center.ToTuple())
+		self.assertEqual(3, circle.Radius)
+
+	def test_Circle_None(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(ValueError) as context:
+			circle.Move(None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+
+	def test_Circle_tuple(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(TypeError) as context:
+			circle.Move((1, 2))
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
 
 
 class Copy(Testcase):
