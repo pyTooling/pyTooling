@@ -41,11 +41,14 @@ An implementation of 2D cartesian data structures for Python.
 from __future__            import annotations
 
 from math                  import atan2, sqrt
-from typing                import Any, Generic, Iterable, Self, TypeVar, Union
+from typing                import TYPE_CHECKING, Any, Generic, Iterable, Self, TypeVar, Union
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
 from pyTooling.Common      import getFullyQualifiedName
+
+if TYPE_CHECKING:
+	from pyTooling.Cartesian2D.Shapes import Rectangle
 
 
 Coordinate = TypeVar("Coordinate", bound=Union[int, float])
@@ -887,6 +890,27 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return Point2D((self._minX + self._maxX) / 2, (self._minY + self._maxY) / 2)
 
+	def ToRectangle(self) -> Rectangle[Coordinate]:
+		"""
+		Create a new rectangle from this bounding box's corners.
+
+		:returns:           A new rectangle with the size and position of this bounding box.
+		:raises ValueError: If the bounding box has no width or no height.
+		"""
+		from pyTooling.Cartesian2D.Shapes import Rectangle
+
+		if self._minX == self._maxX or self._minY == self._maxY:
+			ex = ValueError("Bounding box has no area.")
+			ex.add_note(f"Got width '{self._maxX - self._minX}' and height '{self._maxY - self._minY}'.")
+			raise ex
+
+		return Rectangle(
+			Point2D(self._minX, self._minY),
+			Point2D(self._minX, self._maxY),
+			Point2D(self._maxX, self._maxY),
+			Point2D(self._maxX, self._minY)
+		)
+
 	def Union(self, other: BoundingBox[Coordinate]) -> BoundingBox[Coordinate]:
 		"""
 		Create the smallest bounding box enclosing this and another bounding box.
@@ -910,11 +934,11 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			max(self._maxY, other._maxY)
 		)
 
-	def Intersects(self, other: BoundingBox[Coordinate]) -> bool:
+	def HasOverlap(self, other: BoundingBox[Coordinate]) -> bool:
 		"""
 		Check if this bounding box and another bounding box overlap.
 
-		Two bounding boxes touching at a border or a corner intersect.
+		Two bounding boxes touching at a border or a corner overlap.
 
 		:param other:       The second bounding box.
 		:returns:           ``True``, if both bounding boxes share at least one point.
@@ -933,7 +957,7 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self._minY <= other._maxY and other._minY <= self._maxY
 		)
 
-	def Contains(self, point: Point2D[Coordinate]) -> bool:
+	def ContainsPoint(self, point: Point2D[Coordinate]) -> bool:
 		"""
 		Check if a point lies within this bounding box.
 
@@ -951,7 +975,32 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
 			raise ex
 
+		return self._ContainsPoint(point)
+
+	def _ContainsPoint(self, point: Point2D[Coordinate]) -> bool:
+		"""
+		Check if a point lies within this bounding box, without checking the parameter.
+
+		:param point: The point to check.
+		:returns:     ``True``, if the point lies within the bounding box or on its border.
+		"""
 		return self._minX <= point._x <= self._maxX and self._minY <= point._y <= self._maxY
+
+	def __contains__(self, other: Any) -> bool:
+		"""
+		Check if an element lies within this bounding box (``other in box``).
+
+		:param other:      The element to check. Supported: :class:`Point2D`.
+		:returns:          ``True``, if the element lies within the bounding box or on its border.
+		:raises TypeError: If the first operand is not of type :class:`Point2D`.
+		"""
+		if isinstance(other, Point2D):
+			return self._ContainsPoint(other)
+
+		ex = TypeError("First operand is not supported by in operator.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+		ex.add_note("Supported types for first operand: Point2D")
+		raise ex
 
 	def Copy(self) -> Self:
 		"""

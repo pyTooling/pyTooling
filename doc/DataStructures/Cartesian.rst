@@ -226,10 +226,12 @@ so it always follows moved points. :meth:`~pyTooling.Cartesian2D.BoundingBox.Fro
      - Result
    * - ``box.Union(other)``
      - A new :class:`~pyTooling.Cartesian2D.BoundingBox` enclosing both.
-   * - ``box.Intersects(other)``
+   * - ``box.HasOverlap(other)``
      - ``True``, if both share at least one point - touching borders count.
-   * - ``box.Contains(point)``
+   * - ``box.ContainsPoint(point)``, ``point in box``
      - ``True``, if the point lies inside or on the border.
+   * - ``box.ToRectangle()``
+     - A new :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` with the box's corners.
 
 .. code-block:: Python
 

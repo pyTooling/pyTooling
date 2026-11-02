@@ -32,11 +32,12 @@
 Unit tests for :mod:`pyTooling.Cartesian2D`: points, offsets and sizes, their copies, comparisons and
 arithmetic.
 """
-from copy                  import copy, deepcopy
-from math                  import isclose, pi, sqrt
+from copy                         import copy, deepcopy
+from math                         import isclose, pi, sqrt
 
-from pyTooling.Cartesian2D import Origin2D, Point2D, Offset2D, Size2D, BoundingBox, Segment2D, LineSegment2D
-from pyTooling.Testing     import Testcase
+from pyTooling.Cartesian2D        import Origin2D, Point2D, Offset2D, Size2D, BoundingBox, Segment2D, LineSegment2D
+from pyTooling.Cartesian2D.Shapes import Rectangle
+from pyTooling.Testing            import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -1194,56 +1195,105 @@ class Bounds(Testcase):
 		self.assertEqual("Parameter 'other' is not of type 'BoundingBox'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
-	def test_Intersects(self) -> None:
+	def test_HasOverlap(self) -> None:
 		box = BoundingBox(0, 0, 2, 2)
 
-		self.assertTrue(box.Intersects(BoundingBox(1, 1, 3, 3)))
-		self.assertTrue(box.Intersects(BoundingBox(-1, -1, 3, 3)))
-		self.assertTrue(box.Intersects(BoundingBox(2, 2, 3, 3)))
-		self.assertFalse(box.Intersects(BoundingBox(3, 0, 4, 2)))
-		self.assertFalse(box.Intersects(BoundingBox(0, -2, 2, -1)))
+		self.assertTrue(box.HasOverlap(BoundingBox(1, 1, 3, 3)))
+		self.assertTrue(box.HasOverlap(BoundingBox(-1, -1, 3, 3)))
+		self.assertTrue(box.HasOverlap(BoundingBox(2, 2, 3, 3)))
+		self.assertFalse(box.HasOverlap(BoundingBox(3, 0, 4, 2)))
+		self.assertFalse(box.HasOverlap(BoundingBox(0, -2, 2, -1)))
 
-	def test_Intersects_None(self) -> None:
+	def test_HasOverlap_None(self) -> None:
 		box = BoundingBox(0, 0, 2, 2)
 
 		with self.assertRaises(ValueError) as context:
-			_ = box.Intersects(None)
+			_ = box.HasOverlap(None)
 
 		self.assertEqual("Parameter 'other' is None.", str(context.exception))
 
-	def test_Intersects_tuple(self) -> None:
+	def test_HasOverlap_tuple(self) -> None:
 		box = BoundingBox(0, 0, 2, 2)
 
 		with self.assertRaises(TypeError) as context:
-			_ = box.Intersects((1, 1, 3, 3))
+			_ = box.HasOverlap((1, 1, 3, 3))
 
 		self.assertEqual("Parameter 'other' is not of type 'BoundingBox'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
-	def test_Contains(self) -> None:
+	def test_ContainsPoint(self) -> None:
 		box = BoundingBox(0, 0, 2, 2)
 
-		self.assertTrue(box.Contains(Point2D(1, 1)))
-		self.assertTrue(box.Contains(Point2D(2, 0)))
-		self.assertFalse(box.Contains(Point2D(3, 1)))
-		self.assertFalse(box.Contains(Point2D(1, -0.5)))
+		self.assertTrue(box.ContainsPoint(Point2D(1, 1)))
+		self.assertTrue(box.ContainsPoint(Point2D(2, 0)))
+		self.assertFalse(box.ContainsPoint(Point2D(3, 1)))
+		self.assertFalse(box.ContainsPoint(Point2D(1, -0.5)))
 
-	def test_Contains_None(self) -> None:
+	def test_ContainsPoint_None(self) -> None:
 		box = BoundingBox(0, 0, 2, 2)
 
 		with self.assertRaises(ValueError) as context:
-			_ = box.Contains(None)
+			_ = box.ContainsPoint(None)
 
 		self.assertEqual("Parameter 'point' is None.", str(context.exception))
 
-	def test_Contains_tuple(self) -> None:
+	def test_ContainsPoint_tuple(self) -> None:
 		box = BoundingBox(0, 0, 2, 2)
 
 		with self.assertRaises(TypeError) as context:
-			_ = box.Contains((1, 1))
+			_ = box.ContainsPoint((1, 1))
 
 		self.assertEqual("Parameter 'point' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_In(self) -> None:
+		box = BoundingBox(0, 0, 2, 2)
+
+		self.assertIn(Point2D(1, 1), box)
+		self.assertIn(Point2D(2, 0), box)
+		self.assertNotIn(Point2D(3, 1), box)
+
+	def test_In_tuple(self) -> None:
+		box = BoundingBox(0, 0, 2, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = (1, 1) in box
+
+		self.assertEqual("First operand is not supported by in operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'tuple'.", "Supported types for first operand: Point2D"],
+			context.exception.__notes__
+		)
+
+	def test_In_None(self) -> None:
+		box = BoundingBox(0, 0, 2, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = None in box
+
+		self.assertEqual("First operand is not supported by in operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'NoneType'.", "Supported types for first operand: Point2D"],
+			context.exception.__notes__
+		)
+
+	def test_ToRectangle(self) -> None:
+		rectangle = BoundingBox(1, 2, 4, 6).ToRectangle()
+
+		self.assertIsInstance(rectangle, Rectangle)
+		self.assertTupleEqual(
+			((1, 2), (1, 6), (4, 6), (4, 2)),
+			tuple(point.ToTuple() for point in rectangle.Points)
+		)
+		self.assertEqual(BoundingBox(1, 2, 4, 6), rectangle.BoundingBox)
+
+	def test_ToRectangle_NoArea(self) -> None:
+		for box in (BoundingBox(1, 2, 1, 6), BoundingBox(1, 2, 4, 2)):
+			with self.subTest(box=box):
+				with self.assertRaises(ValueError) as context:
+					_ = box.ToRectangle()
+
+				self.assertEqual("Bounding box has no area.", str(context.exception))
 
 	def test_Equal(self) -> None:
 		box = BoundingBox(1, 2, 4, 6)
