@@ -40,6 +40,8 @@ Features
 * **Bounding boxes** - every shape and segment reports the smallest axis-aligned
   :class:`~pyTooling.Cartesian2D.BoundingBox` enclosing it, and bounding boxes unite, intersect and contain points.
 * **Shapes and segments moved as a whole** - ``Move(offset)`` shifts all their points in place.
+* **Points owned by one element** - a shape or segment owns its points, so a point can't silently belong to two
+  shapes. Coordinates of different frames aren't mixed in a computation.
 * **Independent copies** - ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` return an object sharing no point
   with the original. A shape's copy is of the same class, and its edges share the copied corners.
 * Conversion to plain tuples through ``ToTuple``, for handing coordinates to a library that expects them.
@@ -140,6 +142,10 @@ the offending type in a note.
 
 :meth:`~pyTooling.Cartesian2D.Point2D.Copy` returns an independent point and
 :meth:`~pyTooling.Cartesian2D.Point2D.ToTuple` the ``(x, y)`` pair.
+
+A point is owned by at most one element, the segment or shape it belongs to: the read-only
+:attr:`~pyTooling.Cartesian2D.Point2D.Parent`. A new point and a copy have no owner. See
+:ref:`STRUCT/Cartesian2D/Ownership`.
 
 .. seealso::
 
@@ -257,10 +263,13 @@ A :class:`~pyTooling.Cartesian2D.Segment2D` is a :attr:`~pyTooling.Cartesian2D.S
 :attr:`~pyTooling.Cartesian2D.Segment2D.End` point.
 
 Its constructor **copies both points by default**, so a segment doesn't change when the points it was built from
-move later. ``copyPoints=False`` keeps the references instead, which is what
-:class:`~pyTooling.Cartesian2D.Shapes.Trapezium` uses to let consecutive edges share a corner. A point assigned to
-:attr:`~pyTooling.Cartesian2D.Segment2D.Start` or :attr:`~pyTooling.Cartesian2D.Segment2D.End` is referenced, not
-copied.
+move later. ``copyPoints=False`` keeps the references instead: the segment takes ownership of both points. A point
+assigned to :attr:`~pyTooling.Cartesian2D.Segment2D.Start` or :attr:`~pyTooling.Cartesian2D.Segment2D.End` is
+referenced too; the segment owns it and releases the previous one.
+
+A segment with a :attr:`~pyTooling.Cartesian2D.Segment2D.Parent` shape is an **edge** of that shape, like the edges of
+a :class:`~pyTooling.Cartesian2D.Shapes.Polygon`: it references two of the shape's corners, which stay owned by the
+shape. An edge can't replace its points.
 
 :attr:`~pyTooling.Cartesian2D.Segment2D.BoundingBox` encloses both points, and
 :meth:`~pyTooling.Cartesian2D.Segment2D.Move` shifts both by an :class:`~pyTooling.Cartesian2D.Offset2D`, in place.
@@ -291,6 +300,35 @@ measurements:
       |rarr| Its base-class, the 2-dimensional segment.
    :ref:`STRUCT/Cartesian3D/LineSegment3D`
       |rarr| Its counterpart, the line segment in 3D.
+
+
+.. _STRUCT/Cartesian2D/Ownership:
+
+Ownership and Frames
+====================
+
+Every point is owned by at most one element: a standalone segment owns its two points, a shape owns its corners or
+its center. An element given a point with ``copyPoints=False`` takes ownership of it; a point owned by another element
+raises :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError`, so two shapes never move each other's corners by accident.
+Copying is always possible - the copy has no owner.
+
+The edges of a polygon or trapezium are views: they reference the shape's corners, but don't own them. Moving an edge
+moves the corners it references; replacing an edge's point raises :exc:`~pyTooling.Cartesian2D.NotOwnedError`.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D
+   from pyTooling.Cartesian2D.Shapes import Circle, Polygon
+
+   center =   Point2D(1, 1)
+   bubble =   Circle(center, 1, copyPoints=False)   # center.Parent is bubble
+   triangle = Polygon((center, Point2D(4, 0), Point2D(2, 3)), copyPoints=False)
+   # AlreadyOwnedError: Point is owned by another element already.
+
+The coordinates of a point are relative to a **frame**: :attr:`~pyTooling.Cartesian2D.Point2D.Frame` is the frame of
+its owner, and an element without a frame has ``None``. Subtracting points or measuring the angle between line
+segments of different frames raises :exc:`~pyTooling.Cartesian2D.NotInSameFrameError` instead of mixing unrelated
+coordinates.
 
 
 .. _STRUCT/Cartesian2D/Shapes:
@@ -339,7 +377,8 @@ corner back to the first one.
 It keeps both views: :attr:`~pyTooling.Cartesian2D.Shapes.Polygon.Points`, the corners as a tuple, and
 :attr:`~pyTooling.Cartesian2D.Shapes.Polygon.Segments`, one :class:`~pyTooling.Cartesian2D.LineSegment2D` edge per
 corner, with consecutive edges sharing a corner object. The corners are copied by default; ``copyPoints=False`` keeps
-the given points instead, as for a :ref:`segment <STRUCT/Cartesian2D/Segment2D>`.
+the given points instead, as for a :ref:`segment <STRUCT/Cartesian2D/Segment2D>`. The polygon owns its corners, and
+its edges have the polygon as parent.
 
 .. code-block:: Python
 
@@ -430,7 +469,7 @@ Circle
 A :class:`~pyTooling.Cartesian2D.Shapes.Circle` is placed by its :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Center`, a
 :class:`~pyTooling.Cartesian2D.Point2D`, and sized by its :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Radius`, a
 positive :class:`int` or :class:`float`. The center is copied by default; ``copyPoints=False`` keeps the given
-point instead.
+point instead. The circle owns its center.
 
 Three read-only properties measure it:
 

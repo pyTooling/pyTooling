@@ -41,15 +41,15 @@ An implementation of 2D cartesian data structures for Python.
 from __future__            import annotations
 
 from math                  import atan2, sqrt
-from typing                import TYPE_CHECKING, Any, Generic, Iterable, Self, TypeVar, Union
+from typing                import TYPE_CHECKING, Any, Generic, Iterable, Optional as Nullable, Self, TypeVar, Union
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
-from pyTooling.Exceptions  import ToolingException
+from pyTooling.Exceptions  import ToolingException, AlreadyInHierarchyError, NotAChildError, NotInSameHierarchyError
 from pyTooling.Common      import getFullyQualifiedName
 
 if TYPE_CHECKING:
-	from pyTooling.Cartesian2D.Shapes import Rectangle
+	from pyTooling.Cartesian2D.Shapes import Rectangle, Shape
 
 
 Coordinate = TypeVar("Coordinate", bound=Union[int, float])
@@ -66,15 +66,47 @@ class NoAreaError(Cartesian2DError):
 
 
 @export
+class AlreadyOwnedError(Cartesian2DError, AlreadyInHierarchyError):
+	"""
+	The exception is raised when an element is given to an element, but another element owns it already.
+
+	For example, a point given to a shape with ``copyPoints=False`` while another shape owns it.
+	"""
+
+
+@export
+class NotOwnedError(Cartesian2DError, NotAChildError):
+	"""
+	The exception is raised when an element replaces or removes an element it doesn't own.
+
+	For example, an edge of a polygon references the polygon's corners, so it can't replace them.
+	"""
+
+
+@export
+class NotInSameFrameError(Cartesian2DError, NotInSameHierarchyError):
+	"""
+	The exception is raised when points or segments of different frames are combined in a computation.
+
+	A frame is what the coordinates of an element are relative to. Combining coordinates of different frames would mix
+	unrelated values silently.
+	"""
+
+
+@export
 class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""An implementation of a 2D cartesian point."""
 
-	_x: Coordinate  #: The x-direction coordinate.
-	_y: Coordinate  #: The y-direction coordinate.
+	_x:      Coordinate                         #: The x-direction coordinate.
+	_y:      Coordinate                         #: The y-direction coordinate.
+	_parent: Nullable[Union[Segment2D, Shape]]  #: Segment or shape owning the point, or ``None``.
 
 	def __init__(self, x: Coordinate, y: Coordinate) -> None:
 		"""
 		Initializes a 2-dimensional point.
+
+		A new point has no owner. A shape or segment takes ownership of the point, when it's given the point instead of
+		copying it.
 
 		:param x:           X-coordinate.
 		:param y:           Y-coordinate.
@@ -97,8 +129,9 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
 			raise ex
 
-		self._x = x
-		self._y = y
+		self._x =      x
+		self._y =      y
+		self._parent = None
 
 	@property
 	def X(self) -> Coordinate:
@@ -152,9 +185,31 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 	y = Y
 
+	@readonly
+	def Parent(self) -> Nullable[Union[Segment2D, Shape]]:
+		"""
+		Read-only property to access the segment or shape owning the point (:attr:`_parent`).
+
+		:returns: The owning segment or shape, or ``None``, if no element owns the point.
+		"""
+		return self._parent
+
+	@readonly
+	def Frame(self) -> Any:
+		"""
+		Read-only property to return the frame the point's coordinates are relative to.
+
+		The frame is the owning element's frame. A point without an owner has no frame.
+
+		:returns: The frame, or ``None``, if the point has no frame.
+		"""
+		return None if self._parent is None else self._parent.Frame
+
 	def Copy(self) -> Self:
 		"""
 		Create a new 2D-point as a copy of this 2D point.
+
+		The copy has no owner.
 
 		:returns: Copy of this 2D-point.
 
@@ -240,11 +295,17 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Subtract two 2D-Points from each other and create a new 2D-offset.
 
-		:param other:      A 2D-point as :class:`Point2D`.
-		:returns:          A new 2D-offset representing the distance between these two points.
-		:raises TypeError: If parameter 'other' is not of type :class:`Point2D`.
+		:param other:                The second 2D-point as :class:`Point2D`.
+		:returns:                    A new 2D-offset representing the distance between these two points.
+		:raises TypeError:           If parameter 'other' is not of type :class:`Point2D`.
+		:raises NotInSameFrameError: If parameter 'other' is in another frame than this point.
 		"""
 		if isinstance(other, Point2D):
+			if self.Frame is not other.Frame:
+				ex = NotInSameFrameError("Points are in different frames.")
+				ex.add_note(f"Got points {self} and {other}.")
+				raise ex from ValueError("Parameter 'other' is in another frame.")
+
 			return Offset2D(
 				self._x - other._x,
 				self._y - other._y
@@ -1111,23 +1172,56 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 @export
 class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
-	"""An implementation of a 2D cartesian segment."""
+	"""
+	An implementation of a 2D cartesian segment.
 
-	_start: Point2D[Coordinate]  #: Start point of a segment.
-	_end:   Point2D[Coordinate]  #: End point of a segment.
+	A standalone segment owns its start and end point. A segment with a parent shape is an edge of that shape: it
+	references two of the shape's points, which stay owned by the shape.
+	"""
 
-	def __init__(self, start: Point2D[Coordinate], end: Point2D[Coordinate], copyPoints: bool = True) -> None:
+	_parent: Nullable[Shape]      #: Shape, whose edge this segment is, or ``None`` for a standalone segment.
+	_start:  Point2D[Coordinate]  #: Start point of a segment.
+	_end:    Point2D[Coordinate]  #: End point of a segment.
+
+	def __init__(
+		self,
+		start:      Point2D[Coordinate],
+		end:        Point2D[Coordinate],
+		copyPoints: bool = True,
+		*,
+		parent:     Nullable[Shape] = None
+	) -> None:
 		"""
 		Initializes a 2-dimensional segment.
 
-		:param start:       Start point of the segment.
-		:param end:         End point of the segment.
-		:param copyPoints:  Optional, if ``True``, the given points are copied instead of referenced.
-		:raises ValueError: If parameter 'start' is None.
-		:raises TypeError:  If parameter 'start' is not of type :class:`Point2D`.
-		:raises ValueError: If parameter 'end' is None.
-		:raises TypeError:  If parameter 'end' is not of type :class:`Point2D`.
+		:param start:              Start point of the segment.
+		:param end:                End point of the segment.
+		:param copyPoints:         Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                           ``True``.
+		:param parent:             Optional, the shape this segment is an edge of. Default: ``None``.
+		:raises ValueError:        If parameter 'start' is None.
+		:raises TypeError:         If parameter 'start' is not of type :class:`Point2D`.
+		:raises AlreadyOwnedError: If parameter 'start' is owned by another element, while no parent is given and
+		                           'copyPoints' is ``False``. |br|
+		                           Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:     If parameter 'start' isn't owned by parameter 'parent'.
+		:raises ValueError:        If parameter 'end' is None.
+		:raises TypeError:         If parameter 'end' is not of type :class:`Point2D`.
+		:raises ValueError:        If parameter 'end' is the same point as parameter 'start', while no parent is given and
+		                           'copyPoints' is ``False``. |br|
+		                           Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError: If parameter 'end' is owned by another element, while no parent is given and
+		                           'copyPoints' is ``False``. |br|
+		                           Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:     If parameter 'end' isn't owned by parameter 'parent'.
+		:raises ValueError:        If parameter 'copyPoints' is None.
+		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape`.
+		:raises ValueError:        If parameter 'parent' is given, while 'copyPoints' is ``True``. |br|
+		                           An edge references the points of its parent shape: use ``copyPoints=False``.
 		"""
+		from pyTooling.Cartesian2D.Shapes import Shape
+
 		if start is None:
 			raise ValueError("Parameter 'start' is None.")
 		elif not isinstance(start, Point2D):
@@ -1142,21 +1236,92 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")
 			raise ex
 
-		self._start = start.Copy() if copyPoints else start
-		self._end =   end.Copy()   if copyPoints else end
+		if copyPoints is None:
+			raise ValueError("Parameter 'copyPoints' is None.")
+		elif not isinstance(copyPoints, bool):
+			ex = TypeError("Parameter 'copyPoints' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
+			raise ex
+
+		if parent is None:
+			if copyPoints:
+				start = start.Copy()
+				end =   end.Copy()
+			elif end is start:
+				ex = ValueError("Parameter 'end' is the same point as parameter 'start'.")
+				ex.add_note(f"Got point {start}.")
+				ex.add_note("Use 'copyPoints=True' to copy the points.")
+				raise ex
+			else:
+				for name, point in (
+					("start", start),
+					("end",   end)
+				):
+					if point._parent is not None:
+						ex = AlreadyOwnedError("Point is owned by another element already.")
+						ex.add_note(f"Got point {point} owned by {point._parent!r}.")
+						ex.add_note("Use 'copyPoints=True' to copy the point.")
+						raise ex from ValueError(f"Parameter '{name}' is owned by another element.")
+
+			start._parent = self
+			end._parent =   self
+		elif not isinstance(parent, Shape):
+			ex = TypeError("Parameter 'parent' is not of type 'Shape'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+		elif copyPoints:
+			ex = ValueError("Parameter 'parent' is given, while 'copyPoints' is True.")
+			ex.add_note("An edge references the points of its parent shape: use 'copyPoints=False'.")
+			raise ex
+		else:
+			for name, point in (
+				("start", start),
+				("end",   end)
+			):
+				if point._parent is not parent:
+					ex = NotOwnedError("Point isn't owned by the parent shape.")
+					ex.add_note(f"Got point {point} owned by {point._parent!r}.")
+					raise ex from ValueError(f"Parameter '{name}' isn't owned by parameter 'parent'.")
+
+		self._parent = parent
+		self._start =  start
+		self._end =    end
+
+	@readonly
+	def Parent(self) -> Nullable[Shape]:
+		"""
+		Read-only property to access the shape this segment is an edge of (:attr:`_parent`).
+
+		:returns: The parent shape, or ``None`` for a standalone segment.
+		"""
+		return self._parent
+
+	@readonly
+	def Frame(self) -> Any:
+		"""
+		Read-only property to return the frame the segment's coordinates are relative to.
+
+		An edge is in its shape's frame. A standalone segment has no frame.
+
+		:returns: The frame, or ``None``, if the segment has no frame.
+		"""
+		return None if self._parent is None else self._parent.Frame
 
 	@property
 	def Start(self) -> Point2D[Coordinate]:
 		"""
 		Property to access the segment's start point (:attr:`_start`).
 
-		An assigned point is referenced, not copied.
+		An assigned point is referenced, not copied: the segment takes ownership of it and releases the previous start
+		point. An edge of a shape doesn't own its points, so it can't replace them.
 
 		``start`` is a deprecated alias of this property; it is removed in v11.0.0.
 
-		:returns:           Start point of the segment.
-		:raises ValueError: If ``None`` is assigned.
-		:raises TypeError:  If an assigned value is not of type :class:`Point2D`.
+		:returns:                  Start point of the segment.
+		:raises ValueError:        If ``None`` is assigned.
+		:raises TypeError:         If an assigned value is not of type :class:`Point2D`.
+		:raises NotOwnedError:     If the segment is an edge of a shape.
+		:raises AlreadyOwnedError: If an assigned point is owned by another element.
 		"""
 		return self._start
 
@@ -1168,8 +1333,20 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'start' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
 			raise ex
+		elif start is self._start:
+			return
+		elif self._parent is not None:
+			ex = NotOwnedError("Segment doesn't own its start point.")
+			ex.add_note(f"The segment is an edge of {self._parent!r}, which owns the point.")
+			raise ex
+		elif start._parent is not None:
+			ex = AlreadyOwnedError("Point is owned by another element already.")
+			ex.add_note(f"Got point {start} owned by {start._parent!r}.")
+			raise ex from ValueError("Parameter 'start' is owned by another element.")
 
-		self._start = start
+		self._start._parent = None
+		start._parent =       self
+		self._start =         start
 
 	start = Start
 
@@ -1178,13 +1355,16 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the segment's end point (:attr:`_end`).
 
-		An assigned point is referenced, not copied.
+		An assigned point is referenced, not copied: the segment takes ownership of it and releases the previous end
+		point. An edge of a shape doesn't own its points, so it can't replace them.
 
 		``end`` is a deprecated alias of this property; it is removed in v11.0.0.
 
-		:returns:           End point of the segment.
-		:raises ValueError: If ``None`` is assigned.
-		:raises TypeError:  If an assigned value is not of type :class:`Point2D`.
+		:returns:                  End point of the segment.
+		:raises ValueError:        If ``None`` is assigned.
+		:raises TypeError:         If an assigned value is not of type :class:`Point2D`.
+		:raises NotOwnedError:     If the segment is an edge of a shape.
+		:raises AlreadyOwnedError: If an assigned point is owned by another element.
 		"""
 		return self._end
 
@@ -1196,8 +1376,20 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'end' is not of type 'Point2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")
 			raise ex
+		elif end is self._end:
+			return
+		elif self._parent is not None:
+			ex = NotOwnedError("Segment doesn't own its end point.")
+			ex.add_note(f"The segment is an edge of {self._parent!r}, which owns the point.")
+			raise ex
+		elif end._parent is not None:
+			ex = AlreadyOwnedError("Point is owned by another element already.")
+			ex.add_note(f"Got point {end} owned by {end._parent!r}.")
+			raise ex from ValueError("Parameter 'end' is owned by another element.")
 
-		self._end = end
+		self._end._parent = None
+		end._parent =       self
+		self._end =         end
 
 	end = End
 
@@ -1215,6 +1407,8 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	def Move(self, offset: Offset2D[Coordinate]) -> None:
 		"""
 		Move the segment by moving its start and end point (inplace).
+
+		An edge of a shape moves the shape's corners it references.
 
 		:param offset:      The 2D-offset to move by.
 		:raises ValueError: If parameter 'offset' is None.
@@ -1271,12 +1465,13 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		The angle is the one between both segments' directions, from ``0`` (same direction) to :data:`math.pi` (opposite
 		directions).
 
-		:param other:       The second line segment.
-		:returns:           The angle in radians.
-		:raises ValueError: If parameter 'other' is None.
-		:raises TypeError:  If parameter 'other' is not of type :class:`LineSegment2D`.
-		:raises ValueError: If parameter 'other' has length 0.
-		:raises ValueError: If this line segment has length 0.
+		:param other:                The second line segment.
+		:returns:                    The angle in radians.
+		:raises ValueError:          If parameter 'other' is None.
+		:raises TypeError:           If parameter 'other' is not of type :class:`LineSegment2D`.
+		:raises NotInSameFrameError: If parameter 'other' is in another frame than this line segment.
+		:raises ValueError:          If parameter 'other' has length 0.
+		:raises ValueError:          If this line segment has length 0.
 		"""
 		if other is None:
 			raise ValueError("Parameter 'other' is None.")
@@ -1284,6 +1479,10 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 			ex = TypeError("Parameter 'other' is not of type 'LineSegment2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
+		elif self.Frame is not other.Frame:
+			ex = NotInSameFrameError("Line segments are in different frames.")
+			ex.add_note(f"Got line segments {self} and {other}.")
+			raise ex from ValueError("Parameter 'other' is in another frame.")
 		elif other._start._x == other._end._x and other._start._y == other._end._y:
 			ex = ValueError("Parameter 'other' has length 0.")
 			ex.add_note(f"Got line segment {other}.")
