@@ -37,6 +37,9 @@ Features
   four-cornered :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` narrowed down to a
   :class:`~pyTooling.Cartesian2D.Shapes.Square`, and a :class:`~pyTooling.Cartesian2D.Shapes.Circle`.
 * **A circle measured** - it reports its diameter, circumference and area.
+* **Bounding boxes** - every shape and segment reports the smallest axis-aligned
+  :class:`~pyTooling.Cartesian2D.BoundingBox` enclosing it, and bounding boxes unite, intersect and contain points.
+* **Shapes and segments moved as a whole** - ``Move(offset)`` shifts all their points in place.
 * **Independent copies** - ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` return an object sharing no point
   with the original. A shape's copy is of the same class, and its edges share the copied corners.
 * Conversion to plain tuples through ``ToTuple``, for handing coordinates to a library that expects them.
@@ -47,11 +50,10 @@ Features
 Missing Features
 ================
 
-* Moving a shape as a whole. A point can be shifted, but a shape holds its corners and offers no way to translate
-  them together.
 * Rotation, scaling and mirroring - a point can be shifted, but not transformed.
 * Shapes with curved edges other than a circle (ellipses, arcs).
-* Containment and intersection tests (*is this point inside that rectangle?*).
+* Exact containment and intersection tests (*is this point inside that rotated rectangle?*). Only bounding boxes are
+  compared.
 * Area and perimeter of a polygon.
 
 
@@ -202,6 +204,48 @@ meaningless, and keeping the types apart is what prevents it.
       |rarr| Its counterpart, the size with a depth.
 
 
+.. _STRUCT/Cartesian2D/BoundingBox:
+
+BoundingBox
+===========
+
+A :class:`~pyTooling.Cartesian2D.BoundingBox` is the smallest **axis-aligned rectangle** enclosing something: the
+read-only properties :attr:`~pyTooling.Cartesian2D.BoundingBox.MinX`, :attr:`~pyTooling.Cartesian2D.BoundingBox.MinY`,
+:attr:`~pyTooling.Cartesian2D.BoundingBox.MaxX` and :attr:`~pyTooling.Cartesian2D.BoundingBox.MaxY`, and from them
+:attr:`~pyTooling.Cartesian2D.BoundingBox.Width`, :attr:`~pyTooling.Cartesian2D.BoundingBox.Height` and
+:attr:`~pyTooling.Cartesian2D.BoundingBox.Center`. A maximum less than its minimum raises :exc:`ValueError`.
+
+It is a computed value, not a shape: a shape's or segment's ``BoundingBox`` property returns a new one on every access,
+so it always follows moved points. :meth:`~pyTooling.Cartesian2D.BoundingBox.FromPoints` encloses any number of points.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Expression
+     - Result
+   * - ``box.Union(other)``
+     - A new :class:`~pyTooling.Cartesian2D.BoundingBox` enclosing both.
+   * - ``box.Intersects(other)``
+     - ``True``, if both share at least one point - touching borders count.
+   * - ``box.Contains(point)``
+     - ``True``, if the point lies inside or on the border.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D
+   from pyTooling.Cartesian2D.Shapes import Circle, Polygon
+
+   triangle = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+   bubble =   Circle(Point2D(5, 1), 1)
+
+   triangle.BoundingBox                            # BoundingBox(0, 0, 4, 3)
+   triangle.BoundingBox.Union(bubble.BoundingBox)  # BoundingBox(0, 0, 6, 3)
+
+Like an offset, a bounding box compares with ``==`` and ``!=``, and ``Copy()``, :func:`copy.copy` and
+:func:`copy.deepcopy` return an independent one.
+
+
 .. _STRUCT/Cartesian2D/Segment2D:
 
 Segment2D
@@ -215,6 +259,9 @@ move later. ``copyPoints=False`` keeps the references instead, which is what
 :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` uses to let consecutive edges share a corner. A point assigned to
 :attr:`~pyTooling.Cartesian2D.Segment2D.Start` or :attr:`~pyTooling.Cartesian2D.Segment2D.End` is referenced, not
 copied.
+
+:attr:`~pyTooling.Cartesian2D.Segment2D.BoundingBox` encloses both points, and
+:meth:`~pyTooling.Cartesian2D.Segment2D.Move` shifts both by an :class:`~pyTooling.Cartesian2D.Offset2D`, in place.
 
 .. seealso::
 
@@ -261,6 +308,13 @@ Shape
 
 :class:`~pyTooling.Cartesian2D.Shapes.Shape` is the abstract base-class of every 2D shape. It carries no fields; it
 exists so a function can accept *a shape*. Instantiating it raises :exc:`~pyTooling.MetaClasses.AbstractClassError`.
+
+Every shape implements its two abstract members:
+
+* :attr:`~pyTooling.Cartesian2D.Shapes.Shape.BoundingBox` - the smallest axis-aligned
+  :ref:`bounding box <STRUCT/Cartesian2D/BoundingBox>` enclosing the shape, computed on every access;
+* :meth:`~pyTooling.Cartesian2D.Shapes.Shape.Move` - shifts all points of the shape by an
+  :class:`~pyTooling.Cartesian2D.Offset2D`, in place. Edges share the corners, so they move along.
 
 Every shape is created by :class:`~pyTooling.MetaClasses.ExtendedType` and stores its fields in slots, so a class
 derived from a shape can declare ``slots=True`` too and gets no instance dictionary.

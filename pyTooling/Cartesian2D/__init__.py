@@ -41,7 +41,7 @@ An implementation of 2D cartesian data structures for Python.
 from __future__            import annotations
 
 from math                  import atan2, sqrt
-from typing                import TypeVar, Union, Generic, Any, Self
+from typing                import Any, Generic, Iterable, Self, TypeVar, Union
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
@@ -713,6 +713,322 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 
 @export
+class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+	"""
+	An axis-aligned 2D bounding box.
+
+	A bounding box is a computed value: shapes and segments return a new one from their ``BoundingBox`` property on
+	every access. Its borders belong to the box.
+	"""
+
+	_minX: Coordinate  #: Smallest x-coordinate.
+	_minY: Coordinate  #: Smallest y-coordinate.
+	_maxX: Coordinate  #: Largest x-coordinate.
+	_maxY: Coordinate  #: Largest y-coordinate.
+
+	def __init__(self, minX: Coordinate, minY: Coordinate, maxX: Coordinate, maxY: Coordinate) -> None:
+		"""
+		Initializes a 2-dimensional bounding box from its smallest and largest coordinates.
+
+		:param minX:        Smallest x-coordinate.
+		:param minY:        Smallest y-coordinate.
+		:param maxX:        Largest x-coordinate.
+		:param maxY:        Largest y-coordinate.
+		:raises ValueError: If parameter 'minX' is None.
+		:raises TypeError:  If parameter 'minX' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'minY' is None.
+		:raises TypeError:  If parameter 'minY' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'maxX' is None.
+		:raises TypeError:  If parameter 'maxX' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'maxX' is less than parameter 'minX'.
+		:raises ValueError: If parameter 'maxY' is None.
+		:raises TypeError:  If parameter 'maxY' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'maxY' is less than parameter 'minY'.
+		"""
+		for name, value in (
+			("minX", minX),
+			("minY", minY),
+			("maxX", maxX),
+			("maxY", maxY)
+		):
+			if value is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(value, (int, float)):
+				ex = TypeError(f"Parameter '{name}' is not of type 'float' or 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
+				raise ex
+
+		if maxX < minX:
+			ex = ValueError("Parameter 'maxX' is less than parameter 'minX'.")
+			ex.add_note(f"Got minX={minX} and maxX={maxX}.")
+			raise ex
+
+		if maxY < minY:
+			ex = ValueError("Parameter 'maxY' is less than parameter 'minY'.")
+			ex.add_note(f"Got minY={minY} and maxY={maxY}.")
+			raise ex
+
+		self._minX = minX
+		self._minY = minY
+		self._maxX = maxX
+		self._maxY = maxY
+
+	@classmethod
+	def FromPoints(cls, points: Iterable[Point2D[Coordinate]]) -> Self:
+		"""
+		Create the smallest bounding box enclosing all given points.
+
+		:param points:      Points to enclose.
+		:returns:           Bounding box enclosing all points.
+		:raises ValueError: If parameter 'points' is None.
+		:raises TypeError:  If parameter 'points' is not iterable.
+		:raises ValueError: If an element of parameter 'points' is None.
+		:raises TypeError:  If an element of parameter 'points' is not of type :class:`Point2D`.
+		:raises ValueError: If parameter 'points' is empty.
+		"""
+		if points is None:
+			raise ValueError("Parameter 'points' is None.")
+		elif not isinstance(points, Iterable):
+			ex = TypeError("Parameter 'points' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(points)}'.")
+			raise ex
+
+		xList = []
+		yList = []
+		for point in points:
+			if point is None:
+				raise ValueError("An element of parameter 'points' is None.")
+			elif not isinstance(point, Point2D):
+				ex = TypeError("An element of parameter 'points' is not of type 'Point2D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+				raise ex
+
+			xList.append(point._x)
+			yList.append(point._y)
+
+		if len(xList) == 0:
+			raise ValueError("Parameter 'points' is empty.")
+
+		return cls(min(xList), min(yList), max(xList), max(yList))
+
+	@readonly
+	def MinX(self) -> Coordinate:
+		"""
+		Read-only property to access the smallest x-coordinate (:attr:`_minX`).
+
+		:returns: The smallest x-coordinate.
+		"""
+		return self._minX
+
+	@readonly
+	def MinY(self) -> Coordinate:
+		"""
+		Read-only property to access the smallest y-coordinate (:attr:`_minY`).
+
+		:returns: The smallest y-coordinate.
+		"""
+		return self._minY
+
+	@readonly
+	def MaxX(self) -> Coordinate:
+		"""
+		Read-only property to access the largest x-coordinate (:attr:`_maxX`).
+
+		:returns: The largest x-coordinate.
+		"""
+		return self._maxX
+
+	@readonly
+	def MaxY(self) -> Coordinate:
+		"""
+		Read-only property to access the largest y-coordinate (:attr:`_maxY`).
+
+		:returns: The largest y-coordinate.
+		"""
+		return self._maxY
+
+	@readonly
+	def Width(self) -> Coordinate:
+		"""
+		Read-only property to return the bounding box' extent in x-direction.
+
+		:returns: The width in x-direction.
+		"""
+		return self._maxX - self._minX
+
+	@readonly
+	def Height(self) -> Coordinate:
+		"""
+		Read-only property to return the bounding box' extent in y-direction.
+
+		:returns: The height in y-direction.
+		"""
+		return self._maxY - self._minY
+
+	@readonly
+	def Center(self) -> Point2D[float]:
+		"""
+		Read-only property to return the bounding box' center as a new 2D-point.
+
+		:returns: The center point.
+		"""
+		return Point2D((self._minX + self._maxX) / 2, (self._minY + self._maxY) / 2)
+
+	def Union(self, other: BoundingBox[Coordinate]) -> BoundingBox[Coordinate]:
+		"""
+		Create the smallest bounding box enclosing this and another bounding box.
+
+		:param other:       The second bounding box.
+		:returns:           A new bounding box enclosing both bounding boxes.
+		:raises ValueError: If parameter 'other' is None.
+		:raises TypeError:  If parameter 'other' is not of type :class:`BoundingBox`.
+		"""
+		if other is None:
+			raise ValueError("Parameter 'other' is None.")
+		elif not isinstance(other, BoundingBox):
+			ex = TypeError("Parameter 'other' is not of type 'BoundingBox'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self.__class__(
+			min(self._minX, other._minX),
+			min(self._minY, other._minY),
+			max(self._maxX, other._maxX),
+			max(self._maxY, other._maxY)
+		)
+
+	def Intersects(self, other: BoundingBox[Coordinate]) -> bool:
+		"""
+		Check if this bounding box and another bounding box overlap.
+
+		Two bounding boxes touching at a border or a corner intersect.
+
+		:param other:       The second bounding box.
+		:returns:           ``True``, if both bounding boxes share at least one point.
+		:raises ValueError: If parameter 'other' is None.
+		:raises TypeError:  If parameter 'other' is not of type :class:`BoundingBox`.
+		"""
+		if other is None:
+			raise ValueError("Parameter 'other' is None.")
+		elif not isinstance(other, BoundingBox):
+			ex = TypeError("Parameter 'other' is not of type 'BoundingBox'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return (
+			self._minX <= other._maxX and other._minX <= self._maxX and
+			self._minY <= other._maxY and other._minY <= self._maxY
+		)
+
+	def Contains(self, point: Point2D[Coordinate]) -> bool:
+		"""
+		Check if a point lies within this bounding box.
+
+		A point on a border is contained.
+
+		:param point:       The point to check.
+		:returns:           ``True``, if the point lies within the bounding box or on its border.
+		:raises ValueError: If parameter 'point' is None.
+		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point2D):
+			ex = TypeError("Parameter 'point' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		return self._minX <= point._x <= self._maxX and self._minY <= point._y <= self._maxY
+
+	def Copy(self) -> Self:
+		"""
+		Create a new bounding box as a copy of this bounding box.
+
+		:returns: Copy of this bounding box.
+		"""
+		return self.__class__(self._minX, self._minY, self._maxX, self._maxY)
+
+	def __copy__(self) -> Self:
+		"""
+		Returns a copy of this bounding box for :func:`copy.copy`.
+
+		:returns: Copy of this bounding box.
+		"""
+		return self.Copy()
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this bounding box for :func:`copy.deepcopy`.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this bounding box.
+		"""
+		return self.Copy()
+
+	def ToTuple(self) -> tuple[Coordinate, Coordinate, Coordinate, Coordinate]:
+		"""
+		Convert this bounding box to a simple 4-element tuple.
+
+		:returns: ``(minX, minY, maxX, maxY)`` tuple.
+		"""
+		return self._minX, self._minY, self._maxX, self._maxY
+
+	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two bounding boxes for equality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if both bounding boxes have the same coordinates.
+		:raises TypeError: If the second operand is not of type :class:`BoundingBox`.
+		"""
+		if not isinstance(other, BoundingBox):
+			ex = TypeError("Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BoundingBox")
+			raise ex
+
+		return (
+			self._minX == other._minX and self._minY == other._minY and
+			self._maxX == other._maxX and self._maxY == other._maxY
+		)
+
+	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two bounding boxes for inequality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if the bounding boxes differ in at least one coordinate.
+		:raises TypeError: If the second operand is not of type :class:`BoundingBox`.
+		"""
+		if not isinstance(other, BoundingBox):
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BoundingBox")
+			raise ex
+
+		return (
+			self._minX != other._minX or self._minY != other._minY or
+			self._maxX != other._maxX or self._maxY != other._maxY
+		)
+
+	def __repr__(self) -> str:
+		"""
+		Returns the bounding box' string representation.
+
+		:returns: The string representation of the bounding box.
+		"""
+		return f"BoundingBox({self._minX}, {self._minY}, {self._maxX}, {self._maxY})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the bounding box' string equivalent.
+
+		:returns: The string equivalent of the bounding box, its corners with the smallest and the largest coordinates.
+		"""
+		return f"(({self._minX}, {self._minY}), ({self._maxX}, {self._maxY}))"
+
+
+@export
 class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""An implementation of a 2D cartesian segment."""
 
@@ -803,6 +1119,35 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._end = end
 
 	end = End
+
+	@readonly
+	def BoundingBox(self) -> BoundingBox[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the segment's start and end point.
+
+		:returns: A new bounding box.
+		"""
+		start = self._start
+		end =   self._end
+		return BoundingBox(min(start._x, end._x), min(start._y, end._y), max(start._x, end._x), max(start._y, end._y))
+
+	def Move(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the segment by moving its start and end point (inplace).
+
+		:param offset:      The 2D-offset to move by.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`Offset2D`.
+		"""
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, Offset2D):
+			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		self._start += offset
+		self._end +=   offset
 
 	def Copy(self) -> Self:
 		"""
