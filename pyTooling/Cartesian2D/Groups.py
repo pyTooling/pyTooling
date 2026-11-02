@@ -29,9 +29,10 @@
 # ==================================================================================================================== #
 #
 """
-Groups of 2D cartesian shapes, segments and groups, placed by an offset.
+Groups and canvases of 2D cartesian shapes, segments and groups.
 
-The coordinates of everything inside a group are relative to the group, so moving a group changes its offset only.
+The coordinates of everything inside a group are relative to the group, so moving a group changes its offset only. A
+canvas is the root of such a tree and knows the direction of its y-axis.
 
 .. seealso::
 
@@ -42,173 +43,110 @@ The coordinates of everything inside a group are relative to the group, so movin
 """
 from __future__                   import annotations
 
-from typing                       import Generic, Iterable, Optional as Nullable
+from enum                         import Enum
+from typing                       import Generic, Iterable, Optional as Nullable, Union
 
 from pyTooling.Decorators         import export, readonly
 from pyTooling.Exceptions         import EmptyError
+from pyTooling.MetaClasses        import ExtendedType
 from pyTooling.Common             import getFullyQualifiedName
-from pyTooling.Cartesian2D        import Coordinate, Offset2D, BoundingBox, Element2D, Segment2D, Cartesian2DError, \
-                                         AlreadyOwnedError, GroupCycleError, NotOwnedError
+from pyTooling.Cartesian2D        import Coordinate, Offset2D, Size2D, BoundingBox, Alignment, Element2D, Segment2D, \
+                                         Cartesian2DError, AlreadyOwnedError, GroupCycleError, NotOwnedError, \
+                                         NotInSameFrameError
 from pyTooling.Cartesian2D.Shapes import Shape
 
 
 @export
-class EmptyGroupError(Cartesian2DError, EmptyError):
-	"""The exception is raised when the bounding box of a group without children is requested."""
+class YAxisDirection(Enum):
+	"""Direction, in which the y-coordinates of a canvas grow."""
+
+	Up =   0  #: Y-coordinates grow upwards, as in mathematics.
+	Down = 1  #: Y-coordinates grow downwards, as on a screen or in SVG.
 
 
 @export
-class Group(Element2D[Coordinate], Generic[Coordinate]):
+class EmptyGroupError(Cartesian2DError, EmptyError):
+	"""The exception is raised when the bounding box of a group or canvas without children is requested."""
+
+
+@export
+class ContainerMixin(metaclass=ExtendedType, mixin=True):
 	"""
-	A group holds shapes, segments and other groups at an offset.
+	Mixin-class for elements holding shapes, segments and groups: groups and canvases.
 
-	The coordinates of the group's children are relative to the group's origin, which is placed at :attr:`Offset` in the
-	group's own frame. A group without a parent is relative to the origin.
+	The coordinates of the children are relative to the container.
 	"""
 
-	_offset:   Offset2D[Coordinate]         #: Offset of the group's origin in the group's frame.
-	_children: list[Element2D[Coordinate]]  #: Shapes, segments and groups of the group, in insertion order.
+	_children: list[Element2D]  #: Shapes, segments and groups of the container, in insertion order.
 
-	def __init__(
-		self,
-		offset:   Nullable[Offset2D[Coordinate]] = None,
-		children: Nullable[Iterable[Element2D[Coordinate]]] = None,
-		*,
-		parent:   Nullable[Group[Coordinate]] = None
-	) -> None:
+	def __init__(self, children: Nullable[Iterable[Element2D]] = None) -> None:
 		"""
-		Initializes a group at an offset, holding the given children.
+		Initializes the container's children.
 
-		The group takes the children, which must not belong to another element. When parameter 'parent' can't take the
-		group, the children stay free.
+		The container takes the children, which must not belong to another element.
 
-		:param offset:             Optional, offset of the group's origin. Default: ``None``, which places it at ``(0, 0)``.
-		:param children:           Optional, shapes, segments and groups held by the group. Default: ``None``.
-		:param parent:             Optional, the group this group is added to. Default: ``None``, no group.
-		:raises TypeError:         If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		:param children:           Optional, shapes, segments and groups held by the container. Default: ``None``.
 		:raises TypeError:         If parameter 'children' is not iterable.
 		:raises ValueError:        If an element of parameter 'children' is None.
 		:raises TypeError:         If an element of parameter 'children' is not of type
 		                           :class:`~pyTooling.Cartesian2D.Element2D`.
 		:raises AlreadyOwnedError: If an element of parameter 'children' belongs to another element.
 		:raises ValueError:        If an element of parameter 'children' is given twice.
-		:raises TypeError:         If parameter 'parent' is not of type :class:`Group`.
-		:raises GroupCycleError:   If parameter 'parent' is inside an element of parameter 'children'.
 		"""
-		super().__init__(parent=parent)
-
-		if offset is not None and not isinstance(offset, Offset2D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
-			raise ex
-
 		if children is not None and not isinstance(children, Iterable):
 			ex = TypeError("Parameter 'children' is not iterable.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(children)}'.")
 			raise ex
 
-		self._offset =   Offset2D(0, 0) if offset is None else offset.Copy()
 		self._children = childList = []
 
-		if children is not None:
-			seenChildren = set()
-			for child in children:
-				if child is None:
-					raise ValueError("An element of parameter 'children' is None.")
-				elif not isinstance(child, Element2D):
-					ex = TypeError("An element of parameter 'children' is not of type 'Element2D'.")
-					ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
-					raise ex
-				elif child._parent is not None:
-					ex = AlreadyOwnedError("Element is owned by another element already.")
-					ex.add_note(f"Got {child!r} owned by {child._parent!r}.")
-					raise ex from ValueError("An element of parameter 'children' belongs to another element.")
-				elif child in seenChildren:
-					ex = ValueError("An element of parameter 'children' is given twice.")
-					ex.add_note(f"Got {child!r}.")
-					raise ex
+		if children is None:
+			return
 
-				seenChildren.add(child)
-				childList.append(child)
+		seenChildren = set()
+		for child in children:
+			if child is None:
+				raise ValueError("An element of parameter 'children' is None.")
+			elif not isinstance(child, Element2D):
+				ex = TypeError("An element of parameter 'children' is not of type 'Element2D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+				raise ex
+			elif child._parent is not None:
+				ex = AlreadyOwnedError("Element is owned by another element already.")
+				ex.add_note(f"Got {child!r} owned by {child._parent!r}.")
+				raise ex from ValueError("An element of parameter 'children' belongs to another element.")
+			elif child in seenChildren:
+				ex = ValueError("An element of parameter 'children' is given twice.")
+				ex.add_note(f"Got {child!r}.")
+				raise ex
 
-			for child in childList:
-				child._parent = self
+			seenChildren.add(child)
+			childList.append(child)
 
-		try:
-			self.Parent = parent
-		except GroupCycleError:
-			for child in childList:
-				child._parent = None
-
-			raise
-
-	@property
-	def Offset(self) -> Offset2D[Coordinate]:
-		"""
-		Property to access the offset of the group's origin in the group's frame (:attr:`_offset`).
-
-		An assigned offset is copied, so groups never share an offset.
-
-		:returns:           The group's offset.
-		:raises ValueError: If ``None`` is assigned.
-		:raises TypeError:  If an assigned value is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
-		"""
-		return self._offset
-
-	@Offset.setter
-	def Offset(self, offset: Offset2D[Coordinate]) -> None:
-		if offset is None:
-			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset2D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
-			raise ex
-
-		self._offset = offset.Copy()
+		for child in childList:
+			child._parent = self
 
 	@readonly
-	def AbsoluteOffset(self) -> Offset2D[Coordinate]:
+	def Children(self) -> tuple[Element2D, ...]:
 		"""
-		Read-only property to return the offset of the group's origin relative to the origin.
-
-		The offsets of all groups up the parent chain are added to :attr:`Offset`.
-
-		:returns: A new 2D-offset.
-		"""
-		frame = self.Frame
-		return self._offset.Copy() if frame is None else self._offset + frame.AbsoluteOffset
-
-	@readonly
-	def Children(self) -> tuple[Element2D[Coordinate], ...]:
-		"""
-		Read-only property to return the shapes, segments and groups of the group (:attr:`_children`).
+		Read-only property to return the shapes, segments and groups of the container (:attr:`_children`).
 
 		:returns: Tuple of children, in insertion order.
 		"""
 		return tuple(self._children)
 
 	@readonly
-	def _ChildFrame(self) -> Group[Coordinate]:
-		"""
-		Read-only property to access the frame the coordinates of this group's children are relative to: the group itself.
-
-		:returns: This group.
-		"""
-		return self
-
-	@readonly
-	def BoundingBox(self) -> BoundingBox[Coordinate]:
+	def BoundingBox(self) -> BoundingBox:
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing all children.
 
-		The union of the children's bounding boxes is shifted by :attr:`Offset`, so the bounding box is in the group's
-		frame.
+		The bounding box is in the coordinates of the children.
 
 		:returns:                A new bounding box.
-		:raises EmptyGroupError: If the group or a group inside it has no children.
+		:raises EmptyGroupError: If the container or a group inside it has no children.
 		"""
 		if len(self._children) == 0:
-			ex = EmptyGroupError("Group has no children.")
+			ex = EmptyGroupError(f"{self.__class__.__name__} has no children.")
 			ex.add_note(f"Got {self!r}.")
 			raise ex
 
@@ -216,13 +154,13 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 		for child in self._children[1:]:
 			box = box.Union(child.BoundingBox)
 
-		return box + self._offset
+		return box
 
-	def AddChild(self, child: Element2D[Coordinate]) -> None:
+	def AddChild(self, child: Element2D) -> None:
 		"""
-		Add a shape, segment or group to this group.
+		Add a shape, segment or group to this container.
 
-		The child keeps its coordinates, which are relative to this group from now on.
+		The child keeps its coordinates, which are relative to this container from now on.
 
 		:param child:              The shape, segment or group to add.
 		:raises ValueError:        If parameter 'child' is None.
@@ -245,16 +183,16 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 
 		child.Parent = self
 
-	def RemoveChild(self, child: Element2D[Coordinate]) -> None:
+	def RemoveChild(self, child: Element2D) -> None:
 		"""
-		Remove a shape, segment or group from this group.
+		Remove a shape, segment or group from this container.
 
 		The child keeps its coordinates, which are relative to the origin from now on.
 
 		:param child:          The shape, segment or group to remove.
 		:raises ValueError:    If parameter 'child' is None.
 		:raises TypeError:     If parameter 'child' is not of type :class:`~pyTooling.Cartesian2D.Element2D`.
-		:raises NotOwnedError: If parameter 'child' isn't a child of this group.
+		:raises NotOwnedError: If parameter 'child' isn't a child of this container.
 		"""
 		if child is None:
 			raise ValueError("Parameter 'child' is None.")
@@ -263,30 +201,11 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
 			raise ex
 		elif child._parent is not self:
-			ex = NotOwnedError("Element isn't a child of this group.")
+			ex = NotOwnedError(f"Element isn't a child of this {self.__class__.__name__.lower()}.")
 			ex.add_note(f"Got {child!r} owned by {child._parent!r}.")
-			raise ex from ValueError("Parameter 'child' isn't a child of this group.")
+			raise ex from ValueError(f"Parameter 'child' isn't a child of this {self.__class__.__name__.lower()}.")
 
 		child.Parent = None
-
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
-		"""
-		Move the group by changing its :attr:`Offset` (inplace).
-
-		The children keep their coordinates.
-
-		:param offset:      The 2D-offset to move by.
-		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
-		"""
-		if offset is None:
-			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset2D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
-			raise ex
-
-		self._offset += offset
 
 	def DistributeX(self, gap: Nullable[Coordinate] = None) -> None:
 		"""
@@ -300,7 +219,7 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 		                         the first and the last child.
 		:raises TypeError:       If parameter 'gap' is not of type :class:`float` or :class:`int`.
 		:raises ValueError:      If parameter 'gap' is negative.
-		:raises EmptyGroupError: If a group inside this group has no children.
+		:raises EmptyGroupError: If a group inside this container has no children.
 		"""
 		if gap is not None:
 			if not isinstance(gap, (int, float)):
@@ -335,7 +254,7 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 		                         the first and the last child.
 		:raises TypeError:       If parameter 'gap' is not of type :class:`float` or :class:`int`.
 		:raises ValueError:      If parameter 'gap' is negative.
-		:raises EmptyGroupError: If a group inside this group has no children.
+		:raises EmptyGroupError: If a group inside this container has no children.
 		"""
 		if gap is not None:
 			if not isinstance(gap, (int, float)):
@@ -388,6 +307,160 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 
 		return distances
 
+
+@export
+class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
+	"""
+	A group holds shapes, segments and other groups at an offset.
+
+	The coordinates of the group's children are relative to the group's origin, which is placed at :attr:`Offset` in the
+	group's own frame. A group without a parent is relative to the origin.
+	"""
+
+	_offset: Offset2D[Coordinate]  #: Offset of the group's origin in the group's frame.
+
+	def __init__(
+		self,
+		offset:   Nullable[Offset2D[Coordinate]] = None,
+		children: Nullable[Iterable[Element2D[Coordinate]]] = None,
+		*,
+		parent:   Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a group at an offset, holding the given children.
+
+		The group takes the children, which must not belong to another element. When parameter 'parent' can't take the
+		group, the children stay free.
+
+		:param offset:             Optional, offset of the group's origin. Default: ``None``, which places it at ``(0, 0)``.
+		:param children:           Optional, shapes, segments and groups held by the group. Default: ``None``.
+		:param parent:             Optional, the group or canvas this group is added to. Default: ``None``, no parent.
+		:raises TypeError:         If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		:raises TypeError:         If parameter 'children' is not iterable.
+		:raises ValueError:        If an element of parameter 'children' is None.
+		:raises TypeError:         If an element of parameter 'children' is not of type
+		                           :class:`~pyTooling.Cartesian2D.Element2D`.
+		:raises AlreadyOwnedError: If an element of parameter 'children' belongs to another element.
+		:raises ValueError:        If an element of parameter 'children' is given twice.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`Group` or :class:`Canvas`.
+		:raises GroupCycleError:   If parameter 'parent' is inside an element of parameter 'children'.
+		"""
+		super().__init__(parent=parent)
+		ContainerMixin.__init__(self, children)
+
+		if offset is not None and not isinstance(offset, Offset2D):
+			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		self._offset = Offset2D(0, 0) if offset is None else offset.Copy()
+
+		try:
+			self.Parent = parent
+		except GroupCycleError:
+			for child in self._children:
+				child._parent = None
+
+			raise
+
+	@property
+	def Offset(self) -> Offset2D[Coordinate]:
+		"""
+		Property to access the offset of the group's origin in the group's frame (:attr:`_offset`).
+
+		An assigned offset is copied, so groups never share an offset.
+
+		:returns:           The group's offset.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		"""
+		return self._offset
+
+	@Offset.setter
+	def Offset(self, offset: Offset2D[Coordinate]) -> None:
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, Offset2D):
+			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		self._offset = offset.Copy()
+
+	@readonly
+	def AbsoluteOffset(self) -> Offset2D[Coordinate]:
+		"""
+		Read-only property to return the offset of the group's origin relative to the origin.
+
+		The offsets of all groups up the parent chain are added to :attr:`Offset`.
+
+		:returns: A new 2D-offset.
+		"""
+		frame = self.Frame
+		return self._offset.Copy() if frame is None else self._offset + frame.AbsoluteOffset
+
+	@readonly
+	def _ChildFrame(self) -> Group[Coordinate]:
+		"""
+		Read-only property to access the frame the coordinates of this group's children are relative to: the group itself.
+
+		:returns: This group.
+		"""
+		return self
+
+	@readonly
+	def BoundingBox(self) -> BoundingBox[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing all children.
+
+		The union of the children's bounding boxes is shifted by :attr:`Offset`, so the bounding box is in the group's
+		frame.
+
+		:returns:                A new bounding box.
+		:raises EmptyGroupError: If the group or a group inside it has no children.
+		"""
+		return ContainerMixin.BoundingBox.fget(self) + self._offset
+
+	def Move(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the group by changing its :attr:`Offset` (inplace).
+
+		The children keep their coordinates.
+
+		:param offset:      The 2D-offset to move by.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		"""
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, Offset2D):
+			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		self._offset += offset
+
+	def MirrorY(self, height: Coordinate = 0) -> None:
+		"""
+		Mirror the group vertically, so the y-component ``y`` of its :attr:`Offset` becomes ``height - y`` (inplace).
+
+		The children are mirrored at the group's origin: every y-coordinate inside the group is negated.
+
+		:param height:      Optional, the sum of a y-coordinate and its mirrored value. Default: ``0``.
+		:raises ValueError: If parameter 'height' is None.
+		:raises TypeError:  If parameter 'height' is not of type :class:`float` or :class:`int`.
+		"""
+		if height is None:
+			raise ValueError("Parameter 'height' is None.")
+		elif not isinstance(height, (int, float)):
+			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
+			raise ex
+
+		self._offset._yOffset = height - self._offset._yOffset
+		for child in self._children:
+			child.MirrorY()
+
 	def __repr__(self) -> str:
 		"""
 		Returns the group's string representation.
@@ -397,5 +470,211 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 		return f"Group({self._offset}, children={len(self._children)})"
 
 
-Element2D._PARENT_TYPE = (Group, )
-Segment2D._PARENT_TYPE = (Shape, Group)
+@export
+class Canvas(Generic[Coordinate], ContainerMixin, metaclass=ExtendedType, slots=True):
+	"""
+	A canvas is the root of a drawing: it holds shapes, segments and groups, and knows the direction of its y-axis.
+
+	The coordinates of the canvas' children are relative to the origin. A canvas has an optional :attr:`Size`; without
+	one, it is open in every direction.
+	"""
+
+	_direction: YAxisDirection    #: Direction, in which the y-coordinates grow.
+	_size:      Nullable[Size2D]  #: Width and height of the canvas from the origin, or ``None`` for an open canvas.
+
+	def __init__(
+		self,
+		direction: YAxisDirection = YAxisDirection.Up,
+		size:      Nullable[Size2D[Coordinate]] = None,
+		children:  Nullable[Iterable[Element2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a canvas with a y-axis direction and an optional size, holding the given children.
+
+		The canvas takes the children, which must not belong to another element.
+
+		:param direction:          Optional, direction, in which the y-coordinates grow. Default: ``YAxisDirection.Up``.
+		:param size:               Optional, width and height of the canvas, starting at the origin. Default: ``None``,
+		                           which makes an open canvas.
+		:param children:           Optional, shapes, segments and groups held by the canvas. Default: ``None``.
+		:raises ValueError:        If parameter 'direction' is None.
+		:raises TypeError:         If parameter 'direction' is not of type :class:`YAxisDirection`.
+		:raises TypeError:         If parameter 'size' is not of type :class:`~pyTooling.Cartesian2D.Size2D`.
+		:raises TypeError:         If parameter 'children' is not iterable.
+		:raises ValueError:        If an element of parameter 'children' is None.
+		:raises TypeError:         If an element of parameter 'children' is not of type
+		                           :class:`~pyTooling.Cartesian2D.Element2D`.
+		:raises AlreadyOwnedError: If an element of parameter 'children' belongs to another element.
+		:raises ValueError:        If an element of parameter 'children' is given twice.
+		"""
+		super().__init__(children)
+
+		if direction is None:
+			raise ValueError("Parameter 'direction' is None.")
+		elif not isinstance(direction, YAxisDirection):
+			ex = TypeError("Parameter 'direction' is not of type 'YAxisDirection'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
+			raise ex
+
+		if size is not None and not isinstance(size, Size2D):
+			ex = TypeError("Parameter 'size' is not of type 'Size2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(size)}'.")
+			raise ex
+
+		self._direction = direction
+		self._size =      None if size is None else size.Copy()
+
+	@readonly
+	def Direction(self) -> YAxisDirection:
+		"""
+		Read-only property to access the direction, in which the y-coordinates grow (:attr:`_direction`).
+
+		:meth:`Mirror` changes it.
+
+		:returns: The y-axis direction.
+		"""
+		return self._direction
+
+	@readonly
+	def Size(self) -> Nullable[Size2D[Coordinate]]:
+		"""
+		Read-only property to access the width and height of the canvas (:attr:`_size`).
+
+		:returns: The canvas' size, or ``None`` for an open canvas.
+		"""
+		return self._size
+
+	@readonly
+	def Frame(self) -> None:
+		"""
+		Read-only property to return the frame the canvas is relative to.
+
+		A canvas is the root of a drawing, so it has no frame.
+
+		:returns: Always ``None``.
+		"""
+		return None
+
+	@readonly
+	def AbsoluteOffset(self) -> Offset2D[Coordinate]:
+		"""
+		Read-only property to return the offset of the canvas' origin relative to the origin.
+
+		:returns: A new 2D-offset ``(0, 0)``.
+		"""
+		return Offset2D(0, 0)
+
+	@readonly
+	def _ChildFrame(self) -> Canvas[Coordinate]:
+		"""
+		Read-only property to access the frame the coordinates of this canvas' children are relative to: the canvas itself.
+
+		:returns: This canvas.
+		"""
+		return self
+
+	@readonly
+	def TopAlignment(self) -> Alignment:
+		"""
+		Read-only property to return the alignment of the elements' top edges on this canvas.
+
+		:returns: :attr:`Alignment.MaxY <pyTooling.Cartesian2D.Alignment.MaxY>`, if the y-axis points up, else
+		          :attr:`Alignment.MinY <pyTooling.Cartesian2D.Alignment.MinY>`.
+		"""
+		return Alignment.MaxY if self._direction is YAxisDirection.Up else Alignment.MinY
+
+	@readonly
+	def BottomAlignment(self) -> Alignment:
+		"""
+		Read-only property to return the alignment of the elements' bottom edges on this canvas.
+
+		:returns: :attr:`Alignment.MinY <pyTooling.Cartesian2D.Alignment.MinY>`, if the y-axis points up, else
+		          :attr:`Alignment.MaxY <pyTooling.Cartesian2D.Alignment.MaxY>`.
+		"""
+		return Alignment.MinY if self._direction is YAxisDirection.Up else Alignment.MaxY
+
+	def Top(self, element: Element2D[Coordinate]) -> Coordinate:
+		"""
+		Return the absolute y-coordinate of an element's top edge on this canvas.
+
+		:param element:              An element on this canvas.
+		:returns:                    The largest absolute y-coordinate of the element, if the y-axis points up, else the
+		                             smallest one.
+		:raises ValueError:          If parameter 'element' is None.
+		:raises TypeError:           If parameter 'element' is not of type :class:`~pyTooling.Cartesian2D.Element2D`.
+		:raises NotInSameFrameError: If parameter 'element' isn't on this canvas.
+		"""
+		if element is None:
+			raise ValueError("Parameter 'element' is None.")
+		elif not isinstance(element, Element2D):
+			ex = TypeError("Parameter 'element' is not of type 'Element2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(element)}'.")
+			raise ex
+
+		frame = element.Frame
+		while frame is not None and frame is not self:
+			frame = frame.Frame
+
+		if frame is None:
+			ex = NotInSameFrameError("Element isn't on this canvas.")
+			ex.add_note(f"Got {element!r}.")
+			raise ex from ValueError("Parameter 'element' isn't on this canvas.")
+
+		box = element.AbsoluteBoundingBox
+		return box._maxY if self._direction is YAxisDirection.Up else box._minY
+
+	def Bottom(self, element: Element2D[Coordinate]) -> Coordinate:
+		"""
+		Return the absolute y-coordinate of an element's bottom edge on this canvas.
+
+		:param element:              An element on this canvas.
+		:returns:                    The smallest absolute y-coordinate of the element, if the y-axis points up, else the
+		                             largest one.
+		:raises ValueError:          If parameter 'element' is None.
+		:raises TypeError:           If parameter 'element' is not of type :class:`~pyTooling.Cartesian2D.Element2D`.
+		:raises NotInSameFrameError: If parameter 'element' isn't on this canvas.
+		"""
+		if element is None:
+			raise ValueError("Parameter 'element' is None.")
+		elif not isinstance(element, Element2D):
+			ex = TypeError("Parameter 'element' is not of type 'Element2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(element)}'.")
+			raise ex
+
+		frame = element.Frame
+		while frame is not None and frame is not self:
+			frame = frame.Frame
+
+		if frame is None:
+			ex = NotInSameFrameError("Element isn't on this canvas.")
+			ex.add_note(f"Got {element!r}.")
+			raise ex from ValueError("Parameter 'element' isn't on this canvas.")
+
+		box = element.AbsoluteBoundingBox
+		return box._minY if self._direction is YAxisDirection.Up else box._maxY
+
+	def Mirror(self) -> None:
+		"""
+		Flip the canvas to the other y-axis direction, keeping the drawing's appearance (inplace).
+
+		Every level of the drawing negates its y-coordinates: a group's offset relative to its parent, and every point
+		relative to its group. On a canvas with a :attr:`Size`, the top level uses ``height - y`` instead, so the
+		drawing stays within the canvas.
+		"""
+		height = 0 if self._size is None else self._size._height
+		for child in self._children:
+			child.MirrorY(height)
+
+		self._direction = YAxisDirection.Down if self._direction is YAxisDirection.Up else YAxisDirection.Up
+
+	def __repr__(self) -> str:
+		"""
+		Returns the canvas' string representation.
+
+		:returns: The string representation of the canvas, its direction, size and number of children.
+		"""
+		return f"Canvas({self._direction.name}, {self._size}, children={len(self._children)})"
+
+
+Element2D._PARENT_TYPE = (Group, Canvas)
+Segment2D._PARENT_TYPE = (Shape, Group, Canvas)
