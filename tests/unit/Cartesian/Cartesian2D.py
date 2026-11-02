@@ -38,7 +38,7 @@ from math                         import isclose, pi, sqrt
 from pyTooling.Cartesian2D        import Base, Element2D, Origin2D, Point2D, Offset2D, Size2D, BoundingBox, Segment2D, \
                                          LineSegment2D, Alignment, AlreadyOwnedError, DuplicatePointError, NoAreaError
 from pyTooling.Cartesian2D.Shapes import Rectangle, Circle, Shape
-from pyTooling.Cartesian2D.Groups import Group
+from pyTooling.Cartesian2D.Groups import Group, Canvas
 from pyTooling.Exceptions         import DuplicateElementError, InvalidOperationError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
@@ -1459,6 +1459,40 @@ class Hierarchy(Testcase):
 		self.assertNotIn("_parent", Segment2D.__slots__)
 
 
+class Mirroring(Testcase):
+	def test_LineSegment(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		line.MirrorY(10)
+
+		self.assertTupleEqual(((1, 8), (4, 4)), line.ToTuple())
+
+	def test_LineSegment_Default(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		line.MirrorY()
+
+		self.assertTupleEqual(((1, -2), (4, -6)), line.ToTuple())
+
+	def test_LineSegment_None(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		with self.assertRaises(ValueError) as context:
+			line.MirrorY(None)
+
+		self.assertEqual("Parameter 'height' is None.", str(context.exception))
+
+	def test_LineSegment_str(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		with self.assertRaises(TypeError) as context:
+			line.MirrorY("10")
+
+		self.assertEqual("Parameter 'height' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
+
+
 class Ownership(Testcase):
 	def test_Point(self) -> None:
 		point = Point2D(1, 2)
@@ -1677,7 +1711,7 @@ class Ownership(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), copyPoints=False, parent=1)
 
-		self.assertEqual("Parameter 'parent' is not of type 'Shape' or 'Group'.", str(context.exception))
+		self.assertEqual("Parameter 'parent' is not of type 'Shape' or 'Group' or 'Canvas'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 	def test_LineSegment_Start(self) -> None:
@@ -1810,19 +1844,19 @@ class ParentTypes(Testcase):
 		self.assertTupleEqual((Element2D, ), Origin2D._PARENT_TYPE)
 
 	def test_Segment(self) -> None:
-		self.assertTupleEqual((Shape, Group), Segment2D._PARENT_TYPE)
+		self.assertTupleEqual((Shape, Group, Canvas), Segment2D._PARENT_TYPE)
 
 	def test_LineSegment(self) -> None:
-		self.assertTupleEqual((Shape, Group), LineSegment2D._PARENT_TYPE)
+		self.assertTupleEqual((Shape, Group, Canvas), LineSegment2D._PARENT_TYPE)
 
 	def test_Shape(self) -> None:
-		self.assertTupleEqual((Group, ), Shape._PARENT_TYPE)
+		self.assertTupleEqual((Group, Canvas), Shape._PARENT_TYPE)
 
 	def test_Rectangle(self) -> None:
-		self.assertTupleEqual((Group, ), Rectangle._PARENT_TYPE)
+		self.assertTupleEqual((Group, Canvas), Rectangle._PARENT_TYPE)
 
 	def test_Group(self) -> None:
-		self.assertTupleEqual((Group, ), Group._PARENT_TYPE)
+		self.assertTupleEqual((Group, Canvas), Group._PARENT_TYPE)
 
 
 class Frames(Testcase):

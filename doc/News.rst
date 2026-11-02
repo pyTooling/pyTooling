@@ -29,6 +29,9 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D.Groups`: a :class:`~pyTooling.Cartesian2D.Groups.Group` holds shapes, segments and
      groups at an offset, with coordinates relative to the group. Elements report absolute positions and bounding
      boxes, move between groups keeping their position, align to each other and are distributed along an axis.
+   * :mod:`pyTooling.Cartesian2D.Groups`: a :class:`~pyTooling.Cartesian2D.Groups.Canvas` is the root of a drawing,
+     with the y-axis pointing up or down and an optional size. :meth:`~pyTooling.Cartesian2D.Groups.Canvas.Mirror`
+     flips a drawing to the other direction; every element mirrors vertically with ``MirrorY(height)``.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

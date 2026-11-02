@@ -53,7 +53,7 @@ from pyTooling.Common      import getFullyQualifiedName
 
 if TYPE_CHECKING:
 	from pyTooling.Cartesian2D.Shapes import Rectangle, Shape
-	from pyTooling.Cartesian2D.Groups import Group
+	from pyTooling.Cartesian2D.Groups import Group, Canvas
 
 
 Coordinate = TypeVar("Coordinate", bound=Union[int, float])
@@ -170,17 +170,18 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		Property to access the parent of this object (:attr:`_parent`).
 
 		A point's parent is the segment or shape owning it. A segment's parent is the shape it's an edge of, or the group
-		holding it. A shape's or group's parent is the group holding it.
+		or canvas holding it. A shape's or group's parent is the group or canvas holding it.
 
-		Only an :class:`Element2D` can be assigned a parent. Assigning a group moves the element into that group, assigning
-		``None`` removes it from its group. The element keeps its local coordinates, so its absolute position changes with
+		Only an :class:`Element2D` can be assigned a parent. Assigning a group or canvas moves the element into it, assigning
+		``None`` removes it from its parent. The element keeps its local coordinates, so its absolute position changes with
 		the frame. Use :meth:`Element2D.MoveTo` to keep the absolute position.
 
 		:returns:                  The parent, or ``None``, if this object has no parent.
 		:raises TypeError:         If an assigned value is not of a type in :attr:`_PARENT_TYPE`.
 		:raises TypeError:         If a parent is assigned to a :class:`Point2D`.
-		:raises TypeError:         If an assigned value is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`, while
-		                           this object is an :class:`Element2D`.
+		:raises TypeError:         If an assigned value is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas`, while this object is an
+		                           :class:`Element2D`.
 		:raises AlreadyOwnedError: If the element is an edge of a shape.
 		:raises GroupCycleError:   If an assigned group is this element or one of its descendants.
 		"""
@@ -516,22 +517,24 @@ class Origin2D(Point2D[Coordinate], Generic[Coordinate]):
 @export
 class Element2D(Base[Coordinate], Generic[Coordinate]):
 	"""
-	Abstract base-class of all elements a :class:`~pyTooling.Cartesian2D.Groups.Group` can hold: shapes, segments and
-	groups.
+	Abstract base-class of all elements a :class:`~pyTooling.Cartesian2D.Groups.Group` or a
+	:class:`~pyTooling.Cartesian2D.Groups.Canvas` can hold: shapes, segments and groups.
 
-	An element belongs to at most one group, its :attr:`Parent`. Its coordinates are relative to its parent group, an
+	An element belongs to at most one group or canvas, its :attr:`Parent`. Its coordinates are relative to its parent, an
 	element without a parent is relative to the origin.
 
 	A derived class implements :attr:`BoundingBox` and :meth:`Move`. Its initializer takes the keyword-only parameter
 	``parent`` and assigns it to :attr:`Parent` as its last statement, when the element is fully initialized.
 	"""
 
-	def __init__(self, *, parent: Nullable[Group[Coordinate]] = None) -> None:
+	def __init__(self, *, parent: Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None) -> None:
 		"""
-		Initializes an element without a parent and checks the group it will be registered in.
+		Initializes an element without a parent and checks the group or canvas it will be registered in.
 
-		:param parent:     Optional, the group the derived class registers the element in. Default: ``None``, no group.
-		:raises TypeError: If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:param parent:     Optional, the group or canvas the derived class registers the element in. Default: ``None``, no
+		                   parent.
+		:raises TypeError: If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                   :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		"""
 		# Imported for its side effect: it assigns '_PARENT_TYPE' of the element classes.
 		from pyTooling.Cartesian2D import Groups
@@ -542,16 +545,16 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		self._parent = None
 
 	@Base.Parent.setter
-	def Parent(self, parent: Nullable[Group]) -> None:
-		from pyTooling.Cartesian2D.Groups import Group
+	def Parent(self, parent: Nullable[Union[Group, Canvas]]) -> None:
+		from pyTooling.Cartesian2D.Groups import ContainerMixin
 
-		if parent is not None and not isinstance(parent, Group):
-			ex = TypeError("Parameter 'parent' is not of type 'Group'.")
+		if parent is not None and not isinstance(parent, ContainerMixin):
+			ex = TypeError("Parameter 'parent' is not of type 'Group' or 'Canvas'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 		elif parent is self._parent:
 			return
-		elif self._parent is not None and not isinstance(self._parent, Group):
+		elif self._parent is not None and not isinstance(self._parent, ContainerMixin):
 			ex = AlreadyOwnedError("Element is owned by another element already.")
 			ex.add_note(f"Got {self!r} owned by {self._parent!r}.")
 			raise ex from ValueError("Parameter 'parent' can't replace the shape of an edge.")
@@ -604,16 +607,27 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		:param offset: The 2D-offset to move by.
 		"""
 
-	def MoveTo(self, parent: Nullable[Group], keepPosition: bool = True) -> None:
+	@abstractmethod
+	def MirrorY(self, height: Coordinate = 0) -> None:
 		"""
-		Move the element into another group.
+		Mirror the element vertically, so every y-coordinate ``y`` becomes ``height - y`` (inplace).
+
+		The element is mirrored at the horizontal line at half the height.
+
+		:param height: Optional, the sum of a y-coordinate and its mirrored value. Default: ``0``.
+		"""
+
+	def MoveTo(self, parent: Nullable[Union[Group, Canvas]], keepPosition: bool = True) -> None:
+		"""
+		Move the element into another group or canvas.
 
 		With ``keepPosition``, the element is moved by the difference of both frames, so its absolute position stays.
 		Otherwise, it keeps its local coordinates, like an assignment to :attr:`Parent`.
 
-		:param parent:             The new parent group, or ``None`` for no group.
+		:param parent:             The new parent group or canvas, or ``None`` for no parent.
 		:param keepPosition:       Optional, if ``True``, the absolute position is kept. Default: ``True``.
-		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		:raises GroupCycleError:   If parameter 'parent' is this element or one of its descendants.
 		:raises ValueError:        If parameter 'keepPosition' is None.
 		:raises TypeError:         If parameter 'keepPosition' is not of type :class:`bool`.
@@ -1502,8 +1516,8 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 	"""
 	An implementation of a 2D cartesian segment.
 
-	A standalone segment owns its start and end point; a group can hold it. A segment with a parent shape is an edge of
-	that shape: it references two of the shape's points, which stay owned by the shape.
+	A standalone segment owns its start and end point; a group or canvas can hold it. A segment with a parent shape is an
+	edge of that shape: it references two of the shape's points, which stay owned by the shape.
 	"""
 
 	_start: Point2D[Coordinate]  #: Start point of a segment.
@@ -1515,7 +1529,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		end:        Point2D[Coordinate],
 		*,
 		copyPoints: bool = True,
-		parent:     Nullable[Union[Shape, Group[Coordinate]]] = None
+		parent:     Nullable[Union[Shape, Group[Coordinate], Canvas[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a 2-dimensional segment.
@@ -1524,8 +1538,8 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		:param end:                  End point of the segment.
 		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
 		                             ``True``.
-		:param parent:               Optional, the shape this segment is an edge of, or the group the segment is added to.
-		                             Default: ``None``.
+		:param parent:               Optional, the shape this segment is an edge of, or the group or canvas the segment is
+		                             added to. Default: ``None``.
 		:raises ValueError:          If parameter 'start' is None.
 		:raises TypeError:           If parameter 'start' is not of type :class:`Point2D`.
 		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while parameter 'parent' isn't a
@@ -1543,12 +1557,13 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		:raises NotOwnedError:       If parameter 'end' isn't owned by parameter 'parent'.
 		:raises ValueError:          If parameter 'copyPoints' is None.
 		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
-		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape` or
-		                             :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape`,
+		                             :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		:raises ValueError:          If parameter 'parent' is a shape, while 'copyPoints' is ``True``. |br|
 		                             An edge references the points of its parent shape: use ``copyPoints=False``.
 		"""
-		from pyTooling.Cartesian2D.Groups import Group
+		from pyTooling.Cartesian2D.Groups import ContainerMixin
 
 		super().__init__(parent=parent)
 
@@ -1573,7 +1588,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
 			raise ex
 
-		if parent is None or isinstance(parent, Group):
+		if parent is None or isinstance(parent, ContainerMixin):
 			if copyPoints:
 				start = start.Copy()
 				end =   end.Copy()
@@ -1743,6 +1758,27 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 
 		self._start += offset
 		self._end +=   offset
+
+	def MirrorY(self, height: Coordinate = 0) -> None:
+		"""
+		Mirror the segment vertically, so the y-coordinate ``y`` of its start and end point becomes ``height - y``
+		(inplace).
+
+		An edge of a shape mirrors the shape's corners it references.
+
+		:param height:      Optional, the sum of a y-coordinate and its mirrored value. Default: ``0``.
+		:raises ValueError: If parameter 'height' is None.
+		:raises TypeError:  If parameter 'height' is not of type :class:`float` or :class:`int`.
+		"""
+		if height is None:
+			raise ValueError("Parameter 'height' is None.")
+		elif not isinstance(height, (int, float)):
+			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
+			raise ex
+
+		self._start._y = height - self._start._y
+		self._end._y =   height - self._end._y
 
 	def Copy(self) -> Self:
 		"""
