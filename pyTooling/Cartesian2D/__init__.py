@@ -45,6 +45,7 @@ from typing                import TYPE_CHECKING, Any, Generic, Iterable, Self, T
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Exceptions  import ToolingException
 from pyTooling.Common      import getFullyQualifiedName
 
 if TYPE_CHECKING:
@@ -52,6 +53,16 @@ if TYPE_CHECKING:
 
 
 Coordinate = TypeVar("Coordinate", bound=Union[int, float])
+
+
+@export
+class Cartesian2DError(ToolingException):
+	"""Base-exception of all exceptions raised by :mod:`pyTooling.Cartesian2D`."""
+
+
+@export
+class NoAreaError(Cartesian2DError):
+	"""The exception is raised when an operation needs an area, but a bounding box has no width or no height."""
 
 
 @export
@@ -901,13 +912,13 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Create a new rectangle from this bounding box's corners.
 
-		:returns:           A new rectangle with the size and position of this bounding box.
-		:raises ValueError: If the bounding box has no width or no height.
+		:returns:            A new rectangle with the size and position of this bounding box.
+		:raises NoAreaError: If the bounding box has no width or no height.
 		"""
 		from pyTooling.Cartesian2D.Shapes import Rectangle
 
 		if self._minX == self._maxX or self._minY == self._maxY:
-			ex = ValueError("Bounding box has no area.")
+			ex = NoAreaError("Bounding box has no area.")
 			ex.add_note(f"Got width '{self._maxX - self._minX}' and height '{self._maxY - self._minY}'.")
 			raise ex
 

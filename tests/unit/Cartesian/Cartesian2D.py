@@ -35,7 +35,8 @@ arithmetic.
 from copy                         import copy, deepcopy
 from math                         import isclose, pi, sqrt
 
-from pyTooling.Cartesian2D        import Origin2D, Point2D, Offset2D, Size2D, BoundingBox, Segment2D, LineSegment2D
+from pyTooling.Cartesian2D        import Origin2D, Point2D, Offset2D, Size2D, BoundingBox, Segment2D, LineSegment2D, \
+                                         NoAreaError
 from pyTooling.Cartesian2D.Shapes import Rectangle
 from pyTooling.Testing            import Testcase
 
@@ -1298,7 +1299,7 @@ class Bounds(Testcase):
 	def test_ToRectangle_NoArea(self) -> None:
 		for box in (BoundingBox(1, 2, 1, 6), BoundingBox(1, 2, 4, 2)):
 			with self.subTest(box=box):
-				with self.assertRaises(ValueError) as context:
+				with self.assertRaises(NoAreaError) as context:
 					_ = box.ToRectangle()
 
 				self.assertEqual("Bounding box has no area.", str(context.exception))
