@@ -793,8 +793,7 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(points)}'.")
 			raise ex
 
-		xList = []
-		yList = []
+		minX = None
 		for point in points:
 			if point is None:
 				raise ValueError("An element of parameter 'points' is None.")
@@ -803,13 +802,27 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
 				raise ex
 
-			xList.append(point._x)
-			yList.append(point._y)
+			x = point._x
+			y = point._y
+			if minX is None:
+				minX = maxX = x
+				minY = maxY = y
+				continue
 
-		if len(xList) == 0:
+			if x < minX:
+				minX = x
+			elif x > maxX:
+				maxX = x
+
+			if y < minY:
+				minY = y
+			elif y > maxY:
+				maxY = y
+
+		if minX is None:
 			raise ValueError("Parameter 'points' is empty.")
 
-		return cls(min(xList), min(yList), max(xList), max(yList))
+		return cls(minX, minY, maxX, maxY)
 
 	@readonly
 	def MinX(self) -> Coordinate:
