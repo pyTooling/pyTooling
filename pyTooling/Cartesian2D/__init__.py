@@ -938,10 +938,11 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Check if this bounding box and another bounding box overlap.
 
-		Two bounding boxes touching at a border or a corner overlap.
+		Two bounding boxes touching only at a border or a corner don't overlap, so elements can be aligned next to each
+		other without a distance.
 
 		:param other:       The second bounding box.
-		:returns:           ``True``, if both bounding boxes share at least one point.
+		:returns:           ``True``, if the inner areas of both bounding boxes overlap.
 		:raises ValueError: If parameter 'other' is None.
 		:raises TypeError:  If parameter 'other' is not of type :class:`BoundingBox`.
 		"""
@@ -953,8 +954,8 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		return (
-			self._minX <= other._maxX and other._minX <= self._maxX and
-			self._minY <= other._maxY and other._minY <= self._maxY
+			self._minX < other._maxX and other._minX < self._maxX and
+			self._minY < other._maxY and other._minY < self._maxY
 		)
 
 	def ContainsPoint(self, point: Point2D[Coordinate]) -> bool:

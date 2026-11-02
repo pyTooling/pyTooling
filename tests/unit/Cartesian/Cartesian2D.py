@@ -1200,9 +1200,17 @@ class Bounds(Testcase):
 
 		self.assertTrue(box.HasOverlap(BoundingBox(1, 1, 3, 3)))
 		self.assertTrue(box.HasOverlap(BoundingBox(-1, -1, 3, 3)))
-		self.assertTrue(box.HasOverlap(BoundingBox(2, 2, 3, 3)))
 		self.assertFalse(box.HasOverlap(BoundingBox(3, 0, 4, 2)))
 		self.assertFalse(box.HasOverlap(BoundingBox(0, -2, 2, -1)))
+
+	def test_HasOverlap_Touching(self) -> None:
+		box = BoundingBox(0, 0, 2, 2)
+
+		self.assertFalse(box.HasOverlap(BoundingBox(2, 0, 4, 2)))
+		self.assertFalse(box.HasOverlap(BoundingBox(-2, 0, 0, 2)))
+		self.assertFalse(box.HasOverlap(BoundingBox(0, 2, 2, 4)))
+		self.assertFalse(box.HasOverlap(BoundingBox(0, -2, 2, 0)))
+		self.assertFalse(box.HasOverlap(BoundingBox(2, 2, 3, 3)))
 
 	def test_HasOverlap_None(self) -> None:
 		box = BoundingBox(0, 0, 2, 2)
