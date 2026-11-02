@@ -26,6 +26,9 @@ Version 10.x (2026)
      <pyTooling.Cartesian2D.Base.Parent>`). A point owned by another element raises
      :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError` instead of being shared; points and line segments of different
      frames raise :exc:`~pyTooling.Cartesian2D.NotInSameFrameError` when combined.
+   * :mod:`pyTooling.Cartesian2D.Groups`: a :class:`~pyTooling.Cartesian2D.Groups.Group` holds shapes, segments and
+     groups at an offset, with coordinates relative to the group. Elements report absolute positions and bounding
+     boxes, move between groups keeping their position, align to each other and are distributed along an axis.
 
    .. rubric:: Changes
 

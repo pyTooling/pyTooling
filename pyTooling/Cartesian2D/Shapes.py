@@ -48,7 +48,7 @@ class Shape(Element2D[Coordinate], Generic[Coordinate]):
 	A derived class declares its fields as slots, so a class derived from a shape can use slots too. It implements
 	:attr:`~pyTooling.Cartesian2D.Element2D.BoundingBox` and :meth:`~pyTooling.Cartesian2D.Element2D.Move`.
 
-	A shape owns its points.
+	A shape owns its points. A group can hold it.
 	"""
 
 

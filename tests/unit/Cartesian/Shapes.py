@@ -1344,7 +1344,10 @@ class Frames(Testcase):
 			_ = polygon2.Points[0] - polygon1.Points[0]
 
 		self.assertEqual("Points are in different frames.", str(context.exception))
-		self.assertListEqual(["Got points (1, 1) and (0, 0)."], context.exception.__notes__)
+		self.assertListEqual(
+			["Got points (1, 1) and (0, 0).", "Subtract the points' 'Absolute' positions instead."],
+			context.exception.__notes__
+		)
 		self.assertIsInstance(context.exception.__cause__, ValueError)
 		self.assertEqual("Parameter 'other' is in another frame.", str(context.exception.__cause__))
 

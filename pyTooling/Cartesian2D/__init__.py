@@ -40,18 +40,20 @@ An implementation of 2D cartesian data structures for Python.
 """
 from __future__            import annotations
 
+from enum                  import Enum
 from math                  import atan2, sqrt
 from typing                import TYPE_CHECKING, Any, ClassVar, Generic, Iterable, Optional as Nullable, Self, \
                                   TypeVar, Union
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod
-from pyTooling.Exceptions  import ToolingException, AlreadyInHierarchyError, DuplicateElementError, NotAChildError, \
-                                  NotInSameHierarchyError
+from pyTooling.Exceptions  import ToolingException, AlreadyInHierarchyError, CycleError, DuplicateElementError, \
+                                  NotAChildError, NotInSameHierarchyError
 from pyTooling.Common      import getFullyQualifiedName
 
 if TYPE_CHECKING:
 	from pyTooling.Cartesian2D.Shapes import Rectangle, Shape
+	from pyTooling.Cartesian2D.Groups import Group
 
 
 Coordinate = TypeVar("Coordinate", bound=Union[int, float])
@@ -101,6 +103,11 @@ class NotEnoughCornersError(Cartesian2DError):
 
 
 @export
+class GroupCycleError(Cartesian2DError, CycleError):
+	"""The exception is raised when a group would become its own parent or the parent of one of its ancestors."""
+
+
+@export
 class NotInSameFrameError(Cartesian2DError, NotInSameHierarchyError):
 	"""
 	The exception is raised when points or segments of different frames are combined in a computation.
@@ -114,9 +121,11 @@ class NotInSameFrameError(Cartesian2DError, NotInSameHierarchyError):
 @abstractclass
 class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""
-	Abstract base-class of everything having a parent and coordinates relative to a frame: points, segments and shapes.
+	Abstract base-class of everything having a parent and coordinates relative to a frame: points, segments, shapes and
+	groups.
 
-	A frame is what the coordinates are relative to. Every frame is an instance of this class.
+	A frame is what the coordinates are relative to, and a group is the frame of its children. Every frame is an instance
+	of this class.
 	"""
 
 	_PARENT_TYPE: ClassVar[tuple[type, ...]]  #: Types a parent of this class can have.
@@ -143,7 +152,8 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to access the parent of this object (:attr:`_parent`).
 
-		A point's parent is the segment or shape owning it. A segment's parent is the shape it's an edge of.
+		A point's parent is the segment or shape owning it. A segment's parent is the shape it's an edge of, or the group
+		holding it.
 
 		:returns: The parent, or ``None``, if this object has no parent.
 		"""
@@ -154,7 +164,8 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Read-only property to return the frame this object's coordinates are relative to.
 
-		The frame comes from the parent. An object without a parent has no frame.
+		The frame comes from the parent. An object without a parent has no frame, its coordinates are relative to the
+		origin.
 
 		:returns: The frame, or ``None``, if this object has no frame.
 		"""
@@ -266,6 +277,22 @@ class Point2D(Base[Coordinate], Generic[Coordinate]):
 
 	y = Y
 
+	@readonly
+	def Absolute(self) -> Point2D[Coordinate]:
+		"""
+		Read-only property to return the point's position relative to the origin as a new 2D-point.
+
+		The offsets of all groups up the parent chain are added to the point's coordinates. The new point has no owner.
+
+		:returns: A new 2D-point with absolute coordinates.
+		"""
+		frame = self.Frame
+		if frame is None:
+			return Point2D(self._x, self._y)
+
+		offset = frame.AbsoluteOffset
+		return Point2D(self._x + offset._xOffset, self._y + offset._yOffset)
+
 	def Copy(self) -> Self:
 		"""
 		Create a new 2D-point as a copy of this 2D point.
@@ -359,12 +386,14 @@ class Point2D(Base[Coordinate], Generic[Coordinate]):
 		:param other:                The second 2D-point as :class:`Point2D`.
 		:returns:                    A new 2D-offset representing the distance between these two points.
 		:raises TypeError:           If parameter 'other' is not of type :class:`Point2D`.
-		:raises NotInSameFrameError: If parameter 'other' is in another frame than this point.
+		:raises NotInSameFrameError: If parameter 'other' is in another frame than this point. |br|
+		                             Subtract the points' :attr:`Absolute` positions instead.
 		"""
 		if isinstance(other, Point2D):
 			if self.Frame is not other.Frame:
 				ex = NotInSameFrameError("Points are in different frames.")
 				ex.add_note(f"Got points {self} and {other}.")
+				ex.add_note("Subtract the points' 'Absolute' positions instead.")
 				raise ex from ValueError("Parameter 'other' is in another frame.")
 
 			return Offset2D(
@@ -417,10 +446,64 @@ class Point2D(Base[Coordinate], Generic[Coordinate]):
 @export
 class Element2D(Base[Coordinate], Generic[Coordinate]):
 	"""
-	Abstract base-class of all segments and shapes.
+	Abstract base-class of all elements a :class:`~pyTooling.Cartesian2D.Groups.Group` can hold: shapes, segments and
+	groups.
+
+	An element belongs to at most one group, its :attr:`Parent`. Its coordinates are relative to its parent group, an
+	element without a parent is relative to the origin.
 
 	A derived class implements :attr:`BoundingBox` and :meth:`Move`.
 	"""
+
+	@property
+	def Parent(self) -> Nullable[Union[Group, Shape]]:
+		"""
+		Property to access the group holding this element (:attr:`_parent`).
+
+		An edge of a shape has the shape as parent.
+
+		Assigning a group moves the element into that group, assigning ``None`` removes it from its group. The element
+		keeps its local coordinates, so its absolute position changes with the frame. Use :meth:`MoveTo` to keep the
+		absolute position.
+
+		:returns:                  The parent group, the shape of an edge, or ``None``.
+		:raises TypeError:         If an assigned value is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises AlreadyOwnedError: If the element is an edge of a shape.
+		:raises GroupCycleError:   If an assigned group is this element or one of its descendants.
+		"""
+		return self._parent
+
+	@Parent.setter
+	def Parent(self, parent: Nullable[Group]) -> None:
+		from pyTooling.Cartesian2D.Groups import Group
+
+		if parent is not None and not isinstance(parent, Group):
+			ex = TypeError("Parameter 'parent' is not of type 'Group'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+		elif parent is self._parent:
+			return
+		elif self._parent is not None and not isinstance(self._parent, Group):
+			ex = AlreadyOwnedError("Element is owned by another element already.")
+			ex.add_note(f"Got {self!r} owned by {self._parent!r}.")
+			raise ex from ValueError("Parameter 'parent' can't replace the shape of an edge.")
+
+		frame = parent
+		while frame is not None:
+			if frame is self:
+				ex = GroupCycleError("Group would contain itself.")
+				ex.add_note(f"Got {parent!r} as parent of {self!r}.")
+				raise ex from ValueError("Parameter 'parent' is this element or one of its descendants.")
+
+			frame = frame.Frame
+
+		if self._parent is not None:
+			self._parent._children.remove(self)
+
+		if parent is not None:
+			parent._children.append(self)
+
+		self._parent = parent
 
 	@readonly
 	@abstractmethod
@@ -428,16 +511,110 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing the element.
 
+		The bounding box is in the element's frame.
+
 		:returns: A new bounding box.
 		"""
+
+	@readonly
+	def AbsoluteBoundingBox(self) -> BoundingBox[Coordinate]:
+		"""
+		Read-only property to return the element's bounding box relative to the origin.
+
+		The offsets of all groups up the parent chain are added to :attr:`BoundingBox`.
+
+		:returns: A new bounding box.
+		"""
+		frame = self.Frame
+		return self.BoundingBox if frame is None else self.BoundingBox + frame.AbsoluteOffset
 
 	@abstractmethod
 	def Move(self, offset: Offset2D[Coordinate]) -> None:
 		"""
-		Move the element by moving all its points (inplace).
+		Move the element by an offset in its frame (inplace).
 
 		:param offset: The 2D-offset to move by.
 		"""
+
+	def MoveTo(self, parent: Nullable[Group], keepPosition: bool = True) -> None:
+		"""
+		Move the element into another group.
+
+		With ``keepPosition``, the element is moved by the difference of both frames, so its absolute position stays.
+		Otherwise, it keeps its local coordinates, like an assignment to :attr:`Parent`.
+
+		:param parent:             The new parent group, or ``None`` for no group.
+		:param keepPosition:       Optional, if ``True``, the absolute position is kept. Default: ``True``.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises GroupCycleError:   If parameter 'parent' is this element or one of its descendants.
+		:raises ValueError:        If parameter 'keepPosition' is None.
+		:raises TypeError:         If parameter 'keepPosition' is not of type :class:`bool`.
+		:raises AlreadyOwnedError: If the element is an edge of a shape.
+		"""
+		if keepPosition is None:
+			raise ValueError("Parameter 'keepPosition' is None.")
+		elif not isinstance(keepPosition, bool):
+			ex = TypeError("Parameter 'keepPosition' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(keepPosition)}'.")
+			raise ex
+
+		frame =          self.Frame
+		previousOffset = Offset2D(0, 0) if frame is None else frame.AbsoluteOffset
+
+		self.Parent = parent
+
+		if not keepPosition:
+			return
+
+		frame = self.Frame
+		if frame is None:
+			self.Move(previousOffset)
+		else:
+			self.Move(previousOffset - frame.AbsoluteOffset)
+
+	def AlignTo(self, reference: Element2D[Coordinate], alignment: Alignment) -> None:
+		"""
+		Move the element, so an edge or the center of its bounding box aligns with the one of another element.
+
+		Both elements may be in different frames: their absolute bounding boxes are compared.
+
+		:param reference:   The element to align with. It isn't moved.
+		:param alignment:   The edge or center to align.
+		:raises ValueError: If parameter 'reference' is None.
+		:raises TypeError:  If parameter 'reference' is not of type :class:`Element2D`.
+		:raises ValueError: If parameter 'alignment' is None.
+		:raises TypeError:  If parameter 'alignment' is not of type :class:`Alignment`.
+		"""
+		if reference is None:
+			raise ValueError("Parameter 'reference' is None.")
+		elif not isinstance(reference, Element2D):
+			ex = TypeError("Parameter 'reference' is not of type 'Element2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(reference)}'.")
+			raise ex
+
+		if alignment is None:
+			raise ValueError("Parameter 'alignment' is None.")
+		elif not isinstance(alignment, Alignment):
+			ex = TypeError("Parameter 'alignment' is not of type 'Alignment'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
+			raise ex
+
+		box =          self.AbsoluteBoundingBox
+		referenceBox = reference.AbsoluteBoundingBox
+		if alignment is Alignment.Left:
+			offset = Offset2D(referenceBox._minX - box._minX, 0)
+		elif alignment is Alignment.CenterX:
+			offset = Offset2D((referenceBox._minX + referenceBox._maxX - box._minX - box._maxX) / 2, 0)
+		elif alignment is Alignment.Right:
+			offset = Offset2D(referenceBox._maxX - box._maxX, 0)
+		elif alignment is Alignment.MinY:
+			offset = Offset2D(0, referenceBox._minY - box._minY)
+		elif alignment is Alignment.CenterY:
+			offset = Offset2D(0, (referenceBox._minY + referenceBox._maxY - box._minY - box._maxY) / 2)
+		else:
+			offset = Offset2D(0, referenceBox._maxY - box._maxY)
+
+		self.Move(offset)
 
 
 Point2D._PARENT_TYPE = (Element2D, )
@@ -1172,6 +1349,26 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		ex.add_note("Supported types for first operand: Point2D")
 		raise ex
 
+	def __add__(self, other: Any) -> BoundingBox[Coordinate]:
+		"""
+		Adds a 2D-offset to this bounding box and creates a new, shifted bounding box.
+
+		:param other:      A 2D-offset as :class:`Offset2D`.
+		:returns:          A new bounding box shifted by the 2D-offset.
+		:raises TypeError: If parameter 'other' is not of type :class:`Offset2D`.
+		"""
+		if not isinstance(other, Offset2D):
+			ex = TypeError("Parameter 'other' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self.__class__(
+			self._minX + other._xOffset,
+			self._minY + other._yOffset,
+			self._maxX + other._xOffset,
+			self._maxY + other._yOffset
+		)
+
 	def Copy(self) -> Self:
 		"""
 		Create a new bounding box as a copy of this bounding box.
@@ -1261,12 +1458,28 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 
 @export
+class Alignment(Enum):
+	"""
+	Edge or center of a bounding box, two elements are aligned at.
+
+	The vertical members name the smaller or larger y-coordinate, so they don't depend on the direction of the y-axis.
+	"""
+
+	Left =    0  #: Align the smallest x-coordinates.
+	CenterX = 1  #: Align the centers in x-direction.
+	Right =   2  #: Align the largest x-coordinates.
+	MinY =    3  #: Align the smallest y-coordinates.
+	CenterY = 4  #: Align the centers in y-direction.
+	MaxY =    5  #: Align the largest y-coordinates.
+
+
+@export
 class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 	"""
 	An implementation of a 2D cartesian segment.
 
-	A standalone segment owns its start and end point. A segment with a parent shape is an edge of that shape: it
-	references two of the shape's points, which stay owned by the shape.
+	A standalone segment owns its start and end point; a group can hold it. A segment with a parent shape is an edge of
+	that shape: it references two of the shape's points, which stay owned by the shape.
 	"""
 
 	_start: Point2D[Coordinate]  #: Start point of a segment.
@@ -1403,7 +1616,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 			raise ex
 		elif start is self._start:
 			return
-		elif self._parent is not None:
+		elif self._start._parent is not self:
 			ex = NotOwnedError("Segment doesn't own its start point.")
 			ex.add_note(f"The segment is an edge of {self._parent!r}, which owns the point.")
 			raise ex
@@ -1451,7 +1664,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 			raise ex
 		elif end is self._end:
 			return
-		elif self._parent is not None:
+		elif self._end._parent is not self:
 			ex = NotOwnedError("Segment doesn't own its end point.")
 			ex.add_note(f"The segment is an edge of {self._parent!r}, which owns the point.")
 			raise ex

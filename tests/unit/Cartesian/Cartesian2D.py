@@ -36,8 +36,9 @@ from copy                         import copy, deepcopy
 from math                         import isclose, pi, sqrt
 
 from pyTooling.Cartesian2D        import Base, Element2D, Origin2D, Point2D, Offset2D, Size2D, BoundingBox, Segment2D, \
-                                         LineSegment2D, AlreadyOwnedError, DuplicatePointError, NoAreaError
-from pyTooling.Cartesian2D.Shapes import Rectangle, Shape
+                                         LineSegment2D, Alignment, AlreadyOwnedError, DuplicatePointError, NoAreaError
+from pyTooling.Cartesian2D.Shapes import Rectangle, Circle, Shape
+from pyTooling.Cartesian2D.Groups import Group
 from pyTooling.Exceptions         import DuplicateElementError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
@@ -1338,6 +1339,24 @@ class Bounds(Testcase):
 			context.exception.__notes__
 		)
 
+	def test_Plus_Offset(self) -> None:
+		box = BoundingBox(1, 2, 4, 6)
+
+		newBox = box + Offset2D(10, -2)
+
+		self.assertIs(BoundingBox, type(newBox))
+		self.assertTupleEqual((11, 0, 14, 4), newBox.ToTuple())
+		self.assertTupleEqual((1, 2, 4, 6), box.ToTuple())
+
+	def test_Plus_tuple(self) -> None:
+		box = BoundingBox(1, 2, 4, 6)
+
+		with self.assertRaises(TypeError) as context:
+			_ = box + (10, -2)
+
+		self.assertEqual("Parameter 'other' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
 	def test_Copy(self) -> None:
 		box = BoundingBox(1, 2, 4, 6)
 
@@ -1768,3 +1787,109 @@ class Frames(Testcase):
 		line2 = LineSegment2D(Point2D(5, 5), Point2D(5, 7))
 
 		self.assertTrue(isclose(pi / 2, line1.AngleTo(line2)))
+
+
+class Aligning(Testcase):
+	def test_Left(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(10, 10), 1)
+
+		circle.AlignTo(rectangle, Alignment.Left)
+
+		self.assertEqual(BoundingBox(0, 9, 2, 11), circle.BoundingBox)
+
+	def test_CenterX(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(10, 10), 1)
+
+		circle.AlignTo(rectangle, Alignment.CenterX)
+
+		self.assertEqual(BoundingBox(1, 9, 3, 11), circle.BoundingBox)
+
+	def test_Right(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(10, 10), 1)
+
+		circle.AlignTo(rectangle, Alignment.Right)
+
+		self.assertEqual(BoundingBox(2, 9, 4, 11), circle.BoundingBox)
+
+	def test_MinY(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(10, 10), 1)
+
+		circle.AlignTo(rectangle, Alignment.MinY)
+
+		self.assertEqual(BoundingBox(9, 0, 11, 2), circle.BoundingBox)
+
+	def test_CenterY(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 4), Point2D(0, 4))
+		circle =    Circle(Point2D(10, 10), 1)
+
+		circle.AlignTo(rectangle, Alignment.CenterY)
+
+		self.assertEqual(BoundingBox(9, 1, 11, 3), circle.BoundingBox)
+
+	def test_MaxY(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(10, 10), 1)
+
+		circle.AlignTo(rectangle, Alignment.MaxY)
+
+		self.assertEqual(BoundingBox(9, 0, 11, 2), circle.BoundingBox)
+
+	def test_OtherGroup(self) -> None:
+		"""Elements of different groups are aligned by their absolute bounding boxes."""
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(1, 1), 1)
+		_ =         Group(Offset2D(10, 0), (rectangle, ))
+		_ =         Group(Offset2D(0, 50), (circle, ))
+
+		circle.AlignTo(rectangle, Alignment.Right)
+
+		self.assertEqual(BoundingBox(12, 50, 14, 52), circle.AbsoluteBoundingBox)
+		self.assertEqual(BoundingBox(12, 0, 14, 2), circle.BoundingBox)
+
+	def test_Group(self) -> None:
+		"""Aligning a group changes its offset."""
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		group =     Group(Offset2D(10, 10), (Circle(Point2D(1, 1), 1), ))
+
+		group.AlignTo(rectangle, Alignment.Left)
+
+		self.assertTupleEqual((0, 10), group.Offset.ToTuple())
+
+	def test_ReferenceNone(self) -> None:
+		circle = Circle(Point2D(10, 10), 1)
+
+		with self.assertRaises(ValueError) as context:
+			circle.AlignTo(None, Alignment.Left)
+
+		self.assertEqual("Parameter 'reference' is None.", str(context.exception))
+
+	def test_ReferencePoint(self) -> None:
+		circle = Circle(Point2D(10, 10), 1)
+
+		with self.assertRaises(TypeError) as context:
+			circle.AlignTo(Point2D(0, 0), Alignment.Left)
+
+		self.assertEqual("Parameter 'reference' is not of type 'Element2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
+	def test_AlignmentNone(self) -> None:
+		circle = Circle(Point2D(10, 10), 1)
+
+		with self.assertRaises(ValueError) as context:
+			circle.AlignTo(Circle(Point2D(0, 0), 1), None)
+
+		self.assertEqual("Parameter 'alignment' is None.", str(context.exception))
+
+	def test_AlignmentStr(self) -> None:
+		circle = Circle(Point2D(10, 10), 1)
+
+		with self.assertRaises(TypeError) as context:
+			circle.AlignTo(Circle(Point2D(0, 0), 1), "Left")
+
+		self.assertEqual("Parameter 'alignment' is not of type 'Alignment'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual((10, 10), circle.Center.ToTuple())
