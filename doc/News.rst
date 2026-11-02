@@ -30,6 +30,8 @@ Version 10.x (2026)
      raises :exc:`ValueError`, a wrong type :exc:`TypeError`. A trapezium's
      :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Points` and :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Segments`
      are read-only. The lower-case names (``x``, ``points``, ...) stay as deprecated aliases until v11.0.0.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: shapes are created by :class:`~pyTooling.MetaClasses.ExtendedType` and use
+     slots, so a derived class can use slots too. :class:`~pyTooling.Cartesian2D.Shapes.Shape` is abstract.
 
    .. rubric:: Bug Fixes
 

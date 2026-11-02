@@ -36,6 +36,7 @@ from math                         import cos, isclose, pi, radians, sin, sqrt
 
 from pyTooling.Cartesian2D        import Point2D, LineSegment2D
 from pyTooling.Cartesian2D.Shapes import Shape, Polygon, Trapezium, Rectangle, Square, Circle
+from pyTooling.MetaClasses        import ExtendedType, AbstractClassError
 from pyTooling.Testing            import Testcase
 
 
@@ -46,6 +47,12 @@ if __name__ == "__main__":  # pragma: no cover
 
 
 class Instantiation(Testcase):
+	def test_Shape(self) -> None:
+		with self.assertRaises(AbstractClassError) as context:
+			_ = Shape()
+
+		self.assertEqual("Class 'Shape' is abstract and needs to be derived.", str(context.exception))
+
 	def test_Polygon(self) -> None:
 		point0 = Point2D(0, 0)
 		point1 = Point2D(4, 0)
@@ -460,6 +467,85 @@ class Instantiation(Testcase):
 
 		self.assertEqual("Parameter 'copyPoints' is not of type 'bool'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+
+class Slots(Testcase):
+	"""A class derived from a shape with ``slots=True`` gets its own slots and no instance dictionary."""
+
+	def test_Shapes(self) -> None:
+		for shapeClass in (Shape, Polygon, Trapezium, Rectangle, Square, Circle):
+			self.assertIsInstance(shapeClass, ExtendedType)
+			self.assertNotIn("__dict__", dir(shapeClass))
+
+	def test_Polygon(self) -> None:
+		class LabeledPolygon(Polygon, metaclass=ExtendedType, slots=True):
+			_label: str
+
+			def __init__(self, points: tuple[Point2D, ...], label: str) -> None:
+				super().__init__(points)
+				self._label = label
+
+		polygon = LabeledPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), "triangle")
+
+		self.assertTupleEqual(("_label", ), LabeledPolygon.__slots__)
+		self.assertFalse(hasattr(polygon, "__dict__"))
+		self.assertEqual("triangle", polygon._label)
+
+	def test_Trapezium(self) -> None:
+		class LabeledTrapezium(Trapezium, metaclass=ExtendedType, slots=True):
+			_label: str
+
+			def __init__(self, p00: Point2D, p01: Point2D, p11: Point2D, p10: Point2D, label: str) -> None:
+				super().__init__(p00, p01, p11, p10)
+				self._label = label
+
+		trapezium = LabeledTrapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), "trapezium")
+
+		self.assertTupleEqual(("_label", ), LabeledTrapezium.__slots__)
+		self.assertFalse(hasattr(trapezium, "__dict__"))
+		self.assertEqual("trapezium", trapezium._label)
+
+	def test_Rectangle(self) -> None:
+		class LabeledRectangle(Rectangle, metaclass=ExtendedType, slots=True):
+			_label: str
+
+			def __init__(self, p00: Point2D, p01: Point2D, p11: Point2D, p10: Point2D, label: str) -> None:
+				super().__init__(p00, p01, p11, p10)
+				self._label = label
+
+		rectangle = LabeledRectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), "rectangle")
+
+		self.assertTupleEqual(("_label", ), LabeledRectangle.__slots__)
+		self.assertFalse(hasattr(rectangle, "__dict__"))
+		self.assertEqual("rectangle", rectangle._label)
+
+	def test_Square(self) -> None:
+		class LabeledSquare(Square, metaclass=ExtendedType, slots=True):
+			_label: str
+
+			def __init__(self, p00: Point2D, p01: Point2D, p11: Point2D, p10: Point2D, label: str) -> None:
+				super().__init__(p00, p01, p11, p10)
+				self._label = label
+
+		square = LabeledSquare(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), "square")
+
+		self.assertTupleEqual(("_label", ), LabeledSquare.__slots__)
+		self.assertFalse(hasattr(square, "__dict__"))
+		self.assertEqual("square", square._label)
+
+	def test_Circle(self) -> None:
+		class LabeledCircle(Circle, metaclass=ExtendedType, slots=True):
+			_label: str
+
+			def __init__(self, center: Point2D, radius: int, label: str) -> None:
+				super().__init__(center, radius)
+				self._label = label
+
+		circle = LabeledCircle(Point2D(1, 2), 3, "circle")
+
+		self.assertTupleEqual(("_label", ), LabeledCircle.__slots__)
+		self.assertFalse(hasattr(circle, "__dict__"))
+		self.assertEqual("circle", circle._label)
 
 
 class Corners(Testcase):
