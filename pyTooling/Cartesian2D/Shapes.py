@@ -34,13 +34,19 @@ from math                  import degrees, isclose, pi
 from typing                import Generic, Iterable, Self
 
 from pyTooling.Decorators  import export, readonly
+from pyTooling.MetaClasses import ExtendedType, abstractclass
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, LineSegment2D
 
 
 @export
-class Shape(Generic[Coordinate]):
-	"""Base-class for all 2D cartesian shapes."""
+@abstractclass
+class Shape(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+	"""
+	Abstract base-class for all 2D cartesian shapes.
+
+	A derived class declares its fields as slots, so a class derived from a shape can use slots too.
+	"""
 
 
 @export

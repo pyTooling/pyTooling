@@ -259,8 +259,11 @@ is an object of that shape. A polygon and a circle stand beside that chain.
 Shape
 =====
 
-:class:`~pyTooling.Cartesian2D.Shapes.Shape` is the empty base-class of every 2D shape. It carries no fields; it
-exists so a function can accept *a shape*.
+:class:`~pyTooling.Cartesian2D.Shapes.Shape` is the abstract base-class of every 2D shape. It carries no fields; it
+exists so a function can accept *a shape*. Instantiating it raises :exc:`~pyTooling.MetaClasses.AbstractClassError`.
+
+Every shape is created by :class:`~pyTooling.MetaClasses.ExtendedType` and stores its fields in slots, so a class
+derived from a shape can declare ``slots=True`` too and gets no instance dictionary.
 
 .. seealso::
 
