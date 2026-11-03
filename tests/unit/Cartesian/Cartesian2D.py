@@ -1407,6 +1407,75 @@ class Ownership(Testcase):
 		self.assertIsNone(point.Parent)
 		self.assertIsNone(point.Frame)
 
+	def test_Point_Parent(self) -> None:
+		"""The parent parameter sets the owner, but the point isn't registered."""
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+		start = line.Start
+		end = line.End
+
+		point = Point2D(7, 8, parent=line)
+
+		self.assertIs(line, point.Parent)
+		self.assertIs(start, line.Start)
+		self.assertIs(end, line.End)
+		self.assertIs(line, start.Parent)
+
+	def test_Point_ParentNone(self) -> None:
+		point = Point2D(1, 2, parent=None)
+
+		self.assertIsNone(point.Parent)
+
+	def test_Point_ParentInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Point2D(1, 2, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Segment2D' or 'Shape'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Point_ParentPositional(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		with self.assertRaises(TypeError):
+			_ = Point2D(1, 2, line)
+
+	def test_Point_Parent_Copy(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+		point = Point2D(7, 8, parent=line)
+
+		self.assertIsNone(point.Copy().Parent)
+		self.assertIsNone(copy(point).Parent)
+		self.assertIsNone(deepcopy(point).Parent)
+
+	def test_Point_Parent_ToOtherSegment(self) -> None:
+		"""A point with a parent is owned, so another segment can't take it without copying."""
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+		point = Point2D(7, 8, parent=line)
+
+		with self.assertRaises(AlreadyOwnedError):
+			_ = LineSegment2D(point, Point2D(9, 9), copyPoints=False)
+
+		other = LineSegment2D(point, Point2D(9, 9))
+
+		self.assertIs(other, other.Start.Parent)
+		self.assertIsNot(point, other.Start)
+		self.assertIs(line, point.Parent)
+
+	def test_Point_Parent_ToParentSegment(self) -> None:
+		"""The parent segment can replace its points with a point of which it is the owner."""
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+		start = line.Start
+		end = line.End
+		newStart = Point2D(7, 8, parent=line)
+		newEnd = Point2D(9, 9, parent=line)
+
+		line.Start = newStart
+		line.End = newEnd
+
+		self.assertIs(newStart, line.Start)
+		self.assertIs(newEnd, line.End)
+		self.assertIsNone(start.Parent)
+		self.assertIsNone(end.Parent)
+
 	def test_Point_ReadOnly(self) -> None:
 		point = Point2D(1, 2)
 

@@ -101,19 +101,24 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	_y:      Coordinate                         #: The y-direction coordinate.
 	_parent: Nullable[Union[Segment2D, Shape]]  #: Segment or shape owning the point, or ``None``.
 
-	def __init__(self, x: Coordinate, y: Coordinate) -> None:
+	def __init__(self, x: Coordinate, y: Coordinate, *, parent: Nullable[Union[Segment2D, Shape]] = None) -> None:
 		"""
 		Initializes a 2-dimensional point.
 
-		A new point has no owner. A shape or segment takes ownership of the point, when it's given the point instead of
-		copying it.
+		A shape or segment takes ownership of the point, when it's given the point instead of copying it.
+
+		Parameter ``parent`` sets the owner, but doesn't register the point in it: the parent's points don't change. The
+		point is in the parent's frame, so it can be combined with the parent's points.
 
 		:param x:           X-coordinate.
 		:param y:           Y-coordinate.
+		:param parent:      Optional, the segment or shape owning the point. Default: ``None``, no owner.
 		:raises ValueError: If parameter 'x' is None.
 		:raises TypeError:  If parameter 'x' is not of type :class:`float` or :class:`int`.
 		:raises ValueError: If parameter 'y' is None.
 		:raises TypeError:  If parameter 'y' is not of type :class:`float` or :class:`int`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Segment2D` or
+		                    :class:`~pyTooling.Cartesian2D.Shapes.Shape`.
 		"""
 		if x is None:
 			raise ValueError("Parameter 'x' is None.")
@@ -129,9 +134,17 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
 			raise ex
 
+		if parent is not None:
+			from pyTooling.Cartesian2D.Shapes import Shape
+
+			if not isinstance(parent, (Segment2D, Shape)):
+				ex = TypeError("Parameter 'parent' is not of type 'Segment2D' or 'Shape'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+				raise ex
+
 		self._x =      x
 		self._y =      y
-		self._parent = None
+		self._parent = parent
 
 	@property
 	def X(self) -> Coordinate:
@@ -1339,7 +1352,7 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = NotOwnedError("Segment doesn't own its start point.")
 			ex.add_note(f"The segment is an edge of {self._parent!r}, which owns the point.")
 			raise ex
-		elif start._parent is not None:
+		elif start._parent is not None and (start._parent is not self or start is self._end):
 			ex = AlreadyOwnedError("Point is owned by another element already.")
 			ex.add_note(f"Got point {start} owned by {start._parent!r}.")
 			raise ex from ValueError("Parameter 'start' is owned by another element.")
@@ -1382,7 +1395,7 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = NotOwnedError("Segment doesn't own its end point.")
 			ex.add_note(f"The segment is an edge of {self._parent!r}, which owns the point.")
 			raise ex
-		elif end._parent is not None:
+		elif end._parent is not None and (end._parent is not self or end is self._start):
 			ex = AlreadyOwnedError("Point is owned by another element already.")
 			ex.add_note(f"Got point {end} owned by {end._parent!r}.")
 			raise ex from ValueError("Parameter 'end' is owned by another element.")

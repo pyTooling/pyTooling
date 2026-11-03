@@ -1302,6 +1302,20 @@ class Frames(Testcase):
 		self.assertTrue(isclose(pi / 2, angle))
 
 
+class FramedPoints(Testcase):
+	def test_Parent(self) -> None:
+		"""A point with a shape as parent is in the shape's frame, but not one of its points."""
+		frame = object()
+		polygon = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), frame)
+
+		point = Point2D(1, 1, parent=polygon)
+
+		self.assertIs(polygon, point.Parent)
+		self.assertIs(frame, point.Frame)
+		self.assertEqual(3, len(polygon.Points))
+		self.assertTupleEqual((1, 1), (point - polygon.Points[0]).ToTuple())
+
+
 class Copy(Testcase):
 	def test_Polygon(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5), Point2D(-1, 3)))

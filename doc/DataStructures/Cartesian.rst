@@ -144,8 +144,8 @@ the offending type in a note.
 :meth:`~pyTooling.Cartesian2D.Point2D.ToTuple` the ``(x, y)`` pair.
 
 A point is owned by at most one element, the segment or shape it belongs to: the read-only
-:attr:`~pyTooling.Cartesian2D.Point2D.Parent`. A new point and a copy have no owner. See
-:ref:`STRUCT/Cartesian2D/Ownership`.
+:attr:`~pyTooling.Cartesian2D.Point2D.Parent`. A new point and a copy have no owner, unless parameter ``parent`` sets
+one. See :ref:`STRUCT/Cartesian2D/Ownership`.
 
 .. seealso::
 
@@ -311,6 +311,10 @@ Every point is owned by at most one element: a standalone segment owns its two p
 its center. An element given a point with ``copyPoints=False`` takes ownership of it; a point owned by another element
 raises :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError`, so two shapes never move each other's corners by accident.
 Copying is always possible - the copy has no owner.
+
+``Point2D(x, y, parent=shape)`` sets the owner, but doesn't register the point: the shape's points don't change. Such a
+point is in the shape's frame, so it can be combined with the shape's points, and it can replace the start or end point
+of its parent segment.
 
 The edges of a polygon or trapezium are views: they reference the shape's corners, but don't own them. Moving an edge
 moves the corners it references; replacing an edge's point raises :exc:`~pyTooling.Cartesian2D.NotOwnedError`.
