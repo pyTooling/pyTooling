@@ -44,7 +44,7 @@ from math                  import atan2, sqrt
 from typing                import TYPE_CHECKING, Any, Generic, Iterable, Optional as Nullable, Self, TypeVar, Union
 
 from pyTooling.Decorators  import readonly, export
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Exceptions  import ToolingException, AlreadyInHierarchyError, NotAChildError, NotInSameHierarchyError
 from pyTooling.Common      import getFullyQualifiedName
 
@@ -94,14 +94,90 @@ class NotInSameFrameError(Cartesian2DError, NotInSameHierarchyError):
 
 
 @export
-class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+@abstractclass
+class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+	"""
+	Abstract base-class of everything having a parent and coordinates relative to a frame: points, segments and shapes.
+
+	A frame is what the coordinates are relative to. Every frame is an instance of this class.
+	"""
+
+	_parent: Nullable[Base[Coordinate]]  #: Parent of this object, or ``None``.
+
+	def __init__(self, *, parent: Nullable[Base[Coordinate]] = None) -> None:
+		"""
+		Initializes the parent relation.
+
+		:param parent: Optional, the parent of this object. Default: ``None``, no parent.
+		"""
+		self._parent = parent
+
+	@readonly
+	def Parent(self) -> Nullable[Base[Coordinate]]:
+		"""
+		Read-only property to access the parent of this object (:attr:`_parent`).
+
+		A point's parent is the segment or shape owning it. A segment's parent is the shape it's an edge of.
+
+		:returns: The parent, or ``None``, if this object has no parent.
+		"""
+		return self._parent
+
+	@readonly
+	def Frame(self) -> Nullable[Base[Coordinate]]:
+		"""
+		Read-only property to return the frame this object's coordinates are relative to.
+
+		The frame comes from the parent. An object without a parent has no frame.
+
+		:returns: The frame, or ``None``, if this object has no frame.
+		"""
+		return None if self._parent is None else self._parent._ChildFrame
+
+	@readonly
+	def _ChildFrame(self) -> Nullable[Base[Coordinate]]:
+		"""
+		Read-only property to access the frame the coordinates of this object's children are relative to (:attr:`Frame`).
+
+		:returns: This object's frame, or ``None``, if this object has no frame.
+		"""
+		return self.Frame
+
+
+@export
+class Element2D(Base[Coordinate], Generic[Coordinate]):
+	"""
+	Abstract base-class of all segments and shapes.
+
+	A derived class implements :attr:`BoundingBox` and :meth:`Move`.
+	"""
+
+	@readonly
+	@abstractmethod
+	def BoundingBox(self) -> BoundingBox[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the element.
+
+		:returns: A new bounding box.
+		"""
+
+	@abstractmethod
+	def Move(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the element by moving all its points (inplace).
+
+		:param offset: The 2D-offset to move by.
+		"""
+
+
+@export
+class Point2D(Base[Coordinate], Generic[Coordinate]):
 	"""An implementation of a 2D cartesian point."""
 
-	_x:      Coordinate                         #: The x-direction coordinate.
-	_y:      Coordinate                         #: The y-direction coordinate.
-	_parent: Nullable[Union[Segment2D, Shape]]  #: Segment or shape owning the point, or ``None``.
+	_x: Coordinate  #: The x-direction coordinate.
+	_y: Coordinate  #: The y-direction coordinate.
 
-	def __init__(self, x: Coordinate, y: Coordinate, *, parent: Nullable[Union[Segment2D, Shape]] = None) -> None:
+	def __init__(self, x: Coordinate, y: Coordinate, *, parent: Nullable[Element2D[Coordinate]] = None) -> None:
 		"""
 		Initializes a 2-dimensional point.
 
@@ -117,9 +193,10 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:raises TypeError:  If parameter 'x' is not of type :class:`float` or :class:`int`.
 		:raises ValueError: If parameter 'y' is None.
 		:raises TypeError:  If parameter 'y' is not of type :class:`float` or :class:`int`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`Segment2D` or
-		                    :class:`~pyTooling.Cartesian2D.Shapes.Shape`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Element2D`.
 		"""
+		super().__init__(parent=parent)
+
 		if x is None:
 			raise ValueError("Parameter 'x' is None.")
 		elif not isinstance(x, (int, float)):
@@ -134,17 +211,13 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
 			raise ex
 
-		if parent is not None:
-			from pyTooling.Cartesian2D.Shapes import Shape
+		if parent is not None and not isinstance(parent, Element2D):
+			ex = TypeError("Parameter 'parent' is not of type 'Element2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
 
-			if not isinstance(parent, (Segment2D, Shape)):
-				ex = TypeError("Parameter 'parent' is not of type 'Segment2D' or 'Shape'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-				raise ex
-
-		self._x =      x
-		self._y =      y
-		self._parent = parent
+		self._x = x
+		self._y = y
 
 	@property
 	def X(self) -> Coordinate:
@@ -197,26 +270,6 @@ class Point2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._y = y
 
 	y = Y
-
-	@readonly
-	def Parent(self) -> Nullable[Union[Segment2D, Shape]]:
-		"""
-		Read-only property to access the segment or shape owning the point (:attr:`_parent`).
-
-		:returns: The owning segment or shape, or ``None``, if no element owns the point.
-		"""
-		return self._parent
-
-	@readonly
-	def Frame(self) -> Any:
-		"""
-		Read-only property to return the frame the point's coordinates are relative to.
-
-		The frame is the owning element's frame. A point without an owner has no frame.
-
-		:returns: The frame, or ``None``, if the point has no frame.
-		"""
-		return None if self._parent is None else self._parent.Frame
 
 	def Copy(self) -> Self:
 		"""
@@ -1184,7 +1237,7 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 
 @export
-class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 	"""
 	An implementation of a 2D cartesian segment.
 
@@ -1192,9 +1245,8 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	references two of the shape's points, which stay owned by the shape.
 	"""
 
-	_parent: Nullable[Shape]      #: Shape, whose edge this segment is, or ``None`` for a standalone segment.
-	_start:  Point2D[Coordinate]  #: Start point of a segment.
-	_end:    Point2D[Coordinate]  #: End point of a segment.
+	_start: Point2D[Coordinate]  #: Start point of a segment.
+	_end:   Point2D[Coordinate]  #: End point of a segment.
 
 	def __init__(
 		self,
@@ -1234,6 +1286,8 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		                           An edge references the points of its parent shape: use ``copyPoints=False``.
 		"""
 		from pyTooling.Cartesian2D.Shapes import Shape
+
+		super().__init__(parent=parent)
 
 		if start is None:
 			raise ValueError("Parameter 'start' is None.")
@@ -1296,29 +1350,8 @@ class Segment2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 					ex.add_note(f"Got point {point} owned by {point._parent!r}.")
 					raise ex from ValueError(f"Parameter '{name}' isn't owned by parameter 'parent'.")
 
-		self._parent = parent
-		self._start =  start
-		self._end =    end
-
-	@readonly
-	def Parent(self) -> Nullable[Shape]:
-		"""
-		Read-only property to access the shape this segment is an edge of (:attr:`_parent`).
-
-		:returns: The parent shape, or ``None`` for a standalone segment.
-		"""
-		return self._parent
-
-	@readonly
-	def Frame(self) -> Any:
-		"""
-		Read-only property to return the frame the segment's coordinates are relative to.
-
-		An edge is in its shape's frame. A standalone segment has no frame.
-
-		:returns: The frame, or ``None``, if the segment has no frame.
-		"""
-		return None if self._parent is None else self._parent.Frame
+		self._start = start
+		self._end =   end
 
 	@property
 	def Start(self) -> Point2D[Coordinate]:

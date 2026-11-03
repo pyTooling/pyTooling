@@ -144,7 +144,7 @@ the offending type in a note.
 :meth:`~pyTooling.Cartesian2D.Point2D.ToTuple` the ``(x, y)`` pair.
 
 A point is owned by at most one element, the segment or shape it belongs to: the read-only
-:attr:`~pyTooling.Cartesian2D.Point2D.Parent`. A new point and a copy have no owner, unless parameter ``parent`` sets
+:attr:`~pyTooling.Cartesian2D.Base.Parent`. A new point and a copy have no owner, unless parameter ``parent`` sets
 one. See :ref:`STRUCT/Cartesian2D/Ownership`.
 
 .. seealso::
@@ -267,7 +267,7 @@ move later. ``copyPoints=False`` keeps the references instead: the segment takes
 assigned to :attr:`~pyTooling.Cartesian2D.Segment2D.Start` or :attr:`~pyTooling.Cartesian2D.Segment2D.End` is
 referenced too; the segment owns it and releases the previous one.
 
-A segment with a :attr:`~pyTooling.Cartesian2D.Segment2D.Parent` shape is an **edge** of that shape, like the edges of
+A segment with a :attr:`~pyTooling.Cartesian2D.Base.Parent` shape is an **edge** of that shape, like the edges of
 a :class:`~pyTooling.Cartesian2D.Shapes.Polygon`: it references two of the shape's corners, which stay owned by the
 shape. An edge can't replace its points.
 
@@ -329,8 +329,10 @@ moves the corners it references; replacing an edge's point raises :exc:`~pyTooli
    triangle = Polygon((center, Point2D(4, 0), Point2D(2, 3)), copyPoints=False)
    # AlreadyOwnedError: Point is owned by another element already.
 
-The coordinates of a point are relative to a **frame**: :attr:`~pyTooling.Cartesian2D.Point2D.Frame` is the frame of
-its owner, and an element without a frame has ``None``. Subtracting points or measuring the angle between line
+The coordinates of a point are relative to a **frame**: :attr:`~pyTooling.Cartesian2D.Base.Frame` is the frame of its
+owner, and an element without a frame has ``None``. Points, segments and shapes derive from the abstract
+:class:`~pyTooling.Cartesian2D.Base`, which holds the parent and returns the frame; segments and shapes also from
+:class:`~pyTooling.Cartesian2D.Element2D`. Subtracting points or measuring the angle between line
 segments of different frames raises :exc:`~pyTooling.Cartesian2D.NotInSameFrameError` instead of mixing unrelated
 coordinates.
 

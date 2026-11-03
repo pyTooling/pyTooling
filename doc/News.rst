@@ -22,8 +22,8 @@ Version 10.x (2026)
      point with the original.
    * :mod:`pyTooling.Cartesian2D`: a :class:`~pyTooling.Cartesian2D.BoundingBox` value (union, intersection, point
      containment). Every shape and segment returns its ``BoundingBox`` and moves in place with ``Move(offset)``.
-   * :mod:`pyTooling.Cartesian2D`: shapes and segments own their points (:attr:`Point2D.Parent
-     <pyTooling.Cartesian2D.Point2D.Parent>`). A point owned by another element raises
+   * :mod:`pyTooling.Cartesian2D`: shapes and segments own their points (:attr:`Base.Parent
+     <pyTooling.Cartesian2D.Base.Parent>`). A point owned by another element raises
      :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError` instead of being shared; points and line segments of different
      frames raise :exc:`~pyTooling.Cartesian2D.NotInSameFrameError` when combined.
 

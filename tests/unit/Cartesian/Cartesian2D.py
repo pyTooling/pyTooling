@@ -35,9 +35,10 @@ arithmetic.
 from copy                         import copy, deepcopy
 from math                         import isclose, pi, sqrt
 
-from pyTooling.Cartesian2D        import Origin2D, Point2D, Offset2D, Size2D, BoundingBox, Segment2D, LineSegment2D, \
-                                         AlreadyOwnedError, NoAreaError
-from pyTooling.Cartesian2D.Shapes import Rectangle
+from pyTooling.Cartesian2D        import Base, Element2D, Origin2D, Point2D, Offset2D, Size2D, BoundingBox, Segment2D, \
+                                         LineSegment2D, AlreadyOwnedError, NoAreaError
+from pyTooling.Cartesian2D.Shapes import Rectangle, Shape
+from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
 
 
@@ -1400,6 +1401,41 @@ class Moving(Testcase):
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
 
+class Hierarchy(Testcase):
+	def test_Base(self) -> None:
+		with self.assertRaises(AbstractClassError):
+			_ = Base()
+
+	def test_Element2D(self) -> None:
+		with self.assertRaises(AbstractClassError):
+			_ = Element2D()
+
+	def test_Point(self) -> None:
+		self.assertIsInstance(Point2D(1, 2), Base)
+		self.assertNotIsInstance(Point2D(1, 2), Element2D)
+
+	def test_Origin(self) -> None:
+		origin = Origin2D()
+
+		self.assertIsInstance(origin, Base)
+		self.assertIsNone(origin.Parent)
+		self.assertIsNone(origin.Frame)
+
+	def test_Segment(self) -> None:
+		self.assertIsInstance(Segment2D(Point2D(1, 2), Point2D(4, 6)), Element2D)
+		self.assertIsInstance(LineSegment2D(Point2D(1, 2), Point2D(4, 6)), Element2D)
+
+	def test_Shape(self) -> None:
+		self.assertTrue(issubclass(Shape, Element2D))
+
+	def test_Slots(self) -> None:
+		"""The parent is a slot of the base-class only."""
+		self.assertTupleEqual(("_parent", ), Base.__slots__)
+		self.assertTupleEqual((), Element2D.__slots__)
+		self.assertNotIn("_parent", Point2D.__slots__)
+		self.assertNotIn("_parent", Segment2D.__slots__)
+
+
 class Ownership(Testcase):
 	def test_Point(self) -> None:
 		point = Point2D(1, 2)
@@ -1429,8 +1465,16 @@ class Ownership(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Point2D(1, 2, parent=1)
 
-		self.assertEqual("Parameter 'parent' is not of type 'Segment2D' or 'Shape'.", str(context.exception))
+		self.assertEqual("Parameter 'parent' is not of type 'Element2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Point_ParentPoint(self) -> None:
+		"""A point can't own another point."""
+		with self.assertRaises(TypeError) as context:
+			_ = Point2D(1, 2, parent=Point2D(3, 4))
+
+		self.assertEqual("Parameter 'parent' is not of type 'Element2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
 
 	def test_Point_ParentPositional(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))

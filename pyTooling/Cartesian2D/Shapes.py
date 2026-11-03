@@ -32,50 +32,24 @@
 from __future__            import annotations
 
 from math                  import degrees, isclose, pi
-from typing                import Any, Generic, Iterable, Self
+from typing                import Generic, Iterable, Self
 
 from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox, LineSegment2D, AlreadyOwnedError
+from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox, Element2D, LineSegment2D, \
+                                  AlreadyOwnedError
 
 
 @export
-class Shape(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+class Shape(Element2D[Coordinate], Generic[Coordinate]):
 	"""
 	Abstract base-class for all 2D cartesian shapes.
 
 	A derived class declares its fields as slots, so a class derived from a shape can use slots too. It implements
-	:attr:`BoundingBox` and :meth:`Move`.
+	:attr:`~pyTooling.Cartesian2D.Element2D.BoundingBox` and :meth:`~pyTooling.Cartesian2D.Element2D.Move`.
 
 	A shape owns its points.
 	"""
-
-	@readonly
-	def Frame(self) -> Any:
-		"""
-		Read-only property to return the frame the shape's coordinates are relative to.
-
-		:returns: The frame, or ``None``, if the shape has no frame.
-		"""
-		return None
-
-	@readonly
-	@abstractmethod
-	def BoundingBox(self) -> BoundingBox[Coordinate]:
-		"""
-		Read-only property to return the smallest axis-aligned bounding box enclosing the shape.
-
-		:returns: A new bounding box.
-		"""
-
-	@abstractmethod
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
-		"""
-		Move the shape by moving all its points (inplace).
-
-		:param offset: The 2D-offset to move by.
-		"""
 
 
 @export
@@ -111,6 +85,8 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		:raises ValueError:        If parameter 'copyPoints' is None.
 		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
 		"""
+		super().__init__()
+
 		if points is None:
 			raise ValueError("Parameter 'points' is None.")
 		elif not isinstance(points, Iterable):
@@ -269,6 +245,8 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		"""
+		super().__init__()
+
 		if p00 is None:
 			raise ValueError("Parameter 'p00' is None.")
 		elif not isinstance(p00, Point2D):
@@ -596,6 +574,8 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		:raises ValueError:        If parameter 'copyPoints' is None.
 		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
 		"""
+		super().__init__()
+
 		if center is None:
 			raise ValueError("Parameter 'center' is None.")
 		elif not isinstance(center, Point2D):
