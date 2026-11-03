@@ -138,11 +138,11 @@ class NotInSameFrameError(Cartesian2DError, NotInSameHierarchyError):
 @abstractclass
 class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""
-	Abstract base-class of everything having a parent and coordinates relative to a frame: points, segments, shapes and
-	groups.
+	Abstract base-class of everything having a parent and coordinates relative to a frame: points, segments, shapes,
+	groups and canvases.
 
-	A frame is what the coordinates are relative to, and a group is the frame of its children. Every frame is an instance
-	of this class.
+	A frame is what the coordinates are relative to, and a group or canvas is the frame of its children. Every frame is an
+	instance of this class.
 	"""
 
 	_PARENT_TYPE: ClassVar[tuple[type, ...]]  #: Types a parent of this class can have.
@@ -172,9 +172,9 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		A point's parent is the segment or shape owning it. A segment's parent is the shape it's an edge of, or the group
 		or canvas holding it. A shape's or group's parent is the group or canvas holding it.
 
-		Only an :class:`Element2D` can be assigned a parent. Assigning a group or canvas moves the element into it, assigning
-		``None`` removes it from its parent. The element keeps its local coordinates, so its absolute position changes with
-		the frame. Use :meth:`Element2D.MoveTo` to keep the absolute position.
+		Only an :class:`Element2D` can be assigned a parent. Assigning a group or canvas moves the element into it,
+		assigning ``None`` removes it from its parent. The element keeps its local coordinates, so its absolute position
+		changes with the frame. Use :meth:`Element2D.MoveTo` to keep the absolute position.
 
 		:returns:                  The parent, or ``None``, if this object has no parent.
 		:raises TypeError:         If an assigned value is not of a type in :attr:`_PARENT_TYPE`.

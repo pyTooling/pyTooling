@@ -50,9 +50,9 @@ from pyTooling.Decorators         import export, readonly
 from pyTooling.Exceptions         import EmptyError
 from pyTooling.MetaClasses        import ExtendedType
 from pyTooling.Common             import getFullyQualifiedName
-from pyTooling.Cartesian2D        import Coordinate, Offset2D, Size2D, BoundingBox, Alignment, Element2D, Segment2D, \
-                                         Cartesian2DError, AlreadyOwnedError, GroupCycleError, NotOwnedError, \
-                                         NotInSameFrameError
+from pyTooling.Cartesian2D        import Coordinate, Base, Offset2D, Size2D, BoundingBox, Alignment, Element2D, \
+                                         Segment2D, Cartesian2DError, AlreadyOwnedError, GroupCycleError, \
+                                         NotOwnedError, NotInSameFrameError
 from pyTooling.Cartesian2D.Shapes import Shape
 
 
@@ -83,7 +83,8 @@ class ContainerMixin(metaclass=ExtendedType, mixin=True):
 		"""
 		Initializes the container's children.
 
-		The container takes the children, which must not belong to another element.
+		The children must not belong to another element. They are checked and stored here; the class using this mixin
+		sets their parent as its last step, so a failing check of that class leaves them free.
 
 		:param children:           Optional, shapes, segments and groups held by the container. Default: ``None``.
 		:raises TypeError:         If parameter 'children' is not iterable.
@@ -122,9 +123,6 @@ class ContainerMixin(metaclass=ExtendedType, mixin=True):
 
 			seenChildren.add(child)
 			childList.append(child)
-
-		for child in childList:
-			child._parent = self
 
 	@readonly
 	def Children(self) -> tuple[Element2D, ...]:
@@ -355,6 +353,9 @@ class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
 
 		self._offset = Offset2D(0, 0) if offset is None else offset.Copy()
 
+		for child in self._children:
+			child._parent = self
+
 		try:
 			self.Parent = parent
 		except GroupCycleError:
@@ -471,12 +472,15 @@ class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
 
 
 @export
-class Canvas(Generic[Coordinate], ContainerMixin, metaclass=ExtendedType, slots=True):
+class Canvas(Base[Coordinate], ContainerMixin, Generic[Coordinate]):
 	"""
 	A canvas is the root of a drawing: it holds shapes, segments and groups, and knows the direction of its y-axis.
 
 	The coordinates of the canvas' children are relative to the origin. A canvas has an optional :attr:`Size`; without
 	one, it is open in every direction.
+
+	As the root, it has no parent and no frame: :attr:`~pyTooling.Cartesian2D.Base.Parent` and
+	:attr:`~pyTooling.Cartesian2D.Base.Frame` are always ``None``.
 	"""
 
 	_direction: YAxisDirection    #: Direction, in which the y-coordinates grow.
@@ -507,7 +511,8 @@ class Canvas(Generic[Coordinate], ContainerMixin, metaclass=ExtendedType, slots=
 		:raises AlreadyOwnedError: If an element of parameter 'children' belongs to another element.
 		:raises ValueError:        If an element of parameter 'children' is given twice.
 		"""
-		super().__init__(children)
+		super().__init__()
+		ContainerMixin.__init__(self, children)
 
 		if direction is None:
 			raise ValueError("Parameter 'direction' is None.")
@@ -523,6 +528,9 @@ class Canvas(Generic[Coordinate], ContainerMixin, metaclass=ExtendedType, slots=
 
 		self._direction = direction
 		self._size =      None if size is None else size.Copy()
+
+		for child in self._children:
+			child._parent = self
 
 	@readonly
 	def Direction(self) -> YAxisDirection:
@@ -543,17 +551,6 @@ class Canvas(Generic[Coordinate], ContainerMixin, metaclass=ExtendedType, slots=
 		:returns: The canvas' size, or ``None`` for an open canvas.
 		"""
 		return self._size
-
-	@readonly
-	def Frame(self) -> None:
-		"""
-		Read-only property to return the frame the canvas is relative to.
-
-		A canvas is the root of a drawing, so it has no frame.
-
-		:returns: Always ``None``.
-		"""
-		return None
 
 	@readonly
 	def AbsoluteOffset(self) -> Offset2D[Coordinate]:

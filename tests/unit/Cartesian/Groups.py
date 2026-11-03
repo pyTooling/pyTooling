@@ -33,9 +33,9 @@ Unit tests for :mod:`pyTooling.Cartesian2D.Groups` - groups, canvases, frames, a
 """
 from math                         import isclose, pi
 
-from pyTooling.Cartesian2D        import Point2D, Offset2D, Size2D, BoundingBox, Alignment, Element2D, Segment2D, \
-                                         LineSegment2D, AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, \
-                                         NotOwnedError, NotInSameFrameError, GroupCycleError
+from pyTooling.Cartesian2D        import Base, Point2D, Offset2D, Size2D, BoundingBox, Alignment, Element2D, \
+                                         Segment2D, LineSegment2D, AlreadyOwnedError, DuplicatePointError, \
+                                         NotEnoughCornersError, NotOwnedError, NotInSameFrameError, GroupCycleError
 from pyTooling.Cartesian2D.Shapes import Polygon, Trapezium, Rectangle, Square, Circle
 from pyTooling.Cartesian2D.Groups import Group, Canvas, YAxisDirection, EmptyGroupError
 from pyTooling.Exceptions         import EmptyError
@@ -1054,6 +1054,32 @@ class CanvasInstantiation(Testcase):
 		self.assertIs(canvas, circle.Center.Frame)
 		self.assertIs(canvas, group.Frame)
 
+	def test_Canvas_Base(self) -> None:
+		"""A canvas is a frame like a group, and the root: it never has a parent."""
+		canvas = Canvas()
+
+		self.assertIsInstance(canvas, Base)
+		self.assertNotIsInstance(canvas, Element2D)
+		self.assertIsNone(canvas.Parent)
+		self.assertIsNone(canvas.Frame)
+
+		with self.assertRaises(AttributeError):
+			canvas.Parent = Group()
+
+		self.assertIsNone(canvas.Parent)
+
+	def test_Canvas_ParentParameter(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Canvas(parent=Group())
+
+	def test_Canvas_Slots(self) -> None:
+		self.assertFalse(hasattr(Canvas(), "__dict__"))
+		self.assertFalse(hasattr(Group(), "__dict__"))
+
+	def test_Canvas_Hash(self) -> None:
+		"""A canvas defines no ``__eq__``: it hashes by identity."""
+		self.assertEqual(2, len({Canvas(), Canvas()}))
+
 	def test_Canvas_DirectionNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = Canvas(None)
@@ -1087,6 +1113,124 @@ class CanvasInstantiation(Testcase):
 		canvas = Canvas(YAxisDirection.Down, Size2D(400, 300), (Circle(Point2D(1, 1), 1), ))
 
 		self.assertEqual("Canvas(Down, (400, 300), children=1)", repr(canvas))
+
+
+class CanvasFailing(Testcase):
+	"""A failing check of a canvas or group leaves the given children free."""
+
+	def test_Canvas_Direction(self) -> None:
+		child = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(TypeError):
+			_ = Canvas("up", children=(child, ))
+
+		self.assertIsNone(child.Parent)
+
+	def test_Canvas_Size(self) -> None:
+		child = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(TypeError):
+			_ = Canvas(size=(10, 10), children=(child, ))
+
+		self.assertIsNone(child.Parent)
+
+	def test_Group_Offset(self) -> None:
+		child = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(TypeError):
+			_ = Group((1, 1), (child, ))
+
+		self.assertIsNone(child.Parent)
+
+
+class CanvasParentParameter(Testcase):
+	"""Parameter 'parent' registers the new element in the canvas, as ``AddChild`` does."""
+
+	def test_Segment(self) -> None:
+		canvas = Canvas()
+
+		segment = Segment2D(Point2D(1, 2), Point2D(4, 6), parent=canvas)
+
+		self.assertIs(canvas, segment.Parent)
+		self.assertTupleEqual((segment, ), canvas.Children)
+		self.assertIs(canvas, segment.Start.Frame)
+
+	def test_LineSegment(self) -> None:
+		canvas = Canvas()
+
+		segment = LineSegment2D(Point2D(1, 2), Point2D(4, 6), parent=canvas)
+
+		self.assertIs(canvas, segment.Parent)
+		self.assertTupleEqual((segment, ), canvas.Children)
+		self.assertIs(segment, segment.Start.Parent)
+
+	def test_Polygon(self) -> None:
+		canvas = Canvas()
+
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=canvas)
+
+		self.assertIs(canvas, polygon.Parent)
+		self.assertTupleEqual((polygon, ), canvas.Children)
+		self.assertIs(canvas, polygon.Points[0].Frame)
+
+	def test_Trapezium(self) -> None:
+		canvas = Canvas()
+
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), parent=canvas)
+
+		self.assertIs(canvas, trapezium.Parent)
+		self.assertTupleEqual((trapezium, ), canvas.Children)
+
+	def test_Rectangle(self) -> None:
+		canvas = Canvas()
+
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), parent=canvas)
+
+		self.assertIs(canvas, rectangle.Parent)
+		self.assertTupleEqual((rectangle, ), canvas.Children)
+
+	def test_Rectangle_Failing(self) -> None:
+		canvas = Canvas()
+
+		with self.assertRaises(ValueError):
+			_ = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(5, 2), Point2D(1, 2), parent=canvas)
+
+		self.assertTupleEqual((), canvas.Children)
+
+	def test_Square(self) -> None:
+		canvas = Canvas()
+
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), parent=canvas)
+
+		self.assertIs(canvas, square.Parent)
+		self.assertTupleEqual((square, ), canvas.Children)
+
+	def test_Circle(self) -> None:
+		canvas = Canvas()
+
+		circle = Circle(Point2D(1, 2), 3, parent=canvas)
+
+		self.assertIs(canvas, circle.Parent)
+		self.assertTupleEqual((circle, ), canvas.Children)
+		self.assertIs(canvas, circle.Center.Frame)
+
+	def test_Group(self) -> None:
+		canvas = Canvas()
+
+		group = Group(Offset2D(1, 1), parent=canvas)
+
+		self.assertIs(canvas, group.Parent)
+		self.assertTupleEqual((group, ), canvas.Children)
+		self.assertIs(canvas, group.Frame)
+		self.assertTupleEqual((1, 1), group.AbsoluteOffset.ToTuple())
+
+	def test_Point(self) -> None:
+		"""A point's owner is an element, a canvas isn't one."""
+		with self.assertRaises(TypeError) as context:
+			_ = Point2D(1, 2, parent=Canvas())
+
+		self.assertEqual("Parameter 'parent' is not of type 'Element2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Groups.Canvas'."], context.exception.__notes__)
 
 
 class CanvasMembership(Testcase):
