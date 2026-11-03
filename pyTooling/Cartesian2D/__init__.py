@@ -1252,8 +1252,8 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		self,
 		start:      Point2D[Coordinate],
 		end:        Point2D[Coordinate],
-		copyPoints: bool = True,
 		*,
+		copyPoints: bool = True,
 		parent:     Nullable[Shape] = None
 	) -> None:
 		"""

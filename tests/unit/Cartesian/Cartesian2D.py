@@ -1607,6 +1607,14 @@ class Ownership(Testcase):
 		self.assertIsNot(line.Start, line.End)
 		self.assertEqual(0.0, line.Length)
 
+	def test_Segment_copyPointsPositional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Segment2D(Point2D(1, 2), Point2D(4, 6), False)
+
+	def test_LineSegment_copyPointsPositional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), False)
+
 	def test_LineSegment_copyPointsNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), copyPoints=None)

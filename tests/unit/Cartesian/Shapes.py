@@ -1174,6 +1174,14 @@ class Ownership(Testcase):
 		self.assertIs(polygon, edge.Start.Parent)
 		self.assertEqual(3, len(polygon.Segments))
 
+	def test_Polygon_copyPointsPositional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), False)
+
+	def test_Circle_copyPointsPositional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Circle(Point2D(1, 2), 3, False)
+
 	def test_Edge_copyPoints(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 

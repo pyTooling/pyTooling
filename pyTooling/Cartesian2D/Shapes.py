@@ -60,7 +60,7 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 	_points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the polygon's corners.
 	_segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the polygon's edges.
 
-	def __init__(self, points: Iterable[Point2D[Coordinate]], copyPoints: bool = True) -> None:
+	def __init__(self, points: Iterable[Point2D[Coordinate]], *, copyPoints: bool = True) -> None:
 		"""
 		Initializes a polygon from its corners.
 
@@ -554,7 +554,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 	_center: Point2D[Coordinate]  #: Center point of the circle.
 	_radius: Coordinate           #: Radius of the circle.
 
-	def __init__(self, center: Point2D[Coordinate], radius: Coordinate, copyPoints: bool = True) -> None:
+	def __init__(self, center: Point2D[Coordinate], radius: Coordinate, *, copyPoints: bool = True) -> None:
 		"""
 		Initializes a circle by its center and radius.
 
