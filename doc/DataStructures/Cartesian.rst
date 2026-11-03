@@ -396,7 +396,8 @@ its edges have the polygon as parent.
    str(triangle)                      # ((0, 0) → (4, 0) → (2, 3) → (0, 0))
 
 A corner that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`, fewer than three corners
-raise :exc:`ValueError`. The corners are not checked any further: edges may cross each other.
+raise :exc:`~pyTooling.Cartesian2D.NotEnoughCornersError`. The corners are not checked any further: edges may cross
+each other.
 
 .. seealso::
 

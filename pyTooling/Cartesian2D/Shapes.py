@@ -37,7 +37,7 @@ from typing                import Generic, Iterable, Self
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox, Element2D, LineSegment2D, \
-                                  AlreadyOwnedError, DuplicatePointError
+                                  AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError
 
 
 @export
@@ -68,23 +68,23 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 
 		The polygon owns its corners. Referenced points (``copyPoints=False``) must not be owned by another element.
 
-		:param points:               Corners of the polygon.
-		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
-		                             ``True``.
-		:raises ValueError:          If parameter 'points' is None.
-		:raises TypeError:           If parameter 'points' is not iterable.
-		:raises ValueError:          If an element of parameter 'points' is None.
-		:raises TypeError:           If an element of parameter 'points' is not of type
-		                             :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises AlreadyOwnedError:   If an element of parameter 'points' is owned by another element, while 'copyPoints' is
-		                             ``False``. |br|
-		                             Use ``copyPoints=True`` to copy the point.
-		:raises DuplicatePointError: If an element of parameter 'points' is given twice, while 'copyPoints' is
-		                             ``False``. |br|
-		                             Use ``copyPoints=True`` to copy the points.
-		:raises ValueError:          If parameter 'points' has fewer than 3 points.
-		:raises ValueError:          If parameter 'copyPoints' is None.
-		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:param points:                 Corners of the polygon.
+		:param copyPoints:             Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                               ``True``.
+		:raises ValueError:            If parameter 'points' is None.
+		:raises TypeError:             If parameter 'points' is not iterable.
+		:raises ValueError:            If an element of parameter 'points' is None.
+		:raises TypeError:             If an element of parameter 'points' is not of type
+		                               :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError:     If an element of parameter 'points' is owned by another element, while
+		                               'copyPoints' is ``False``. |br|
+		                               Use ``copyPoints=True`` to copy the point.
+		:raises DuplicatePointError:   If an element of parameter 'points' is given twice, while 'copyPoints' is
+		                               ``False``. |br|
+		                               Use ``copyPoints=True`` to copy the points.
+		:raises NotEnoughCornersError: If parameter 'points' has fewer than 3 points.
+		:raises ValueError:            If parameter 'copyPoints' is None.
+		:raises TypeError:             If parameter 'copyPoints' is not of type :class:`bool`.
 		"""
 		super().__init__()
 
@@ -126,9 +126,9 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 				pointList.append(point)
 
 		if len(pointList) < 3:
-			ex = ValueError("Parameter 'points' has fewer than 3 points.")
+			ex = NotEnoughCornersError("Polygon has fewer than 3 corners.")
 			ex.add_note(f"Got {len(pointList)} points.")
-			raise ex
+			raise ex from ValueError("Parameter 'points' has fewer than 3 points.")
 
 		self._points = corners = tuple(pointList)
 		for corner in corners:

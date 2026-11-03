@@ -35,7 +35,7 @@ from copy                         import copy, deepcopy
 from math                         import cos, isclose, pi, radians, sin, sqrt
 
 from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox, LineSegment2D, AlreadyOwnedError, \
-                                         DuplicatePointError, NotOwnedError, NotInSameFrameError
+                                         DuplicatePointError, NotEnoughCornersError, NotOwnedError, NotInSameFrameError
 from pyTooling.Cartesian2D.Shapes import Shape, Polygon, Trapezium, Rectangle, Square, Circle
 from pyTooling.Decorators         import readonly
 from pyTooling.MetaClasses        import ExtendedType, AbstractClassError
@@ -111,11 +111,13 @@ class Instantiation(Testcase):
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Polygon_TwoPoints(self) -> None:
-		with self.assertRaises(ValueError) as context:
+		with self.assertRaises(NotEnoughCornersError) as context:
 			_ = Polygon((Point2D(0, 0), Point2D(4, 0)))
 
-		self.assertEqual("Parameter 'points' has fewer than 3 points.", str(context.exception))
+		self.assertEqual("Polygon has fewer than 3 corners.", str(context.exception))
 		self.assertListEqual(["Got 2 points."], context.exception.__notes__)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("Parameter 'points' has fewer than 3 points.", str(context.exception.__cause__))
 
 	def test_Polygon_copyPointsNone(self) -> None:
 		with self.assertRaises(ValueError) as context:

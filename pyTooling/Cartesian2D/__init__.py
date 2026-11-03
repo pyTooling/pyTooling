@@ -95,6 +95,11 @@ class DuplicatePointError(Cartesian2DError, DuplicateElementError):
 
 
 @export
+class NotEnoughCornersError(Cartesian2DError):
+	"""The exception is raised when a polygon is given fewer than 3 corners."""
+
+
+@export
 class NotInSameFrameError(Cartesian2DError, NotInSameHierarchyError):
 	"""
 	The exception is raised when points or segments of different frames are combined in a computation.
