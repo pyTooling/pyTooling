@@ -310,7 +310,8 @@ Ownership and Frames
 Every point is owned by at most one element: a standalone segment owns its two points, a shape owns its corners or
 its center. An element given a point with ``copyPoints=False`` takes ownership of it; a point owned by another element
 raises :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError`, so two shapes never move each other's corners by accident.
-Copying is always possible - the copy has no owner.
+The same point object given twice raises :exc:`~pyTooling.Cartesian2D.DuplicatePointError`. Copying is always possible -
+the copy has no owner.
 
 ``Point2D(x, y, parent=shape)`` sets the owner, but doesn't register the point: the shape's points don't change. Such a
 point is in the shape's frame, so it can be combined with the shape's points, and it can replace the start or end point

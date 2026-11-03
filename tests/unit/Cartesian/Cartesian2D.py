@@ -36,8 +36,9 @@ from copy                         import copy, deepcopy
 from math                         import isclose, pi, sqrt
 
 from pyTooling.Cartesian2D        import Base, Element2D, Origin2D, Point2D, Offset2D, Size2D, BoundingBox, Segment2D, \
-                                         LineSegment2D, AlreadyOwnedError, NoAreaError
+                                         LineSegment2D, AlreadyOwnedError, DuplicatePointError, NoAreaError
 from pyTooling.Cartesian2D.Shapes import Rectangle, Shape
+from pyTooling.Exceptions         import DuplicateElementError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
 
@@ -1589,15 +1590,29 @@ class Ownership(Testcase):
 	def test_LineSegment_SamePoint(self) -> None:
 		point = Point2D(1, 2)
 
-		with self.assertRaises(ValueError) as context:
+		with self.assertRaises(DuplicatePointError) as context:
 			_ = LineSegment2D(point, point, copyPoints=False)
 
-		self.assertEqual("Parameter 'end' is the same point as parameter 'start'.", str(context.exception))
+		self.assertIsInstance(context.exception, DuplicateElementError)
+		self.assertEqual("Point is given twice.", str(context.exception))
 		self.assertListEqual(
 			["Got point (1, 2).", "Use 'copyPoints=True' to copy the points."],
 			context.exception.__notes__
 		)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("Parameter 'end' is the same point as parameter 'start'.", str(context.exception.__cause__))
 		self.assertIsNone(point.Parent)
+
+	def test_LineSegment_EqualCoordinates(self) -> None:
+		"""Two different point objects with equal coordinates aren't a duplicate."""
+		start = Point2D(1, 2)
+		end =   Point2D(1, 2)
+
+		line = LineSegment2D(start, end, copyPoints=False)
+
+		self.assertIs(start, line.Start)
+		self.assertIs(end, line.End)
+		self.assertEqual(0.0, line.Length)
 
 	def test_LineSegment_SamePoint_Copy(self) -> None:
 		point = Point2D(1, 2)
@@ -1673,8 +1688,12 @@ class Ownership(Testcase):
 		"""The segment's own end point can't become its start point."""
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		with self.assertRaises(AlreadyOwnedError):
+		with self.assertRaises(DuplicatePointError) as context:
 			line.Start = line.End
+
+		self.assertEqual("Point is given twice.", str(context.exception))
+		self.assertListEqual(["Got point (4, 6)."], context.exception.__notes__)
+		self.assertEqual("Parameter 'start' is the segment's end point.", str(context.exception.__cause__))
 
 	def test_LineSegment_End(self) -> None:
 		line =     LineSegment2D(Point2D(1, 2), Point2D(4, 6))
@@ -1685,6 +1704,17 @@ class Ownership(Testcase):
 
 		self.assertIs(line, point.Parent)
 		self.assertIsNone(previous.Parent)
+
+	def test_LineSegment_End_Start(self) -> None:
+		"""The segment's own start point can't become its end point."""
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		with self.assertRaises(DuplicatePointError) as context:
+			line.End = line.Start
+
+		self.assertEqual("Point is given twice.", str(context.exception))
+		self.assertListEqual(["Got point (1, 2)."], context.exception.__notes__)
+		self.assertEqual("Parameter 'end' is the segment's start point.", str(context.exception.__cause__))
 
 	def test_LineSegment_End_Same(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))

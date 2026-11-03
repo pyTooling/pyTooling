@@ -35,7 +35,7 @@ from copy                         import copy, deepcopy
 from math                         import cos, isclose, pi, radians, sin, sqrt
 
 from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox, LineSegment2D, AlreadyOwnedError, \
-                                         NotOwnedError, NotInSameFrameError
+                                         DuplicatePointError, NotOwnedError, NotInSameFrameError
 from pyTooling.Cartesian2D.Shapes import Shape, Polygon, Trapezium, Rectangle, Square, Circle
 from pyTooling.Decorators         import readonly
 from pyTooling.MetaClasses        import ExtendedType, AbstractClassError
@@ -1055,14 +1055,16 @@ class Ownership(Testcase):
 	def test_Polygon_Twice(self) -> None:
 		point = Point2D(0, 0)
 
-		with self.assertRaises(ValueError) as context:
+		with self.assertRaises(DuplicatePointError) as context:
 			_ = Polygon((point, Point2D(4, 0), point), copyPoints=False)
 
-		self.assertEqual("An element of parameter 'points' is given twice.", str(context.exception))
+		self.assertEqual("Point is given twice.", str(context.exception))
 		self.assertListEqual(
 			["Got point (0, 0).", "Use 'copyPoints=True' to copy the points."],
 			context.exception.__notes__
 		)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("An element of parameter 'points' is given twice.", str(context.exception.__cause__))
 		self.assertIsNone(point.Parent)
 
 	def test_Trapezium(self) -> None:
@@ -1118,11 +1120,13 @@ class Ownership(Testcase):
 		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
 		point =     Point2D(0, 0)
 
-		with self.assertRaises(ValueError) as context:
+		with self.assertRaises(DuplicatePointError) as context:
 			trapezium.points = (point, Point2D(2, 0), point, Point2D(0, 2))
 
-		self.assertEqual("An element of parameter 'points' is given twice.", str(context.exception))
+		self.assertEqual("Point is given twice.", str(context.exception))
 		self.assertListEqual(["Got point (0, 0)."], context.exception.__notes__)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("An element of parameter 'points' is given twice.", str(context.exception.__cause__))
 		self.assertIsNone(point.Parent)
 
 	def test_Circle(self) -> None:

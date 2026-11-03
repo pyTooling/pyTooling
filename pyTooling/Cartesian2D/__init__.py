@@ -45,7 +45,8 @@ from typing                import TYPE_CHECKING, Any, Generic, Iterable, Optiona
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod
-from pyTooling.Exceptions  import ToolingException, AlreadyInHierarchyError, NotAChildError, NotInSameHierarchyError
+from pyTooling.Exceptions  import ToolingException, AlreadyInHierarchyError, DuplicateElementError, NotAChildError, \
+                                  NotInSameHierarchyError
 from pyTooling.Common      import getFullyQualifiedName
 
 if TYPE_CHECKING:
@@ -80,6 +81,16 @@ class NotOwnedError(Cartesian2DError, NotAChildError):
 	The exception is raised when an element replaces or removes an element it doesn't own.
 
 	For example, an edge of a polygon references the polygon's corners, so it can't replace them.
+	"""
+
+
+@export
+class DuplicatePointError(Cartesian2DError, DuplicateElementError):
+	"""
+	The exception is raised when the same point object is given twice to an element.
+
+	For example, the same point as start and end point of a segment with ``copyPoints=False``. Two different point objects
+	with equal coordinates aren't a duplicate.
 	"""
 
 
@@ -1259,31 +1270,31 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		"""
 		Initializes a 2-dimensional segment.
 
-		:param start:              Start point of the segment.
-		:param end:                End point of the segment.
-		:param copyPoints:         Optional, if ``True``, the given points are copied instead of referenced. Default:
-		                           ``True``.
-		:param parent:             Optional, the shape this segment is an edge of. Default: ``None``.
-		:raises ValueError:        If parameter 'start' is None.
-		:raises TypeError:         If parameter 'start' is not of type :class:`Point2D`.
-		:raises AlreadyOwnedError: If parameter 'start' is owned by another element, while no parent is given and
-		                           'copyPoints' is ``False``. |br|
-		                           Use ``copyPoints=True`` to copy the point.
-		:raises NotOwnedError:     If parameter 'start' isn't owned by parameter 'parent'.
-		:raises ValueError:        If parameter 'end' is None.
-		:raises TypeError:         If parameter 'end' is not of type :class:`Point2D`.
-		:raises ValueError:        If parameter 'end' is the same point as parameter 'start', while no parent is given and
-		                           'copyPoints' is ``False``. |br|
-		                           Use ``copyPoints=True`` to copy the points.
-		:raises AlreadyOwnedError: If parameter 'end' is owned by another element, while no parent is given and
-		                           'copyPoints' is ``False``. |br|
-		                           Use ``copyPoints=True`` to copy the point.
-		:raises NotOwnedError:     If parameter 'end' isn't owned by parameter 'parent'.
-		:raises ValueError:        If parameter 'copyPoints' is None.
-		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
-		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape`.
-		:raises ValueError:        If parameter 'parent' is given, while 'copyPoints' is ``True``. |br|
-		                           An edge references the points of its parent shape: use ``copyPoints=False``.
+		:param start:                Start point of the segment.
+		:param end:                  End point of the segment.
+		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                             ``True``.
+		:param parent:               Optional, the shape this segment is an edge of. Default: ``None``.
+		:raises ValueError:          If parameter 'start' is None.
+		:raises TypeError:           If parameter 'start' is not of type :class:`Point2D`.
+		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while no parent is given and
+		                             'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:       If parameter 'start' isn't owned by parameter 'parent'.
+		:raises ValueError:          If parameter 'end' is None.
+		:raises TypeError:           If parameter 'end' is not of type :class:`Point2D`.
+		:raises DuplicatePointError: If parameter 'end' is the same point as parameter 'start', while no parent is given and
+		                             'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'end' is owned by another element, while no parent is given and
+		                             'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:       If parameter 'end' isn't owned by parameter 'parent'.
+		:raises ValueError:          If parameter 'copyPoints' is None.
+		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape`.
+		:raises ValueError:          If parameter 'parent' is given, while 'copyPoints' is ``True``. |br|
+		                             An edge references the points of its parent shape: use ``copyPoints=False``.
 		"""
 		from pyTooling.Cartesian2D.Shapes import Shape
 
@@ -1315,10 +1326,10 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 				start = start.Copy()
 				end =   end.Copy()
 			elif end is start:
-				ex = ValueError("Parameter 'end' is the same point as parameter 'start'.")
+				ex = DuplicatePointError("Point is given twice.")
 				ex.add_note(f"Got point {start}.")
 				ex.add_note("Use 'copyPoints=True' to copy the points.")
-				raise ex
+				raise ex from ValueError("Parameter 'end' is the same point as parameter 'start'.")
 			else:
 				for name, point in (
 					("start", start),
@@ -1363,11 +1374,12 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 
 		``start`` is a deprecated alias of this property; it is removed in v11.0.0.
 
-		:returns:                  Start point of the segment.
-		:raises ValueError:        If ``None`` is assigned.
-		:raises TypeError:         If an assigned value is not of type :class:`Point2D`.
-		:raises NotOwnedError:     If the segment is an edge of a shape.
-		:raises AlreadyOwnedError: If an assigned point is owned by another element.
+		:returns:                    Start point of the segment.
+		:raises ValueError:          If ``None`` is assigned.
+		:raises TypeError:           If an assigned value is not of type :class:`Point2D`.
+		:raises NotOwnedError:       If the segment is an edge of a shape.
+		:raises DuplicatePointError: If an assigned point is the segment's end point.
+		:raises AlreadyOwnedError:   If an assigned point is owned by another element.
 		"""
 		return self._start
 
@@ -1385,7 +1397,11 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 			ex = NotOwnedError("Segment doesn't own its start point.")
 			ex.add_note(f"The segment is an edge of {self._parent!r}, which owns the point.")
 			raise ex
-		elif start._parent is not None and (start._parent is not self or start is self._end):
+		elif start is self._end:
+			ex = DuplicatePointError("Point is given twice.")
+			ex.add_note(f"Got point {start}.")
+			raise ex from ValueError("Parameter 'start' is the segment's end point.")
+		elif start._parent is not None and start._parent is not self:
 			ex = AlreadyOwnedError("Point is owned by another element already.")
 			ex.add_note(f"Got point {start} owned by {start._parent!r}.")
 			raise ex from ValueError("Parameter 'start' is owned by another element.")
@@ -1406,11 +1422,12 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 
 		``end`` is a deprecated alias of this property; it is removed in v11.0.0.
 
-		:returns:                  End point of the segment.
-		:raises ValueError:        If ``None`` is assigned.
-		:raises TypeError:         If an assigned value is not of type :class:`Point2D`.
-		:raises NotOwnedError:     If the segment is an edge of a shape.
-		:raises AlreadyOwnedError: If an assigned point is owned by another element.
+		:returns:                    End point of the segment.
+		:raises ValueError:          If ``None`` is assigned.
+		:raises TypeError:           If an assigned value is not of type :class:`Point2D`.
+		:raises NotOwnedError:       If the segment is an edge of a shape.
+		:raises DuplicatePointError: If an assigned point is the segment's start point.
+		:raises AlreadyOwnedError:   If an assigned point is owned by another element.
 		"""
 		return self._end
 
@@ -1428,7 +1445,11 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 			ex = NotOwnedError("Segment doesn't own its end point.")
 			ex.add_note(f"The segment is an edge of {self._parent!r}, which owns the point.")
 			raise ex
-		elif end._parent is not None and (end._parent is not self or end is self._start):
+		elif end is self._start:
+			ex = DuplicatePointError("Point is given twice.")
+			ex.add_note(f"Got point {end}.")
+			raise ex from ValueError("Parameter 'end' is the segment's start point.")
+		elif end._parent is not None and end._parent is not self:
 			ex = AlreadyOwnedError("Point is owned by another element already.")
 			ex.add_note(f"Got point {end} owned by {end._parent!r}.")
 			raise ex from ValueError("Parameter 'end' is owned by another element.")
