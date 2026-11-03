@@ -114,6 +114,7 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 		if children is None:
 			return
 
+		seenChildren = set()
 		for child in children:
 			if child is None:
 				raise ValueError("An element of parameter 'children' is None.")
@@ -125,11 +126,12 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 				ex = AlreadyOwnedError("Element is owned by another element already.")
 				ex.add_note(f"Got {child!r} owned by {child._parent!r}.")
 				raise ex from ValueError("An element of parameter 'children' belongs to another element.")
-			elif any(child is element for element in childList):
+			elif child in seenChildren:
 				ex = ValueError("An element of parameter 'children' is given twice.")
 				ex.add_note(f"Got {child!r}.")
 				raise ex
 
+			seenChildren.add(child)
 			childList.append(child)
 
 		for child in childList:

@@ -164,6 +164,12 @@ class Instantiation(Testcase):
 		self.assertEqual("Group((1, 2), children=1)", repr(group))
 
 
+class Hashing(Testcase):
+	def test_Group(self) -> None:
+		"""A group defines no ``__eq__``: it hashes by identity."""
+		self.assertEqual(2, len({Group(), Group()}))
+
+
 class Membership(Testcase):
 	def test_AddChild(self) -> None:
 		circle = Circle(Point2D(1, 1), 1)
