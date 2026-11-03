@@ -1247,6 +1247,63 @@ class Ownership(Testcase):
 		self.assertTupleEqual(((0, -1), (4, -1), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
 
 
+class Hashing(Testcase):
+	"""Points, segments and shapes define no ``__eq__``: they hash by identity."""
+
+	def test_Point(self) -> None:
+		point1 = Point2D(1, 2)
+		point2 = Point2D(1, 2)
+
+		points = {point1, point2}
+
+		self.assertEqual(2, len(points))
+		self.assertIn(point1, points)
+		self.assertIn(point2, points)
+
+	def test_LineSegment(self) -> None:
+		self.assertEqual(2, len({
+			LineSegment2D(Point2D(1, 2), Point2D(4, 6)),
+			LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+		}))
+
+	def test_Polygon(self) -> None:
+		self.assertEqual(2, len({
+			Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))),
+			Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		}))
+
+	def test_Trapezium(self) -> None:
+		self.assertEqual(2, len({
+			Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3)),
+			Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		}))
+
+	def test_Rectangle(self) -> None:
+		self.assertEqual(2, len({
+			Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2)),
+			Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		}))
+
+	def test_Square(self) -> None:
+		self.assertEqual(2, len({
+			Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2)),
+			Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
+		}))
+
+	def test_Circle(self) -> None:
+		self.assertEqual(2, len({Circle(Point2D(1, 2), 3), Circle(Point2D(1, 2), 3)}))
+
+	def test_Offset2D(self) -> None:
+		"""An offset compares by value, so it isn't hashable."""
+		with self.assertRaises(TypeError):
+			_ = hash(Offset2D(1, 2))
+
+	def test_BoundingBox(self) -> None:
+		"""A bounding box compares by value, so it isn't hashable."""
+		with self.assertRaises(TypeError):
+			_ = hash(BoundingBox(0, 0, 1, 1))
+
+
 class FramedPolygon(Polygon, metaclass=ExtendedType, slots=True):
 	"""A polygon with a fixed frame, standing in for a polygon placed in a group."""
 

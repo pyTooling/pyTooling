@@ -102,7 +102,8 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
 			raise ex
 
-		pointList = []
+		pointList =  []
+		seenPoints = set()
 		for point in points:
 			if point is None:
 				raise ValueError("An element of parameter 'points' is None.")
@@ -117,12 +118,13 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 				ex.add_note(f"Got point {point} owned by {point._parent!r}.")
 				ex.add_note("Use 'copyPoints=True' to copy the point.")
 				raise ex from ValueError("An element of parameter 'points' is owned by another element.")
-			elif any(point is corner for corner in pointList):
+			elif point in seenPoints:
 				ex = DuplicatePointError("Point is given twice.")
 				ex.add_note(f"Got point {point}.")
 				ex.add_note("Use 'copyPoints=True' to copy the points.")
 				raise ex from ValueError("An element of parameter 'points' is given twice.")
 			else:
+				seenPoints.add(point)
 				pointList.append(point)
 
 		if len(pointList) < 3:
@@ -334,8 +336,9 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(points)}'.")
 			raise ex
 
-		corners = tuple(points)
-		for index, point in enumerate(corners):
+		corners =    tuple(points)
+		seenPoints = set()
+		for point in corners:
 			if point is None:
 				raise ValueError("An element of parameter 'points' is None.")
 			elif not isinstance(point, Point2D):
@@ -346,10 +349,12 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 				ex = AlreadyOwnedError("Point is owned by another element already.")
 				ex.add_note(f"Got point {point} owned by {point._parent!r}.")
 				raise ex from ValueError("An element of parameter 'points' is owned by another element.")
-			elif any(point is corner for corner in corners[:index]):
+			elif point in seenPoints:
 				ex = DuplicatePointError("Point is given twice.")
 				ex.add_note(f"Got point {point}.")
 				raise ex from ValueError("An element of parameter 'points' is given twice.")
+
+			seenPoints.add(point)
 
 		for corner in self._points:
 			corner._parent = None
