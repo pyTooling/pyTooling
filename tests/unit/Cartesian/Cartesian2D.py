@@ -1666,7 +1666,7 @@ class Ownership(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), copyPoints=False, parent=1)
 
-		self.assertEqual("Parameter 'parent' is not of type 'Shape'.", str(context.exception))
+		self.assertEqual("Parameter 'parent' is not of type 'Shape' or 'Group'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 	def test_LineSegment_Start(self) -> None:

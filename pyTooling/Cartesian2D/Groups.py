@@ -48,7 +48,7 @@ from typing                import Generic, Iterable, Optional as Nullable
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Offset2D, BoundingBox, Element2D, Cartesian2DError, AlreadyOwnedError, \
-                                  NotOwnedError
+                                  GroupCycleError, NotOwnedError
 
 
 @export
@@ -79,15 +79,19 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 	def __init__(
 		self,
 		offset:   Nullable[Offset2D[Coordinate]] = None,
-		children: Nullable[Iterable[Element2D[Coordinate]]] = None
+		children: Nullable[Iterable[Element2D[Coordinate]]] = None,
+		*,
+		parent:   Nullable[Group[Coordinate]] = None
 	) -> None:
 		"""
 		Initializes a group at an offset, holding the given children.
 
-		The group takes the children, which must not belong to another element.
+		The group takes the children, which must not belong to another element. When parameter 'parent' can't take the
+		group, the children stay free.
 
 		:param offset:             Optional, offset of the group's origin. Default: ``None``, which places it at ``(0, 0)``.
 		:param children:           Optional, shapes, segments and groups held by the group. Default: ``None``.
+		:param parent:             Optional, the group this group is added to. Default: ``None``, no group.
 		:raises TypeError:         If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
 		:raises TypeError:         If parameter 'children' is not iterable.
 		:raises ValueError:        If an element of parameter 'children' is None.
@@ -95,8 +99,10 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 		                           :class:`~pyTooling.Cartesian2D.Element2D`.
 		:raises AlreadyOwnedError: If an element of parameter 'children' belongs to another element.
 		:raises ValueError:        If an element of parameter 'children' is given twice.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`Group`.
+		:raises GroupCycleError:   If parameter 'parent' is inside an element of parameter 'children'.
 		"""
-		super().__init__()
+		super().__init__(parent=parent)
 
 		if offset is not None and not isinstance(offset, Offset2D):
 			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
@@ -111,31 +117,37 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 		self._offset =   Offset2D(0, 0) if offset is None else offset.Copy()
 		self._children = childList = []
 
-		if children is None:
-			return
+		if children is not None:
+			seenChildren = set()
+			for child in children:
+				if child is None:
+					raise ValueError("An element of parameter 'children' is None.")
+				elif not isinstance(child, Element2D):
+					ex = TypeError("An element of parameter 'children' is not of type 'Element2D'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
+					raise ex
+				elif child._parent is not None:
+					ex = AlreadyOwnedError("Element is owned by another element already.")
+					ex.add_note(f"Got {child!r} owned by {child._parent!r}.")
+					raise ex from ValueError("An element of parameter 'children' belongs to another element.")
+				elif child in seenChildren:
+					ex = ValueError("An element of parameter 'children' is given twice.")
+					ex.add_note(f"Got {child!r}.")
+					raise ex
 
-		seenChildren = set()
-		for child in children:
-			if child is None:
-				raise ValueError("An element of parameter 'children' is None.")
-			elif not isinstance(child, Element2D):
-				ex = TypeError("An element of parameter 'children' is not of type 'Element2D'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
-				raise ex
-			elif child._parent is not None:
-				ex = AlreadyOwnedError("Element is owned by another element already.")
-				ex.add_note(f"Got {child!r} owned by {child._parent!r}.")
-				raise ex from ValueError("An element of parameter 'children' belongs to another element.")
-			elif child in seenChildren:
-				ex = ValueError("An element of parameter 'children' is given twice.")
-				ex.add_note(f"Got {child!r}.")
-				raise ex
+				seenChildren.add(child)
+				childList.append(child)
 
-			seenChildren.add(child)
-			childList.append(child)
+			for child in childList:
+				child._parent = self
 
-		for child in childList:
-			child._parent = self
+		try:
+			self.Parent = parent
+		except GroupCycleError:
+			for child in childList:
+				child._parent = None
+
+			raise
 
 	@property
 	def Offset(self) -> Offset2D[Coordinate]:

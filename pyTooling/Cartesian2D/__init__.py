@@ -452,8 +452,26 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 	An element belongs to at most one group, its :attr:`Parent`. Its coordinates are relative to its parent group, an
 	element without a parent is relative to the origin.
 
-	A derived class implements :attr:`BoundingBox` and :meth:`Move`.
+	A derived class implements :attr:`BoundingBox` and :meth:`Move`. Its initializer takes the keyword-only parameter
+	``parent`` and assigns it to :attr:`Parent` as its last statement, when the element is fully initialized.
 	"""
+
+	def __init__(self, *, parent: Nullable[Group[Coordinate]] = None) -> None:
+		"""
+		Initializes an element without a parent and checks the group it will be registered in.
+
+		:param parent:     Optional, the group the derived class registers the element in. Default: ``None``, no group.
+		:raises TypeError: If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		"""
+		super().__init__()
+
+		if parent is not None:
+			from pyTooling.Cartesian2D.Groups import Group
+
+			if not isinstance(parent, Group):
+				ex = TypeError("Parameter 'parent' is not of type 'Group'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+				raise ex
 
 	@property
 	def Parent(self) -> Nullable[Union[Group, Shape]]:
@@ -1491,7 +1509,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		end:        Point2D[Coordinate],
 		*,
 		copyPoints: bool = True,
-		parent:     Nullable[Shape] = None
+		parent:     Nullable[Union[Shape, Group[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a 2-dimensional segment.
@@ -1500,32 +1518,34 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		:param end:                  End point of the segment.
 		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
 		                             ``True``.
-		:param parent:               Optional, the shape this segment is an edge of. Default: ``None``.
+		:param parent:               Optional, the shape this segment is an edge of, or the group the segment is added to.
+		                             Default: ``None``.
 		:raises ValueError:          If parameter 'start' is None.
 		:raises TypeError:           If parameter 'start' is not of type :class:`Point2D`.
-		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while no parent is given and
-		                             'copyPoints' is ``False``. |br|
+		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while parameter 'parent' isn't a
+		                             shape and 'copyPoints' is ``False``. |br|
 		                             Use ``copyPoints=True`` to copy the point.
 		:raises NotOwnedError:       If parameter 'start' isn't owned by parameter 'parent'.
 		:raises ValueError:          If parameter 'end' is None.
 		:raises TypeError:           If parameter 'end' is not of type :class:`Point2D`.
-		:raises DuplicatePointError: If parameter 'end' is the same point as parameter 'start', while no parent is given and
-		                             'copyPoints' is ``False``. |br|
+		:raises DuplicatePointError: If parameter 'end' is the same point as parameter 'start', while parameter 'parent'
+		                             isn't a shape and 'copyPoints' is ``False``. |br|
 		                             Use ``copyPoints=True`` to copy the points.
-		:raises AlreadyOwnedError:   If parameter 'end' is owned by another element, while no parent is given and
-		                             'copyPoints' is ``False``. |br|
+		:raises AlreadyOwnedError:   If parameter 'end' is owned by another element, while parameter 'parent' isn't a
+		                             shape and 'copyPoints' is ``False``. |br|
 		                             Use ``copyPoints=True`` to copy the point.
 		:raises NotOwnedError:       If parameter 'end' isn't owned by parameter 'parent'.
 		:raises ValueError:          If parameter 'copyPoints' is None.
 		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
-		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape`.
-		:raises ValueError:          If parameter 'parent' is given, while 'copyPoints' is ``True``. |br|
+		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape` or
+		                             :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises ValueError:          If parameter 'parent' is a shape, while 'copyPoints' is ``True``. |br|
 		                             An edge references the points of its parent shape: use ``copyPoints=False``.
 		"""
-		# The module declaring the parent's class sets '_PARENT_TYPE' of this class.
-		from pyTooling.Cartesian2D import Shapes
+		from pyTooling.Cartesian2D.Shapes import Shape
+		from pyTooling.Cartesian2D.Groups import Group
 
-		super().__init__(parent=parent)
+		super().__init__()
 
 		if start is None:
 			raise ValueError("Parameter 'start' is None.")
@@ -1548,7 +1568,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
 			raise ex
 
-		if parent is None:
+		if parent is None or isinstance(parent, Group):
 			if copyPoints:
 				start = start.Copy()
 				end =   end.Copy()
@@ -1570,8 +1590,12 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 
 			start._parent = self
 			end._parent =   self
+		elif not isinstance(parent, Shape):
+			ex = TypeError("Parameter 'parent' is not of type 'Shape' or 'Group'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
 		elif copyPoints:
-			ex = ValueError("Parameter 'parent' is given, while 'copyPoints' is True.")
+			ex = ValueError("Parameter 'parent' is a shape, while 'copyPoints' is True.")
 			ex.add_note("An edge references the points of its parent shape: use 'copyPoints=False'.")
 			raise ex
 		else:
@@ -1584,8 +1608,13 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 					ex.add_note(f"Got point {point} owned by {point._parent!r}.")
 					raise ex from ValueError(f"Parameter '{name}' isn't owned by parameter 'parent'.")
 
+			self._parent = parent
+
 		self._start = start
 		self._end =   end
+
+		if self._parent is None:
+			self.Parent = parent
 
 	@property
 	def Start(self) -> Point2D[Coordinate]:

@@ -37,7 +37,7 @@ from math                         import cos, isclose, pi, radians, sin, sqrt
 from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox, LineSegment2D, AlreadyOwnedError, \
                                          DuplicatePointError, NotEnoughCornersError, NotOwnedError, NotInSameFrameError
 from pyTooling.Cartesian2D.Shapes import Shape, Polygon, Trapezium, Rectangle, Square, Circle
-from pyTooling.Decorators         import readonly
+from pyTooling.Cartesian2D.Groups import Group
 from pyTooling.MetaClasses        import ExtendedType, AbstractClassError
 from pyTooling.Testing            import Testcase
 
@@ -1194,7 +1194,7 @@ class Ownership(Testcase):
 		with self.assertRaises(ValueError) as context:
 			_ = LineSegment2D(polygon.Points[0], polygon.Points[2], parent=polygon)
 
-		self.assertEqual("Parameter 'parent' is given, while 'copyPoints' is True.", str(context.exception))
+		self.assertEqual("Parameter 'parent' is a shape, while 'copyPoints' is True.", str(context.exception))
 		self.assertListEqual(
 			["An edge references the points of its parent shape: use 'copyPoints=False'."],
 			context.exception.__notes__
@@ -1304,24 +1304,10 @@ class Hashing(Testcase):
 			_ = hash(BoundingBox(0, 0, 1, 1))
 
 
-class FramedPolygon(Polygon, metaclass=ExtendedType, slots=True):
-	"""A polygon with a fixed frame, standing in for a polygon placed in a group."""
-
-	_frame: object
-
-	def __init__(self, points: tuple[Point2D, ...], frame: object) -> None:
-		super().__init__(points)
-		self._frame = frame
-
-	@readonly
-	def Frame(self) -> object:
-		return self._frame
-
-
 class Frames(Testcase):
 	def test_Point(self) -> None:
-		frame =   object()
-		polygon = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), frame)
+		frame =   Group()
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=frame)
 
 		for corner in polygon.Points:
 			self.assertIs(frame, corner.Frame)
@@ -1330,15 +1316,15 @@ class Frames(Testcase):
 			self.assertIs(frame, segment.Frame)
 
 	def test_Point_Minus_Point(self) -> None:
-		polygon = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), object())
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group())
 
 		offset = polygon.Points[2] - polygon.Points[0]
 
 		self.assertTupleEqual((2, 3), offset.ToTuple())
 
 	def test_Point_Minus_Point_OtherFrame(self) -> None:
-		polygon1 = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), object())
-		polygon2 = FramedPolygon((Point2D(1, 1), Point2D(5, 1), Point2D(3, 4)), object())
+		polygon1 = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group())
+		polygon2 = Polygon((Point2D(1, 1), Point2D(5, 1), Point2D(3, 4)), parent=Group())
 
 		with self.assertRaises(NotInSameFrameError) as context:
 			_ = polygon2.Points[0] - polygon1.Points[0]
@@ -1352,14 +1338,14 @@ class Frames(Testcase):
 		self.assertEqual("Parameter 'other' is in another frame.", str(context.exception.__cause__))
 
 	def test_Point_Minus_Point_NoFrame(self) -> None:
-		polygon = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), object())
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group())
 
 		with self.assertRaises(NotInSameFrameError):
 			_ = polygon.Points[0] - Point2D(1, 1)
 
 	def test_AngleTo_OtherFrame(self) -> None:
-		polygon1 = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), object())
-		polygon2 = FramedPolygon((Point2D(1, 1), Point2D(5, 1), Point2D(3, 4)), object())
+		polygon1 = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group())
+		polygon2 = Polygon((Point2D(1, 1), Point2D(5, 1), Point2D(3, 4)), parent=Group())
 
 		with self.assertRaises(NotInSameFrameError) as context:
 			_ = polygon1.Segments[0].AngleTo(polygon2.Segments[0])
@@ -1369,7 +1355,7 @@ class Frames(Testcase):
 		self.assertEqual("Parameter 'other' is in another frame.", str(context.exception.__cause__))
 
 	def test_AngleTo_SameFrame(self) -> None:
-		polygon = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), object())
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), parent=Group())
 
 		angle = polygon.Segments[0].AngleTo(polygon.Segments[1])
 
@@ -1379,8 +1365,8 @@ class Frames(Testcase):
 class FramedPoints(Testcase):
 	def test_Parent(self) -> None:
 		"""A point with a shape as parent is in the shape's frame, but not one of its points."""
-		frame = object()
-		polygon = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), frame)
+		frame =   Group()
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=frame)
 
 		point = Point2D(1, 1, parent=polygon)
 

@@ -32,12 +32,15 @@
 from __future__            import annotations
 
 from math                  import degrees, isclose, pi
-from typing                import Generic, Iterable, Self
+from typing                import TYPE_CHECKING, Generic, Iterable, Optional as Nullable, Self
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox, Element2D, Segment2D, LineSegment2D, \
                                   AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError
+
+if TYPE_CHECKING:
+	from pyTooling.Cartesian2D.Groups import Group
 
 
 @export
@@ -48,7 +51,8 @@ class Shape(Element2D[Coordinate], Generic[Coordinate]):
 	A derived class declares its fields as slots, so a class derived from a shape can use slots too. It implements
 	:attr:`~pyTooling.Cartesian2D.Element2D.BoundingBox` and :meth:`~pyTooling.Cartesian2D.Element2D.Move`.
 
-	A shape owns its points. A group can hold it.
+	A shape owns its points. A group can hold it: given as parameter ``parent``, it registers the shape, when the shape is
+	fully initialized.
 	"""
 
 
@@ -63,7 +67,13 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 	_points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the polygon's corners.
 	_segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the polygon's edges.
 
-	def __init__(self, points: Iterable[Point2D[Coordinate]], *, copyPoints: bool = True) -> None:
+	def __init__(
+		self,
+		points:     Iterable[Point2D[Coordinate]],
+		*,
+		copyPoints: bool = True,
+		parent:     Nullable[Group[Coordinate]] = None
+	) -> None:
 		"""
 		Initializes a polygon from its corners.
 
@@ -74,6 +84,7 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		:param points:                 Corners of the polygon.
 		:param copyPoints:             Optional, if ``True``, the given points are copied instead of referenced. Default:
 		                               ``True``.
+		:param parent:                 Optional, the group the polygon is added to. Default: ``None``, no group.
 		:raises ValueError:            If parameter 'points' is None.
 		:raises TypeError:             If parameter 'points' is not iterable.
 		:raises ValueError:            If an element of parameter 'points' is None.
@@ -88,8 +99,9 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		:raises NotEnoughCornersError: If parameter 'points' has fewer than 3 points.
 		:raises ValueError:            If parameter 'copyPoints' is None.
 		:raises TypeError:             If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:             If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
 		"""
-		super().__init__()
+		super().__init__(parent=parent)
 
 		if points is None:
 			raise ValueError("Parameter 'points' is None.")
@@ -143,6 +155,8 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 			LineSegment2D(start, end, copyPoints=False, parent=self)
 			for start, end in zip(corners, (*corners[1:], corners[0]))
 		)
+
+		self.Parent = parent
 
 	def Copy(self) -> Self:
 		"""
@@ -234,7 +248,15 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 	_points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the trapezium.
 	_segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the trapezium.
 
-	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
+	def __init__(
+		self,
+		p00:    Point2D[Coordinate],
+		p01:    Point2D[Coordinate],
+		p11:    Point2D[Coordinate],
+		p10:    Point2D[Coordinate],
+		*,
+		parent: Nullable[Group[Coordinate]] = None
+	) -> None:
 		"""
 		Initializes a trapezium with 4 corners.
 
@@ -242,6 +264,7 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
+		:param parent:      Optional, the group the trapezium is added to. Default: ``None``, no group.
 		:raises ValueError: If parameter 'p00' is None.
 		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p01' is None.
@@ -250,8 +273,9 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
 		"""
-		super().__init__()
+		super().__init__(parent=parent)
 
 		if p00 is None:
 			raise ValueError("Parameter 'p00' is None.")
@@ -296,6 +320,8 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 			LineSegment2D(_p11, _p10, copyPoints=False, parent=self),
 			LineSegment2D(_p10, _p00, copyPoints=False, parent=self)
 		)
+
+		self.Parent = parent
 
 	@readonly
 	def Points(self) -> tuple[Point2D[Coordinate], ...]:
@@ -472,7 +498,15 @@ class Rectangle(Trapezium[Coordinate]):
 	A rectangle is a trapezium, where opposite edges are parallel to each other and all inner angles are 90 |degree| .
 	"""
 
-	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
+	def __init__(
+		self,
+		p00:    Point2D[Coordinate],
+		p01:    Point2D[Coordinate],
+		p11:    Point2D[Coordinate],
+		p10:    Point2D[Coordinate],
+		*,
+		parent: Nullable[Group[Coordinate]] = None
+	) -> None:
 		"""
 		Initializes a rectangle with 4 corners.
 
@@ -480,6 +514,7 @@ class Rectangle(Trapezium[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
+		:param parent:      Optional, the group the rectangle is added to. Default: ``None``, no group.
 		:raises ValueError: If parameter 'p00' is None.
 		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p01' is None.
@@ -488,6 +523,7 @@ class Rectangle(Trapezium[Coordinate]):
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
 		:raises ValueError: If opposite edges have different lengths.
 		:raises ValueError: If two consecutive corners are the same point.
 		:raises ValueError: If an inner angle isn't 90 |degree|.
@@ -517,6 +553,8 @@ class Rectangle(Trapezium[Coordinate]):
 				ex.add_note(f"Got {degrees(angle):.2f}° at corner {edge._end}.")
 				raise ex
 
+		self.Parent = parent
+
 
 @export
 class Square(Rectangle[Coordinate]):
@@ -524,7 +562,15 @@ class Square(Rectangle[Coordinate]):
 	A square is a rectangle, where all edges have the same length and all inner angles are 90 |degree| .
 	"""
 
-	def __init__(self, p00: Point2D[Coordinate], p01: Point2D[Coordinate], p11: Point2D[Coordinate], p10: Point2D[Coordinate]) -> None:
+	def __init__(
+		self,
+		p00:    Point2D[Coordinate],
+		p01:    Point2D[Coordinate],
+		p11:    Point2D[Coordinate],
+		p10:    Point2D[Coordinate],
+		*,
+		parent: Nullable[Group[Coordinate]] = None
+	) -> None:
 		"""
 		Initializes a square with 4 corners.
 
@@ -532,6 +578,7 @@ class Square(Rectangle[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
+		:param parent:      Optional, the group the square is added to. Default: ``None``, no group.
 		:raises ValueError: If parameter 'p00' is None.
 		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p01' is None.
@@ -540,6 +587,7 @@ class Square(Rectangle[Coordinate]):
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
 		:raises ValueError: If opposite edges have different lengths.
 		:raises ValueError: If two consecutive corners are the same point.
 		:raises ValueError: If an inner angle isn't 90 |degree|.
@@ -554,6 +602,8 @@ class Square(Rectangle[Coordinate]):
 			ex.add_note(f"Got lengths {edge.Length} and {nextEdge.Length}.")
 			raise ex
 
+		self.Parent = parent
+
 
 @export
 class Circle(Shape[Coordinate], Generic[Coordinate]):
@@ -563,7 +613,14 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 	_center: Point2D[Coordinate]  #: Center point of the circle.
 	_radius: Coordinate           #: Radius of the circle.
 
-	def __init__(self, center: Point2D[Coordinate], radius: Coordinate, *, copyPoints: bool = True) -> None:
+	def __init__(
+		self,
+		center:     Point2D[Coordinate],
+		radius:     Coordinate,
+		*,
+		copyPoints: bool = True,
+		parent:     Nullable[Group[Coordinate]] = None
+	) -> None:
 		"""
 		Initializes a circle by its center and radius.
 
@@ -573,6 +630,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		:param radius:             Radius of the circle.
 		:param copyPoints:         Optional, if ``True``, the given center is copied instead of referenced. Default:
 		                           ``True``.
+		:param parent:             Optional, the group the circle is added to. Default: ``None``, no group.
 		:raises ValueError:        If parameter 'center' is None.
 		:raises TypeError:         If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises AlreadyOwnedError: If parameter 'center' is owned by another element, while 'copyPoints' is ``False``. |br|
@@ -582,8 +640,9 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		:raises ValueError:        If parameter 'radius' isn't positive.
 		:raises ValueError:        If parameter 'copyPoints' is None.
 		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
 		"""
-		super().__init__()
+		super().__init__(parent=parent)
 
 		if center is None:
 			raise ValueError("Parameter 'center' is None.")
@@ -619,6 +678,8 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		self._center =         center.Copy() if copyPoints else center
 		self._radius =         radius
 		self._center._parent = self
+
+		self.Parent = parent
 
 	def Copy(self) -> Self:
 		"""

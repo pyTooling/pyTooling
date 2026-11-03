@@ -538,6 +538,12 @@ Assigning :attr:`~pyTooling.Cartesian2D.Element2D.Parent` moves an element into 
 coordinates. A group can't become its own descendant: that raises :exc:`~pyTooling.Cartesian2D.GroupCycleError`. An
 edge of a shape belongs to its shape and can't be moved into a group.
 
+Every shape, segment and group takes a keyword-only parameter ``parent``: a group given there registers the new element,
+as :meth:`~pyTooling.Cartesian2D.Groups.Group.AddChild` does. The element registers when it is fully initialized, so a
+failing check leaves nothing in the group. A segment with a shape as ``parent`` is an edge of that shape instead. A
+:class:`~pyTooling.Cartesian2D.Point2D` with a ``parent`` is different, it isn't registered: see
+:ref:`STRUCT/Cartesian2D/Ownership`.
+
 
 .. _STRUCT/Cartesian2D/Group:
 

@@ -33,9 +33,10 @@ Unit tests for :mod:`pyTooling.Cartesian2D.Groups` - groups, frames, absolute co
 """
 from math                         import isclose, pi
 
-from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox, Element2D, LineSegment2D, AlreadyOwnedError, \
-                                         NotOwnedError, NotInSameFrameError, GroupCycleError
-from pyTooling.Cartesian2D.Shapes import Polygon, Circle
+from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox, Element2D, Segment2D, LineSegment2D, \
+                                         AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
+                                         NotInSameFrameError, GroupCycleError
+from pyTooling.Cartesian2D.Shapes import Polygon, Trapezium, Rectangle, Square, Circle
 from pyTooling.Cartesian2D.Groups import Group, Axis, EmptyGroupError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
@@ -351,6 +352,293 @@ class Membership(Testcase):
 		for edge in polygon.Segments:
 			self.assertIs(polygon, edge.Parent)
 			self.assertIs(group, edge.Frame)
+
+
+class ParentParameter(Testcase):
+	"""Parameter 'parent' registers the new element in the group, as ``AddChild`` does."""
+
+	def test_Segment(self) -> None:
+		group = Group()
+
+		segment = Segment2D(Point2D(1, 2), Point2D(4, 6), parent=group)
+
+		self.assertIs(group, segment.Parent)
+		self.assertTupleEqual((segment, ), group.Children)
+		self.assertIs(segment, segment.Start.Parent)
+		self.assertIs(segment, segment.End.Parent)
+		self.assertIs(group, segment.Start.Frame)
+
+	def test_LineSegment(self) -> None:
+		group = Group()
+
+		segment = LineSegment2D(Point2D(1, 2), Point2D(4, 6), parent=group)
+
+		self.assertIs(group, segment.Parent)
+		self.assertTupleEqual((segment, ), group.Children)
+		self.assertIs(group, segment.Frame)
+
+	def test_LineSegment_Reference(self) -> None:
+		"""A segment in a group owns its points, as a standalone one."""
+		group = Group()
+		start = Point2D(1, 2)
+		end =   Point2D(4, 6)
+
+		segment = LineSegment2D(start, end, copyPoints=False, parent=group)
+
+		self.assertIs(start, segment.Start)
+		self.assertIs(end, segment.End)
+		self.assertIs(segment, start.Parent)
+		self.assertIs(segment, end.Parent)
+
+		replacement = Point2D(7, 8)
+		segment.Start = replacement
+
+		self.assertIs(segment, replacement.Parent)
+		self.assertIsNone(start.Parent)
+
+	def test_LineSegment_Shape(self) -> None:
+		"""A segment with a shape as parent is an edge, not a child of a group."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		edge = LineSegment2D(polygon.Points[0], polygon.Points[2], copyPoints=False, parent=polygon)
+
+		self.assertIs(polygon, edge.Parent)
+		self.assertIs(polygon, edge.Start.Parent)
+
+	def test_LineSegment_Int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Shape' or 'Group'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_LineSegment_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), Group())
+
+	def test_LineSegment_Failing(self) -> None:
+		group = Group()
+		point = Point2D(1, 2)
+
+		with self.assertRaises(DuplicatePointError):
+			_ = LineSegment2D(point, point, copyPoints=False, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Polygon(self) -> None:
+		group = Group()
+
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=group)
+
+		self.assertIs(group, polygon.Parent)
+		self.assertTupleEqual((polygon, ), group.Children)
+		self.assertIs(group, polygon.Points[0].Frame)
+		self.assertIs(group, polygon.Segments[0].Frame)
+
+	def test_Polygon_Int(self) -> None:
+		"""A wrong parent is found before the polygon takes the given points."""
+		points = (Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))
+
+		with self.assertRaises(TypeError) as context:
+			_ = Polygon(points, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(points[0].Parent)
+
+	def test_Polygon_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), Group())
+
+	def test_Polygon_Failing(self) -> None:
+		group = Group()
+
+		with self.assertRaises(NotEnoughCornersError):
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0)), parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Trapezium(self) -> None:
+		group = Group()
+
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), parent=group)
+
+		self.assertIs(group, trapezium.Parent)
+		self.assertTupleEqual((trapezium, ), group.Children)
+		self.assertIs(group, trapezium.Points[0].Frame)
+
+	def test_Trapezium_Int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Trapezium_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), Group())
+
+	def test_Trapezium_Failing(self) -> None:
+		group = Group()
+
+		with self.assertRaises(ValueError):
+			_ = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), None, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Rectangle(self) -> None:
+		group = Group()
+
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), parent=group)
+
+		self.assertIs(group, rectangle.Parent)
+		self.assertTupleEqual((rectangle, ), group.Children)
+
+	def test_Rectangle_Int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Rectangle_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), Group())
+
+	def test_Rectangle_Failing(self) -> None:
+		"""The rectangle's own checks run before it registers: a parallelogram leaves no child in the group."""
+		group = Group()
+
+		with self.assertRaises(ValueError):
+			_ = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(5, 2), Point2D(1, 2), parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Square(self) -> None:
+		group = Group()
+
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), parent=group)
+
+		self.assertIs(group, square.Parent)
+		self.assertTupleEqual((square, ), group.Children)
+
+	def test_Square_Int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Square_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), Group())
+
+	def test_Square_Failing(self) -> None:
+		"""The square's own checks run before it registers: a rectangle leaves no child in the group."""
+		group = Group()
+
+		with self.assertRaises(ValueError):
+			_ = Square(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Circle(self) -> None:
+		group = Group()
+
+		circle = Circle(Point2D(1, 2), 3, parent=group)
+
+		self.assertIs(group, circle.Parent)
+		self.assertTupleEqual((circle, ), group.Children)
+		self.assertIs(group, circle.Center.Frame)
+
+	def test_Circle_Int(self) -> None:
+		"""A wrong parent is found before the circle takes the given center."""
+		center = Point2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Circle(center, 3, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(center.Parent)
+
+	def test_Circle_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Circle(Point2D(1, 2), 3, Group())
+
+	def test_Circle_Failing(self) -> None:
+		group = Group()
+
+		with self.assertRaises(ValueError):
+			_ = Circle(Point2D(1, 2), 0, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Group(self) -> None:
+		parent = Group()
+		child =  Circle(Point2D(1, 2), 3)
+
+		group = Group(Offset2D(1, 1), (child, ), parent=parent)
+
+		self.assertIs(parent, group.Parent)
+		self.assertTupleEqual((group, ), parent.Children)
+		self.assertIs(group, child.Parent)
+		self.assertTupleEqual((2, 3), child.Center.Absolute.ToTuple())
+
+	def test_Group_Int(self) -> None:
+		"""A wrong parent is found before the group takes the given children."""
+		child = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Group(children=(child, ), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(child.Parent)
+
+	def test_Group_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Group(None, None, Group())
+
+	def test_Group_Failing(self) -> None:
+		group = Group()
+
+		with self.assertRaises(TypeError):
+			_ = Group(offset=(1, 1), parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Group_ParentIsChild(self) -> None:
+		"""The new group can't be a child of its own child. The child stays free."""
+		child = Group()
+
+		with self.assertRaises(GroupCycleError) as context:
+			_ = Group(children=(child, ), parent=child)
+
+		self.assertEqual("Group would contain itself.", str(context.exception))
+		self.assertEqual("Parameter 'parent' is this element or one of its descendants.", str(context.exception.__cause__))
+		self.assertIsNone(child.Parent)
+		self.assertTupleEqual((), child.Children)
+
+	def test_Group_ParentInsideChild(self) -> None:
+		inner = Group()
+		child = Group(children=(inner, ))
+
+		with self.assertRaises(GroupCycleError):
+			_ = Group(children=(child, ), parent=inner)
+
+		self.assertIsNone(child.Parent)
+		self.assertTupleEqual((), inner.Children)
+
+	def test_Point(self) -> None:
+		"""A point's parent sets the owner only: the group's children don't change."""
+		group = Group()
+
+		point = Point2D(1, 2, parent=group)
+
+		self.assertIs(group, point.Parent)
+		self.assertIs(group, point.Frame)
+		self.assertTupleEqual((), group.Children)
 
 
 class Frames(Testcase):
