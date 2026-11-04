@@ -41,7 +41,8 @@ An implementation of 2D cartesian data structures for Python.
 from __future__            import annotations
 
 from math                  import atan2, sqrt
-from typing                import TYPE_CHECKING, Any, Generic, Iterable, Optional as Nullable, Self, TypeVar, Union
+from typing                import TYPE_CHECKING, Any, ClassVar, Generic, Iterable, Optional as Nullable, Self, \
+                                  TypeVar, Union
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod
@@ -118,14 +119,23 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	A frame is what the coordinates are relative to. Every frame is an instance of this class.
 	"""
 
+	_PARENT_TYPE: ClassVar[tuple[type, ...]]  #: Types a parent of this class can have.
+
 	_parent: Nullable[Base[Coordinate]]  #: Parent of this object, or ``None``.
 
 	def __init__(self, *, parent: Nullable[Base[Coordinate]] = None) -> None:
 		"""
 		Initializes the parent relation.
 
-		:param parent: Optional, the parent of this object. Default: ``None``, no parent.
+		:param parent:     Optional, the parent of this object. Default: ``None``, no parent.
+		:raises TypeError: If parameter 'parent' is not of a type in :attr:`_PARENT_TYPE`.
 		"""
+		if parent is not None and not isinstance(parent, self._PARENT_TYPE):
+			typeNames = " or ".join(f"'{parentType.__name__}'" for parentType in self._PARENT_TYPE)
+			ex = TypeError(f"Parameter 'parent' is not of type {typeNames}.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+
 		self._parent = parent
 
 	@readonly
@@ -199,11 +209,6 @@ class Point2D(Base[Coordinate], Generic[Coordinate]):
 		elif not isinstance(y, (int, float)):
 			ex = TypeError("Parameter 'y' is not of type 'float' or 'int'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
-			raise ex
-
-		if parent is not None and not isinstance(parent, Element2D):
-			ex = TypeError("Parameter 'parent' is not of type 'Element2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 
 		self._x = x
@@ -433,6 +438,9 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 
 		:param offset: The 2D-offset to move by.
 		"""
+
+
+Point2D._PARENT_TYPE = (Element2D, )
 
 
 @export
@@ -1301,7 +1309,8 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		:raises ValueError:          If parameter 'parent' is given, while 'copyPoints' is ``True``. |br|
 		                             An edge references the points of its parent shape: use ``copyPoints=False``.
 		"""
-		from pyTooling.Cartesian2D.Shapes import Shape
+		# The module declaring the parent's class sets '_PARENT_TYPE' of this class.
+		from pyTooling.Cartesian2D import Shapes
 
 		super().__init__(parent=parent)
 
@@ -1348,10 +1357,6 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 
 			start._parent = self
 			end._parent =   self
-		elif not isinstance(parent, Shape):
-			ex = TypeError("Parameter 'parent' is not of type 'Shape'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-			raise ex
 		elif copyPoints:
 			ex = ValueError("Parameter 'parent' is given, while 'copyPoints' is True.")
 			ex.add_note("An edge references the points of its parent shape: use 'copyPoints=False'.")

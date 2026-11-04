@@ -1739,6 +1739,20 @@ class Ownership(Testcase):
 		self.assertIs(end, line1.End)
 
 
+class ParentTypes(Testcase):
+	def test_Point(self) -> None:
+		self.assertTupleEqual((Element2D, ), Point2D._PARENT_TYPE)
+
+	def test_Origin(self) -> None:
+		self.assertTupleEqual((Element2D, ), Origin2D._PARENT_TYPE)
+
+	def test_Segment(self) -> None:
+		self.assertTupleEqual((Shape, ), Segment2D._PARENT_TYPE)
+
+	def test_LineSegment(self) -> None:
+		self.assertTupleEqual((Shape, ), LineSegment2D._PARENT_TYPE)
+
+
 class Frames(Testcase):
 	def test_Point_Minus_Point(self) -> None:
 		"""Points of two standalone segments have no frame, so they can be subtracted."""

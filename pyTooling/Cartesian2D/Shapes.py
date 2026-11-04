@@ -36,7 +36,7 @@ from typing                import Generic, Iterable, Self
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox, Element2D, LineSegment2D, \
+from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox, Element2D, Segment2D, LineSegment2D, \
                                   AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError
 
 
@@ -50,6 +50,9 @@ class Shape(Element2D[Coordinate], Generic[Coordinate]):
 
 	A shape owns its points.
 	"""
+
+
+Segment2D._PARENT_TYPE = (Shape, )
 
 
 @export
