@@ -1766,10 +1766,19 @@ class ParentTypes(Testcase):
 		self.assertTupleEqual((Element2D, ), Origin2D._PARENT_TYPE)
 
 	def test_Segment(self) -> None:
-		self.assertTupleEqual((Shape, ), Segment2D._PARENT_TYPE)
+		self.assertTupleEqual((Shape, Group), Segment2D._PARENT_TYPE)
 
 	def test_LineSegment(self) -> None:
-		self.assertTupleEqual((Shape, ), LineSegment2D._PARENT_TYPE)
+		self.assertTupleEqual((Shape, Group), LineSegment2D._PARENT_TYPE)
+
+	def test_Shape(self) -> None:
+		self.assertTupleEqual((Group, ), Shape._PARENT_TYPE)
+
+	def test_Rectangle(self) -> None:
+		self.assertTupleEqual((Group, ), Rectangle._PARENT_TYPE)
+
+	def test_Group(self) -> None:
+		self.assertTupleEqual((Group, ), Group._PARENT_TYPE)
 
 
 class Frames(Testcase):

@@ -40,15 +40,16 @@ The coordinates of everything inside a group are relative to the group, so movin
    :mod:`pyTooling.Cartesian2D.Shapes`
       |rarr| Shapes a group can hold.
 """
-from __future__            import annotations
+from __future__                   import annotations
 
-from enum                  import Enum
-from typing                import Generic, Iterable, Optional as Nullable
+from enum                         import Enum
+from typing                       import Generic, Iterable, Optional as Nullable
 
-from pyTooling.Decorators  import export, readonly
-from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Cartesian2D import Coordinate, Offset2D, BoundingBox, Element2D, Cartesian2DError, AlreadyOwnedError, \
-                                  GroupCycleError, NotOwnedError
+from pyTooling.Decorators         import export, readonly
+from pyTooling.Common             import getFullyQualifiedName
+from pyTooling.Cartesian2D        import Coordinate, Offset2D, BoundingBox, Element2D, Segment2D, Cartesian2DError, \
+                                         AlreadyOwnedError, GroupCycleError, NotOwnedError
+from pyTooling.Cartesian2D.Shapes import Shape
 
 
 @export
@@ -345,3 +346,7 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 		:returns: The string representation of the group, its offset and number of children.
 		"""
 		return f"Group({self._offset}, children={len(self._children)})"
+
+
+Element2D._PARENT_TYPE = (Group, )
+Segment2D._PARENT_TYPE = (Shape, Group)

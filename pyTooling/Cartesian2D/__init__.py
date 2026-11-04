@@ -463,15 +463,13 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		:param parent:     Optional, the group the derived class registers the element in. Default: ``None``, no group.
 		:raises TypeError: If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
 		"""
-		super().__init__()
+		# The module declaring the parent's class sets '_PARENT_TYPE' of this class.
+		from pyTooling.Cartesian2D import Groups
 
-		if parent is not None:
-			from pyTooling.Cartesian2D.Groups import Group
+		super().__init__(parent=parent)
 
-			if not isinstance(parent, Group):
-				ex = TypeError("Parameter 'parent' is not of type 'Group'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-				raise ex
+		# The derived class registers the element by assigning 'Parent' as its last statement.
+		self._parent = None
 
 	@property
 	def Parent(self) -> Nullable[Union[Group, Shape]]:
@@ -1542,10 +1540,9 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		:raises ValueError:          If parameter 'parent' is a shape, while 'copyPoints' is ``True``. |br|
 		                             An edge references the points of its parent shape: use ``copyPoints=False``.
 		"""
-		from pyTooling.Cartesian2D.Shapes import Shape
 		from pyTooling.Cartesian2D.Groups import Group
 
-		super().__init__()
+		super().__init__(parent=parent)
 
 		if start is None:
 			raise ValueError("Parameter 'start' is None.")
@@ -1590,10 +1587,6 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 
 			start._parent = self
 			end._parent =   self
-		elif not isinstance(parent, Shape):
-			ex = TypeError("Parameter 'parent' is not of type 'Shape' or 'Group'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
-			raise ex
 		elif copyPoints:
 			ex = ValueError("Parameter 'parent' is a shape, while 'copyPoints' is True.")
 			ex.add_note("An edge references the points of its parent shape: use 'copyPoints=False'.")
