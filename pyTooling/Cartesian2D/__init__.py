@@ -177,11 +177,24 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		the frame. Use :meth:`Element2D.MoveTo` to keep the absolute position.
 
 		:returns:                  The parent, or ``None``, if this object has no parent.
-		:raises TypeError:         If an assigned value is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:         If an assigned value is not of a type in :attr:`_PARENT_TYPE`.
+		:raises TypeError:         If a parent is assigned to a :class:`Point2D`.
+		:raises TypeError:         If an assigned value is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`, while
+		                           this object is an :class:`Element2D`.
 		:raises AlreadyOwnedError: If the element is an edge of a shape.
 		:raises GroupCycleError:   If an assigned group is this element or one of its descendants.
 		"""
 		return self._parent
+
+	@Parent.setter
+	def Parent(self, parent: Nullable[Base[Coordinate]]) -> None:
+		if parent is not None and not isinstance(parent, self._PARENT_TYPE):
+			typeNames = " or ".join(f"'{parentType.__name__}'" for parentType in self._PARENT_TYPE)
+			ex = TypeError(f"Parameter 'parent' is not of type {typeNames}.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+
+		self._parent = parent
 
 	@readonly
 	def Frame(self) -> Nullable[Base[Coordinate]]:
@@ -248,6 +261,13 @@ class Point2D(Base[Coordinate], Generic[Coordinate]):
 
 		self._x = x
 		self._y = y
+
+	@Base.Parent.setter
+	def Parent(self, parent: Nullable[Element2D[Coordinate]]) -> None:
+		ex = TypeError(f"The parent of a '{getFullyQualifiedName(self)}' is read-only.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+		ex.add_note("A segment or shape takes ownership of a point, when it's given the point.")
+		raise ex
 
 	@property
 	def X(self) -> Coordinate:
@@ -551,7 +571,7 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		if parent is not None:
 			parent._children.append(self)
 
-		self._parent = parent
+		Base.Parent.fset(self, parent)
 
 	@readonly
 	@abstractmethod

@@ -1543,9 +1543,17 @@ class Ownership(Testcase):
 	def test_Point_ReadOnly(self) -> None:
 		point = Point2D(1, 2)
 
-		with self.assertRaises(AttributeError):
+		with self.assertRaises(TypeError) as context:
 			point.Parent = LineSegment2D(Point2D(0, 0), Point2D(1, 1))
 
+		self.assertEqual("The parent of a 'pyTooling.Cartesian2D.Point2D' is read-only.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got type 'pyTooling.Cartesian2D.LineSegment2D'.",
+				"A segment or shape takes ownership of a point, when it's given the point."
+			],
+			context.exception.__notes__
+		)
 		self.assertIsNone(point.Parent)
 
 	def test_Point_Copy(self) -> None:
@@ -1756,6 +1764,39 @@ class Ownership(Testcase):
 		self.assertListEqual(["Got point (9, 9) owned by LineSegment2D((7, 8), (9, 9))."], context.exception.__notes__)
 		self.assertEqual("Parameter 'end' is owned by another element.", str(context.exception.__cause__))
 		self.assertIs(end, line1.End)
+
+
+class Node(Base):
+	"""A class with a parent, using the setter of :class:`Base`."""
+
+	_PARENT_TYPE = (Point2D, )
+
+
+class ParentSetter(Testcase):
+	def test_Assign(self) -> None:
+		point = Point2D(1, 2)
+		node =  Node()
+
+		node.Parent = point
+
+		self.assertIs(point, node.Parent)
+
+	def test_AssignNone(self) -> None:
+		node = Node(parent=Point2D(1, 2))
+
+		node.Parent = None
+
+		self.assertIsNone(node.Parent)
+
+	def test_AssignInt(self) -> None:
+		node = Node()
+
+		with self.assertRaises(TypeError) as context:
+			node.Parent = 1
+
+		self.assertEqual("Parameter 'parent' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(node.Parent)
 
 
 class ParentTypes(Testcase):
