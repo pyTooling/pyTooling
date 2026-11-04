@@ -147,15 +147,22 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._parent = parent
 
-	@readonly
+	@property
 	def Parent(self) -> Nullable[Base[Coordinate]]:
 		"""
-		Read-only property to access the parent of this object (:attr:`_parent`).
+		Property to access the parent of this object (:attr:`_parent`).
 
 		A point's parent is the segment or shape owning it. A segment's parent is the shape it's an edge of, or the group
-		holding it.
+		holding it. A shape's or group's parent is the group holding it.
 
-		:returns: The parent, or ``None``, if this object has no parent.
+		Only an :class:`Element2D` can be assigned a parent. Assigning a group moves the element into that group, assigning
+		``None`` removes it from its group. The element keeps its local coordinates, so its absolute position changes with
+		the frame. Use :meth:`Element2D.MoveTo` to keep the absolute position.
+
+		:returns:                  The parent, or ``None``, if this object has no parent.
+		:raises TypeError:         If an assigned value is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises AlreadyOwnedError: If the element is an edge of a shape.
+		:raises GroupCycleError:   If an assigned group is this element or one of its descendants.
 		"""
 		return self._parent
 
@@ -497,25 +504,7 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		# The derived class registers the element by assigning 'Parent' as its last statement.
 		self._parent = None
 
-	@property
-	def Parent(self) -> Nullable[Union[Group, Shape]]:
-		"""
-		Property to access the group holding this element (:attr:`_parent`).
-
-		An edge of a shape has the shape as parent.
-
-		Assigning a group moves the element into that group, assigning ``None`` removes it from its group. The element
-		keeps its local coordinates, so its absolute position changes with the frame. Use :meth:`MoveTo` to keep the
-		absolute position.
-
-		:returns:                  The parent group, the shape of an edge, or ``None``.
-		:raises TypeError:         If an assigned value is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
-		:raises AlreadyOwnedError: If the element is an edge of a shape.
-		:raises GroupCycleError:   If an assigned group is this element or one of its descendants.
-		"""
-		return self._parent
-
-	@Parent.setter
+	@Base.Parent.setter
 	def Parent(self, parent: Nullable[Group]) -> None:
 		from pyTooling.Cartesian2D.Groups import Group
 
