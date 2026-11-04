@@ -54,8 +54,8 @@ class Instantiation(Testcase):
 			_ = Shape()
 
 		self.assertEqual(
-			"Class 'Shape' is abstract. The following methods: 'BoundingBox', 'Move' need to be overridden in a derived "
-			"class.",
+			"Class 'Shape' is abstract. The following methods: 'BoundingBox', 'Move', 'MirrorY' need to be overridden in a "
+			"derived class.",
 			str(context.exception)
 		)
 
@@ -995,6 +995,88 @@ class Moving(Testcase):
 
 		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
+
+
+class Mirroring(Testcase):
+	def test_Polygon(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+
+		polygon.MirrorY(10)
+
+		self.assertTupleEqual(((0, 10), (4, 9), (2, 7)), tuple(point.ToTuple() for point in polygon.Points))
+		self.assertTupleEqual(((0, 10), (4, 9)), polygon.Segments[0].ToTuple())
+
+	def test_Polygon_Default(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+
+		polygon.MirrorY()
+
+		self.assertTupleEqual(((0, 0), (4, -1), (2, -3)), tuple(point.ToTuple() for point in polygon.Points))
+
+	def test_Polygon_None(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+
+		with self.assertRaises(ValueError) as context:
+			polygon.MirrorY(None)
+
+		self.assertEqual("Parameter 'height' is None.", str(context.exception))
+
+	def test_Polygon_str(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+
+		with self.assertRaises(TypeError) as context:
+			polygon.MirrorY("10")
+
+		self.assertEqual("Parameter 'height' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Trapezium(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		trapezium.MirrorY(4)
+
+		self.assertTupleEqual(((1, 3), (3, 3), (4, 1), (0, 1)), tuple(point.ToTuple() for point in trapezium.Points))
+
+	def test_Trapezium_None(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		with self.assertRaises(ValueError) as context:
+			trapezium.MirrorY(None)
+
+		self.assertEqual("Parameter 'height' is None.", str(context.exception))
+
+	def test_Trapezium_str(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		with self.assertRaises(TypeError) as context:
+			trapezium.MirrorY("4")
+
+		self.assertEqual("Parameter 'height' is not of type 'float' or 'int'.", str(context.exception))
+
+	def test_Circle(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		circle.MirrorY(10)
+
+		self.assertTupleEqual((1, 8), circle.Center.ToTuple())
+		self.assertEqual(3, circle.Radius)
+
+	def test_Circle_None(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(ValueError) as context:
+			circle.MirrorY(None)
+
+		self.assertEqual("Parameter 'height' is None.", str(context.exception))
+
+	def test_Circle_str(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(TypeError) as context:
+			circle.MirrorY("10")
+
+		self.assertEqual("Parameter 'height' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
 
 

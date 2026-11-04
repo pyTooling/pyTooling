@@ -32,7 +32,7 @@
 from __future__            import annotations
 
 from math                  import degrees, isclose, pi
-from typing                import TYPE_CHECKING, Generic, Iterable, Optional as Nullable, Self
+from typing                import TYPE_CHECKING, Generic, Iterable, Optional as Nullable, Self, Union
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Common      import getFullyQualifiedName
@@ -40,7 +40,7 @@ from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox, El
                                   AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError
 
 if TYPE_CHECKING:
-	from pyTooling.Cartesian2D.Groups import Group
+	from pyTooling.Cartesian2D.Groups import Group, Canvas
 
 
 @export
@@ -51,8 +51,8 @@ class Shape(Element2D[Coordinate], Generic[Coordinate]):
 	A derived class declares its fields as slots, so a class derived from a shape can use slots too. It implements
 	:attr:`~pyTooling.Cartesian2D.Element2D.BoundingBox` and :meth:`~pyTooling.Cartesian2D.Element2D.Move`.
 
-	A shape owns its points. A group can hold it: given as parameter ``parent``, it registers the shape, when the shape is
-	fully initialized.
+	A shape owns its points. A group or canvas can hold it: given as parameter ``parent``, it registers the shape, when
+	the shape is fully initialized.
 	"""
 
 
@@ -72,7 +72,7 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		points:     Iterable[Point2D[Coordinate]],
 		*,
 		copyPoints: bool = True,
-		parent:     Nullable[Group[Coordinate]] = None
+		parent:     Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a polygon from its corners.
@@ -84,7 +84,7 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		:param points:                 Corners of the polygon.
 		:param copyPoints:             Optional, if ``True``, the given points are copied instead of referenced. Default:
 		                               ``True``.
-		:param parent:                 Optional, the group the polygon is added to. Default: ``None``, no group.
+		:param parent:                 Optional, the group or canvas the polygon is added to. Default: ``None``, no parent.
 		:raises ValueError:            If parameter 'points' is None.
 		:raises TypeError:             If parameter 'points' is not iterable.
 		:raises ValueError:            If an element of parameter 'points' is None.
@@ -99,7 +99,8 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		:raises NotEnoughCornersError: If parameter 'points' has fewer than 3 points.
 		:raises ValueError:            If parameter 'copyPoints' is None.
 		:raises TypeError:             If parameter 'copyPoints' is not of type :class:`bool`.
-		:raises TypeError:             If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:             If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                               :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		"""
 		super().__init__(parent=parent)
 
@@ -223,6 +224,24 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		for point in self._points:
 			point += offset
 
+	def MirrorY(self, height: Coordinate = 0) -> None:
+		"""
+		Mirror the polygon vertically, so the y-coordinate ``y`` of every corner becomes ``height - y`` (inplace).
+
+		:param height:      Optional, the sum of a y-coordinate and its mirrored value. Default: ``0``.
+		:raises ValueError: If parameter 'height' is None.
+		:raises TypeError:  If parameter 'height' is not of type :class:`float` or :class:`int`.
+		"""
+		if height is None:
+			raise ValueError("Parameter 'height' is None.")
+		elif not isinstance(height, (int, float)):
+			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
+			raise ex
+
+		for point in self._points:
+			point._y = height - point._y
+
 	def __repr__(self) -> str:
 		"""
 		Returns the polygon's string representation.
@@ -255,7 +274,7 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		p11:    Point2D[Coordinate],
 		p10:    Point2D[Coordinate],
 		*,
-		parent: Nullable[Group[Coordinate]] = None
+		parent: Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a trapezium with 4 corners.
@@ -264,7 +283,7 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
-		:param parent:      Optional, the group the trapezium is added to. Default: ``None``, no group.
+		:param parent:      Optional, the group or canvas the trapezium is added to. Default: ``None``, no parent.
 		:raises ValueError: If parameter 'p00' is None.
 		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p01' is None.
@@ -273,7 +292,8 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		"""
 		super().__init__(parent=parent)
 
@@ -472,6 +492,24 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		for point in self._points:
 			point += offset
 
+	def MirrorY(self, height: Coordinate = 0) -> None:
+		"""
+		Mirror the trapezium vertically, so the y-coordinate ``y`` of every corner becomes ``height - y`` (inplace).
+
+		:param height:      Optional, the sum of a y-coordinate and its mirrored value. Default: ``0``.
+		:raises ValueError: If parameter 'height' is None.
+		:raises TypeError:  If parameter 'height' is not of type :class:`float` or :class:`int`.
+		"""
+		if height is None:
+			raise ValueError("Parameter 'height' is None.")
+		elif not isinstance(height, (int, float)):
+			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
+			raise ex
+
+		for point in self._points:
+			point._y = height - point._y
+
 	def Copy(self) -> Self:
 		"""
 		Create a new trapezium as a copy of this trapezium.
@@ -505,7 +543,7 @@ class Rectangle(Trapezium[Coordinate]):
 		p11:    Point2D[Coordinate],
 		p10:    Point2D[Coordinate],
 		*,
-		parent: Nullable[Group[Coordinate]] = None
+		parent: Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a rectangle with 4 corners.
@@ -514,7 +552,7 @@ class Rectangle(Trapezium[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
-		:param parent:      Optional, the group the rectangle is added to. Default: ``None``, no group.
+		:param parent:      Optional, the group or canvas the rectangle is added to. Default: ``None``, no parent.
 		:raises ValueError: If parameter 'p00' is None.
 		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p01' is None.
@@ -523,7 +561,8 @@ class Rectangle(Trapezium[Coordinate]):
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		:raises ValueError: If opposite edges have different lengths.
 		:raises ValueError: If two consecutive corners are the same point.
 		:raises ValueError: If an inner angle isn't 90 |degree|.
@@ -569,7 +608,7 @@ class Square(Rectangle[Coordinate]):
 		p11:    Point2D[Coordinate],
 		p10:    Point2D[Coordinate],
 		*,
-		parent: Nullable[Group[Coordinate]] = None
+		parent: Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a square with 4 corners.
@@ -578,7 +617,7 @@ class Square(Rectangle[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
-		:param parent:      Optional, the group the square is added to. Default: ``None``, no group.
+		:param parent:      Optional, the group or canvas the square is added to. Default: ``None``, no parent.
 		:raises ValueError: If parameter 'p00' is None.
 		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p01' is None.
@@ -587,7 +626,8 @@ class Square(Rectangle[Coordinate]):
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		:raises ValueError: If opposite edges have different lengths.
 		:raises ValueError: If two consecutive corners are the same point.
 		:raises ValueError: If an inner angle isn't 90 |degree|.
@@ -619,7 +659,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		radius:     Coordinate,
 		*,
 		copyPoints: bool = True,
-		parent:     Nullable[Group[Coordinate]] = None
+		parent:     Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a circle by its center and radius.
@@ -630,7 +670,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		:param radius:             Radius of the circle.
 		:param copyPoints:         Optional, if ``True``, the given center is copied instead of referenced. Default:
 		                           ``True``.
-		:param parent:             Optional, the group the circle is added to. Default: ``None``, no group.
+		:param parent:             Optional, the group or canvas the circle is added to. Default: ``None``, no parent.
 		:raises ValueError:        If parameter 'center' is None.
 		:raises TypeError:         If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises AlreadyOwnedError: If parameter 'center' is owned by another element, while 'copyPoints' is ``False``. |br|
@@ -640,7 +680,8 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		:raises ValueError:        If parameter 'radius' isn't positive.
 		:raises ValueError:        If parameter 'copyPoints' is None.
 		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
-		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		"""
 		super().__init__(parent=parent)
 
@@ -773,6 +814,23 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 			raise ex
 
 		self._center += offset
+
+	def MirrorY(self, height: Coordinate = 0) -> None:
+		"""
+		Mirror the circle vertically, so the y-coordinate ``y`` of its center becomes ``height - y`` (inplace).
+
+		:param height:      Optional, the sum of a y-coordinate and its mirrored value. Default: ``0``.
+		:raises ValueError: If parameter 'height' is None.
+		:raises TypeError:  If parameter 'height' is not of type :class:`float` or :class:`int`.
+		"""
+		if height is None:
+			raise ValueError("Parameter 'height' is None.")
+		elif not isinstance(height, (int, float)):
+			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
+			raise ex
+
+		self._center._y = height - self._center._y
 
 	def __repr__(self) -> str:
 		"""
