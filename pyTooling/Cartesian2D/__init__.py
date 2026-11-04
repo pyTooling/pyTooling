@@ -161,32 +161,6 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 
 @export
-class Element2D(Base[Coordinate], Generic[Coordinate]):
-	"""
-	Abstract base-class of all segments and shapes.
-
-	A derived class implements :attr:`BoundingBox` and :meth:`Move`.
-	"""
-
-	@readonly
-	@abstractmethod
-	def BoundingBox(self) -> BoundingBox[Coordinate]:
-		"""
-		Read-only property to return the smallest axis-aligned bounding box enclosing the element.
-
-		:returns: A new bounding box.
-		"""
-
-	@abstractmethod
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
-		"""
-		Move the element by moving all its points (inplace).
-
-		:param offset: The 2D-offset to move by.
-		"""
-
-
-@export
 class Point2D(Base[Coordinate], Generic[Coordinate]):
 	"""An implementation of a 2D cartesian point."""
 
@@ -433,6 +407,32 @@ class Point2D(Base[Coordinate], Generic[Coordinate]):
 		:returns: The string equivalent of the 2D point.
 		"""
 		return f"({self._x}, {self._y})"
+
+
+@export
+class Element2D(Base[Coordinate], Generic[Coordinate]):
+	"""
+	Abstract base-class of all segments and shapes.
+
+	A derived class implements :attr:`BoundingBox` and :meth:`Move`.
+	"""
+
+	@readonly
+	@abstractmethod
+	def BoundingBox(self) -> BoundingBox[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the element.
+
+		:returns: A new bounding box.
+		"""
+
+	@abstractmethod
+	def Move(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the element by moving all its points (inplace).
+
+		:param offset: The 2D-offset to move by.
+		"""
 
 
 @export
