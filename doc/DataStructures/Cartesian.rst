@@ -577,7 +577,8 @@ by :meth:`~pyTooling.Cartesian2D.Groups.Group.RemoveChild`. A child of another e
 A group's :attr:`~pyTooling.Cartesian2D.Groups.Group.BoundingBox` is the union of its children's bounding boxes,
 shifted by its offset, so it is in the group's own frame. A group without children has no bounding box and raises
 :exc:`~pyTooling.Cartesian2D.Groups.EmptyGroupError`. :meth:`~pyTooling.Cartesian2D.Groups.Group.Distribute` moves the
-children along an :class:`~pyTooling.Cartesian2D.Groups.Axis`, so the gaps between them are equal.
+children along an :class:`~pyTooling.Cartesian2D.Groups.Axis`, so the gaps between them are equal: either at a given
+distance after the first child, or evenly between the first and the last child.
 
 The frame of a point, segment or shape inside a group is that group. Subtracting points of different groups raises
 :exc:`~pyTooling.Cartesian2D.NotInSameFrameError`; subtract their absolute positions instead.

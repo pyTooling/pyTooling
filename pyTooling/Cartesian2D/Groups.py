@@ -296,16 +296,22 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 
 		self._offset += offset
 
-	def Distribute(self, axis: Axis) -> None:
+	def Distribute(self, axis: Axis, gap: Nullable[Coordinate] = None) -> None:
 		"""
 		Move the children along an axis, so the gaps between their bounding boxes are equal.
 
-		The children are ordered by the smallest coordinate of their bounding boxes on that axis. The first and the last
-		child keep their position. With fewer than three children, there is nothing to distribute.
+		The children are ordered by the smallest coordinate of their bounding boxes on that axis. The first child keeps its
+		position. Without a gap, the last child keeps its position too and the gaps follow from the space between them. With
+		fewer than three children, there is then nothing to distribute. With a gap, the other children follow the first one
+		at that distance.
 
 		:param axis:             The axis to distribute the children along.
+		:param gap:              Optional, the distance between two bounding boxes. Default: ``None``, equal gaps between
+		                         the first and the last child.
 		:raises ValueError:      If parameter 'axis' is None.
 		:raises TypeError:       If parameter 'axis' is not of type :class:`Axis`.
+		:raises TypeError:       If parameter 'gap' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:      If parameter 'gap' is negative.
 		:raises EmptyGroupError: If a group inside this group has no children.
 		"""
 		if axis is None:
@@ -315,7 +321,17 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(axis)}'.")
 			raise ex
 
-		if len(self._children) < 3:
+		if gap is not None:
+			if not isinstance(gap, (int, float)):
+				ex = TypeError("Parameter 'gap' is not of type 'float' or 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(gap)}'.")
+				raise ex
+			elif gap < 0:
+				ex = ValueError("Parameter 'gap' is negative.")
+				ex.add_note(f"Got value '{gap}'.")
+				raise ex
+
+		if len(self._children) < (3 if gap is None else 2):
 			return
 
 		entries = []
@@ -327,11 +343,16 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 				entries.append((box._minY, box._maxY, child))
 
 		entries.sort(key=lambda entry: entry[0])
-		first =    entries[0]
-		last =     entries[-1]
-		gap =      (last[1] - first[0] - sum(high - low for low, high, _ in entries)) / (len(entries) - 1)
+		first = entries[0]
+		if gap is None:
+			last =  entries[-1]
+			gap =   (last[1] - first[0] - sum(high - low for low, high, _ in entries)) / (len(entries) - 1)
+			moved = entries[1:-1]
+		else:
+			moved = entries[1:]
+
 		position = first[1] + gap
-		for low, high, child in entries[1:-1]:
+		for low, high, child in moved:
 			if axis is Axis.X:
 				child.Move(Offset2D(position - low, 0))
 			else:

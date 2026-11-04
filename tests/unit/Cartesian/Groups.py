@@ -944,6 +944,63 @@ class Distributing(Testcase):
 		self.assertTupleEqual((0, 0), circle1.Center.ToTuple())
 		self.assertTupleEqual((3, 0), circle2.Center.ToTuple())
 
+	def test_Gap_X(self) -> None:
+		circle1 = Circle(Point2D(0, 0), 1)
+		circle2 = Circle(Point2D(3, 0), 2)
+		circle3 = Circle(Point2D(20, 5), 1)
+		group =   Group(children=(circle3, circle2, circle1))
+
+		group.Distribute(Axis.X, 3)
+
+		self.assertEqual(BoundingBox(-1, -1, 1, 1), circle1.BoundingBox)
+		self.assertEqual(BoundingBox(4, -2, 8, 2), circle2.BoundingBox)
+		self.assertEqual(BoundingBox(11, 4, 13, 6), circle3.BoundingBox)
+
+	def test_Gap_Y(self) -> None:
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(0, 2))
+		line2 = LineSegment2D(Point2D(5, 3), Point2D(5, 4))
+		group = Group(children=(line1, line2))
+
+		group.Distribute(Axis.Y, 0.5)
+
+		self.assertEqual(BoundingBox(0, 0, 0, 2), line1.BoundingBox)
+		self.assertEqual(BoundingBox(5, 2.5, 5, 3.5), line2.BoundingBox)
+
+	def test_Gap_Zero(self) -> None:
+		circle1 = Circle(Point2D(0, 0), 1)
+		circle2 = Circle(Point2D(5, 0), 1)
+		group =   Group(children=(circle1, circle2))
+
+		group.Distribute(Axis.X, 0)
+
+		self.assertTupleEqual((2, 0), circle2.Center.ToTuple())
+
+	def test_Gap_OneChild(self) -> None:
+		circle = Circle(Point2D(3, 0), 1)
+		group =  Group(children=(circle, ))
+
+		group.Distribute(Axis.X, 1)
+
+		self.assertTupleEqual((3, 0), circle.Center.ToTuple())
+
+	def test_Gap_Str(self) -> None:
+		group = Group()
+
+		with self.assertRaises(TypeError) as context:
+			group.Distribute(Axis.X, "1")
+
+		self.assertEqual("Parameter 'gap' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Gap_Negative(self) -> None:
+		group = Group()
+
+		with self.assertRaises(ValueError) as context:
+			group.Distribute(Axis.X, -1)
+
+		self.assertEqual("Parameter 'gap' is negative.", str(context.exception))
+		self.assertListEqual(["Got value '-1'."], context.exception.__notes__)
+
 	def test_AxisNone(self) -> None:
 		group = Group()
 
