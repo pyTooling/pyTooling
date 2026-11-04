@@ -286,8 +286,7 @@ class Point2D(Base[Coordinate], Generic[Coordinate]):
 
 		:returns: A new 2D-point with absolute coordinates.
 		"""
-		frame = self.Frame
-		if frame is None:
+		if (frame := self.Frame) is None:
 			return Point2D(self._x, self._y)
 
 		offset = frame.AbsoluteOffset
@@ -609,8 +608,7 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		if not keepPosition:
 			return
 
-		frame = self.Frame
-		if frame is None:
+		if (frame := self.Frame) is None:
 			self.Move(previousOffset)
 		else:
 			self.Move(previousOffset - frame.AbsoluteOffset)
