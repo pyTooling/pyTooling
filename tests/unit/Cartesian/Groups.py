@@ -1063,7 +1063,7 @@ class CanvasInstantiation(Testcase):
 		self.assertIsNone(canvas.Parent)
 		self.assertIsNone(canvas.Frame)
 
-		with self.assertRaises(AttributeError):
+		with self.assertRaises(TypeError):
 			canvas.Parent = Group()
 
 		self.assertIsNone(canvas.Parent)
@@ -1116,6 +1116,16 @@ class CanvasInstantiation(Testcase):
 
 
 class CanvasFailing(Testcase):
+	def test_Parent_Assign(self) -> None:
+		canvas = Canvas()
+
+		with self.assertRaises(TypeError) as context:
+			canvas.Parent = Group()
+
+		self.assertEqual("A 'pyTooling.Cartesian2D.Groups.Canvas' has no parent.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Groups.Group'."], context.exception.__notes__)
+		self.assertIsNone(canvas.Parent)
+
 	"""A failing check of a canvas or group leaves the given children free."""
 
 	def test_Canvas_Direction(self) -> None:

@@ -561,6 +561,12 @@ class Canvas(Base[Coordinate], ContainerMixin, Generic[Coordinate]):
 		"""
 		return Offset2D(0, 0)
 
+	@Base.Parent.setter
+	def Parent(self, parent: None) -> None:
+		ex = TypeError(f"A '{getFullyQualifiedName(self)}' has no parent.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+		raise ex
+
 	@readonly
 	def _ChildFrame(self) -> Canvas[Coordinate]:
 		"""

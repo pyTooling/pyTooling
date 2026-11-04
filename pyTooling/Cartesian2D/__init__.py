@@ -179,6 +179,7 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:returns:                  The parent, or ``None``, if this object has no parent.
 		:raises TypeError:         If an assigned value is not of a type in :attr:`_PARENT_TYPE`.
 		:raises TypeError:         If a parent is assigned to a :class:`Point2D`.
+		:raises TypeError:         If a parent is assigned to a :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		:raises TypeError:         If an assigned value is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
 		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas`, while this object is an
 		                           :class:`Element2D`.
