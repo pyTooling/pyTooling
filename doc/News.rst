@@ -10,6 +10,41 @@ release.
 Version 10.x (2026)
 *******************
 
+.. topic:: :gh:`v10.2.0 - unreleased <pyTooling/pyTooling/releases/v10.2.0>`
+
+   .. rubric:: New Features
+
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with three or more
+     corners, and a :class:`~pyTooling.Cartesian2D.Shapes.Circle` by center and radius, measuring its diameter,
+     circumference and area.
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: points, offsets, sizes, segments and shapes support
+     :func:`copy.copy` and :func:`copy.deepcopy`, and segments and shapes have a ``Copy()`` method. A copy shares no
+     point with the original.
+   * :mod:`pyTooling.Cartesian2D`: a :class:`~pyTooling.Cartesian2D.BoundingBox` value (union, intersection, point
+     containment). Every shape and segment returns its ``BoundingBox`` and moves in place with ``Move(offset)``.
+   * :mod:`pyTooling.Cartesian2D`: shapes and segments own their points (:attr:`Base.Parent
+     <pyTooling.Cartesian2D.Base.Parent>`). A point owned by another element raises
+     :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError` instead of being shared; points and line segments of different
+     frames raise :exc:`~pyTooling.Cartesian2D.NotInSameFrameError` when combined.
+
+   .. rubric:: Changes
+
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: coordinates, offsets, sizes and segment end points
+     are CamelCase properties (:attr:`~pyTooling.Cartesian2D.Point2D.X`,
+     :attr:`~pyTooling.Cartesian2D.Offset2D.XOffset`, :attr:`~pyTooling.Cartesian2D.Size2D.Width`,
+     :attr:`~pyTooling.Cartesian2D.Segment2D.Start`, ...). Constructors and setters check their values: ``None``
+     raises :exc:`ValueError`, a wrong type :exc:`TypeError`. A trapezium's
+     :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Points` and :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Segments`
+     are read-only. The lower-case names (``x``, ``points``, ...) stay as deprecated aliases until v11.0.0.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: shapes are created by :class:`~pyTooling.MetaClasses.ExtendedType` and use
+     slots, so a derived class can use slots too. :class:`~pyTooling.Cartesian2D.Shapes.Shape` is abstract.
+
+   .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.Tracing`: an OTLP timestamp in the hour repeated at the end of daylight saving time was read
+     back one hour early.
+
+
 .. topic:: :gh:`v10.1.1 - 29.10.2026 <pyTooling/pyTooling/releases/v10.1.1>`
 
    .. rubric:: Bug Fixes

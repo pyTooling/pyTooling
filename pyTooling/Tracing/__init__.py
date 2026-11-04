@@ -464,7 +464,7 @@ class TraceElement(KeyValuePairsMixin, metaclass=ExtendedType, slots=True):
 		microseconds =       (nanoseconds + 500) // 1_000
 		seconds, remainder = divmod(microseconds, 1_000_000)
 
-		return datetime.fromtimestamp(seconds) + timedelta(microseconds=remainder)
+		return datetime.fromtimestamp(seconds).replace(microsecond=remainder)
 
 
 @export
