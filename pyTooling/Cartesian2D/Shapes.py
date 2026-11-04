@@ -35,36 +35,24 @@ from math                  import degrees, isclose, pi
 from typing                import Generic, Iterable, Self
 
 from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox, LineSegment2D
+from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox, Element2D, Segment2D, LineSegment2D, \
+                                  AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError
 
 
 @export
-class Shape(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+class Shape(Element2D[Coordinate], Generic[Coordinate]):
 	"""
 	Abstract base-class for all 2D cartesian shapes.
 
 	A derived class declares its fields as slots, so a class derived from a shape can use slots too. It implements
-	:attr:`BoundingBox` and :meth:`Move`.
+	:attr:`~pyTooling.Cartesian2D.Element2D.BoundingBox` and :meth:`~pyTooling.Cartesian2D.Element2D.Move`.
+
+	A shape owns its points.
 	"""
 
-	@readonly
-	@abstractmethod
-	def BoundingBox(self) -> BoundingBox[Coordinate]:
-		"""
-		Read-only property to return the smallest axis-aligned bounding box enclosing the shape.
 
-		:returns: A new bounding box.
-		"""
-
-	@abstractmethod
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
-		"""
-		Move the shape by moving all its points (inplace).
-
-		:param offset: The 2D-offset to move by.
-		"""
+Segment2D._PARENT_TYPE = (Shape, )
 
 
 @export
@@ -75,22 +63,34 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 	_points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the polygon's corners.
 	_segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the polygon's edges.
 
-	def __init__(self, points: Iterable[Point2D[Coordinate]], copyPoints: bool = True) -> None:
+	def __init__(self, points: Iterable[Point2D[Coordinate]], *, copyPoints: bool = True) -> None:
 		"""
 		Initializes a polygon from its corners.
 
 		The corners are connected in the given order, the last one back to the first one.
 
-		:param points:      Corners of the polygon.
-		:param copyPoints:  Optional, if ``True``, the given points are copied instead of referenced. Default: ``True``.
-		:raises ValueError: If parameter 'points' is None.
-		:raises TypeError:  If parameter 'points' is not iterable.
-		:raises ValueError: If an element of parameter 'points' is None.
-		:raises TypeError:  If an element of parameter 'points' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError: If parameter 'points' has fewer than 3 points.
-		:raises ValueError: If parameter 'copyPoints' is None.
-		:raises TypeError:  If parameter 'copyPoints' is not of type :class:`bool`.
+		The polygon owns its corners. Referenced points (``copyPoints=False``) must not be owned by another element.
+
+		:param points:                 Corners of the polygon.
+		:param copyPoints:             Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                               ``True``.
+		:raises ValueError:            If parameter 'points' is None.
+		:raises TypeError:             If parameter 'points' is not iterable.
+		:raises ValueError:            If an element of parameter 'points' is None.
+		:raises TypeError:             If an element of parameter 'points' is not of type
+		                               :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError:     If an element of parameter 'points' is owned by another element, while
+		                               'copyPoints' is ``False``. |br|
+		                               Use ``copyPoints=True`` to copy the point.
+		:raises DuplicatePointError:   If an element of parameter 'points' is given twice, while 'copyPoints' is
+		                               ``False``. |br|
+		                               Use ``copyPoints=True`` to copy the points.
+		:raises NotEnoughCornersError: If parameter 'points' has fewer than 3 points.
+		:raises ValueError:            If parameter 'copyPoints' is None.
+		:raises TypeError:             If parameter 'copyPoints' is not of type :class:`bool`.
 		"""
+		super().__init__()
+
 		if points is None:
 			raise ValueError("Parameter 'points' is None.")
 		elif not isinstance(points, Iterable):
@@ -105,7 +105,8 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
 			raise ex
 
-		pointList = []
+		pointList =  []
+		seenPoints = set()
 		for point in points:
 			if point is None:
 				raise ValueError("An element of parameter 'points' is None.")
@@ -113,17 +114,34 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 				ex = TypeError("An element of parameter 'points' is not of type 'Point2D'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
 				raise ex
-
-			pointList.append(point.Copy() if copyPoints else point)
+			elif copyPoints:
+				pointList.append(point.Copy())
+			elif point._parent is not None:
+				ex = AlreadyOwnedError("Point is owned by another element already.")
+				ex.add_note(f"Got point {point} owned by {point._parent!r}.")
+				ex.add_note("Use 'copyPoints=True' to copy the point.")
+				raise ex from ValueError("An element of parameter 'points' is owned by another element.")
+			elif point in seenPoints:
+				ex = DuplicatePointError("Point is given twice.")
+				ex.add_note(f"Got point {point}.")
+				ex.add_note("Use 'copyPoints=True' to copy the points.")
+				raise ex from ValueError("An element of parameter 'points' is given twice.")
+			else:
+				seenPoints.add(point)
+				pointList.append(point)
 
 		if len(pointList) < 3:
-			ex = ValueError("Parameter 'points' has fewer than 3 points.")
+			ex = NotEnoughCornersError("Polygon has fewer than 3 corners.")
 			ex.add_note(f"Got {len(pointList)} points.")
-			raise ex
+			raise ex from ValueError("Parameter 'points' has fewer than 3 points.")
 
-		self._points =   corners = tuple(pointList)
+		self._points = corners = tuple(pointList)
+		for corner in corners:
+			corner._parent = self
+
 		self._segments = tuple(
-			LineSegment2D(start, end, copyPoints=False) for start, end in zip(corners, (*corners[1:], corners[0]))
+			LineSegment2D(start, end, copyPoints=False, parent=self)
+			for start, end in zip(corners, (*corners[1:], corners[0]))
 		)
 
 	def Copy(self) -> Self:
@@ -233,6 +251,8 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		"""
+		super().__init__()
+
 		if p00 is None:
 			raise ValueError("Parameter 'p00' is None.")
 		elif not isinstance(p00, Point2D):
@@ -261,18 +281,20 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(p10)}'.")
 			raise ex
 
-		self._points = (
+		self._points = corners = (
 			_p00 := p00.Copy(),
 			_p01 := p01.Copy(),
 			_p11 := p11.Copy(),
 			_p10 := p10.Copy(),
 		)
+		for corner in corners:
+			corner._parent = self
 
 		self._segments = (
-			LineSegment2D(_p00, _p01, copyPoints=False),
-			LineSegment2D(_p01, _p11, copyPoints=False),
-			LineSegment2D(_p11, _p10, copyPoints=False),
-			LineSegment2D(_p10, _p00, copyPoints=False)
+			LineSegment2D(_p00, _p01, copyPoints=False, parent=self),
+			LineSegment2D(_p01, _p11, copyPoints=False, parent=self),
+			LineSegment2D(_p11, _p10, copyPoints=False, parent=self),
+			LineSegment2D(_p10, _p00, copyPoints=False, parent=self)
 		)
 
 	@readonly
@@ -294,14 +316,17 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		Deprecated alias of :attr:`Points`, which is read-only; it is removed in v11.0.0.
 
 		An assigned iterable is stored as a tuple. Its elements are referenced, not copied, and the edges in
-		:attr:`Segments` aren't updated.
+		:attr:`Segments` aren't updated. The trapezium takes ownership of the assigned points and releases its previous
+		corners.
 
-		:returns:           Tuple of corners, in drawing order.
-		:raises ValueError: If ``None`` is assigned.
-		:raises TypeError:  If an assigned value is not iterable.
-		:raises ValueError: If an element of an assigned iterable is None.
-		:raises TypeError:  If an element of an assigned iterable is not of type
-		                    :class:`~pyTooling.Cartesian2D.Point2D`.
+		:returns:                    Tuple of corners, in drawing order.
+		:raises ValueError:          If ``None`` is assigned.
+		:raises TypeError:           If an assigned value is not iterable.
+		:raises ValueError:          If an element of an assigned iterable is None.
+		:raises TypeError:           If an element of an assigned iterable is not of type
+		                             :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError:   If an element of an assigned iterable is owned by another element.
+		:raises DuplicatePointError: If an element of an assigned iterable is given twice.
 		"""
 		return self._points
 
@@ -314,7 +339,8 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(points)}'.")
 			raise ex
 
-		corners = tuple(points)
+		corners =    tuple(points)
+		seenPoints = set()
 		for point in corners:
 			if point is None:
 				raise ValueError("An element of parameter 'points' is None.")
@@ -322,6 +348,22 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 				ex = TypeError("An element of parameter 'points' is not of type 'Point2D'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
 				raise ex
+			elif point._parent is not None and point._parent is not self:
+				ex = AlreadyOwnedError("Point is owned by another element already.")
+				ex.add_note(f"Got point {point} owned by {point._parent!r}.")
+				raise ex from ValueError("An element of parameter 'points' is owned by another element.")
+			elif point in seenPoints:
+				ex = DuplicatePointError("Point is given twice.")
+				ex.add_note(f"Got point {point}.")
+				raise ex from ValueError("An element of parameter 'points' is given twice.")
+
+			seenPoints.add(point)
+
+		for corner in self._points:
+			corner._parent = None
+
+		for corner in corners:
+			corner._parent = self
 
 		self._points = corners
 
@@ -521,21 +563,28 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 	_center: Point2D[Coordinate]  #: Center point of the circle.
 	_radius: Coordinate           #: Radius of the circle.
 
-	def __init__(self, center: Point2D[Coordinate], radius: Coordinate, copyPoints: bool = True) -> None:
+	def __init__(self, center: Point2D[Coordinate], radius: Coordinate, *, copyPoints: bool = True) -> None:
 		"""
 		Initializes a circle by its center and radius.
 
-		:param center:      Center point of the circle.
-		:param radius:      Radius of the circle.
-		:param copyPoints:  Optional, if ``True``, the given center is copied instead of referenced. Default: ``True``.
-		:raises ValueError: If parameter 'center' is None.
-		:raises TypeError:  If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError: If parameter 'radius' is None.
-		:raises TypeError:  If parameter 'radius' is not of type :class:`float` or :class:`int`.
-		:raises ValueError: If parameter 'radius' isn't positive.
-		:raises ValueError: If parameter 'copyPoints' is None.
-		:raises TypeError:  If parameter 'copyPoints' is not of type :class:`bool`.
+		The circle owns its center. A referenced center (``copyPoints=False``) must not be owned by another element.
+
+		:param center:             Center point of the circle.
+		:param radius:             Radius of the circle.
+		:param copyPoints:         Optional, if ``True``, the given center is copied instead of referenced. Default:
+		                           ``True``.
+		:raises ValueError:        If parameter 'center' is None.
+		:raises TypeError:         If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError: If parameter 'center' is owned by another element, while 'copyPoints' is ``False``. |br|
+		                           Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:        If parameter 'radius' is None.
+		:raises TypeError:         If parameter 'radius' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:        If parameter 'radius' isn't positive.
+		:raises ValueError:        If parameter 'copyPoints' is None.
+		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
 		"""
+		super().__init__()
+
 		if center is None:
 			raise ValueError("Parameter 'center' is None.")
 		elif not isinstance(center, Point2D):
@@ -561,8 +610,15 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
 			raise ex
 
-		self._center = center.Copy() if copyPoints else center
-		self._radius = radius
+		if not copyPoints and center._parent is not None:
+			ex = AlreadyOwnedError("Point is owned by another element already.")
+			ex.add_note(f"Got point {center} owned by {center._parent!r}.")
+			ex.add_note("Use 'copyPoints=True' to copy the point.")
+			raise ex from ValueError("Parameter 'center' is owned by another element.")
+
+		self._center =         center.Copy() if copyPoints else center
+		self._radius =         radius
+		self._center._parent = self
 
 	def Copy(self) -> Self:
 		"""

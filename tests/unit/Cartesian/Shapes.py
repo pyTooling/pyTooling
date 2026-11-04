@@ -34,8 +34,10 @@ Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - polygon, trapezium, rectang
 from copy                         import copy, deepcopy
 from math                         import cos, isclose, pi, radians, sin, sqrt
 
-from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox, LineSegment2D
+from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox, LineSegment2D, AlreadyOwnedError, \
+                                         DuplicatePointError, NotEnoughCornersError, NotOwnedError, NotInSameFrameError
 from pyTooling.Cartesian2D.Shapes import Shape, Polygon, Trapezium, Rectangle, Square, Circle
+from pyTooling.Decorators         import readonly
 from pyTooling.MetaClasses        import ExtendedType, AbstractClassError
 from pyTooling.Testing            import Testcase
 
@@ -109,11 +111,13 @@ class Instantiation(Testcase):
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Polygon_TwoPoints(self) -> None:
-		with self.assertRaises(ValueError) as context:
+		with self.assertRaises(NotEnoughCornersError) as context:
 			_ = Polygon((Point2D(0, 0), Point2D(4, 0)))
 
-		self.assertEqual("Parameter 'points' has fewer than 3 points.", str(context.exception))
+		self.assertEqual("Polygon has fewer than 3 corners.", str(context.exception))
 		self.assertListEqual(["Got 2 points."], context.exception.__notes__)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("Parameter 'points' has fewer than 3 points.", str(context.exception.__cause__))
 
 	def test_Polygon_copyPointsNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -992,6 +996,395 @@ class Moving(Testcase):
 		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
+
+
+class Ownership(Testcase):
+	def test_Polygon(self) -> None:
+		points = (Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))
+
+		polygon = Polygon(points)
+
+		self.assertIsNone(polygon.Frame)
+		for point in points:
+			self.assertIsNone(point.Parent)
+
+		for corner in polygon.Points:
+			self.assertIs(polygon, corner.Parent)
+
+	def test_Polygon_Edges(self) -> None:
+		"""The edges are views: their parent is the polygon, which owns the corners."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		for segment in polygon.Segments:
+			self.assertIs(polygon, segment.Parent)
+			self.assertIs(polygon, segment.Start.Parent)
+			self.assertIs(polygon, segment.End.Parent)
+
+	def test_Polygon_Reference(self) -> None:
+		points = (Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))
+
+		polygon = Polygon(points, copyPoints=False)
+
+		for point in points:
+			self.assertIs(polygon, point.Parent)
+
+	def test_Polygon_Owned(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+		point0 = Point2D(4, 0)
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			_ = Polygon((point0, circle.Center, Point2D(2, 3)), copyPoints=False)
+
+		self.assertEqual("Point is owned by another element already.", str(context.exception))
+		self.assertListEqual(
+			["Got point (1, 1) owned by Circle((1, 1), 1).", "Use 'copyPoints=True' to copy the point."],
+			context.exception.__notes__
+		)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("An element of parameter 'points' is owned by another element.", str(context.exception.__cause__))
+		self.assertIs(circle, circle.Center.Parent)
+		self.assertIsNone(point0.Parent)
+
+	def test_Polygon_Owned_Copy(self) -> None:
+		"""Owned points are fine to copy."""
+		circle = Circle(Point2D(1, 1), 1)
+
+		polygon = Polygon((Point2D(4, 0), circle.Center, Point2D(2, 3)))
+
+		self.assertIs(circle, circle.Center.Parent)
+		self.assertIs(polygon, polygon.Points[1].Parent)
+
+	def test_Polygon_Twice(self) -> None:
+		point = Point2D(0, 0)
+
+		with self.assertRaises(DuplicatePointError) as context:
+			_ = Polygon((point, Point2D(4, 0), point), copyPoints=False)
+
+		self.assertEqual("Point is given twice.", str(context.exception))
+		self.assertListEqual(
+			["Got point (0, 0).", "Use 'copyPoints=True' to copy the points."],
+			context.exception.__notes__
+		)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("An element of parameter 'points' is given twice.", str(context.exception.__cause__))
+		self.assertIsNone(point.Parent)
+
+	def test_Trapezium(self) -> None:
+		point00 = Point2D(1, 1)
+
+		trapezium = Trapezium(point00, Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		self.assertIsNone(point00.Parent)
+		for corner in trapezium.Points:
+			self.assertIs(trapezium, corner.Parent)
+
+		for segment in trapezium.Segments:
+			self.assertIs(trapezium, segment.Parent)
+
+	def test_Trapezium_points(self) -> None:
+		"""The deprecated setter takes ownership of the assigned points and releases the previous corners."""
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		previous =  trapezium.Points
+		corners =   (Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
+
+		trapezium.points = corners
+
+		for corner in corners:
+			self.assertIs(trapezium, corner.Parent)
+
+		for corner in previous:
+			self.assertIsNone(corner.Parent)
+
+	def test_Trapezium_points_Reordered(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		corners =   tuple(reversed(trapezium.Points))
+
+		trapezium.points = corners
+
+		self.assertTupleEqual(((0, 3), (4, 3), (3, 1), (1, 1)), tuple(point.ToTuple() for point in trapezium.Points))
+		for corner in corners:
+			self.assertIs(trapezium, corner.Parent)
+
+	def test_Trapezium_points_Owned(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		circle =    Circle(Point2D(1, 1), 1)
+		previous =  trapezium.Points
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			trapezium.points = (Point2D(0, 0), circle.Center, Point2D(2, 2), Point2D(0, 2))
+
+		self.assertEqual("Point is owned by another element already.", str(context.exception))
+		self.assertListEqual(["Got point (1, 1) owned by Circle((1, 1), 1)."], context.exception.__notes__)
+		self.assertEqual("An element of parameter 'points' is owned by another element.", str(context.exception.__cause__))
+		self.assertIs(previous, trapezium.Points)
+
+	def test_Trapezium_points_Twice(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		point =     Point2D(0, 0)
+
+		with self.assertRaises(DuplicatePointError) as context:
+			trapezium.points = (point, Point2D(2, 0), point, Point2D(0, 2))
+
+		self.assertEqual("Point is given twice.", str(context.exception))
+		self.assertListEqual(["Got point (0, 0)."], context.exception.__notes__)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("An element of parameter 'points' is given twice.", str(context.exception.__cause__))
+		self.assertIsNone(point.Parent)
+
+	def test_Circle(self) -> None:
+		center = Point2D(1, 2)
+
+		circle = Circle(center, 3)
+
+		self.assertIsNone(center.Parent)
+		self.assertIs(circle, circle.Center.Parent)
+
+	def test_Circle_Reference(self) -> None:
+		center = Point2D(1, 2)
+
+		circle = Circle(center, 3, copyPoints=False)
+
+		self.assertIs(circle, center.Parent)
+
+	def test_Circle_Owned(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			_ = Circle(polygon.Points[2], 1, copyPoints=False)
+
+		self.assertEqual("Point is owned by another element already.", str(context.exception))
+		self.assertListEqual(
+			["Got point (2, 3) owned by Polygon((0, 0), (4, 0), (2, 3)).", "Use 'copyPoints=True' to copy the point."],
+			context.exception.__notes__
+		)
+		self.assertEqual("Parameter 'center' is owned by another element.", str(context.exception.__cause__))
+		self.assertIs(polygon, polygon.Points[2].Parent)
+
+	def test_Copy(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		newPolygon = polygon.Copy()
+
+		for corner in newPolygon.Points:
+			self.assertIs(newPolygon, corner.Parent)
+
+		for corner in polygon.Points:
+			self.assertIs(polygon, corner.Parent)
+
+	def test_Edge(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		edge = LineSegment2D(polygon.Points[0], polygon.Points[2], copyPoints=False, parent=polygon)
+
+		self.assertIs(polygon, edge.Parent)
+		self.assertIs(polygon, edge.Start.Parent)
+		self.assertEqual(3, len(polygon.Segments))
+
+	def test_Polygon_copyPointsPositional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), False)
+
+	def test_Circle_copyPointsPositional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Circle(Point2D(1, 2), 3, False)
+
+	def test_Edge_copyPoints(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		with self.assertRaises(ValueError) as context:
+			_ = LineSegment2D(polygon.Points[0], polygon.Points[2], parent=polygon)
+
+		self.assertEqual("Parameter 'parent' is given, while 'copyPoints' is True.", str(context.exception))
+		self.assertListEqual(
+			["An edge references the points of its parent shape: use 'copyPoints=False'."],
+			context.exception.__notes__
+		)
+
+	def test_Edge_NotOwned(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		start =   Point2D(0, 0)
+
+		with self.assertRaises(NotOwnedError) as context:
+			_ = LineSegment2D(start, polygon.Points[2], copyPoints=False, parent=polygon)
+
+		self.assertEqual("Point isn't owned by the parent shape.", str(context.exception))
+		self.assertListEqual(["Got point (0, 0) owned by None."], context.exception.__notes__)
+		self.assertEqual("Parameter 'start' isn't owned by parameter 'parent'.", str(context.exception.__cause__))
+		self.assertIsNone(start.Parent)
+
+	def test_Edge_Start(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		edge =    polygon.Segments[0]
+		start =   edge.Start
+
+		with self.assertRaises(NotOwnedError) as context:
+			edge.Start = Point2D(1, 1)
+
+		self.assertEqual("Segment doesn't own its start point.", str(context.exception))
+		self.assertListEqual(
+			["The segment is an edge of Polygon((0, 0), (4, 0), (2, 3)), which owns the point."],
+			context.exception.__notes__
+		)
+		self.assertIs(start, edge.Start)
+
+	def test_Edge_End(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		edge =    polygon.Segments[0]
+		end =     edge.End
+
+		with self.assertRaises(NotOwnedError) as context:
+			edge.End = Point2D(1, 1)
+
+		self.assertEqual("Segment doesn't own its end point.", str(context.exception))
+		self.assertIs(end, edge.End)
+
+	def test_Edge_Move(self) -> None:
+		"""Moving an edge moves the polygon's corners it references."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		polygon.Segments[0].Move(Offset2D(0, -1))
+
+		self.assertTupleEqual(((0, -1), (4, -1), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
+
+
+class Hashing(Testcase):
+	"""Points, segments and shapes define no ``__eq__``: they hash by identity."""
+
+	def test_Point(self) -> None:
+		point1 = Point2D(1, 2)
+		point2 = Point2D(1, 2)
+
+		points = {point1, point2}
+
+		self.assertEqual(2, len(points))
+		self.assertIn(point1, points)
+		self.assertIn(point2, points)
+
+	def test_LineSegment(self) -> None:
+		self.assertEqual(2, len({
+			LineSegment2D(Point2D(1, 2), Point2D(4, 6)),
+			LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+		}))
+
+	def test_Polygon(self) -> None:
+		self.assertEqual(2, len({
+			Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))),
+			Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		}))
+
+	def test_Trapezium(self) -> None:
+		self.assertEqual(2, len({
+			Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3)),
+			Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+		}))
+
+	def test_Rectangle(self) -> None:
+		self.assertEqual(2, len({
+			Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2)),
+			Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		}))
+
+	def test_Square(self) -> None:
+		self.assertEqual(2, len({
+			Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2)),
+			Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
+		}))
+
+	def test_Circle(self) -> None:
+		self.assertEqual(2, len({Circle(Point2D(1, 2), 3), Circle(Point2D(1, 2), 3)}))
+
+	def test_Offset2D(self) -> None:
+		"""An offset compares by value, so it isn't hashable."""
+		with self.assertRaises(TypeError):
+			_ = hash(Offset2D(1, 2))
+
+	def test_BoundingBox(self) -> None:
+		"""A bounding box compares by value, so it isn't hashable."""
+		with self.assertRaises(TypeError):
+			_ = hash(BoundingBox(0, 0, 1, 1))
+
+
+class FramedPolygon(Polygon, metaclass=ExtendedType, slots=True):
+	"""A polygon with a fixed frame, standing in for a polygon placed in a group."""
+
+	_frame: object
+
+	def __init__(self, points: tuple[Point2D, ...], frame: object) -> None:
+		super().__init__(points)
+		self._frame = frame
+
+	@readonly
+	def Frame(self) -> object:
+		return self._frame
+
+
+class Frames(Testcase):
+	def test_Point(self) -> None:
+		frame =   object()
+		polygon = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), frame)
+
+		for corner in polygon.Points:
+			self.assertIs(frame, corner.Frame)
+
+		for segment in polygon.Segments:
+			self.assertIs(frame, segment.Frame)
+
+	def test_Point_Minus_Point(self) -> None:
+		polygon = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), object())
+
+		offset = polygon.Points[2] - polygon.Points[0]
+
+		self.assertTupleEqual((2, 3), offset.ToTuple())
+
+	def test_Point_Minus_Point_OtherFrame(self) -> None:
+		polygon1 = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), object())
+		polygon2 = FramedPolygon((Point2D(1, 1), Point2D(5, 1), Point2D(3, 4)), object())
+
+		with self.assertRaises(NotInSameFrameError) as context:
+			_ = polygon2.Points[0] - polygon1.Points[0]
+
+		self.assertEqual("Points are in different frames.", str(context.exception))
+		self.assertListEqual(["Got points (1, 1) and (0, 0)."], context.exception.__notes__)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("Parameter 'other' is in another frame.", str(context.exception.__cause__))
+
+	def test_Point_Minus_Point_NoFrame(self) -> None:
+		polygon = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), object())
+
+		with self.assertRaises(NotInSameFrameError):
+			_ = polygon.Points[0] - Point2D(1, 1)
+
+	def test_AngleTo_OtherFrame(self) -> None:
+		polygon1 = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), object())
+		polygon2 = FramedPolygon((Point2D(1, 1), Point2D(5, 1), Point2D(3, 4)), object())
+
+		with self.assertRaises(NotInSameFrameError) as context:
+			_ = polygon1.Segments[0].AngleTo(polygon2.Segments[0])
+
+		self.assertEqual("Line segments are in different frames.", str(context.exception))
+		self.assertListEqual(["Got line segments ((0, 0) → (4, 0)) and ((1, 1) → (5, 1))."], context.exception.__notes__)
+		self.assertEqual("Parameter 'other' is in another frame.", str(context.exception.__cause__))
+
+	def test_AngleTo_SameFrame(self) -> None:
+		polygon = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), object())
+
+		angle = polygon.Segments[0].AngleTo(polygon.Segments[1])
+
+		self.assertTrue(isclose(pi / 2, angle))
+
+
+class FramedPoints(Testcase):
+	def test_Parent(self) -> None:
+		"""A point with a shape as parent is in the shape's frame, but not one of its points."""
+		frame = object()
+		polygon = FramedPolygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), frame)
+
+		point = Point2D(1, 1, parent=polygon)
+
+		self.assertIs(polygon, point.Parent)
+		self.assertIs(frame, point.Frame)
+		self.assertEqual(3, len(polygon.Points))
+		self.assertTupleEqual((1, 1), (point - polygon.Points[0]).ToTuple())
 
 
 class Copy(Testcase):
