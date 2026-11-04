@@ -1803,7 +1803,7 @@ class Aligning(Testcase):
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
 		circle =    Circle(Point2D(10, 10), 1)
 
-		circle.AlignTo(rectangle, Alignment.Left)
+		circle.AlignTo(rectangle, Alignment.MinX)
 
 		self.assertEqual(BoundingBox(0, 9, 2, 11), circle.BoundingBox)
 
@@ -1819,7 +1819,7 @@ class Aligning(Testcase):
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
 		circle =    Circle(Point2D(10, 10), 1)
 
-		circle.AlignTo(rectangle, Alignment.Right)
+		circle.AlignTo(rectangle, Alignment.MaxX)
 
 		self.assertEqual(BoundingBox(2, 9, 4, 11), circle.BoundingBox)
 
@@ -1854,7 +1854,7 @@ class Aligning(Testcase):
 		_ =         Group(Offset2D(10, 0), (rectangle, ))
 		_ =         Group(Offset2D(0, 50), (circle, ))
 
-		circle.AlignTo(rectangle, Alignment.Right)
+		circle.AlignTo(rectangle, Alignment.MaxX)
 
 		self.assertEqual(BoundingBox(12, 50, 14, 52), circle.AbsoluteBoundingBox)
 		self.assertEqual(BoundingBox(12, 0, 14, 2), circle.BoundingBox)
@@ -1864,7 +1864,7 @@ class Aligning(Testcase):
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
 		group =     Group(Offset2D(10, 10), (Circle(Point2D(1, 1), 1), ))
 
-		group.AlignTo(rectangle, Alignment.Left)
+		group.AlignTo(rectangle, Alignment.MinX)
 
 		self.assertTupleEqual((0, 10), group.Offset.ToTuple())
 
@@ -1872,7 +1872,7 @@ class Aligning(Testcase):
 		circle = Circle(Point2D(10, 10), 1)
 
 		with self.assertRaises(ValueError) as context:
-			circle.AlignTo(None, Alignment.Left)
+			circle.AlignTo(None, Alignment.MinX)
 
 		self.assertEqual("Parameter 'reference' is None.", str(context.exception))
 
@@ -1880,7 +1880,7 @@ class Aligning(Testcase):
 		circle = Circle(Point2D(10, 10), 1)
 
 		with self.assertRaises(TypeError) as context:
-			circle.AlignTo(Point2D(0, 0), Alignment.Left)
+			circle.AlignTo(Point2D(0, 0), Alignment.MinX)
 
 		self.assertEqual("Parameter 'reference' is not of type 'Element2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)

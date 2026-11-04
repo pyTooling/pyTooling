@@ -60,6 +60,23 @@ Coordinate = TypeVar("Coordinate", bound=Union[int, float])
 
 
 @export
+class Alignment(Enum):
+	"""
+	Edge or center of a bounding box, two elements are aligned at.
+
+	The members name the smaller or larger coordinate, like :class:`BoundingBox`, so they don't depend on the direction of
+	an axis.
+	"""
+
+	MinX =    0  #: Align the smallest x-coordinates.
+	CenterX = 1  #: Align the centers in x-direction.
+	MaxX =    2  #: Align the largest x-coordinates.
+	MinY =    3  #: Align the smallest y-coordinates.
+	CenterY = 4  #: Align the centers in y-direction.
+	MaxY =    5  #: Align the largest y-coordinates.
+
+
+@export
 class Cartesian2DError(ToolingException):
 	"""Base-exception of all exceptions raised by :mod:`pyTooling.Cartesian2D`."""
 
@@ -631,11 +648,11 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 
 		box =          self.AbsoluteBoundingBox
 		referenceBox = reference.AbsoluteBoundingBox
-		if alignment is Alignment.Left:
+		if alignment is Alignment.MinX:
 			offset = Offset2D(referenceBox._minX - box._minX, 0)
 		elif alignment is Alignment.CenterX:
 			offset = Offset2D((referenceBox._minX + referenceBox._maxX - box._minX - box._maxX) / 2, 0)
-		elif alignment is Alignment.Right:
+		elif alignment is Alignment.MaxX:
 			offset = Offset2D(referenceBox._maxX - box._maxX, 0)
 		elif alignment is Alignment.MinY:
 			offset = Offset2D(0, referenceBox._minY - box._minY)
@@ -1458,22 +1475,6 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:returns: The string equivalent of the bounding box, its corners with the smallest and the largest coordinates.
 		"""
 		return f"(({self._minX}, {self._minY}), ({self._maxX}, {self._maxY}))"
-
-
-@export
-class Alignment(Enum):
-	"""
-	Edge or center of a bounding box, two elements are aligned at.
-
-	The vertical members name the smaller or larger y-coordinate, so they don't depend on the direction of the y-axis.
-	"""
-
-	Left =    0  #: Align the smallest x-coordinates.
-	CenterX = 1  #: Align the centers in x-direction.
-	Right =   2  #: Align the largest x-coordinates.
-	MinY =    3  #: Align the smallest y-coordinates.
-	CenterY = 4  #: Align the centers in y-direction.
-	MaxY =    5  #: Align the largest y-coordinates.
 
 
 @export

@@ -53,16 +53,16 @@ from pyTooling.Cartesian2D.Shapes import Shape
 
 
 @export
-class EmptyGroupError(Cartesian2DError):
-	"""The exception is raised when the bounding box of a group without children is requested."""
-
-
-@export
 class Axis(Enum):
 	"""Axis of the coordinate system."""
 
 	X = 0  #: The x-axis.
 	Y = 1  #: The y-axis.
+
+
+@export
+class EmptyGroupError(Cartesian2DError):
+	"""The exception is raised when the bounding box of a group without children is requested."""
 
 
 @export
