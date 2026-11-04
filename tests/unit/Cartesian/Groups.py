@@ -37,7 +37,7 @@ from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox, Element
                                          AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
                                          NotInSameFrameError, GroupCycleError
 from pyTooling.Cartesian2D.Shapes import Polygon, Trapezium, Rectangle, Square, Circle
-from pyTooling.Cartesian2D.Groups import Group, Axis, EmptyGroupError
+from pyTooling.Cartesian2D.Groups import Group, EmptyGroupError
 from pyTooling.Exceptions         import EmptyError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
@@ -918,7 +918,7 @@ class Distributing(Testcase):
 		circle4 = Circle(Point2D(20, 0), 1)
 		group =   Group(children=(circle4, circle2, circle1, circle3))
 
-		group.Distribute(Axis.X)
+		group.DistributeX()
 
 		self.assertEqual(BoundingBox(-1, -1, 1, 1), circle1.BoundingBox)
 		self.assertEqual(BoundingBox(5, -2, 9, 2), circle2.BoundingBox)
@@ -931,7 +931,7 @@ class Distributing(Testcase):
 		line3 = LineSegment2D(Point2D(1, 9), Point2D(1, 12))
 		group = Group(children=(line1, line2, line3))
 
-		group.Distribute(Axis.Y)
+		group.DistributeY()
 
 		self.assertEqual(BoundingBox(5, 5, 5, 6), line2.BoundingBox)
 		self.assertEqual(BoundingBox(1, 9, 1, 12), line3.BoundingBox)
@@ -941,7 +941,7 @@ class Distributing(Testcase):
 		circle2 = Circle(Point2D(3, 0), 1)
 		group =   Group(children=(circle1, circle2))
 
-		group.Distribute(Axis.X)
+		group.DistributeX()
 
 		self.assertTupleEqual((0, 0), circle1.Center.ToTuple())
 		self.assertTupleEqual((3, 0), circle2.Center.ToTuple())
@@ -952,7 +952,7 @@ class Distributing(Testcase):
 		circle3 = Circle(Point2D(20, 5), 1)
 		group =   Group(children=(circle3, circle2, circle1))
 
-		group.Distribute(Axis.X, 3)
+		group.DistributeX(3)
 
 		self.assertEqual(BoundingBox(-1, -1, 1, 1), circle1.BoundingBox)
 		self.assertEqual(BoundingBox(4, -2, 8, 2), circle2.BoundingBox)
@@ -963,7 +963,7 @@ class Distributing(Testcase):
 		line2 = LineSegment2D(Point2D(5, 3), Point2D(5, 4))
 		group = Group(children=(line1, line2))
 
-		group.Distribute(Axis.Y, 0.5)
+		group.DistributeY(0.5)
 
 		self.assertEqual(BoundingBox(0, 0, 0, 2), line1.BoundingBox)
 		self.assertEqual(BoundingBox(5, 2.5, 5, 3.5), line2.BoundingBox)
@@ -973,7 +973,7 @@ class Distributing(Testcase):
 		circle2 = Circle(Point2D(5, 0), 1)
 		group =   Group(children=(circle1, circle2))
 
-		group.Distribute(Axis.X, 0)
+		group.DistributeX(0)
 
 		self.assertTupleEqual((2, 0), circle2.Center.ToTuple())
 
@@ -981,7 +981,7 @@ class Distributing(Testcase):
 		circle = Circle(Point2D(3, 0), 1)
 		group =  Group(children=(circle, ))
 
-		group.Distribute(Axis.X, 1)
+		group.DistributeX(1)
 
 		self.assertTupleEqual((3, 0), circle.Center.ToTuple())
 
@@ -989,7 +989,7 @@ class Distributing(Testcase):
 		group = Group()
 
 		with self.assertRaises(TypeError) as context:
-			group.Distribute(Axis.X, "1")
+			group.DistributeX("1")
 
 		self.assertEqual("Parameter 'gap' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
@@ -998,24 +998,25 @@ class Distributing(Testcase):
 		group = Group()
 
 		with self.assertRaises(ValueError) as context:
-			group.Distribute(Axis.X, -1)
+			group.DistributeX(-1)
 
 		self.assertEqual("Parameter 'gap' is negative.", str(context.exception))
 		self.assertListEqual(["Got value '-1'."], context.exception.__notes__)
 
-	def test_AxisNone(self) -> None:
-		group = Group()
-
-		with self.assertRaises(ValueError) as context:
-			group.Distribute(None)
-
-		self.assertEqual("Parameter 'axis' is None.", str(context.exception))
-
-	def test_AxisStr(self) -> None:
+	def test_Gap_Y_Str(self) -> None:
 		group = Group()
 
 		with self.assertRaises(TypeError) as context:
-			group.Distribute("X")
+			group.DistributeY("1")
 
-		self.assertEqual("Parameter 'axis' is not of type 'Axis'.", str(context.exception))
+		self.assertEqual("Parameter 'gap' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Gap_Y_Negative(self) -> None:
+		group = Group()
+
+		with self.assertRaises(ValueError) as context:
+			group.DistributeY(-1)
+
+		self.assertEqual("Parameter 'gap' is negative.", str(context.exception))
+		self.assertListEqual(["Got value '-1'."], context.exception.__notes__)

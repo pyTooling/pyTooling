@@ -42,7 +42,6 @@ The coordinates of everything inside a group are relative to the group, so movin
 """
 from __future__                   import annotations
 
-from enum                         import Enum
 from typing                       import Generic, Iterable, Optional as Nullable
 
 from pyTooling.Decorators         import export, readonly
@@ -51,14 +50,6 @@ from pyTooling.Common             import getFullyQualifiedName
 from pyTooling.Cartesian2D        import Coordinate, Offset2D, BoundingBox, Element2D, Segment2D, Cartesian2DError, \
                                          AlreadyOwnedError, GroupCycleError, NotOwnedError
 from pyTooling.Cartesian2D.Shapes import Shape
-
-
-@export
-class Axis(Enum):
-	"""Axis of the coordinate system."""
-
-	X = 0  #: The x-axis.
-	Y = 1  #: The y-axis.
 
 
 @export
@@ -297,31 +288,20 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 
 		self._offset += offset
 
-	def Distribute(self, axis: Axis, gap: Nullable[Coordinate] = None) -> None:
+	def DistributeX(self, gap: Nullable[Coordinate] = None) -> None:
 		"""
-		Move the children along an axis, so the gaps between their bounding boxes are equal.
+		Move the children along the x-axis, so the gaps between their bounding boxes are equal.
 
-		The children are ordered by the smallest coordinate of their bounding boxes on that axis. The first child keeps its
-		position. Without a gap, the last child keeps its position too and the gaps follow from the space between them. With
-		fewer than three children, there is then nothing to distribute. With a gap, the other children follow the first one
-		at that distance.
+		The children are ordered by their smallest x-coordinate. The first child keeps its position. Without a gap, the
+		last child keeps its position too and the gaps follow from the space between them. With fewer than three children,
+		there is then nothing to distribute. With a gap, the other children follow the first one at that distance.
 
-		:param axis:             The axis to distribute the children along.
 		:param gap:              Optional, the distance between two bounding boxes. Default: ``None``, equal gaps between
 		                         the first and the last child.
-		:raises ValueError:      If parameter 'axis' is None.
-		:raises TypeError:       If parameter 'axis' is not of type :class:`Axis`.
 		:raises TypeError:       If parameter 'gap' is not of type :class:`float` or :class:`int`.
 		:raises ValueError:      If parameter 'gap' is negative.
 		:raises EmptyGroupError: If a group inside this group has no children.
 		"""
-		if axis is None:
-			raise ValueError("Parameter 'axis' is None.")
-		elif not isinstance(axis, Axis):
-			ex = TypeError("Parameter 'axis' is not of type 'Axis'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(axis)}'.")
-			raise ex
-
 		if gap is not None:
 			if not isinstance(gap, (int, float)):
 				ex = TypeError("Parameter 'gap' is not of type 'float' or 'int'.")
@@ -338,11 +318,59 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 		entries = []
 		for child in self._children:
 			box = child.BoundingBox
-			if axis is Axis.X:
-				entries.append((box._minX, box._maxX, child))
-			else:
-				entries.append((box._minY, box._maxY, child))
+			entries.append((box._minX, box._maxX, child))
 
+		for child, distance in self._ComputeDistribution(entries, gap):
+			child.Move(Offset2D(distance, 0))
+
+	def DistributeY(self, gap: Nullable[Coordinate] = None) -> None:
+		"""
+		Move the children along the y-axis, so the gaps between their bounding boxes are equal.
+
+		The children are ordered by their smallest y-coordinate. The first child keeps its position. Without a gap, the
+		last child keeps its position too and the gaps follow from the space between them. With fewer than three children,
+		there is then nothing to distribute. With a gap, the other children follow the first one at that distance.
+
+		:param gap:              Optional, the distance between two bounding boxes. Default: ``None``, equal gaps between
+		                         the first and the last child.
+		:raises TypeError:       If parameter 'gap' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:      If parameter 'gap' is negative.
+		:raises EmptyGroupError: If a group inside this group has no children.
+		"""
+		if gap is not None:
+			if not isinstance(gap, (int, float)):
+				ex = TypeError("Parameter 'gap' is not of type 'float' or 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(gap)}'.")
+				raise ex
+			elif gap < 0:
+				ex = ValueError("Parameter 'gap' is negative.")
+				ex.add_note(f"Got value '{gap}'.")
+				raise ex
+
+		if len(self._children) < (3 if gap is None else 2):
+			return
+
+		entries = []
+		for child in self._children:
+			box = child.BoundingBox
+			entries.append((box._minY, box._maxY, child))
+
+		for child, distance in self._ComputeDistribution(entries, gap):
+			child.Move(Offset2D(0, distance))
+
+	@staticmethod
+	def _ComputeDistribution(
+		entries: list[tuple[Coordinate, Coordinate, Element2D]],
+		gap: Nullable[Coordinate]
+	) -> list[tuple[Element2D, Coordinate]]:
+		"""
+		Compute how far the children move along an axis, so the gaps between their bounding boxes are equal.
+
+		:param entries: Smallest coordinate, largest coordinate and child, for each child.
+		:param gap:     The distance between two bounding boxes, or ``None`` for equal gaps between the first and last
+		                child.
+		:returns:       The children to move, each with the distance to move it by.
+		"""
 		entries.sort(key=lambda entry: entry[0])
 		first = entries[0]
 		if gap is None:
@@ -352,14 +380,13 @@ class Group(Element2D[Coordinate], Generic[Coordinate]):
 		else:
 			moved = entries[1:]
 
-		position = first[1] + gap
+		distances = []
+		position =  first[1] + gap
 		for low, high, child in moved:
-			if axis is Axis.X:
-				child.Move(Offset2D(position - low, 0))
-			else:
-				child.Move(Offset2D(0, position - low))
-
+			distances.append((child, position - low))
 			position += high - low + gap
+
+		return distances
 
 	def __repr__(self) -> str:
 		"""
