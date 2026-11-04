@@ -38,6 +38,7 @@ from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox, Element
                                          NotInSameFrameError, GroupCycleError
 from pyTooling.Cartesian2D.Shapes import Polygon, Trapezium, Rectangle, Square, Circle
 from pyTooling.Cartesian2D.Groups import Group, Axis, EmptyGroupError
+from pyTooling.Exceptions         import EmptyError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
 
@@ -760,6 +761,7 @@ class Bounds(Testcase):
 		with self.assertRaises(EmptyGroupError) as context:
 			_ = group.BoundingBox
 
+		self.assertIsInstance(context.exception, EmptyError)
 		self.assertEqual("Group has no children.", str(context.exception))
 		self.assertListEqual(["Got Group((1, 2), children=0)."], context.exception.__notes__)
 

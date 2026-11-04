@@ -46,6 +46,7 @@ from enum                         import Enum
 from typing                       import Generic, Iterable, Optional as Nullable
 
 from pyTooling.Decorators         import export, readonly
+from pyTooling.Exceptions         import EmptyError
 from pyTooling.Common             import getFullyQualifiedName
 from pyTooling.Cartesian2D        import Coordinate, Offset2D, BoundingBox, Element2D, Segment2D, Cartesian2DError, \
                                          AlreadyOwnedError, GroupCycleError, NotOwnedError
@@ -61,7 +62,7 @@ class Axis(Enum):
 
 
 @export
-class EmptyGroupError(Cartesian2DError):
+class EmptyGroupError(Cartesian2DError, EmptyError):
 	"""The exception is raised when the bounding box of a group without children is requested."""
 
 

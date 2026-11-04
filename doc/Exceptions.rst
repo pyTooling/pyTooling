@@ -99,6 +99,9 @@ one error by its own class.
    * - :exc:`InUseError`
      - an element is removed from a data structure, but other elements still use it.
      - none yet (pyVHDLModel: ``LibraryInUseError``)
+   * - :exc:`EmptyError`
+     - an operation needs at least one element, but a data structure has none.
+     - :exc:`~pyTooling.Cartesian2D.Groups.EmptyGroupError`
 
 .. code-block:: Python
 
