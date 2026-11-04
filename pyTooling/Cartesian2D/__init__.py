@@ -444,6 +444,33 @@ class Point2D(Base[Coordinate], Generic[Coordinate]):
 
 
 @export
+class Origin2D(Point2D[Coordinate], Generic[Coordinate]):
+	"""An implementation of a 2D cartesian origin."""
+
+	def __init__(self) -> None:
+		"""
+		Initializes a 2-dimensional origin.
+		"""
+		super().__init__(0, 0)
+
+	def Copy(self) -> Self:
+		"""
+		An origin is a singular point, so it can't be copied.
+
+		:raises RuntimeError: Because an origin can't be copied.
+		"""
+		raise RuntimeError("An origin can't be copied.")
+
+	def __repr__(self) -> str:
+		"""
+		Returns the 2D origin's string representation.
+
+		:returns: The string representation of the 2D origin.
+		"""
+		return f"Origin2D({self._x}, {self._y})"
+
+
+@export
 class Element2D(Base[Coordinate], Generic[Coordinate]):
 	"""
 	Abstract base-class of all elements a :class:`~pyTooling.Cartesian2D.Groups.Group` can hold: shapes, segments and
@@ -634,33 +661,6 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 
 
 Point2D._PARENT_TYPE = (Element2D, )
-
-
-@export
-class Origin2D(Point2D[Coordinate], Generic[Coordinate]):
-	"""An implementation of a 2D cartesian origin."""
-
-	def __init__(self) -> None:
-		"""
-		Initializes a 2-dimensional origin.
-		"""
-		super().__init__(0, 0)
-
-	def Copy(self) -> Self:
-		"""
-		An origin is a singular point, so it can't be copied.
-
-		:raises RuntimeError: Because an origin can't be copied.
-		"""
-		raise RuntimeError("An origin can't be copied.")
-
-	def __repr__(self) -> str:
-		"""
-		Returns the 2D origin's string representation.
-
-		:returns: The string representation of the 2D origin.
-		"""
-		return f"Origin2D({self._x}, {self._y})"
 
 
 @export
