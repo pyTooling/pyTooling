@@ -441,26 +441,29 @@ class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
 
 		self._offset += offset
 
-	def MirrorY(self, height: Coordinate = 0) -> None:
+	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
 		"""
-		Mirror the group vertically, so the y-component ``y`` of its :attr:`Offset` becomes ``height - y`` (inplace).
+		Mirror the group at a horizontal axis by mirroring the y-component of its :attr:`Offset` (inplace).
 
 		The children are mirrored at the group's origin: every y-coordinate inside the group is negated.
 
-		:param height:      Optional, the sum of a y-coordinate and its mirrored value. Default: ``0``.
-		:raises ValueError: If parameter 'height' is None.
-		:raises TypeError:  If parameter 'height' is not of type :class:`float` or :class:`int`.
+		:param twiceAxis: Twice the y-coordinate of the axis.
 		"""
-		if height is None:
-			raise ValueError("Parameter 'height' is None.")
-		elif not isinstance(height, (int, float)):
-			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
-			raise ex
-
-		self._offset._yOffset = height - self._offset._yOffset
+		self._offset._yOffset = twiceAxis - self._offset._yOffset
 		for child in self._children:
-			child.MirrorY()
+			child._MirrorVertically(0)
+
+	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the group at a vertical axis by mirroring the x-component of its :attr:`Offset` (inplace).
+
+		The children are mirrored at the group's origin: every x-coordinate inside the group is negated.
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		self._offset._xOffset = twiceAxis - self._offset._xOffset
+		for child in self._children:
+			child._MirrorHorizontally(0)
 
 	def __repr__(self) -> str:
 		"""
@@ -666,7 +669,7 @@ class Canvas(Base[Coordinate], ContainerMixin, Generic[Coordinate]):
 		"""
 		height = 0 if self._size is None else self._size._height
 		for child in self._children:
-			child.MirrorY(height)
+			child._MirrorVertically(height)
 
 		self._direction = YAxisDirection.Down if self._direction is YAxisDirection.Up else YAxisDirection.Up
 

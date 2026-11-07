@@ -224,23 +224,27 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		for point in self._points:
 			point += offset
 
-	def MirrorY(self, height: Coordinate = 0) -> None:
+	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
 		"""
-		Mirror the polygon vertically, so the y-coordinate ``y`` of every corner becomes ``height - y`` (inplace).
+		Mirror the polygon at a horizontal axis by mirroring all its corners (inplace).
 
-		:param height:      Optional, the sum of a y-coordinate and its mirrored value. Default: ``0``.
-		:raises ValueError: If parameter 'height' is None.
-		:raises TypeError:  If parameter 'height' is not of type :class:`float` or :class:`int`.
+		Its edges share the corners, so they mirror along.
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
 		"""
-		if height is None:
-			raise ValueError("Parameter 'height' is None.")
-		elif not isinstance(height, (int, float)):
-			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
-			raise ex
-
 		for point in self._points:
-			point._y = height - point._y
+			point._y = twiceAxis - point._y
+
+	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the polygon at a vertical axis by mirroring all its corners (inplace).
+
+		Its edges share the corners, so they mirror along.
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		for point in self._points:
+			point._x = twiceAxis - point._x
 
 	def __repr__(self) -> str:
 		"""
@@ -492,23 +496,27 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		for point in self._points:
 			point += offset
 
-	def MirrorY(self, height: Coordinate = 0) -> None:
+	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
 		"""
-		Mirror the trapezium vertically, so the y-coordinate ``y`` of every corner becomes ``height - y`` (inplace).
+		Mirror the trapezium at a horizontal axis by mirroring all its corners (inplace).
 
-		:param height:      Optional, the sum of a y-coordinate and its mirrored value. Default: ``0``.
-		:raises ValueError: If parameter 'height' is None.
-		:raises TypeError:  If parameter 'height' is not of type :class:`float` or :class:`int`.
+		Its edges share the corners, so they mirror along.
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
 		"""
-		if height is None:
-			raise ValueError("Parameter 'height' is None.")
-		elif not isinstance(height, (int, float)):
-			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
-			raise ex
-
 		for point in self._points:
-			point._y = height - point._y
+			point._y = twiceAxis - point._y
+
+	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the trapezium at a vertical axis by mirroring all its corners (inplace).
+
+		Its edges share the corners, so they mirror along.
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		for point in self._points:
+			point._x = twiceAxis - point._x
 
 	def Copy(self) -> Self:
 		"""
@@ -815,22 +823,21 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 
 		self._center += offset
 
-	def MirrorY(self, height: Coordinate = 0) -> None:
+	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
 		"""
-		Mirror the circle vertically, so the y-coordinate ``y`` of its center becomes ``height - y`` (inplace).
+		Mirror the circle at a horizontal axis by mirroring its center (inplace).
 
-		:param height:      Optional, the sum of a y-coordinate and its mirrored value. Default: ``0``.
-		:raises ValueError: If parameter 'height' is None.
-		:raises TypeError:  If parameter 'height' is not of type :class:`float` or :class:`int`.
+		:param twiceAxis: Twice the y-coordinate of the axis.
 		"""
-		if height is None:
-			raise ValueError("Parameter 'height' is None.")
-		elif not isinstance(height, (int, float)):
-			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
-			raise ex
+		self._center._y = twiceAxis - self._center._y
 
-		self._center._y = height - self._center._y
+	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the circle at a vertical axis by mirroring its center (inplace).
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		self._center._x = twiceAxis - self._center._x
 
 	def __repr__(self) -> str:
 		"""
