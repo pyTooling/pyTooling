@@ -533,7 +533,7 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		:param parent:     Optional, the group the derived class registers the element in. Default: ``None``, no group.
 		:raises TypeError: If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
 		"""
-		# The module declaring the parent's class sets '_PARENT_TYPE' of this class.
+		# Imported for its side effect: it assigns '_PARENT_TYPE' of the element classes.
 		from pyTooling.Cartesian2D import Groups
 
 		super().__init__(parent=parent)
