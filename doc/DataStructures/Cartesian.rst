@@ -42,6 +42,9 @@ Features
 * **Shapes and segments moved as a whole** - ``Move(offset)`` shifts all their points in place.
 * **Points owned by one element** - a shape or segment owns its points, so a point can't silently belong to two
   shapes. Coordinates of different frames aren't mixed in a computation.
+* **Groups with relative coordinates** - a :class:`~pyTooling.Cartesian2D.Groups.Group` holds shapes, segments and
+  groups at an offset, so moving a group moves everything in it. Absolute positions, alignment and distribution are
+  computed across groups.
 * **Independent copies** - ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` return an object sharing no point
   with the original. A shape's copy is of the same class, and its edges share the copied corners.
 * Conversion to plain tuples through ``ToTuple``, for handing coordinates to a library that expects them.
@@ -141,7 +144,8 @@ An offset may be written as a plain 2-tuple wherever one is accepted. Anything e
 the offending type in a note.
 
 :meth:`~pyTooling.Cartesian2D.Point2D.Copy` returns an independent point and
-:meth:`~pyTooling.Cartesian2D.Point2D.ToTuple` the ``(x, y)`` pair.
+:meth:`~pyTooling.Cartesian2D.Point2D.ToTuple` the ``(x, y)`` pair. :attr:`~pyTooling.Cartesian2D.Point2D.Absolute`
+returns a new point relative to the origin, for a point inside a :ref:`group <STRUCT/Cartesian2D/Groups>`.
 
 A point is owned by at most one element, the segment or shape it belongs to: the read-only
 :attr:`~pyTooling.Cartesian2D.Base.Parent`. A new point and a copy have no owner, unless parameter ``parent`` sets
@@ -162,7 +166,8 @@ An :class:`~pyTooling.Cartesian2D.Origin2D` is a :class:`~pyTooling.Cartesian2D.
 constructor takes no coordinates. It exists so a function needing *the* origin can say so in its signature instead
 of checking two numbers.
 
-An origin can't be copied: ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` raise :exc:`RuntimeError`.
+An origin can't be copied: ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` raise
+:exc:`~pyTooling.Exceptions.InvalidOperationError` (a :exc:`RuntimeError`).
 
 .. seealso::
 
@@ -221,8 +226,9 @@ read-only properties :attr:`~pyTooling.Cartesian2D.BoundingBox.MinX`, :attr:`~py
 :attr:`~pyTooling.Cartesian2D.BoundingBox.Width`, :attr:`~pyTooling.Cartesian2D.BoundingBox.Height` and
 :attr:`~pyTooling.Cartesian2D.BoundingBox.Center`. A maximum less than its minimum raises :exc:`ValueError`.
 
-It is a computed value, not a shape: a shape's or segment's ``BoundingBox`` property returns a new one on every access,
-so it always follows moved points. :meth:`~pyTooling.Cartesian2D.BoundingBox.FromPoints` encloses any number of points.
+It is a computed value, not a shape: the ``BoundingBox`` property of a shape, segment or group returns a new one on
+every access, so it always follows moved points. :meth:`~pyTooling.Cartesian2D.BoundingBox.FromPoints` encloses any
+number of points, and ``box + offset`` returns a shifted bounding box.
 
 .. list-table::
    :header-rows: 1
@@ -356,11 +362,12 @@ Shape
 :class:`~pyTooling.Cartesian2D.Shapes.Shape` is the abstract base-class of every 2D shape. It carries no fields; it
 exists so a function can accept *a shape*. Instantiating it raises :exc:`~pyTooling.MetaClasses.AbstractClassError`.
 
-Every shape implements its two abstract members:
+A shape is an :ref:`element <STRUCT/Cartesian2D/Element2D>`, so a group can hold it. Every shape implements the
+element's two abstract members:
 
-* :attr:`~pyTooling.Cartesian2D.Shapes.Shape.BoundingBox` - the smallest axis-aligned
+* :attr:`~pyTooling.Cartesian2D.Element2D.BoundingBox` - the smallest axis-aligned
   :ref:`bounding box <STRUCT/Cartesian2D/BoundingBox>` enclosing the shape, computed on every access;
-* :meth:`~pyTooling.Cartesian2D.Shapes.Shape.Move` - shifts all points of the shape by an
+* :meth:`~pyTooling.Cartesian2D.Element2D.Move` - shifts all points of the shape by an
   :class:`~pyTooling.Cartesian2D.Offset2D`, in place. Edges share the corners, so they move along.
 
 Every shape is created by :class:`~pyTooling.MetaClasses.ExtendedType` and stores its fields in slots, so a class
@@ -501,6 +508,86 @@ A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D` or a radius that i
 
    :ref:`STRUCT/Cartesian2D/Shape`
       |rarr| Its base-class, the base-class of the 2-dimensional shapes.
+
+
+.. _STRUCT/Cartesian2D/Groups:
+
+Groups
+******
+
+The groups live in :mod:`pyTooling.Cartesian2D.Groups`. A group places shapes, segments and other groups at an
+offset, so a drawing is built from parts that are positioned as a whole.
+
+
+.. _STRUCT/Cartesian2D/Element2D:
+
+Element2D
+=========
+
+:class:`~pyTooling.Cartesian2D.Element2D` is the abstract base-class of everything a group can hold: shapes, segments
+and groups. An element belongs to at most one group, its :attr:`~pyTooling.Cartesian2D.Element2D.Parent`, and offers:
+
+* :attr:`~pyTooling.Cartesian2D.Element2D.BoundingBox` in its frame and
+  :attr:`~pyTooling.Cartesian2D.Element2D.AbsoluteBoundingBox` relative to the origin;
+* :meth:`~pyTooling.Cartesian2D.Element2D.Move`, shifting it in its frame;
+* :meth:`~pyTooling.Cartesian2D.Element2D.MoveTo`, moving it into another group - by default keeping its absolute
+  position, so its local coordinates change;
+* :meth:`~pyTooling.Cartesian2D.Element2D.AlignTo`, moving it so an edge or the center of its bounding box aligns
+  with another element's - see :class:`~pyTooling.Cartesian2D.Alignment`. Both elements may be in different groups.
+
+Assigning :attr:`~pyTooling.Cartesian2D.Element2D.Parent` moves an element into a group too, but keeps its local
+coordinates. A group can't become its own descendant: that raises :exc:`~pyTooling.Cartesian2D.GroupCycleError`. An
+edge of a shape belongs to its shape and can't be moved into a group.
+
+Every shape, segment and group takes a keyword-only parameter ``parent``: a group given there registers the new element,
+as :meth:`~pyTooling.Cartesian2D.Groups.Group.AddChild` does. The element registers when it is fully initialized, so a
+failing check leaves nothing in the group. A segment with a shape as ``parent`` is an edge of that shape instead. A
+:class:`~pyTooling.Cartesian2D.Point2D` with a ``parent`` is different, it isn't registered: see
+:ref:`STRUCT/Cartesian2D/Ownership`.
+
+
+.. _STRUCT/Cartesian2D/Group:
+
+Group
+=====
+
+A :class:`~pyTooling.Cartesian2D.Groups.Group` has an :attr:`~pyTooling.Cartesian2D.Groups.Group.Offset` and
+:attr:`~pyTooling.Cartesian2D.Groups.Group.Children`. The coordinates of all children are **relative to the group**,
+and a group without a parent is relative to the origin. So moving a group changes its offset only - the coordinates of
+its children stay as they are.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D, Offset2D
+   from pyTooling.Cartesian2D.Shapes import Circle
+   from pyTooling.Cartesian2D.Groups import Group
+
+   wheel = Circle(Point2D(1, 1), 1)
+   axle =  Group(Offset2D(10, 0), (wheel, ))
+   car =   Group(Offset2D(0, 5), (axle, ))
+
+   wheel.Center                       # (1, 1), relative to axle
+   wheel.Center.Absolute              # (11, 6)
+   car.BoundingBox                    # BoundingBox(10, 5, 12, 7)
+   car.Move(Offset2D(100, 0))         # wheel.Center is still (1, 1)
+
+Children are given to the constructor or added by :meth:`~pyTooling.Cartesian2D.Groups.Group.AddChild`, and removed
+by :meth:`~pyTooling.Cartesian2D.Groups.Group.RemoveChild`. A child of another element raises
+:exc:`~pyTooling.Cartesian2D.AlreadyOwnedError` - use :meth:`~pyTooling.Cartesian2D.Element2D.MoveTo` to move it.
+
+A group's :attr:`~pyTooling.Cartesian2D.Groups.Group.BoundingBox` is the union of its children's bounding boxes,
+shifted by its offset, so it is in the group's own frame. A group without children has no bounding box and raises
+:exc:`~pyTooling.Cartesian2D.Groups.EmptyGroupError`. :meth:`~pyTooling.Cartesian2D.Groups.Group.DistributeX` and
+:meth:`~pyTooling.Cartesian2D.Groups.Group.DistributeY` move the children along that axis, so the gaps between them are
+equal: either at a given distance after the first child, or evenly between the first and the last child.
+
+The frame of a point, segment or shape inside a group is that group. Subtracting points of different groups raises
+:exc:`~pyTooling.Cartesian2D.NotInSameFrameError`; subtract their absolute positions instead.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Ownership`
+      |rarr| How points belong to shapes and segments.
 
 
 .. _STRUCT/Cartesian3D:

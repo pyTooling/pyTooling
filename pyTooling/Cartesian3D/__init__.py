@@ -45,6 +45,7 @@ from typing                import Union, Generic, Any, Self
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType
+from pyTooling.Exceptions  import InvalidOperationError
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate
 
@@ -335,9 +336,9 @@ class Origin3D(Point3D[Coordinate], Generic[Coordinate]):
 		"""
 		An origin is a singular point, so it can't be copied.
 
-		:raises RuntimeError: Because an origin can't be copied.
+		:raises InvalidOperationError: Always, because an origin is a singular point.
 		"""
-		raise RuntimeError("An origin can't be copied.")
+		raise InvalidOperationError("An origin can't be copied.")
 
 	def __repr__(self) -> str:
 		"""

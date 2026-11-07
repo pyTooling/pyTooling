@@ -38,7 +38,7 @@ from pyTooling.CallGraph   import DuplicateFunctionError
 from pyTooling.CI          import NeedDependencyCycleError
 from pyTooling.ControlFlow import DuplicateBlockError, DuplicateEdgeError as ControlFlowDuplicateEdgeError
 from pyTooling.Dependency  import CircularRequirementsFileError
-from pyTooling.Exceptions  import AlreadyInHierarchyError, CycleError, DuplicateElementError, \
+from pyTooling.Exceptions  import AlreadyInHierarchyError, CycleError, DuplicateElementError, EmptyError, \
                                   EnvironmentVariableError, ExceptionBase, InUseError, MissingDependencyError, \
                                   NotAChildError, NotConfiguredError, NotInSameHierarchyError, \
                                   PlatformNotSupportedError, ToolingException
@@ -123,6 +123,17 @@ class CommonBases(Testcase):
 
 		self.assertIsInstance(context.exception, ToolingException)
 		self.assertEqual("Element 'a' is still used by 'b'.", str(context.exception))
+
+	def test_EmptyError(self) -> None:
+		"""A package's own error derives from its base-exception and 'EmptyError'; both catch it."""
+		class EmptyContainerError(ToolingException, EmptyError):
+			pass
+
+		with self.assertRaises(EmptyError) as context:
+			raise EmptyContainerError("Container 'a' has no elements.")
+
+		self.assertIsInstance(context.exception, ToolingException)
+		self.assertEqual("Container 'a' has no elements.", str(context.exception))
 
 	def test_ToolingExceptionMessage(self) -> None:
 		"""A common base doesn't change how a 'ToolingException' stores its message."""

@@ -36,9 +36,10 @@ from copy                         import copy, deepcopy
 from math                         import isclose, pi, sqrt
 
 from pyTooling.Cartesian2D        import Base, Element2D, Origin2D, Point2D, Offset2D, Size2D, BoundingBox, Segment2D, \
-                                         LineSegment2D, AlreadyOwnedError, DuplicatePointError, NoAreaError
-from pyTooling.Cartesian2D.Shapes import Rectangle, Shape
-from pyTooling.Exceptions         import DuplicateElementError
+                                         LineSegment2D, Alignment, AlreadyOwnedError, DuplicatePointError, NoAreaError
+from pyTooling.Cartesian2D.Shapes import Rectangle, Circle, Shape
+from pyTooling.Cartesian2D.Groups import Group
+from pyTooling.Exceptions         import DuplicateElementError, InvalidOperationError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
 
@@ -587,8 +588,11 @@ class Copy(Testcase):
 	def test_Origin(self) -> None:
 		origin = Origin2D()
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(InvalidOperationError) as context:
 			_ = origin.Copy()
+
+		self.assertEqual("An origin can't be copied.", str(context.exception))
+		self.assertIsInstance(context.exception, RuntimeError)
 
 	def test_Point_int(self) -> None:
 		point = Point2D(1, 2)
@@ -665,13 +669,13 @@ class Copy(Testcase):
 	def test_Origin_copy(self) -> None:
 		origin = Origin2D()
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(InvalidOperationError):
 			_ = copy(origin)
 
 	def test_Origin_deepcopy(self) -> None:
 		origin = Origin2D()
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(InvalidOperationError):
 			_ = deepcopy(origin)
 
 	def test_Point_Independent(self) -> None:
@@ -775,7 +779,7 @@ class Copy(Testcase):
 	def test_LineSegment_Origin(self) -> None:
 		line = LineSegment2D(Origin2D(), Point2D(2, 3), copyPoints=False)
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(InvalidOperationError):
 			_ = line.Copy()
 
 
@@ -1338,6 +1342,24 @@ class Bounds(Testcase):
 			context.exception.__notes__
 		)
 
+	def test_Plus_Offset(self) -> None:
+		box = BoundingBox(1, 2, 4, 6)
+
+		newBox = box + Offset2D(10, -2)
+
+		self.assertIs(BoundingBox, type(newBox))
+		self.assertTupleEqual((11, 0, 14, 4), newBox.ToTuple())
+		self.assertTupleEqual((1, 2, 4, 6), box.ToTuple())
+
+	def test_Plus_tuple(self) -> None:
+		box = BoundingBox(1, 2, 4, 6)
+
+		with self.assertRaises(TypeError) as context:
+			_ = box + (10, -2)
+
+		self.assertEqual("Parameter 'other' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
 	def test_Copy(self) -> None:
 		box = BoundingBox(1, 2, 4, 6)
 
@@ -1524,9 +1546,17 @@ class Ownership(Testcase):
 	def test_Point_ReadOnly(self) -> None:
 		point = Point2D(1, 2)
 
-		with self.assertRaises(AttributeError):
+		with self.assertRaises(TypeError) as context:
 			point.Parent = LineSegment2D(Point2D(0, 0), Point2D(1, 1))
 
+		self.assertEqual("The parent of a 'pyTooling.Cartesian2D.Point2D' is read-only.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got type 'pyTooling.Cartesian2D.LineSegment2D'.",
+				"A segment or shape takes ownership of a point, when it's given the point."
+			],
+			context.exception.__notes__
+		)
 		self.assertIsNone(point.Parent)
 
 	def test_Point_Copy(self) -> None:
@@ -1647,7 +1677,7 @@ class Ownership(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), copyPoints=False, parent=1)
 
-		self.assertEqual("Parameter 'parent' is not of type 'Shape'.", str(context.exception))
+		self.assertEqual("Parameter 'parent' is not of type 'Shape' or 'Group'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 	def test_LineSegment_Start(self) -> None:
@@ -1739,6 +1769,39 @@ class Ownership(Testcase):
 		self.assertIs(end, line1.End)
 
 
+class Node(Base):
+	"""A class with a parent, using the setter of :class:`Base`."""
+
+	_PARENT_TYPE = (Point2D, )
+
+
+class ParentSetter(Testcase):
+	def test_Assign(self) -> None:
+		point = Point2D(1, 2)
+		node =  Node()
+
+		node.Parent = point
+
+		self.assertIs(point, node.Parent)
+
+	def test_AssignNone(self) -> None:
+		node = Node(parent=Point2D(1, 2))
+
+		node.Parent = None
+
+		self.assertIsNone(node.Parent)
+
+	def test_AssignInt(self) -> None:
+		node = Node()
+
+		with self.assertRaises(TypeError) as context:
+			node.Parent = 1
+
+		self.assertEqual("Parameter 'parent' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(node.Parent)
+
+
 class ParentTypes(Testcase):
 	def test_Point(self) -> None:
 		self.assertTupleEqual((Element2D, ), Point2D._PARENT_TYPE)
@@ -1747,10 +1810,19 @@ class ParentTypes(Testcase):
 		self.assertTupleEqual((Element2D, ), Origin2D._PARENT_TYPE)
 
 	def test_Segment(self) -> None:
-		self.assertTupleEqual((Shape, ), Segment2D._PARENT_TYPE)
+		self.assertTupleEqual((Shape, Group), Segment2D._PARENT_TYPE)
 
 	def test_LineSegment(self) -> None:
-		self.assertTupleEqual((Shape, ), LineSegment2D._PARENT_TYPE)
+		self.assertTupleEqual((Shape, Group), LineSegment2D._PARENT_TYPE)
+
+	def test_Shape(self) -> None:
+		self.assertTupleEqual((Group, ), Shape._PARENT_TYPE)
+
+	def test_Rectangle(self) -> None:
+		self.assertTupleEqual((Group, ), Rectangle._PARENT_TYPE)
+
+	def test_Group(self) -> None:
+		self.assertTupleEqual((Group, ), Group._PARENT_TYPE)
 
 
 class Frames(Testcase):
@@ -1768,3 +1840,109 @@ class Frames(Testcase):
 		line2 = LineSegment2D(Point2D(5, 5), Point2D(5, 7))
 
 		self.assertTrue(isclose(pi / 2, line1.AngleTo(line2)))
+
+
+class Aligning(Testcase):
+	def test_Left(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(10, 10), 1)
+
+		circle.AlignTo(rectangle, Alignment.MinX)
+
+		self.assertEqual(BoundingBox(0, 9, 2, 11), circle.BoundingBox)
+
+	def test_CenterX(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(10, 10), 1)
+
+		circle.AlignTo(rectangle, Alignment.CenterX)
+
+		self.assertEqual(BoundingBox(1, 9, 3, 11), circle.BoundingBox)
+
+	def test_Right(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(10, 10), 1)
+
+		circle.AlignTo(rectangle, Alignment.MaxX)
+
+		self.assertEqual(BoundingBox(2, 9, 4, 11), circle.BoundingBox)
+
+	def test_MinY(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(10, 10), 1)
+
+		circle.AlignTo(rectangle, Alignment.MinY)
+
+		self.assertEqual(BoundingBox(9, 0, 11, 2), circle.BoundingBox)
+
+	def test_CenterY(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 4), Point2D(0, 4))
+		circle =    Circle(Point2D(10, 10), 1)
+
+		circle.AlignTo(rectangle, Alignment.CenterY)
+
+		self.assertEqual(BoundingBox(9, 1, 11, 3), circle.BoundingBox)
+
+	def test_MaxY(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(10, 10), 1)
+
+		circle.AlignTo(rectangle, Alignment.MaxY)
+
+		self.assertEqual(BoundingBox(9, 0, 11, 2), circle.BoundingBox)
+
+	def test_OtherGroup(self) -> None:
+		"""Elements of different groups are aligned by their absolute bounding boxes."""
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(1, 1), 1)
+		_ =         Group(Offset2D(10, 0), (rectangle, ))
+		_ =         Group(Offset2D(0, 50), (circle, ))
+
+		circle.AlignTo(rectangle, Alignment.MaxX)
+
+		self.assertEqual(BoundingBox(12, 50, 14, 52), circle.AbsoluteBoundingBox)
+		self.assertEqual(BoundingBox(12, 0, 14, 2), circle.BoundingBox)
+
+	def test_Group(self) -> None:
+		"""Aligning a group changes its offset."""
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		group =     Group(Offset2D(10, 10), (Circle(Point2D(1, 1), 1), ))
+
+		group.AlignTo(rectangle, Alignment.MinX)
+
+		self.assertTupleEqual((0, 10), group.Offset.ToTuple())
+
+	def test_ReferenceNone(self) -> None:
+		circle = Circle(Point2D(10, 10), 1)
+
+		with self.assertRaises(ValueError) as context:
+			circle.AlignTo(None, Alignment.MinX)
+
+		self.assertEqual("Parameter 'reference' is None.", str(context.exception))
+
+	def test_ReferencePoint(self) -> None:
+		circle = Circle(Point2D(10, 10), 1)
+
+		with self.assertRaises(TypeError) as context:
+			circle.AlignTo(Point2D(0, 0), Alignment.MinX)
+
+		self.assertEqual("Parameter 'reference' is not of type 'Element2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
+	def test_AlignmentNone(self) -> None:
+		circle = Circle(Point2D(10, 10), 1)
+
+		with self.assertRaises(ValueError) as context:
+			circle.AlignTo(Circle(Point2D(0, 0), 1), None)
+
+		self.assertEqual("Parameter 'alignment' is None.", str(context.exception))
+
+	def test_AlignmentStr(self) -> None:
+		circle = Circle(Point2D(10, 10), 1)
+
+		with self.assertRaises(TypeError) as context:
+			circle.AlignTo(Circle(Point2D(0, 0), 1), "Left")
+
+		self.assertEqual("Parameter 'alignment' is not of type 'Alignment'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual((10, 10), circle.Center.ToTuple())

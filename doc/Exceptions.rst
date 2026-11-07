@@ -99,6 +99,13 @@ one error by its own class.
    * - :exc:`InUseError`
      - an element is removed from a data structure, but other elements still use it.
      - none yet (pyVHDLModel: ``LibraryInUseError``)
+   * - :exc:`EmptyError`
+     - an operation needs at least one element, but a data structure has none.
+     - :exc:`~pyTooling.Cartesian2D.Groups.EmptyGroupError`
+   * - :exc:`InvalidOperationError`
+     - an operation isn't valid for an object, e.g. copying an origin. It's a :exc:`RuntimeError`.
+     - raised directly by :meth:`Origin2D.Copy() <pyTooling.Cartesian2D.Origin2D.Copy>` and
+       :meth:`Origin3D.Copy() <pyTooling.Cartesian3D.Origin3D.Copy>`
 
 .. code-block:: Python
 
