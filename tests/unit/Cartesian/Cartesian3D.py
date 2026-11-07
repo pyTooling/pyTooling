@@ -36,6 +36,7 @@ from copy                  import copy, deepcopy
 from math                  import pi, sqrt
 
 from pyTooling.Cartesian3D import Origin3D, Point3D, Offset3D, Size3D, Segment3D, LineSegment3D
+from pyTooling.Exceptions  import InvalidOperationError
 from pyTooling.Testing     import Testcase
 
 
@@ -711,8 +712,11 @@ class Copy(Testcase):
 	def test_Origin(self) -> None:
 		origin = Origin3D()
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(InvalidOperationError) as context:
 			_ = origin.Copy()
+
+		self.assertEqual("An origin can't be copied.", str(context.exception))
+		self.assertIsInstance(context.exception, RuntimeError)
 
 	def test_Point_int(self) -> None:
 		point = Point3D(1, 2, 3)
@@ -801,13 +805,13 @@ class Copy(Testcase):
 	def test_Origin_copy(self) -> None:
 		origin = Origin3D()
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(InvalidOperationError):
 			_ = copy(origin)
 
 	def test_Origin_deepcopy(self) -> None:
 		origin = Origin3D()
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(InvalidOperationError):
 			_ = deepcopy(origin)
 
 	def test_Point_Independent(self) -> None:
@@ -911,7 +915,7 @@ class Copy(Testcase):
 	def test_LineSegment_Origin(self) -> None:
 		line = LineSegment3D(Origin3D(), Point3D(2, 3, 4), copyPoints=False)
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(InvalidOperationError):
 			_ = line.Copy()
 
 

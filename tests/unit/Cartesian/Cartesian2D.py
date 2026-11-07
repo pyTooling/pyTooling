@@ -39,7 +39,7 @@ from pyTooling.Cartesian2D        import Base, Element2D, Origin2D, Point2D, Off
                                          LineSegment2D, Alignment, AlreadyOwnedError, DuplicatePointError, NoAreaError
 from pyTooling.Cartesian2D.Shapes import Rectangle, Circle, Shape
 from pyTooling.Cartesian2D.Groups import Group
-from pyTooling.Exceptions         import DuplicateElementError
+from pyTooling.Exceptions         import DuplicateElementError, InvalidOperationError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
 
@@ -588,8 +588,11 @@ class Copy(Testcase):
 	def test_Origin(self) -> None:
 		origin = Origin2D()
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(InvalidOperationError) as context:
 			_ = origin.Copy()
+
+		self.assertEqual("An origin can't be copied.", str(context.exception))
+		self.assertIsInstance(context.exception, RuntimeError)
 
 	def test_Point_int(self) -> None:
 		point = Point2D(1, 2)
@@ -666,13 +669,13 @@ class Copy(Testcase):
 	def test_Origin_copy(self) -> None:
 		origin = Origin2D()
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(InvalidOperationError):
 			_ = copy(origin)
 
 	def test_Origin_deepcopy(self) -> None:
 		origin = Origin2D()
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(InvalidOperationError):
 			_ = deepcopy(origin)
 
 	def test_Point_Independent(self) -> None:
@@ -776,7 +779,7 @@ class Copy(Testcase):
 	def test_LineSegment_Origin(self) -> None:
 		line = LineSegment2D(Origin2D(), Point2D(2, 3), copyPoints=False)
 
-		with self.assertRaises(RuntimeError):
+		with self.assertRaises(InvalidOperationError):
 			_ = line.Copy()
 
 

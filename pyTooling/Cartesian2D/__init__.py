@@ -48,7 +48,7 @@ from typing                import TYPE_CHECKING, Any, ClassVar, Generic, Iterabl
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Exceptions  import ToolingException, AlreadyInHierarchyError, CycleError, DuplicateElementError, \
-                                  NotAChildError, NotInSameHierarchyError
+                                  InvalidOperationError, NotAChildError, NotInSameHierarchyError
 from pyTooling.Common      import getFullyQualifiedName
 
 if TYPE_CHECKING:
@@ -500,9 +500,9 @@ class Origin2D(Point2D[Coordinate], Generic[Coordinate]):
 		"""
 		An origin is a singular point, so it can't be copied.
 
-		:raises RuntimeError: Because an origin can't be copied.
+		:raises InvalidOperationError: Always, because an origin is a singular point.
 		"""
-		raise RuntimeError("An origin can't be copied.")
+		raise InvalidOperationError("An origin can't be copied.")
 
 	def __repr__(self) -> str:
 		"""

@@ -31,6 +31,9 @@ Version 10.x (2026)
      boxes, move between groups keeping their position, align to each other and are distributed along an axis.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
+   * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:
+     an operation isn't valid for an object. Copying an origin (:class:`~pyTooling.Cartesian2D.Origin2D`,
+     :class:`~pyTooling.Cartesian3D.Origin3D`) raises it (was a plain :exc:`RuntimeError`).
 
    .. rubric:: Changes
 

@@ -166,7 +166,8 @@ An :class:`~pyTooling.Cartesian2D.Origin2D` is a :class:`~pyTooling.Cartesian2D.
 constructor takes no coordinates. It exists so a function needing *the* origin can say so in its signature instead
 of checking two numbers.
 
-An origin can't be copied: ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` raise :exc:`RuntimeError`.
+An origin can't be copied: ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` raise
+:exc:`~pyTooling.Exceptions.InvalidOperationError` (a :exc:`RuntimeError`).
 
 .. seealso::
 
