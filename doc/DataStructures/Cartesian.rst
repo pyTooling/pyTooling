@@ -57,7 +57,8 @@ Features
 Missing Features
 ================
 
-* Rotation and scaling - an element can be shifted and mirrored vertically, but not rotated or scaled.
+* Rotation and scaling - an element can be shifted and mirrored at a vertical or horizontal axis, but not rotated or
+  scaled.
 * Shapes with curved edges other than a circle (ellipses, arcs).
 * Exact containment and intersection tests (*is this point inside that rotated rectangle?*). Only bounding boxes are
   compared.
@@ -533,8 +534,8 @@ segments and groups. An element belongs to at most one group or canvas, its
 * :attr:`~pyTooling.Cartesian2D.Element2D.BoundingBox` in its frame and
   :attr:`~pyTooling.Cartesian2D.Element2D.AbsoluteBoundingBox` relative to the origin;
 * :meth:`~pyTooling.Cartesian2D.Element2D.Move`, shifting it in its frame;
-* :meth:`~pyTooling.Cartesian2D.Element2D.MirrorVertically` and
-  :meth:`~pyTooling.Cartesian2D.Element2D.MirrorHorizontally`, mirroring it at a horizontal or vertical axis through
+* :meth:`~pyTooling.Cartesian2D.Element2D.MirrorHorizontally` and
+  :meth:`~pyTooling.Cartesian2D.Element2D.MirrorVertically`, mirroring it at a horizontal or vertical axis through
   an edge or the center of its bounding box, named by an :class:`~pyTooling.Cartesian2D.Alignment` and optionally
   shifted by an offset;
 * :meth:`~pyTooling.Cartesian2D.Element2D.MoveTo`, moving it into another group - by default keeping its absolute

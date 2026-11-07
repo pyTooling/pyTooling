@@ -1318,77 +1318,19 @@ class CanvasMembership(Testcase):
 
 
 class Mirroring(Testcase):
-	def test_MirrorVertically(self) -> None:
-		"""A group mirrors its offset at the axis, its children are mirrored at the group's origin."""
-		circle = Circle(Point2D(1, 2), 1)
-		inner =  Group(Offset2D(3, 4), (circle, ))
-		outer =  Group(Offset2D(10, 20), (inner, ))
-
-		outer.MirrorVertically(Alignment.MinY, 10)
-
-		self.assertTupleEqual((10, 50), outer.Offset.ToTuple())
-		self.assertTupleEqual((3, -4), inner.Offset.ToTuple())
-		self.assertTupleEqual((1, -2), circle.Center.ToTuple())
-		self.assertTupleEqual((14, 44), circle.Center.Absolute.ToTuple())
-		self.assertEqual(BoundingBox(13, 43, 15, 45), outer.BoundingBox)
-
-	def test_MirrorVertically_Default(self) -> None:
-		"""A group mirrored at its center keeps its bounding box."""
-		line =  LineSegment2D(Point2D(0, 0), Point2D(4, 2))
-		inner = Group(Offset2D(1, 1), (line, ))
-		outer = Group(Offset2D(10, 20), (inner, ))
-
-		outer.MirrorVertically()
-
-		self.assertTupleEqual((10, 24), outer.Offset.ToTuple())
-		self.assertTupleEqual((1, -1), inner.Offset.ToTuple())
-		self.assertTupleEqual(((0, 0), (4, -2)), line.ToTuple())
-		self.assertEqual(BoundingBox(11, 21, 15, 23), outer.BoundingBox)
-
-	def test_MirrorVertically_MaxY(self) -> None:
-		line =  LineSegment2D(Point2D(0, 0), Point2D(4, 2))
-		group = Group(Offset2D(10, 20), (line, ))
-
-		group.MirrorVertically(Alignment.MaxY)
-
-		self.assertTupleEqual((10, 24), group.Offset.ToTuple())
-		self.assertEqual(BoundingBox(10, 22, 14, 24), group.BoundingBox)
-
-	def test_MirrorVertically_AxisMaxX(self) -> None:
-		group = Group(Offset2D(1, 2))
-
-		with self.assertRaises(ValueError) as context:
-			group.MirrorVertically(Alignment.MaxX)
-
-		self.assertEqual(
-			"Parameter 'axis' is not Alignment.MinY, Alignment.CenterY or Alignment.MaxY.",
-			str(context.exception)
-		)
-		self.assertListEqual(["Got value 'Alignment.MaxX'."], context.exception.__notes__)
-		self.assertTupleEqual((1, 2), group.Offset.ToTuple())
-
-	def test_MirrorVertically_Empty(self) -> None:
-		group = Group(Offset2D(1, 2))
-
-		with self.assertRaises(EmptyGroupError) as context:
-			group.MirrorVertically()
-
-		self.assertEqual("Group has no children.", str(context.exception))
-		self.assertTupleEqual((1, 2), group.Offset.ToTuple())
-
 	def test_MirrorHorizontally(self) -> None:
 		"""A group mirrors its offset at the axis, its children are mirrored at the group's origin."""
 		circle = Circle(Point2D(1, 2), 1)
 		inner =  Group(Offset2D(3, 4), (circle, ))
 		outer =  Group(Offset2D(10, 20), (inner, ))
 
-		outer.MirrorHorizontally(Alignment.MaxX, 5)
+		outer.MirrorHorizontally(Alignment.MinY, 10)
 
-		self.assertTupleEqual((30, 20), outer.Offset.ToTuple())
-		self.assertTupleEqual((-3, 4), inner.Offset.ToTuple())
-		self.assertTupleEqual((-1, 2), circle.Center.ToTuple())
-		self.assertTupleEqual((26, 26), circle.Center.Absolute.ToTuple())
-		self.assertEqual(BoundingBox(25, 25, 27, 27), outer.BoundingBox)
+		self.assertTupleEqual((10, 50), outer.Offset.ToTuple())
+		self.assertTupleEqual((3, -4), inner.Offset.ToTuple())
+		self.assertTupleEqual((1, -2), circle.Center.ToTuple())
+		self.assertTupleEqual((14, 44), circle.Center.Absolute.ToTuple())
+		self.assertEqual(BoundingBox(13, 43, 15, 45), outer.BoundingBox)
 
 	def test_MirrorHorizontally_Default(self) -> None:
 		"""A group mirrored at its center keeps its bounding box."""
@@ -1398,26 +1340,84 @@ class Mirroring(Testcase):
 
 		outer.MirrorHorizontally()
 
+		self.assertTupleEqual((10, 24), outer.Offset.ToTuple())
+		self.assertTupleEqual((1, -1), inner.Offset.ToTuple())
+		self.assertTupleEqual(((0, 0), (4, -2)), line.ToTuple())
+		self.assertEqual(BoundingBox(11, 21, 15, 23), outer.BoundingBox)
+
+	def test_MirrorHorizontally_MaxY(self) -> None:
+		line =  LineSegment2D(Point2D(0, 0), Point2D(4, 2))
+		group = Group(Offset2D(10, 20), (line, ))
+
+		group.MirrorHorizontally(Alignment.MaxY)
+
+		self.assertTupleEqual((10, 24), group.Offset.ToTuple())
+		self.assertEqual(BoundingBox(10, 22, 14, 24), group.BoundingBox)
+
+	def test_MirrorHorizontally_AxisMaxX(self) -> None:
+		group = Group(Offset2D(1, 2))
+
+		with self.assertRaises(ValueError) as context:
+			group.MirrorHorizontally(Alignment.MaxX)
+
+		self.assertEqual(
+			"Parameter 'axis' is not Alignment.MinY, Alignment.CenterY or Alignment.MaxY.",
+			str(context.exception)
+		)
+		self.assertListEqual(["Got value 'Alignment.MaxX'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2), group.Offset.ToTuple())
+
+	def test_MirrorHorizontally_Empty(self) -> None:
+		group = Group(Offset2D(1, 2))
+
+		with self.assertRaises(EmptyGroupError) as context:
+			group.MirrorHorizontally()
+
+		self.assertEqual("Group has no children.", str(context.exception))
+		self.assertTupleEqual((1, 2), group.Offset.ToTuple())
+
+	def test_MirrorVertically(self) -> None:
+		"""A group mirrors its offset at the axis, its children are mirrored at the group's origin."""
+		circle = Circle(Point2D(1, 2), 1)
+		inner =  Group(Offset2D(3, 4), (circle, ))
+		outer =  Group(Offset2D(10, 20), (inner, ))
+
+		outer.MirrorVertically(Alignment.MaxX, 5)
+
+		self.assertTupleEqual((30, 20), outer.Offset.ToTuple())
+		self.assertTupleEqual((-3, 4), inner.Offset.ToTuple())
+		self.assertTupleEqual((-1, 2), circle.Center.ToTuple())
+		self.assertTupleEqual((26, 26), circle.Center.Absolute.ToTuple())
+		self.assertEqual(BoundingBox(25, 25, 27, 27), outer.BoundingBox)
+
+	def test_MirrorVertically_Default(self) -> None:
+		"""A group mirrored at its center keeps its bounding box."""
+		line =  LineSegment2D(Point2D(0, 0), Point2D(4, 2))
+		inner = Group(Offset2D(1, 1), (line, ))
+		outer = Group(Offset2D(10, 20), (inner, ))
+
+		outer.MirrorVertically()
+
 		self.assertTupleEqual((16, 20), outer.Offset.ToTuple())
 		self.assertTupleEqual((-1, 1), inner.Offset.ToTuple())
 		self.assertTupleEqual(((0, 0), (-4, 2)), line.ToTuple())
 		self.assertEqual(BoundingBox(11, 21, 15, 23), outer.BoundingBox)
 
-	def test_MirrorHorizontally_MinX(self) -> None:
+	def test_MirrorVertically_MinX(self) -> None:
 		line =  LineSegment2D(Point2D(0, 0), Point2D(4, 2))
 		group = Group(Offset2D(10, 20), (line, ))
 
-		group.MirrorHorizontally(Alignment.MinX)
+		group.MirrorVertically(Alignment.MinX)
 
 		self.assertTupleEqual((10, 20), group.Offset.ToTuple())
 		self.assertTupleEqual(((0, 0), (-4, 2)), line.ToTuple())
 		self.assertEqual(BoundingBox(6, 20, 10, 22), group.BoundingBox)
 
-	def test_MirrorHorizontally_OffsetNone(self) -> None:
+	def test_MirrorVertically_OffsetNone(self) -> None:
 		group = Group(Offset2D(1, 2))
 
 		with self.assertRaises(ValueError) as context:
-			group.MirrorHorizontally(Alignment.MinX, None)
+			group.MirrorVertically(Alignment.MinX, None)
 
 		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
 		self.assertTupleEqual((1, 2), group.Offset.ToTuple())

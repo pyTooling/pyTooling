@@ -609,96 +609,27 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		:param offset: The 2D-offset to move by.
 		"""
 
-	def MirrorVertically(self, axis: Alignment = Alignment.CenterY, offset: Coordinate = 0) -> None:
+	def MirrorVertically(self, axis: Alignment = Alignment.CenterX, offset: Coordinate = 0) -> None:
 		r"""
-		Mirror the element vertically at a horizontal axis through its bounding box (inplace).
-
-		The axis runs through the smallest y-coordinate (``MinY``), the center (``CenterY``) or the largest y-coordinate
-		(``MaxY``) of the element's :attr:`BoundingBox`, shifted by ``offset`` in y-direction. For an axis at ``y = a``,
-		every y-coordinate ``y`` becomes ``2a - y``; the x-coordinates stay. A group mirrors its offset, and its children
-		at the group's origin.
-
-		Mirrored at ``Alignment.MinY``, with the y-axis pointing up:
-
-		.. code-block:: text
-
-		     before            after
-
-		     +----+
-		     |  \ |
-		     |   \|
-		   --+----+-- MinY   --+----+-- MinY
-		                       |   /|
-		                       |  / |
-		                       +----+
-
-		:param axis:        Optional, the edge or center of the bounding box the axis runs through. Default:
-		                    ``Alignment.CenterY``.
-		:param offset:      Optional, the distance of the axis from that edge or center in y-direction. Default: ``0``.
-		:raises ValueError: If parameter 'axis' is None.
-		:raises TypeError:  If parameter 'axis' is not of type :class:`Alignment`.
-		:raises ValueError: If parameter 'axis' is not ``MinY``, ``CenterY`` or ``MaxY``.
-		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`float` or :class:`int`.
-		"""
-		if axis is None:
-			raise ValueError("Parameter 'axis' is None.")
-		elif not isinstance(axis, Alignment):
-			ex = TypeError("Parameter 'axis' is not of type 'Alignment'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(axis)}'.")
-			raise ex
-		elif axis not in (Alignment.MinY, Alignment.CenterY, Alignment.MaxY):
-			ex = ValueError("Parameter 'axis' is not Alignment.MinY, Alignment.CenterY or Alignment.MaxY.")
-			ex.add_note(f"Got value '{axis}'.")
-			raise ex
-
-		if offset is None:
-			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, (int, float)):
-			ex = TypeError("Parameter 'offset' is not of type 'float' or 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
-			raise ex
-
-		box = self.BoundingBox
-		if axis is Alignment.MinY:
-			twiceAxis = 2 * box._minY
-		elif axis is Alignment.CenterY:
-			twiceAxis = box._minY + box._maxY
-		else:
-			twiceAxis = 2 * box._maxY
-
-		self._MirrorVertically(twiceAxis + 2 * offset)
-
-	@abstractmethod
-	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
-		"""
-		Mirror the element at a horizontal axis, so every y-coordinate ``y`` becomes ``twiceAxis - y`` (inplace).
-
-		:param twiceAxis: Twice the y-coordinate of the axis.
-		"""
-
-	def MirrorHorizontally(self, axis: Alignment = Alignment.CenterX, offset: Coordinate = 0) -> None:
-		r"""
-		Mirror the element horizontally at a vertical axis through its bounding box (inplace).
+		Mirror the element at a vertical axis through its bounding box (inplace).
 
 		The axis runs through the smallest x-coordinate (``MinX``), the center (``CenterX``) or the largest x-coordinate
 		(``MaxX``) of the element's :attr:`BoundingBox`, shifted by ``offset`` in x-direction. For an axis at ``x = a``,
 		every x-coordinate ``x`` becomes ``2a - x``; the y-coordinates stay. A group mirrors its offset, and its children
 		at the group's origin.
 
-		Mirrored at ``Alignment.MaxX``:
+		Mirrored at ``Alignment.MaxX``: the element on the left of the axis is mirrored to the right of it.
 
 		.. code-block:: text
 
-		   before        after
-
-		        MaxX     MaxX
-		        |        |
-		   +----+        +----+
-		   | \  |        |  / |
-		   |  \ |        | /  |
-		   +----+        +----+
-		        |        |
+		             axis at MaxX
+		             |
+		        +----+----+
+		        | \  |  / |
+		        |  \ | /  |
+		        +----+----+
+		             |
+		        before  after
 
 		:param axis:        Optional, the edge or center of the bounding box the axis runs through. Default:
 		                    ``Alignment.CenterX``.
@@ -735,14 +666,80 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		else:
 			twiceAxis = 2 * box._maxX
 
+		self._MirrorVertically(twiceAxis + 2 * offset)
+
+	@abstractmethod
+	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the element at a vertical axis, so every x-coordinate ``x`` becomes ``twiceAxis - x`` (inplace).
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+
+	def MirrorHorizontally(self, axis: Alignment = Alignment.CenterY, offset: Coordinate = 0) -> None:
+		r"""
+		Mirror the element at a horizontal axis through its bounding box (inplace).
+
+		The axis runs through the smallest y-coordinate (``MinY``), the center (``CenterY``) or the largest y-coordinate
+		(``MaxY``) of the element's :attr:`BoundingBox`, shifted by ``offset`` in y-direction. For an axis at ``y = a``,
+		every y-coordinate ``y`` becomes ``2a - y``; the x-coordinates stay. A group mirrors its offset, and its children
+		at the group's origin.
+
+		Mirrored at ``Alignment.MinY``, with the y-axis pointing up: the element above the axis is mirrored below it.
+
+		.. code-block:: text
+
+		        +----+
+		        |  \ |    before
+		        |   \|
+		     ---+----+--- axis at MinY
+		        |   /|
+		        |  / |    after
+		        +----+
+
+		:param axis:        Optional, the edge or center of the bounding box the axis runs through. Default:
+		                    ``Alignment.CenterY``.
+		:param offset:      Optional, the distance of the axis from that edge or center in y-direction. Default: ``0``.
+		:raises ValueError: If parameter 'axis' is None.
+		:raises TypeError:  If parameter 'axis' is not of type :class:`Alignment`.
+		:raises ValueError: If parameter 'axis' is not ``MinY``, ``CenterY`` or ``MaxY``.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`float` or :class:`int`.
+		"""
+		if axis is None:
+			raise ValueError("Parameter 'axis' is None.")
+		elif not isinstance(axis, Alignment):
+			ex = TypeError("Parameter 'axis' is not of type 'Alignment'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(axis)}'.")
+			raise ex
+		elif axis not in (Alignment.MinY, Alignment.CenterY, Alignment.MaxY):
+			ex = ValueError("Parameter 'axis' is not Alignment.MinY, Alignment.CenterY or Alignment.MaxY.")
+			ex.add_note(f"Got value '{axis}'.")
+			raise ex
+
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, (int, float)):
+			ex = TypeError("Parameter 'offset' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		box = self.BoundingBox
+		if axis is Alignment.MinY:
+			twiceAxis = 2 * box._minY
+		elif axis is Alignment.CenterY:
+			twiceAxis = box._minY + box._maxY
+		else:
+			twiceAxis = 2 * box._maxY
+
 		self._MirrorHorizontally(twiceAxis + 2 * offset)
 
 	@abstractmethod
 	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
 		"""
-		Mirror the element at a vertical axis, so every x-coordinate ``x`` becomes ``twiceAxis - x`` (inplace).
+		Mirror the element at a horizontal axis, so every y-coordinate ``y`` becomes ``twiceAxis - y`` (inplace).
 
-		:param twiceAxis: Twice the x-coordinate of the axis.
+		:param twiceAxis: Twice the y-coordinate of the axis.
 		"""
 
 	def MoveTo(self, parent: Nullable[Union[Group, Canvas]], keepPosition: bool = True) -> None:
@@ -1887,7 +1884,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		self._start += offset
 		self._end +=   offset
 
-	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
+	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the segment at a horizontal axis by mirroring its start and end point (inplace).
 
@@ -1898,7 +1895,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		self._start._y = twiceAxis - self._start._y
 		self._end._y =   twiceAxis - self._end._y
 
-	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
+	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the segment at a vertical axis by mirroring its start and end point (inplace).
 
