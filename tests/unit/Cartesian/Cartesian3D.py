@@ -36,9 +36,11 @@ from copy                         import copy, deepcopy
 from math                         import isclose, pi, sqrt
 
 from pyTooling.Cartesian3D        import Base3D, Element3D, Origin3D, Point3D, Offset3D, Size3D, BoundingBox3D, \
-                                         Segment3D, LineSegment3D, Alignment3D, Axis3D, AxisAlignedPlane3D
+                                         Segment3D, LineSegment3D, Alignment3D, Plane3D, YZPlane3D, XZPlane3D, \
+                                         XYPlane3D, Ray3D
 from pyTooling.Cartesian3D.Groups import Group3D
-from pyTooling.Cartesian2D        import Alignment2D, VerticalLine2D, AlreadyOwnedError, DuplicatePointError
+from pyTooling.Cartesian2D        import Point2D, Offset2D, Alignment2D, VerticalLine2D, AlreadyOwnedError, \
+                                         DuplicatePointError
 from pyTooling.Exceptions         import AlreadyInHierarchyError, DuplicateElementError, InvalidOperationError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
@@ -2507,164 +2509,152 @@ class Mirroring(Testcase):
 		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
 
 
-class AxisAlignedPlane(Testcase):
-	def test_X(self) -> None:
-		plane = AxisAlignedPlane3D(Axis3D.X, 5)
+class Planes(Testcase):
+	def test_Plane3D(self) -> None:
+		"""A plane is parallel to a coordinate plane; the base class can't be instantiated."""
+		with self.assertRaises(AbstractClassError) as context:
+			Plane3D()
 
-		self.assertIs(Axis3D.X, plane.Axis)
-		self.assertEqual(5, plane.Position)
+		self.assertEqual(
+			"Class 'Plane3D' is abstract. The following methods: '_MirrorElement' need to be overridden in a derived class.",
+			str(context.exception)
+		)
 
-	def test_Z(self) -> None:
-		plane = AxisAlignedPlane3D(Axis3D.Z, -2.5)
+	def test_Derived(self) -> None:
+		self.assertIsInstance(YZPlane3D(5), Plane3D)
+		self.assertIsInstance(XZPlane3D(5), Plane3D)
+		self.assertIsInstance(XYPlane3D(5), Plane3D)
 
-		self.assertIs(Axis3D.Z, plane.Axis)
-		self.assertEqual(-2.5, plane.Position)
 
-	def test_AxisNone(self) -> None:
+class YZPlanes(Testcase):
+	def test_YZPlane3D(self) -> None:
+		plane = YZPlane3D(5)
+
+		self.assertEqual(5, plane.X)
+
+	def test_YZPlane3D_Float(self) -> None:
+		plane = YZPlane3D(-2.5)
+
+		self.assertEqual(-2.5, plane.X)
+
+	def test_XNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			AxisAlignedPlane3D(None, 5)
+			YZPlane3D(None)
 
-		self.assertEqual("Parameter 'axis' is None.", str(context.exception))
+		self.assertEqual("Parameter 'x' is None.", str(context.exception))
 
-	def test_AxisAlignment(self) -> None:
-		"""An alignment names a face of a bounding box, not an axis."""
+	def test_XStr(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			AxisAlignedPlane3D(Alignment3D.MinZ, 5)
+			YZPlane3D("5")
 
-		self.assertEqual("Parameter 'axis' is not of type 'Axis3D'.", str(context.exception))
-		self.assertListEqual(["Got type 'pyTooling.Cartesian3D.Alignment3D'."], context.exception.__notes__)
-
-	def test_PositionNone(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			AxisAlignedPlane3D(Axis3D.X, None)
-
-		self.assertEqual("Parameter 'position' is None.", str(context.exception))
-
-	def test_PositionStr(self) -> None:
-		with self.assertRaises(TypeError) as context:
-			AxisAlignedPlane3D(Axis3D.X, "5")
-
-		self.assertEqual("Parameter 'position' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertEqual("Parameter 'x' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
-	def test_Immutable(self) -> None:
-		plane = AxisAlignedPlane3D(Axis3D.X, 5)
-
-		with self.assertRaises(AttributeError):
-			plane.Axis = Axis3D.Y
-
-		with self.assertRaises(AttributeError):
-			plane.Position = 6
-
-		self.assertEqual(AxisAlignedPlane3D(Axis3D.X, 5), plane)
-
 	def test_Equal(self) -> None:
-		self.assertTrue(AxisAlignedPlane3D(Axis3D.Z, 5) == AxisAlignedPlane3D(Axis3D.Z, 5.0))
-		self.assertFalse(AxisAlignedPlane3D(Axis3D.Z, 5) == AxisAlignedPlane3D(Axis3D.Y, 5))
-		self.assertFalse(AxisAlignedPlane3D(Axis3D.Z, 5) == AxisAlignedPlane3D(Axis3D.Z, 6))
+		self.assertTrue(YZPlane3D(5) == YZPlane3D(5.0))
+		self.assertFalse(YZPlane3D(5) == YZPlane3D(6))
+		self.assertFalse(YZPlane3D(5) == XZPlane3D(5))
+		self.assertFalse(YZPlane3D(5) == XYPlane3D(5))
 
 	def test_Unequal(self) -> None:
-		self.assertTrue(AxisAlignedPlane3D(Axis3D.Z, 5) != AxisAlignedPlane3D(Axis3D.X, 5))
-		self.assertTrue(AxisAlignedPlane3D(Axis3D.Z, 5) != AxisAlignedPlane3D(Axis3D.Z, 6))
-		self.assertFalse(AxisAlignedPlane3D(Axis3D.Z, 5) != AxisAlignedPlane3D(Axis3D.Z, 5))
-
-	def test_EqualLine(self) -> None:
-		"""A 2D line isn't a 3D plane."""
-		with self.assertRaises(TypeError) as context:
-			_ = AxisAlignedPlane3D(Axis3D.X, 5) == VerticalLine2D(5)
-
-		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
-		self.assertListEqual(
-			["Got type 'pyTooling.Cartesian2D.VerticalLine2D'.", "Supported types for second operand: AxisAlignedPlane3D"],
-			context.exception.__notes__
-		)
-
-	def test_UnequalNone(self) -> None:
-		with self.assertRaises(TypeError) as context:
-			_ = AxisAlignedPlane3D(Axis3D.X, 5) != None
-
-		self.assertEqual("Second operand is not supported by != operator.", str(context.exception))
-		self.assertListEqual(
-			["Got type 'NoneType'.", "Supported types for second operand: AxisAlignedPlane3D"],
-			context.exception.__notes__
-		)
-
-	def test_Hash(self) -> None:
-		planes = {AxisAlignedPlane3D(Axis3D.Z, 5), AxisAlignedPlane3D(Axis3D.Z, 5.0), AxisAlignedPlane3D(Axis3D.Y, 5)}
-
-		self.assertEqual(2, len(planes))
+		self.assertTrue(YZPlane3D(5) != YZPlane3D(6))
+		self.assertTrue(YZPlane3D(5) != XZPlane3D(5))
+		self.assertTrue(YZPlane3D(5) != XYPlane3D(5))
+		self.assertFalse(YZPlane3D(5) != YZPlane3D(5))
 
 	def test_repr(self) -> None:
-		self.assertEqual("AxisAlignedPlane3D(Axis3D.Z, 5)", repr(AxisAlignedPlane3D(Axis3D.Z, 5)))
+		self.assertEqual("YZPlane3D(5)", repr(YZPlane3D(5)))
 
 	def test_str(self) -> None:
-		self.assertEqual("z = 5", str(AxisAlignedPlane3D(Axis3D.Z, 5)))
+		self.assertEqual("x = -2.5", str(YZPlane3D(-2.5)))
 
 	def test_FromElement_MinX(self) -> None:
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
-		self.assertEqual(AxisAlignedPlane3D(Axis3D.X, 1), AxisAlignedPlane3D.FromElement(line, Alignment3D.MinX))
+		self.assertEqual(YZPlane3D(1), YZPlane3D.FromElement(line, Alignment3D.MinX))
 
 	def test_FromElement_CenterX(self) -> None:
+		"""The coordinate of a center is a float, as the center of a bounding box."""
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
-		self.assertEqual(AxisAlignedPlane3D(Axis3D.X, 2.5), AxisAlignedPlane3D.FromElement(line, Alignment3D.CenterX))
+		center = YZPlane3D.FromElement(line, Alignment3D.CenterX)
+
+		self.assertEqual(YZPlane3D(2.5), center)
+		self.assertIs(float, type(center.X))
 
 	def test_FromElement_MaxX(self) -> None:
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
-		self.assertEqual(AxisAlignedPlane3D(Axis3D.X, 4), AxisAlignedPlane3D.FromElement(line, Alignment3D.MaxX))
-
-	def test_FromElement_MinY(self) -> None:
-		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
-
-		self.assertEqual(AxisAlignedPlane3D(Axis3D.Y, 2), AxisAlignedPlane3D.FromElement(line, Alignment3D.MinY))
-
-	def test_FromElement_CenterY(self) -> None:
-		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
-
-		self.assertEqual(AxisAlignedPlane3D(Axis3D.Y, 4), AxisAlignedPlane3D.FromElement(line, Alignment3D.CenterY))
-
-	def test_FromElement_MaxY(self) -> None:
-		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
-
-		self.assertEqual(AxisAlignedPlane3D(Axis3D.Y, 6), AxisAlignedPlane3D.FromElement(line, Alignment3D.MaxY))
-
-	def test_FromElement_MinZ(self) -> None:
-		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
-
-		self.assertEqual(AxisAlignedPlane3D(Axis3D.Z, 3), AxisAlignedPlane3D.FromElement(line, Alignment3D.MinZ))
-
-	def test_FromElement_CenterZ(self) -> None:
-		"""The position of a center is a float, as the center of a bounding box."""
-		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 9))
-
-		center = AxisAlignedPlane3D.FromElement(line, Alignment3D.CenterZ)
-
-		self.assertEqual(AxisAlignedPlane3D(Axis3D.Z, 6), center)
-		self.assertIs(float, type(center.Position))
-
-	def test_FromElement_MaxZ(self) -> None:
-		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
-
-		self.assertEqual(AxisAlignedPlane3D(Axis3D.Z, 8), AxisAlignedPlane3D.FromElement(line, Alignment3D.MaxZ))
+		self.assertEqual(YZPlane3D(4), YZPlane3D.FromElement(line, Alignment3D.MaxX))
 
 	def test_FromElement_Group(self) -> None:
 		"""The plane runs through the absolute bounding box of an element inside a group."""
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 		_ =    Group3D(Offset3D(10, 20, 30), (line, ))
 
-		self.assertEqual(AxisAlignedPlane3D(Axis3D.Z, 38), AxisAlignedPlane3D.FromElement(line, Alignment3D.MaxZ))
+		self.assertEqual(YZPlane3D(14), YZPlane3D.FromElement(line, Alignment3D.MaxX))
+
+	def test_FromElement_AlignmentMinY(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(ValueError) as context:
+			YZPlane3D.FromElement(line, Alignment3D.MinY)
+
+		self.assertEqual(
+			"Parameter 'alignment' is not Alignment3D.MinX, Alignment3D.CenterX or Alignment3D.MaxX.",
+			str(context.exception)
+		)
+		self.assertListEqual(
+			[
+				"Got value 'Alignment3D.MinY'.",
+				"Use 'XZPlane3D.FromElement' or 'XYPlane3D.FromElement' for the other alignments."
+			],
+			context.exception.__notes__
+		)
+
+	def test_Immutable(self) -> None:
+		plane = YZPlane3D(5)
+
+		with self.assertRaises(AttributeError):
+			plane.X = 6
+
+		self.assertEqual(YZPlane3D(5), plane)
+
+	def test_EqualLine(self) -> None:
+		"""A 2D line isn't a 3D plane."""
+		with self.assertRaises(TypeError) as context:
+			_ = YZPlane3D(5) == VerticalLine2D(5)
+
+		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'pyTooling.Cartesian2D.VerticalLine2D'.", "Supported types for second operand: Plane3D"],
+			context.exception.__notes__
+		)
+
+	def test_UnequalNone(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = YZPlane3D(5) != None
+
+		self.assertEqual("Second operand is not supported by != operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'NoneType'.", "Supported types for second operand: Plane3D"],
+			context.exception.__notes__
+		)
+
+	def test_Hash(self) -> None:
+		planes = {YZPlane3D(5), YZPlane3D(5.0), YZPlane3D(6)}
+
+		self.assertEqual(2, len(planes))
 
 	def test_FromElement_ElementNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			AxisAlignedPlane3D.FromElement(None, Alignment3D.MinX)
+			YZPlane3D.FromElement(None, Alignment3D.MinX)
 
 		self.assertEqual("Parameter 'element' is None.", str(context.exception))
 
 	def test_FromElement_ElementPoint(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			AxisAlignedPlane3D.FromElement(Point3D(1, 2, 3), Alignment3D.MinX)
+			YZPlane3D.FromElement(Point3D(1, 2, 3), Alignment3D.MinX)
 
 		self.assertEqual("Parameter 'element' is not of type 'Element3D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian3D.Point3D'."], context.exception.__notes__)
@@ -2673,46 +2663,398 @@ class AxisAlignedPlane(Testcase):
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
 		with self.assertRaises(ValueError) as context:
-			AxisAlignedPlane3D.FromElement(line, None)
+			YZPlane3D.FromElement(line, None)
 
 		self.assertEqual("Parameter 'alignment' is None.", str(context.exception))
 
 	def test_FromElement_Alignment2D(self) -> None:
+		"""A 2D alignment isn't a 3D alignment."""
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
 		with self.assertRaises(TypeError) as context:
-			AxisAlignedPlane3D.FromElement(line, Alignment2D.MinX)
+			YZPlane3D.FromElement(line, Alignment2D.MinX)
 
 		self.assertEqual("Parameter 'alignment' is not of type 'Alignment3D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Alignment2D'."], context.exception.__notes__)
+
+
+class XZPlanes(Testcase):
+	def test_XZPlane3D(self) -> None:
+		plane = XZPlane3D(5)
+
+		self.assertEqual(5, plane.Y)
+
+	def test_XZPlane3D_Float(self) -> None:
+		plane = XZPlane3D(-2.5)
+
+		self.assertEqual(-2.5, plane.Y)
+
+	def test_YNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			XZPlane3D(None)
+
+		self.assertEqual("Parameter 'y' is None.", str(context.exception))
+
+	def test_YStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			XZPlane3D("5")
+
+		self.assertEqual("Parameter 'y' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Equal(self) -> None:
+		self.assertTrue(XZPlane3D(5) == XZPlane3D(5.0))
+		self.assertFalse(XZPlane3D(5) == XZPlane3D(6))
+		self.assertFalse(XZPlane3D(5) == YZPlane3D(5))
+		self.assertFalse(XZPlane3D(5) == XYPlane3D(5))
+
+	def test_Unequal(self) -> None:
+		self.assertTrue(XZPlane3D(5) != XZPlane3D(6))
+		self.assertTrue(XZPlane3D(5) != YZPlane3D(5))
+		self.assertTrue(XZPlane3D(5) != XYPlane3D(5))
+		self.assertFalse(XZPlane3D(5) != XZPlane3D(5))
+
+	def test_repr(self) -> None:
+		self.assertEqual("XZPlane3D(5)", repr(XZPlane3D(5)))
+
+	def test_str(self) -> None:
+		self.assertEqual("y = -2.5", str(XZPlane3D(-2.5)))
+
+	def test_FromElement_MinY(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		self.assertEqual(XZPlane3D(2), XZPlane3D.FromElement(line, Alignment3D.MinY))
+
+	def test_FromElement_CenterY(self) -> None:
+		"""The coordinate of a center is a float, as the center of a bounding box."""
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		center = XZPlane3D.FromElement(line, Alignment3D.CenterY)
+
+		self.assertEqual(XZPlane3D(4), center)
+		self.assertIs(float, type(center.Y))
+
+	def test_FromElement_MaxY(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		self.assertEqual(XZPlane3D(6), XZPlane3D.FromElement(line, Alignment3D.MaxY))
+
+	def test_FromElement_Group(self) -> None:
+		"""The plane runs through the absolute bounding box of an element inside a group."""
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		_ =    Group3D(Offset3D(10, 20, 30), (line, ))
+
+		self.assertEqual(XZPlane3D(26), XZPlane3D.FromElement(line, Alignment3D.MaxY))
+
+	def test_FromElement_AlignmentMinZ(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(ValueError) as context:
+			XZPlane3D.FromElement(line, Alignment3D.MinZ)
+
+		self.assertEqual(
+			"Parameter 'alignment' is not Alignment3D.MinY, Alignment3D.CenterY or Alignment3D.MaxY.",
+			str(context.exception)
+		)
+		self.assertListEqual(
+			[
+				"Got value 'Alignment3D.MinZ'.",
+				"Use 'YZPlane3D.FromElement' or 'XYPlane3D.FromElement' for the other alignments."
+			],
+			context.exception.__notes__
+		)
+
+
+class XYPlanes(Testcase):
+	def test_XYPlane3D(self) -> None:
+		plane = XYPlane3D(5)
+
+		self.assertEqual(5, plane.Z)
+
+	def test_XYPlane3D_Float(self) -> None:
+		plane = XYPlane3D(-2.5)
+
+		self.assertEqual(-2.5, plane.Z)
+
+	def test_ZNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			XYPlane3D(None)
+
+		self.assertEqual("Parameter 'z' is None.", str(context.exception))
+
+	def test_ZStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			XYPlane3D("5")
+
+		self.assertEqual("Parameter 'z' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Equal(self) -> None:
+		self.assertTrue(XYPlane3D(5) == XYPlane3D(5.0))
+		self.assertFalse(XYPlane3D(5) == XYPlane3D(6))
+		self.assertFalse(XYPlane3D(5) == YZPlane3D(5))
+		self.assertFalse(XYPlane3D(5) == XZPlane3D(5))
+
+	def test_Unequal(self) -> None:
+		self.assertTrue(XYPlane3D(5) != XYPlane3D(6))
+		self.assertTrue(XYPlane3D(5) != YZPlane3D(5))
+		self.assertTrue(XYPlane3D(5) != XZPlane3D(5))
+		self.assertFalse(XYPlane3D(5) != XYPlane3D(5))
+
+	def test_repr(self) -> None:
+		self.assertEqual("XYPlane3D(5)", repr(XYPlane3D(5)))
+
+	def test_str(self) -> None:
+		self.assertEqual("z = -2.5", str(XYPlane3D(-2.5)))
+
+	def test_FromElement_MinZ(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		self.assertEqual(XYPlane3D(3), XYPlane3D.FromElement(line, Alignment3D.MinZ))
+
+	def test_FromElement_CenterZ(self) -> None:
+		"""The coordinate of a center is a float, as the center of a bounding box."""
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		center = XYPlane3D.FromElement(line, Alignment3D.CenterZ)
+
+		self.assertEqual(XYPlane3D(5.5), center)
+		self.assertIs(float, type(center.Z))
+
+	def test_FromElement_MaxZ(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		self.assertEqual(XYPlane3D(8), XYPlane3D.FromElement(line, Alignment3D.MaxZ))
+
+	def test_FromElement_Group(self) -> None:
+		"""The plane runs through the absolute bounding box of an element inside a group."""
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		_ =    Group3D(Offset3D(10, 20, 30), (line, ))
+
+		self.assertEqual(XYPlane3D(38), XYPlane3D.FromElement(line, Alignment3D.MaxZ))
+
+	def test_FromElement_AlignmentMinX(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(ValueError) as context:
+			XYPlane3D.FromElement(line, Alignment3D.MinX)
+
+		self.assertEqual(
+			"Parameter 'alignment' is not Alignment3D.MinZ, Alignment3D.CenterZ or Alignment3D.MaxZ.",
+			str(context.exception)
+		)
+		self.assertListEqual(
+			[
+				"Got value 'Alignment3D.MinX'.",
+				"Use 'YZPlane3D.FromElement' or 'XZPlane3D.FromElement' for the other alignments."
+			],
+			context.exception.__notes__
+		)
+
+
+class Rays(Testcase):
+	def test_Ray3D(self) -> None:
+		ray = Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))
+
+		self.assertTupleEqual((1, 2, 3), ray.Start.ToTuple())
+		self.assertTupleEqual((0, 3, 4), ray.Direction.ToTuple())
+
+	def test_Copies(self) -> None:
+		"""The ray copies the given point and offset; its properties return new copies."""
+		start =     Point3D(1, 2, 3)
+		direction = Offset3D(0, 3, 4)
+		ray =       Ray3D(start, direction)
+
+		start += Offset3D(0, 3, 4)
+		direction.XOffset = 7
+
+		self.assertTupleEqual((1, 2, 3), ray.Start.ToTuple())
+		self.assertTupleEqual((0, 3, 4), ray.Direction.ToTuple())
+		self.assertIsNone(ray.Start.Parent)
+		self.assertIsNot(ray.Start, ray.Start)
+
+	def test_StartInGroup(self) -> None:
+		"""A start point inside a group is taken in absolute coordinates."""
+		group = Group3D(Offset3D(10, 20, 30))
+		start = Point3D(1, 2, 3, parent=group)
+
+		ray = Ray3D(start, Offset3D(0, 3, 4))
+
+		self.assertTupleEqual((11, 22, 33), ray.Start.ToTuple())
+		self.assertIs(group, start.Parent)
+
+	def test_StartNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Ray3D(None, Offset3D(0, 3, 4))
+
+		self.assertEqual("Parameter 'start' is None.", str(context.exception))
+
+	def test_StartOffset(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Ray3D(Offset3D(1, 2, 3), Offset3D(0, 3, 4))
+
+		self.assertEqual("Parameter 'start' is not of type 'Point3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian3D.Offset3D'."], context.exception.__notes__)
+
+	def test_Start2D(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Ray3D(Point2D(1, 2), Offset3D(0, 3, 4))
+
+		self.assertEqual("Parameter 'start' is not of type 'Point3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
+	def test_DirectionNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Ray3D(Point3D(1, 2, 3), None)
+
+		self.assertEqual("Parameter 'direction' is None.", str(context.exception))
+
+	def test_Direction2D(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Ray3D(Point3D(1, 2, 3), Offset2D(3, 4))
+
+		self.assertEqual("Parameter 'direction' is not of type 'Offset3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Offset2D'."], context.exception.__notes__)
+
+	def test_DirectionZero(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Ray3D(Point3D(1, 2, 3), Offset3D(0, 0, 0))
+
+		self.assertEqual("Parameter 'direction' is a zero offset.", str(context.exception))
+		self.assertListEqual(["Got offset (0, 0, 0).", "A ray needs a direction."], context.exception.__notes__)
+
+	def test_Immutable(self) -> None:
+		ray = Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))
+
+		with self.assertRaises(AttributeError):
+			ray.Start = Point3D(0, 0, 0)
+
+		with self.assertRaises(AttributeError):
+			ray.Direction = Offset3D(0, 6, 8)
+
+		self.assertEqual(Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)), ray)
+
+	def test_PointAt(self) -> None:
+		ray = Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))
+
+		point = ray.PointAt(5)
+
+		self.assertTupleEqual((1.0, 5.0, 7.0), point.ToTuple())
+		self.assertIsNone(point.Parent)
+
+	def test_PointAt_Zero(self) -> None:
+		ray = Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))
+
+		self.assertTupleEqual((1, 2, 3), ray.PointAt(0).ToTuple())
+
+	def test_PointAt_DirectionLength(self) -> None:
+		"""The distance doesn't depend on the length of the direction."""
+		ray1 = Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))
+		ray2 = Ray3D(Point3D(1, 2, 3), Offset3D(0, 6, 8))
+
+		self.assertTupleEqual(ray1.PointAt(10).ToTuple(), ray2.PointAt(10).ToTuple())
+
+	def test_PointAt_DistanceNone(self) -> None:
+		ray = Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))
+
+		with self.assertRaises(ValueError) as context:
+			ray.PointAt(None)
+
+		self.assertEqual("Parameter 'distance' is None.", str(context.exception))
+
+	def test_PointAt_DistanceStr(self) -> None:
+		ray = Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))
+
+		with self.assertRaises(TypeError) as context:
+			ray.PointAt("5")
+
+		self.assertEqual("Parameter 'distance' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_PointAt_DistanceNegative(self) -> None:
+		ray = Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))
+
+		with self.assertRaises(ValueError) as context:
+			ray.PointAt(-1)
+
+		self.assertEqual("Parameter 'distance' is negative.", str(context.exception))
+		self.assertListEqual(
+			["Got value '-1'.", "A point before the start point isn't on the ray."],
+			context.exception.__notes__
+		)
+
+	def test_Equal(self) -> None:
+		self.assertTrue(Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)) == Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)))
+		self.assertFalse(Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)) == Ray3D(Point3D(1, 2, 3), Offset3D(0, 6, 8)))
+		self.assertFalse(Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)) == Ray3D(Point3D(0, 3, 4), Offset3D(0, 3, 4)))
+
+	def test_Unequal(self) -> None:
+		self.assertTrue(Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)) != Ray3D(Point3D(1, 2, 3), Offset3D(0, 6, 8)))
+		self.assertTrue(Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)) != Ray3D(Point3D(0, 3, 4), Offset3D(0, 3, 4)))
+		self.assertFalse(Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)) != Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)))
+
+	def test_EqualTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)) == ((1, 2, 3), (0, 3, 4))
+
+		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'tuple'.", "Supported types for second operand: Ray3D"],
+			context.exception.__notes__
+		)
+
+	def test_UnequalNone(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)) != None
+
+		self.assertEqual("Second operand is not supported by != operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'NoneType'.", "Supported types for second operand: Ray3D"],
+			context.exception.__notes__
+		)
+
+	def test_Hash(self) -> None:
+		rays = {
+			Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)),
+			Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)),
+			Ray3D(Point3D(1, 2, 3), Offset3D(0, 6, 8))
+		}
+
+		self.assertEqual(2, len(rays))
+
+	def test_repr(self) -> None:
+		self.assertEqual("Ray3D((1, 2, 3), (0, 3, 4))", repr(Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))))
+
+	def test_str(self) -> None:
+		self.assertEqual("(1, 2, 3) + t * (0, 3, 4), t >= 0", str(Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))))
 
 
 class MirroringAtPlane(Testcase):
 	def test_X(self) -> None:
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
-		line.MirrorAt(AxisAlignedPlane3D(Axis3D.X, 10))
+		line.MirrorAt(YZPlane3D(10))
 
 		self.assertTupleEqual(((19, 2, 3), (16, 6, 8)), line.ToTuple())
 
 	def test_Y(self) -> None:
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
-		line.MirrorAt(AxisAlignedPlane3D(Axis3D.Y, 0))
+		line.MirrorAt(XZPlane3D(0))
 
 		self.assertTupleEqual(((1, -2, 3), (4, -6, 8)), line.ToTuple())
 
 	def test_Z(self) -> None:
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
-		line.MirrorAt(AxisAlignedPlane3D(Axis3D.Z, 5))
+		line.MirrorAt(XYPlane3D(5))
 
 		self.assertTupleEqual(((1, 2, 7), (4, 6, 2)), line.ToTuple())
 
 	def test_Float(self) -> None:
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
-		line.MirrorAt(AxisAlignedPlane3D(Axis3D.Z, 0.5))
+		line.MirrorAt(XYPlane3D(0.5))
 
 		self.assertTupleEqual(((1, 2, -2.0), (4, 6, -7.0)), line.ToTuple())
 
@@ -2720,7 +3062,7 @@ class MirroringAtPlane(Testcase):
 		"""A plane at an integer coordinate keeps integer coordinates."""
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
-		line.MirrorAt(AxisAlignedPlane3D(Axis3D.X, 3))
+		line.MirrorAt(YZPlane3D(3))
 
 		self.assertTupleEqual(((5, 2, 3), (2, 6, 8)), line.ToTuple())
 		self.assertIs(int, type(line.Start.X))
@@ -2728,7 +3070,7 @@ class MirroringAtPlane(Testcase):
 
 	def test_Twice(self) -> None:
 		line =   LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
-		mirror = AxisAlignedPlane3D(Axis3D.Y, -3)
+		mirror = XZPlane3D(-3)
 
 		line.MirrorAt(mirror)
 		line.MirrorAt(mirror)
@@ -2740,7 +3082,7 @@ class MirroringAtPlane(Testcase):
 		line1 = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 		line2 = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
-		line1.MirrorAt(AxisAlignedPlane3D.FromElement(line1, Alignment3D.MinZ))
+		line1.MirrorAt(XYPlane3D.FromElement(line1, Alignment3D.MinZ))
 		line2.MirrorZ(Alignment3D.MinZ)
 
 		self.assertTupleEqual(line2.ToTuple(), line1.ToTuple())
@@ -2761,7 +3103,7 @@ class MirroringAtPlane(Testcase):
 		with self.assertRaises(TypeError) as context:
 			line.MirrorAt(VerticalLine2D(5))
 
-		self.assertEqual("Parameter 'plane' is not of type 'AxisAlignedPlane3D'.", str(context.exception))
+		self.assertEqual("Parameter 'plane' is not of type 'Plane3D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.VerticalLine2D'."], context.exception.__notes__)
 		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
 

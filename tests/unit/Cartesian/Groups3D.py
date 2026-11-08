@@ -34,8 +34,8 @@ Unit tests for :mod:`pyTooling.Cartesian3D.Groups` - groups, frames, absolute co
 from copy                         import deepcopy
 from math                         import isclose, pi
 
-from pyTooling.Cartesian3D        import Point3D, Offset3D, BoundingBox3D, Alignment3D, Axis3D, AxisAlignedPlane3D, \
-                                         Element3D, Segment3D, LineSegment3D
+from pyTooling.Cartesian3D        import Point3D, Offset3D, BoundingBox3D, Alignment3D, YZPlane3D, XZPlane3D, \
+                                         XYPlane3D, Element3D, Segment3D, LineSegment3D
 from pyTooling.Cartesian3D.Groups import Group3D
 from pyTooling.Cartesian2D        import AlreadyOwnedError, NotOwnedError, DuplicatePointError, GroupCycleError, \
                                          NotInSameFrameError
@@ -951,7 +951,7 @@ class Mirroring(Testcase):
 		inner = Group3D(Offset3D(3, 4, 5), (line, ))
 		outer = Group3D(Offset3D(10, 20, 30), (inner, ))
 
-		outer.MirrorAt(AxisAlignedPlane3D(Axis3D.Z, 40))
+		outer.MirrorAt(XYPlane3D(40))
 
 		self.assertTupleEqual((10, 20, 50), outer.Offset.ToTuple())
 		self.assertTupleEqual((3, 4, -5), inner.Offset.ToTuple())
@@ -964,7 +964,7 @@ class Mirroring(Testcase):
 		inner = Group3D(Offset3D(3, 4, 5), (line, ))
 		outer = Group3D(Offset3D(10, 20, 30), (inner, ))
 
-		line.MirrorAt(AxisAlignedPlane3D(Axis3D.Y, 0))
+		line.MirrorAt(XZPlane3D(0))
 
 		self.assertTupleEqual((10, 20, 30), outer.Offset.ToTuple())
 		self.assertTupleEqual((3, 4, 5), inner.Offset.ToTuple())
@@ -977,7 +977,7 @@ class Mirroring(Testcase):
 		line2 =  LineSegment3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
 		_ =      Group3D(Offset3D(10, 0, 0), (line1, ))
 		_ =      Group3D(Offset3D(0, 5, 0), (line2, ))
-		mirror = AxisAlignedPlane3D(Axis3D.X, 0)
+		mirror = YZPlane3D(0)
 
 		line1.MirrorAt(mirror)
 		line2.MirrorAt(mirror)
@@ -989,13 +989,13 @@ class Mirroring(Testcase):
 		"""A group without children mirrors its offset: the plane needs no bounding box."""
 		group = Group3D(Offset3D(1, 2, 3))
 
-		group.MirrorAt(AxisAlignedPlane3D(Axis3D.Z, 5))
+		group.MirrorAt(XYPlane3D(5))
 
 		self.assertTupleEqual((1, 2, 7), group.Offset.ToTuple())
 
 	def test_FromElement_Empty(self) -> None:
 		with self.assertRaises(EmptyGroupError) as context:
-			AxisAlignedPlane3D.FromElement(Group3D(Offset3D(1, 2, 3)), Alignment3D.MinZ)
+			XYPlane3D.FromElement(Group3D(Offset3D(1, 2, 3)), Alignment3D.MinZ)
 
 		self.assertEqual("Group3D has no children.", str(context.exception))
 		self.assertListEqual(["Got Group3D((1, 2, 3), children=0)."], context.exception.__notes__)
