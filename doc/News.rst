@@ -25,6 +25,11 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D.Shapes`: an axis-aligned :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` by center and
      two radii, a :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` with its area and its perimeter (Ramanujan's
      approximation).
+   * :mod:`pyTooling.Cartesian2D.Shapes`: conversions without approximation:
+     :meth:`Path.ToPolyLine() <pyTooling.Cartesian2D.Shapes.Path.ToPolyLine>` and
+     :meth:`Path.ToPolygon() <pyTooling.Cartesian2D.Shapes.Path.ToPolygon>` for a path of line segments (a polyline
+     too), :meth:`Polygon.ToPolyLine() <pyTooling.Cartesian2D.Shapes.Polygon.ToPolyLine>` for a polygon and its
+     derived shapes.
    * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: points, offsets, sizes, segments and shapes support
      :func:`copy.copy` and :func:`copy.deepcopy`, and segments and shapes have a ``Copy()`` method. A copy shares no
      point with the original.

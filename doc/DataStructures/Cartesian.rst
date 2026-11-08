@@ -35,7 +35,7 @@ Features
   radius, angles and length, and quadratic and cubic Bezier curves, with exact bounding boxes.
 * **Paths** - a :class:`~pyTooling.Cartesian2D.Shapes.Path` chains line segments, arcs and Bezier curves, open or
   closed, like SVG's ``<path>``; a :class:`~pyTooling.Cartesian2D.Shapes.PolyLine` is a path of line segments, built
-  from points.
+  from points. Paths, polylines and polygons convert into each other, where no approximation is needed.
 * **Shapes placed by their corners**, so a shape is positioned by the points it is built from - a circle by its
   center.
 * Shapes validated on construction: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with any number of corners, the
@@ -823,6 +823,20 @@ default; ``copyPoints=False`` keeps the given points instead, as for a polygon.
 A point that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`, fewer than two points - three
 for a closed polyline - raise :exc:`~pyTooling.Cartesian2D.NotEnoughCornersError`. Unlike a polygon's, a polyline's
 edges may cross each other.
+
+Paths, polylines and polygons convert into each other, where no approximation is needed. Each conversion copies the
+points, references the same value and copies the key-value-pairs shallowly:
+
+* :meth:`~pyTooling.Cartesian2D.Shapes.Path.ToPolyLine` - a path of line segments becomes a polyline, open or closed
+  like the path; a polyline inherits it, a copy;
+* :meth:`~pyTooling.Cartesian2D.Shapes.Path.ToPolygon` - a closed path of line segments, a closed polyline too,
+  becomes a polygon, which checks its edges for crossings;
+* :meth:`~pyTooling.Cartesian2D.Shapes.Polygon.ToPolyLine` - a polygon, and so a trapezium, rectangle or square,
+  becomes a closed polyline.
+
+An open path or polyline encloses no area: :meth:`~pyTooling.Cartesian2D.Shapes.Path.ToPolygon` raises
+:exc:`~pyTooling.Exceptions.InvalidOperationError`. So do both path conversions for a path with an arc or a Bezier
+curve, as a curve can't be converted without an approximation.
 
 .. seealso::
 

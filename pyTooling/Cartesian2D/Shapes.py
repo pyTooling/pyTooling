@@ -247,6 +247,17 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 
 		self.Parent = parent
 
+	def ToPolyLine(self) -> PolyLine[Coordinate]:
+		"""
+		Create a new closed polyline with the corners of this polygon as its points.
+
+		The polyline holds copies of the corners. It references the same :attr:`Value` and holds a shallow copy of the
+		key-value-pairs.
+
+		:returns: A new closed polyline.
+		"""
+		return PolyLine(self._points, closed=True, value=self._value, keyValuePairs=self._dict)
+
 	def Copy(self) -> Self:
 		"""
 		Create a new polygon as a copy of this polygon.
@@ -1318,6 +1329,54 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 
 		for segment in self._segments:
 			segment._MirrorInnerX(twiceAxis)
+
+	def ToPolyLine(self) -> PolyLine[Coordinate]:
+		"""
+		Create a new polyline with the joints of this path as its points.
+
+		An open path becomes an open polyline, a closed path a closed one. The polyline holds copies of the joints. It
+		references the same :attr:`Value` and holds a shallow copy of the key-value-pairs.
+
+		:returns:                      A new polyline.
+		:raises InvalidOperationError: If a segment isn't a line segment. |br|
+		                               A curved segment can't be converted without an approximation.
+		"""
+		for segment in self._segments:
+			if not isinstance(segment, LineSegment2D):
+				ex = InvalidOperationError(f"{self.__class__.__name__} has a segment, which isn't a line segment.")
+				ex.add_note(f"Got {segment!r}.")
+				ex.add_note("A curved segment can't be converted without an approximation.")
+				raise ex
+
+		return PolyLine(self._points, closed=self._closed, value=self._value, keyValuePairs=self._dict)
+
+	def ToPolygon(self) -> Polygon[Coordinate]:
+		"""
+		Create a new polygon with the joints of this closed path as its corners.
+
+		The polygon holds copies of the joints. It references the same :attr:`Value` and holds a shallow copy of the
+		key-value-pairs.
+
+		:returns:                      A new polygon.
+		:raises InvalidOperationError: If the path is open. |br|
+		                               Only a closed path encloses an area.
+		:raises InvalidOperationError: If a segment isn't a line segment. |br|
+		                               A curved segment can't be converted without an approximation.
+		:raises CrossingEdgesError:    If two edges have a point in common, which isn't their shared joint.
+		"""
+		if not self._closed:
+			ex = InvalidOperationError(f"{self.__class__.__name__} is open.")
+			ex.add_note("Only a closed path encloses an area.")
+			raise ex
+
+		for segment in self._segments:
+			if not isinstance(segment, LineSegment2D):
+				ex = InvalidOperationError(f"{self.__class__.__name__} has a segment, which isn't a line segment.")
+				ex.add_note(f"Got {segment!r}.")
+				ex.add_note("A curved segment can't be converted without an approximation.")
+				raise ex
+
+		return Polygon(self._points, value=self._value, keyValuePairs=self._dict)
 
 	def Copy(self) -> Self:
 		"""

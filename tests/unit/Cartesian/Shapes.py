@@ -3637,3 +3637,116 @@ class ClosedPolyLine(Testcase):
 
 		self.assertEqual("((0, 0) → (4, 0) → (4, 3) → (0, 0))", str(polyline))
 
+
+class Conversions(Testcase):
+	def test_PolyLine_ToPolygon(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True, value=1, keyValuePairs={"a": 1})
+
+		polygon = polyline.ToPolygon()
+
+		self.assertIs(Polygon, type(polygon))
+		self.assertTupleEqual(((0, 0), (4, 0), (4, 3)), tuple(point.ToTuple() for point in polygon.Points))
+		self.assertIsNot(polyline.Points[0], polygon.Points[0])
+		self.assertIs(polygon, polygon.Points[0].Parent)
+		self.assertEqual(1, polygon.Value)
+		self.assertEqual(1, polygon["a"])
+		self.assertEqual(6.0, polygon.Area)
+
+	def test_PolyLine_ToPolygon_Open(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)))
+
+		with self.assertRaises(InvalidOperationError) as context:
+			_ = polyline.ToPolygon()
+
+		self.assertEqual("PolyLine is open.", str(context.exception))
+		self.assertListEqual(["Only a closed path encloses an area."], context.exception.__notes__)
+
+	def test_PolyLine_ToPolygon_Crossing(self) -> None:
+		"""A polyline may cross itself, a polygon may not."""
+		polyline = PolyLine((Point2D(0, 0), Point2D(2, 2), Point2D(2, 0), Point2D(0, 2)), closed=True)
+
+		with self.assertRaises(CrossingEdgesError):
+			_ = polyline.ToPolygon()
+
+	def test_Polygon_ToPolyLine(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), value=1)
+
+		polyline = polygon.ToPolyLine()
+
+		self.assertIs(PolyLine, type(polyline))
+		self.assertTrue(polyline.IsClosed)
+		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in polyline.Points))
+		self.assertIsNot(polygon.Points[0], polyline.Points[0])
+		self.assertEqual(1, polyline.Value)
+		self.assertTrue(isclose(polygon.Perimeter, polyline.Length))
+
+	def test_Rectangle_ToPolyLine(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+
+		polyline = rectangle.ToPolyLine()
+
+		self.assertEqual("PolyLine((0, 0), (4, 0), (4, 2), (0, 2), closed=True)", repr(polyline))
+
+	def test_Path_ToPolyLine(self) -> None:
+		path = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), LineSegment2D(Point2D(4, 0), Point2D(4, 3))), value=1)
+
+		polyline = path.ToPolyLine()
+
+		self.assertIs(PolyLine, type(polyline))
+		self.assertFalse(polyline.IsClosed)
+		self.assertTupleEqual(((0, 0), (4, 0), (4, 3)), tuple(point.ToTuple() for point in polyline.Points))
+		self.assertEqual(1, polyline.Value)
+
+	def test_Path_ToPolyLine_Closed(self) -> None:
+		path = Path((
+			LineSegment2D(Point2D(0, 0), Point2D(4, 0)),
+			LineSegment2D(Point2D(4, 0), Point2D(4, 3)),
+			LineSegment2D(Point2D(4, 3), Point2D(0, 0))
+		), closed=True)
+
+		polyline = path.ToPolyLine()
+
+		self.assertTrue(polyline.IsClosed)
+		self.assertEqual(3, len(polyline.Points))
+
+	def test_Path_ToPolyLine_Curve(self) -> None:
+		path = openPath()
+
+		with self.assertRaises(InvalidOperationError) as context:
+			_ = path.ToPolyLine()
+
+		self.assertEqual("Path has a segment, which isn't a line segment.", str(context.exception))
+		self.assertListEqual(
+			[f"Got {path.Segments[1]!r}.", "A curved segment can't be converted without an approximation."],
+			context.exception.__notes__
+		)
+
+	def test_Path_ToPolygon(self) -> None:
+		path = Path((
+			LineSegment2D(Point2D(0, 0), Point2D(4, 0)),
+			LineSegment2D(Point2D(4, 0), Point2D(4, 3)),
+			LineSegment2D(Point2D(4, 3), Point2D(0, 0))
+		), closed=True, keyValuePairs={"a": 1})
+
+		polygon = path.ToPolygon()
+
+		self.assertIs(Polygon, type(polygon))
+		self.assertTupleEqual(((0, 0), (4, 0), (4, 3)), tuple(point.ToTuple() for point in polygon.Points))
+		self.assertEqual(1, polygon["a"])
+
+	def test_Path_ToPolygon_Open(self) -> None:
+		path = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+
+		with self.assertRaises(InvalidOperationError) as context:
+			_ = path.ToPolygon()
+
+		self.assertEqual("Path is open.", str(context.exception))
+		self.assertListEqual(["Only a closed path encloses an area."], context.exception.__notes__)
+
+	def test_Path_ToPolygon_Curve(self) -> None:
+		path = closedPath()
+
+		with self.assertRaises(InvalidOperationError) as context:
+			_ = path.ToPolygon()
+
+		self.assertEqual("Path has a segment, which isn't a line segment.", str(context.exception))
