@@ -35,7 +35,7 @@ arithmetic.
 from copy                  import copy, deepcopy
 from math                  import pi, sqrt
 
-from pyTooling.Cartesian3D import Origin3D, Point3D, Offset3D, Size3D, Segment3D, LineSegment3D
+from pyTooling.Cartesian3D import Origin3D, Point3D, Offset3D, Size3D, BoundingBox3D, Segment3D, LineSegment3D
 from pyTooling.Exceptions  import InvalidOperationError
 from pyTooling.Testing     import Testcase
 
@@ -1195,3 +1195,386 @@ class OffsetArithmetic(Testcase):
 
 		with self.assertRaises(TypeError):
 			offset -= 2
+
+
+class Bounds(Testcase):
+	def test_BoundingBox_int(self) -> None:
+		box = BoundingBox3D(1, 2, 3, 4, 6, 8)
+
+		self.assertEqual(1, box.MinX)
+		self.assertEqual(2, box.MinY)
+		self.assertEqual(3, box.MinZ)
+		self.assertEqual(4, box.MaxX)
+		self.assertEqual(6, box.MaxY)
+		self.assertEqual(8, box.MaxZ)
+		self.assertEqual(3, box.Width)
+		self.assertEqual(4, box.Height)
+		self.assertEqual(5, box.Depth)
+		self.assertTupleEqual((2.5, 4.0, 5.5), box.Center.ToTuple())
+		self.assertTupleEqual((1, 2, 3, 4, 6, 8), box.ToTuple())
+
+	def test_BoundingBox_float(self) -> None:
+		box = BoundingBox3D(-1.5, -2.5, -3.5, 0.5, 0.5, 0.5)
+
+		self.assertEqual(2.0, box.Width)
+		self.assertEqual(3.0, box.Height)
+		self.assertEqual(4.0, box.Depth)
+		self.assertTupleEqual((-0.5, -1.0, -1.5), box.Center.ToTuple())
+
+	def test_BoundingBox_Point(self) -> None:
+		"""A bounding box may have no extent."""
+		box = BoundingBox3D(1, 2, 3, 1, 2, 3)
+
+		self.assertEqual(0, box.Width)
+		self.assertEqual(0, box.Height)
+		self.assertEqual(0, box.Depth)
+
+	def test_BoundingBox_None1(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = BoundingBox3D(None, 2, 3, 4, 6, 8)
+
+		self.assertEqual("Parameter 'minX' is None.", str(context.exception))
+
+	def test_BoundingBox_None3(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = BoundingBox3D(1, 2, None, 4, 6, 8)
+
+		self.assertEqual("Parameter 'minZ' is None.", str(context.exception))
+
+	def test_BoundingBox_None6(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = BoundingBox3D(1, 2, 3, 4, 6, None)
+
+		self.assertEqual("Parameter 'maxZ' is None.", str(context.exception))
+
+	def test_BoundingBox_str1(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = BoundingBox3D("1", 2, 3, 4, 6, 8)
+
+		self.assertEqual("Parameter 'minX' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_BoundingBox_str6(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = BoundingBox3D(1, 2, 3, 4, 6, "8")
+
+		self.assertEqual("Parameter 'maxZ' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_BoundingBox_MaxXLess(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = BoundingBox3D(4, 2, 3, 1, 6, 8)
+
+		self.assertEqual("Parameter 'maxX' is less than parameter 'minX'.", str(context.exception))
+		self.assertListEqual(["Got minX=4 and maxX=1."], context.exception.__notes__)
+
+	def test_BoundingBox_MaxYLess(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = BoundingBox3D(1, 6, 3, 4, 2, 8)
+
+		self.assertEqual("Parameter 'maxY' is less than parameter 'minY'.", str(context.exception))
+		self.assertListEqual(["Got minY=6 and maxY=2."], context.exception.__notes__)
+
+	def test_BoundingBox_MaxZLess(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = BoundingBox3D(1, 2, 8, 4, 6, 3)
+
+		self.assertEqual("Parameter 'maxZ' is less than parameter 'minZ'.", str(context.exception))
+		self.assertListEqual(["Got minZ=8 and maxZ=3."], context.exception.__notes__)
+
+	def test_BoundingBox_ReadOnly(self) -> None:
+		box = BoundingBox3D(1, 2, 3, 4, 6, 8)
+
+		with self.assertRaises(AttributeError):
+			box.MinZ = 0
+
+		self.assertEqual(3, box.MinZ)
+
+	def test_FromPoints(self) -> None:
+		box = BoundingBox3D.FromPoints((Point3D(3, -1, 0), Point3D(-2, 4, 5), Point3D(1, 1, -6)))
+
+		self.assertIs(BoundingBox3D, type(box))
+		self.assertTupleEqual((-2, -1, -6, 3, 4, 5), box.ToTuple())
+
+	def test_FromPoints_Generator(self) -> None:
+		box = BoundingBox3D.FromPoints(Point3D(x, 2 * x, 3 * x) for x in range(4))
+
+		self.assertTupleEqual((0, 0, 0, 3, 6, 9), box.ToTuple())
+
+	def test_FromPoints_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = BoundingBox3D.FromPoints(None)
+
+		self.assertEqual("Parameter 'points' is None.", str(context.exception))
+
+	def test_FromPoints_int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = BoundingBox3D.FromPoints(3)
+
+		self.assertEqual("Parameter 'points' is not iterable.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_FromPoints_NoneFirst(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = BoundingBox3D.FromPoints((None, Point3D(0, 0, 0)))
+
+		self.assertEqual("An element of parameter 'points' is None.", str(context.exception))
+
+	def test_FromPoints_NoneElement(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = BoundingBox3D.FromPoints((Point3D(0, 0, 0), None))
+
+		self.assertEqual("An element of parameter 'points' is None.", str(context.exception))
+
+	def test_FromPoints_tupleFirst(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = BoundingBox3D.FromPoints(((1, 1, 1), Point3D(0, 0, 0)))
+
+		self.assertEqual("An element of parameter 'points' is not of type 'Point3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_FromPoints_tupleElement(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = BoundingBox3D.FromPoints((Point3D(0, 0, 0), (1, 1, 1)))
+
+		self.assertEqual("An element of parameter 'points' is not of type 'Point3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_FromPoints_Empty(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = BoundingBox3D.FromPoints(())
+
+		self.assertEqual("Parameter 'points' is empty.", str(context.exception))
+
+	def test_Union(self) -> None:
+		box1 = BoundingBox3D(0, 0, 0, 2, 2, 2)
+		box2 = BoundingBox3D(1, -1, 1, 4, 1, 5)
+
+		box = box1.Union(box2)
+
+		self.assertTupleEqual((0, -1, 0, 4, 2, 5), box.ToTuple())
+		self.assertTupleEqual((0, 0, 0, 2, 2, 2), box1.ToTuple())
+		self.assertTupleEqual((1, -1, 1, 4, 1, 5), box2.ToTuple())
+
+	def test_Union_None(self) -> None:
+		box = BoundingBox3D(0, 0, 0, 2, 2, 2)
+
+		with self.assertRaises(ValueError) as context:
+			_ = box.Union(None)
+
+		self.assertEqual("Parameter 'other' is None.", str(context.exception))
+
+	def test_Union_tuple(self) -> None:
+		box = BoundingBox3D(0, 0, 0, 2, 2, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = box.Union((1, 1, 1, 3, 3, 3))
+
+		self.assertEqual("Parameter 'other' is not of type 'BoundingBox3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_HasOverlap(self) -> None:
+		box = BoundingBox3D(0, 0, 0, 2, 2, 2)
+
+		self.assertTrue(box.HasOverlap(BoundingBox3D(1, 1, 1, 3, 3, 3)))
+		self.assertTrue(box.HasOverlap(BoundingBox3D(-1, -1, -1, 3, 3, 3)))
+		self.assertFalse(box.HasOverlap(BoundingBox3D(3, 0, 0, 4, 2, 2)))
+		self.assertFalse(box.HasOverlap(BoundingBox3D(0, -2, 0, 2, -1, 2)))
+		self.assertFalse(box.HasOverlap(BoundingBox3D(0, 0, 3, 2, 2, 4)))
+
+	def test_HasOverlap_Touching(self) -> None:
+		box = BoundingBox3D(0, 0, 0, 2, 2, 2)
+
+		self.assertFalse(box.HasOverlap(BoundingBox3D(2, 0, 0, 4, 2, 2)))
+		self.assertFalse(box.HasOverlap(BoundingBox3D(0, -2, 0, 2, 0, 2)))
+		self.assertFalse(box.HasOverlap(BoundingBox3D(0, 0, 2, 2, 2, 4)))
+		self.assertFalse(box.HasOverlap(BoundingBox3D(0, 0, -2, 2, 2, 0)))
+		self.assertFalse(box.HasOverlap(BoundingBox3D(2, 2, 2, 3, 3, 3)))
+
+	def test_HasOverlap_None(self) -> None:
+		box = BoundingBox3D(0, 0, 0, 2, 2, 2)
+
+		with self.assertRaises(ValueError) as context:
+			_ = box.HasOverlap(None)
+
+		self.assertEqual("Parameter 'other' is None.", str(context.exception))
+
+	def test_HasOverlap_tuple(self) -> None:
+		box = BoundingBox3D(0, 0, 0, 2, 2, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = box.HasOverlap((1, 1, 1, 3, 3, 3))
+
+		self.assertEqual("Parameter 'other' is not of type 'BoundingBox3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_ContainsPoint(self) -> None:
+		box = BoundingBox3D(0, 0, 0, 2, 2, 2)
+
+		self.assertTrue(box.ContainsPoint(Point3D(1, 1, 1)))
+		self.assertTrue(box.ContainsPoint(Point3D(2, 0, 2)))
+		self.assertFalse(box.ContainsPoint(Point3D(3, 1, 1)))
+		self.assertFalse(box.ContainsPoint(Point3D(1, -0.5, 1)))
+		self.assertFalse(box.ContainsPoint(Point3D(1, 1, 2.5)))
+
+	def test_ContainsPoint_None(self) -> None:
+		box = BoundingBox3D(0, 0, 0, 2, 2, 2)
+
+		with self.assertRaises(ValueError) as context:
+			_ = box.ContainsPoint(None)
+
+		self.assertEqual("Parameter 'point' is None.", str(context.exception))
+
+	def test_ContainsPoint_tuple(self) -> None:
+		box = BoundingBox3D(0, 0, 0, 2, 2, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = box.ContainsPoint((1, 1, 1))
+
+		self.assertEqual("Parameter 'point' is not of type 'Point3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_In(self) -> None:
+		box = BoundingBox3D(0, 0, 0, 2, 2, 2)
+
+		self.assertIn(Point3D(1, 1, 1), box)
+		self.assertIn(Point3D(2, 0, 2), box)
+		self.assertNotIn(Point3D(1, 1, 3), box)
+
+	def test_In_tuple(self) -> None:
+		box = BoundingBox3D(0, 0, 0, 2, 2, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = (1, 1, 1) in box
+
+		self.assertEqual("First operand is not supported by in operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'tuple'.", "Supported types for first operand: Point3D"],
+			context.exception.__notes__
+		)
+
+	def test_In_None(self) -> None:
+		box = BoundingBox3D(0, 0, 0, 2, 2, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = None in box
+
+		self.assertEqual("First operand is not supported by in operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'NoneType'.", "Supported types for first operand: Point3D"],
+			context.exception.__notes__
+		)
+
+	def test_Equal(self) -> None:
+		box = BoundingBox3D(1, 2, 3, 4, 6, 8)
+
+		self.assertTrue(box == BoundingBox3D(1, 2, 3, 4, 6, 8))
+		self.assertFalse(box == BoundingBox3D(1, 2, 3, 4, 6, 9))
+		self.assertFalse(box != BoundingBox3D(1, 2, 3, 4, 6, 8))
+		self.assertTrue(box != BoundingBox3D(1, 2, 0, 4, 6, 8))
+
+	def test_Equal_tuple(self) -> None:
+		box = BoundingBox3D(1, 2, 3, 4, 6, 8)
+
+		with self.assertRaises(TypeError) as context:
+			_ = box == (1, 2, 3, 4, 6, 8)
+
+		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'tuple'.", "Supported types for second operand: BoundingBox3D"],
+			context.exception.__notes__
+		)
+
+	def test_Unequal_tuple(self) -> None:
+		box = BoundingBox3D(1, 2, 3, 4, 6, 8)
+
+		with self.assertRaises(TypeError) as context:
+			_ = box != (1, 2, 3, 4, 6, 8)
+
+		self.assertEqual("Second operand is not supported by != operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'tuple'.", "Supported types for second operand: BoundingBox3D"],
+			context.exception.__notes__
+		)
+
+	def test_Plus_Offset(self) -> None:
+		box = BoundingBox3D(1, 2, 3, 4, 6, 8)
+
+		newBox = box + Offset3D(10, -2, 1)
+
+		self.assertIs(BoundingBox3D, type(newBox))
+		self.assertTupleEqual((11, 0, 4, 14, 4, 9), newBox.ToTuple())
+		self.assertTupleEqual((1, 2, 3, 4, 6, 8), box.ToTuple())
+
+	def test_Plus_tuple(self) -> None:
+		box = BoundingBox3D(1, 2, 3, 4, 6, 8)
+
+		with self.assertRaises(TypeError) as context:
+			_ = box + (10, -2, 1)
+
+		self.assertEqual("Parameter 'other' is not of type 'Offset3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Copy(self) -> None:
+		box = BoundingBox3D(1, 2, 3, 4, 6, 8)
+
+		for newBox in (box.Copy(), copy(box), deepcopy(box)):
+			self.assertIs(BoundingBox3D, type(newBox))
+			self.assertIsNot(box, newBox)
+			self.assertEqual(box, newBox)
+
+	def test_repr(self) -> None:
+		box = BoundingBox3D(1, 2, 3, 4.5, 6, 8)
+
+		self.assertEqual("BoundingBox3D(1, 2, 3, 4.5, 6, 8)", repr(box))
+
+	def test_str(self) -> None:
+		box = BoundingBox3D(1, 2, 3, 4.5, 6, 8)
+
+		self.assertEqual("((1, 2, 3), (4.5, 6, 8))", str(box))
+
+	def test_LineSegment(self) -> None:
+		line = LineSegment3D(Point3D(4, 1, -2), Point3D(-1, 3, 5))
+
+		box = line.BoundingBox
+
+		self.assertTupleEqual((-1, 1, -2, 4, 3, 5), box.ToTuple())
+
+	def test_LineSegment_ReadOnly(self) -> None:
+		line = LineSegment3D(Point3D(4, 1, -2), Point3D(-1, 3, 5))
+
+		with self.assertRaises(AttributeError):
+			line.BoundingBox = BoundingBox3D(0, 0, 0, 1, 1, 1)
+
+
+class Moving(Testcase):
+	def test_LineSegment(self) -> None:
+		start = Point3D(1, 2, 3)
+		end =   Point3D(4, 6, 8)
+		line =  LineSegment3D(start, end, copyPoints=False)
+
+		line.Move(Offset3D(1, -1, 2))
+
+		self.assertIs(start, line.Start)
+		self.assertIs(end, line.End)
+		self.assertTupleEqual(((2, 1, 5), (5, 5, 10)), line.ToTuple())
+
+	def test_LineSegment_None(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(ValueError) as context:
+			line.Move(None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_LineSegment_tuple(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(TypeError) as context:
+			line.Move((1, 1, 1))
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
