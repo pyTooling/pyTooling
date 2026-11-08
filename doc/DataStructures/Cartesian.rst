@@ -32,7 +32,7 @@ Features
   point minus a point is an offset - in both the copying and the in-place form.
 * **Distances measured** - a line segment reports its length and its angle.
 * **Curved segments** - a circular :class:`~pyTooling.Cartesian2D.ArcSegment2D` around a center, reporting its
-  radius, angles and length.
+  radius, angles and length, and quadratic and cubic Bezier curves, with exact bounding boxes.
 * **Shapes placed by their corners**, so a shape is positioned by the points it is built from - a circle by its
   center.
 * Shapes validated on construction: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with any number of corners, the
@@ -64,6 +64,7 @@ Missing Features
 * Rotation and scaling - an element can be shifted and mirrored at a vertical or horizontal axis, but not rotated or
   scaled.
 * Shapes with curved edges other than a circle, and elliptical arcs.
+* The length of a Bezier curve.
 * Exact containment and intersection tests (*is this point inside that rotated rectangle?*). Only bounding boxes are
   compared.
 * Area and perimeter of a polygon.
@@ -413,6 +414,46 @@ Mirroring an arc reverses its direction, so the mirrored arc bulges to the other
       |rarr| Its base-class, the 2-dimensional segment.
    :ref:`STRUCT/Cartesian2D/Circle`
       |rarr| The full circle as a shape.
+
+.. _STRUCT/Cartesian2D/BezierSegment2D:
+
+BezierSegment2D
+---------------
+
+A Bezier curve runs from its start point to its end point and is pulled towards its
+:attr:`~pyTooling.Cartesian2D.BezierSegment2D.ControlPoints`, like SVG's ``Q`` and ``C`` commands or TikZ'
+``.. controls ..``. Its points are given in curve order:
+
+* a :class:`~pyTooling.Cartesian2D.QuadraticBezierSegment2D` has one
+  :attr:`~pyTooling.Cartesian2D.QuadraticBezierSegment2D.ControlPoint` - ``(start, controlPoint, end)``;
+* a :class:`~pyTooling.Cartesian2D.CubicBezierSegment2D` has two,
+  :attr:`~pyTooling.Cartesian2D.CubicBezierSegment2D.ControlPoint1` next to the start point and
+  :attr:`~pyTooling.Cartesian2D.CubicBezierSegment2D.ControlPoint2` next to the end point -
+  ``(start, controlPoint1, controlPoint2, end)``.
+
+:meth:`~pyTooling.Cartesian2D.BezierSegment2D.PointAt` returns the point of the curve at a curve parameter ``t``, from
+0 (the start point) to 1 (the end point). The :attr:`~pyTooling.Cartesian2D.QuadraticBezierSegment2D.BoundingBox` is
+exact: it adds the points where the curve turns in x- or y-direction. The box of the control points is larger, as the
+curve passes them only in special cases. :meth:`~pyTooling.Cartesian2D.BezierSegment2D.ToTuple` returns the points as
+tuples, in curve order.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D import Point2D, QuadraticBezierSegment2D, CubicBezierSegment2D
+
+   hill = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+   hill.PointAt(0.5)                  # (2.0, 2.0)
+   hill.BoundingBox                   # BoundingBox2D(0, 0, 4, 2.0)
+
+   bow = CubicBezierSegment2D(Point2D(0, 0), Point2D(6, 0), Point2D(6, 6), Point2D(0, 6))
+   bow.BoundingBox                    # BoundingBox2D(0, 0, 4.5, 6)
+
+A Bezier curve has no ``Length``: a cubic curve's length has no closed form, it needs a numeric approximation.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Segment2D`
+      |rarr| Its base-class, the 2-dimensional segment.
 
 
 .. _STRUCT/Cartesian2D/Ownership:

@@ -2665,3 +2665,601 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		:returns: The string equivalent of the 2D arc segment.
 		"""
 		return f"({self._start} → {self._end} around {self._center}, {self._direction.name.lower()})"
+
+
+@export
+class BezierSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
+	"""
+	Abstract base-class of 2D cartesian Bezier curve segments.
+
+	A Bezier curve runs from its start point to its end point and is pulled towards its control points, which it passes
+	only in special cases. The control points are owned like the start and end point.
+	"""
+
+	_controlPoints: tuple[Point2D[Coordinate], ...]  #: Control points of the curve, in curve order.
+
+	@property
+	def Start(self) -> Point2D[Coordinate]:
+		"""
+		Property to access the curve's start point (:attr:`_start`).
+
+		An assigned point is referenced, not copied: the curve takes ownership of it and releases the previous start
+		point. An edge of a shape doesn't own its points, so it can't replace them.
+
+		``start`` is a deprecated alias of this property; it is removed in v11.0.0.
+
+		:returns:                    Start point of the curve.
+		:raises ValueError:          If ``None`` is assigned.
+		:raises TypeError:           If an assigned value is not of type :class:`Point2D`.
+		:raises DuplicatePointError: If an assigned point is a control point of the curve.
+		:raises NotOwnedError:       If the curve is an edge of a shape.
+		:raises DuplicatePointError: If an assigned point is the curve's end point.
+		:raises AlreadyOwnedError:   If an assigned point is owned by another element.
+		"""
+		return self._start
+
+	@Start.setter
+	def Start(self, start: Point2D[Coordinate]) -> None:
+		if start is None:
+			raise ValueError("Parameter 'start' is None.")
+		elif not isinstance(start, Point2D):
+			ex = TypeError("Parameter 'start' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
+			raise ex
+		elif any(start is controlPoint for controlPoint in self._controlPoints):
+			ex = DuplicatePointError("Point is given twice.")
+			ex.add_note(f"Got point {start}.")
+			raise ex from ValueError("Parameter 'start' is a control point of the curve.")
+
+		Segment2D.Start.fset(self, start)
+
+	start = Start
+
+	@property
+	def End(self) -> Point2D[Coordinate]:
+		"""
+		Property to access the curve's end point (:attr:`_end`).
+
+		An assigned point is referenced, not copied: the curve takes ownership of it and releases the previous end point.
+		An edge of a shape doesn't own its points, so it can't replace them.
+
+		``end`` is a deprecated alias of this property; it is removed in v11.0.0.
+
+		:returns:                    End point of the curve.
+		:raises ValueError:          If ``None`` is assigned.
+		:raises TypeError:           If an assigned value is not of type :class:`Point2D`.
+		:raises DuplicatePointError: If an assigned point is a control point of the curve.
+		:raises NotOwnedError:       If the curve is an edge of a shape.
+		:raises DuplicatePointError: If an assigned point is the curve's start point.
+		:raises AlreadyOwnedError:   If an assigned point is owned by another element.
+		"""
+		return self._end
+
+	@End.setter
+	def End(self, end: Point2D[Coordinate]) -> None:
+		if end is None:
+			raise ValueError("Parameter 'end' is None.")
+		elif not isinstance(end, Point2D):
+			ex = TypeError("Parameter 'end' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")
+			raise ex
+		elif any(end is controlPoint for controlPoint in self._controlPoints):
+			ex = DuplicatePointError("Point is given twice.")
+			ex.add_note(f"Got point {end}.")
+			raise ex from ValueError("Parameter 'end' is a control point of the curve.")
+
+		Segment2D.End.fset(self, end)
+
+	end = End
+
+	@readonly
+	def ControlPoints(self) -> tuple[Point2D[Coordinate], ...]:
+		"""
+		Read-only property to access the curve's control points (:attr:`_controlPoints`).
+
+		:returns: Tuple of control points, in curve order.
+		"""
+		return self._controlPoints
+
+	def PointAt(self, t: Union[int, float]) -> Point2D[float]:
+		"""
+		Compute the point of the curve at a curve parameter.
+
+		The curve starts at ``t = 0`` and ends at ``t = 1``. The new point has no owner.
+
+		:param t:           The curve parameter, from 0 to 1.
+		:returns:           A new 2D-point on the curve.
+		:raises ValueError: If parameter 't' is None.
+		:raises TypeError:  If parameter 't' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 't' is out of range 0..1.
+		"""
+		if t is None:
+			raise ValueError("Parameter 't' is None.")
+		elif not isinstance(t, (int, float)):
+			ex = TypeError("Parameter 't' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(t)}'.")
+			raise ex
+		elif not 0 <= t <= 1:
+			ex = ValueError("Parameter 't' is out of range 0..1.")
+			ex.add_note(f"Got value '{t}'.")
+			raise ex
+
+		return self._PointAt(t)
+
+	@abstractmethod
+	def _PointAt(self, t: Union[int, float]) -> Point2D[float]:
+		"""
+		Compute the point of the curve at a curve parameter, without checking the parameter.
+
+		:param t: The curve parameter, from 0 to 1.
+		:returns: A new 2D-point on the curve.
+		"""
+
+	def _MoveInner(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the curve's control points (inplace).
+
+		:param offset: The 2D-offset to move by.
+		"""
+		for controlPoint in self._controlPoints:
+			controlPoint += offset
+
+	def _MirrorInnerY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the curve's control points at a horizontal axis (inplace).
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
+		"""
+		for controlPoint in self._controlPoints:
+			controlPoint._y = twiceAxis - controlPoint._y
+
+	def _MirrorInnerX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the curve's control points at a vertical axis (inplace).
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		for controlPoint in self._controlPoints:
+			controlPoint._x = twiceAxis - controlPoint._x
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this 2D Bezier curve segment for :func:`copy.deepcopy`.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this 2D Bezier curve segment.
+		"""
+		return self.Copy()
+
+	def ToTuple(self) -> tuple[tuple[Coordinate, Coordinate], ...]:
+		"""
+		Convert this 2D Bezier curve segment to a simple tuple of 2D-point tuples, in curve order.
+
+		:returns: ``((x0, y0), (x1, y1), ...)`` tuple, from the start point over the control points to the end point.
+		"""
+		return tuple(point.ToTuple() for point in (self._start, *self._controlPoints, self._end))
+
+
+@export
+class QuadraticBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate]):
+	"""
+	An implementation of a 2D cartesian quadratic Bezier curve segment, having one control point.
+
+	The curve leaves its start point towards the control point and arrives at its end point from the control point's
+	direction.
+	"""
+
+	def __init__(
+		self,
+		start:        Point2D[Coordinate],
+		controlPoint: Point2D[Coordinate],
+		end:          Point2D[Coordinate],
+		*,
+		copyPoints:   bool = True,
+		parent:       Nullable[Union[Shape, Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a 2-dimensional quadratic Bezier curve segment from its start point, control point and end point.
+
+		:param start:                Start point of the curve.
+		:param controlPoint:         Control point of the curve.
+		:param end:                  End point of the curve.
+		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                             ``True``.
+		:param parent:               Optional, the shape this curve is an edge of, or the group or canvas the curve is
+		                             added to. Default: ``None``.
+		:raises ValueError:          If parameter 'start' is None.
+		:raises TypeError:           If parameter 'start' is not of type :class:`Point2D`.
+		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while parameter 'parent' isn't a
+		                             shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:       If parameter 'start' isn't owned by parameter 'parent'.
+		:raises ValueError:          If parameter 'controlPoint' is None.
+		:raises TypeError:           If parameter 'controlPoint' is not of type :class:`Point2D`.
+		:raises DuplicatePointError: If parameter 'controlPoint' is the same point as parameter 'start' or 'end', while
+		                             parameter 'parent' isn't a shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'controlPoint' is owned by another element, while parameter 'parent'
+		                             isn't a shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:       If parameter 'controlPoint' isn't owned by parameter 'parent'.
+		:raises ValueError:          If parameter 'end' is None.
+		:raises TypeError:           If parameter 'end' is not of type :class:`Point2D`.
+		:raises DuplicatePointError: If parameter 'end' is the same point as parameter 'start', while parameter 'parent'
+		                             isn't a shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'end' is owned by another element, while parameter 'parent' isn't a
+		                             shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:       If parameter 'end' isn't owned by parameter 'parent'.
+		:raises ValueError:          If parameter 'copyPoints' is None.
+		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape`,
+		                             :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:raises ValueError:          If parameter 'parent' is a shape, while 'copyPoints' is ``True``. |br|
+		                             An edge references the points of its parent shape: use ``copyPoints=False``.
+		"""
+		from pyTooling.Cartesian2D.Groups import Container2DMixin
+
+		super().__init__(start, end, copyPoints=copyPoints, parent=None if isinstance(parent, Container2DMixin) else parent)
+
+		try:
+			if controlPoint is None:
+				raise ValueError("Parameter 'controlPoint' is None.")
+			elif not isinstance(controlPoint, Point2D):
+				ex = TypeError("Parameter 'controlPoint' is not of type 'Point2D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(controlPoint)}'.")
+				raise ex
+
+			if self._parent is None:
+				if copyPoints:
+					controlPoint = controlPoint.Copy()
+				else:
+					for name, point in (
+						("start", start),
+						("end",   end)
+					):
+						if controlPoint is point:
+							ex = DuplicatePointError("Point is given twice.")
+							ex.add_note(f"Got point {point}.")
+							ex.add_note("Use 'copyPoints=True' to copy the points.")
+							raise ex from ValueError(f"Parameter 'controlPoint' is the same point as parameter '{name}'.")
+
+					if controlPoint._parent is not None:
+						ex = AlreadyOwnedError("Point is owned by another element already.")
+						ex.add_note(f"Got point {controlPoint} owned by {controlPoint._parent!r}.")
+						ex.add_note("Use 'copyPoints=True' to copy the point.")
+						raise ex from ValueError("Parameter 'controlPoint' is owned by another element.")
+
+				controlPoint._parent = self
+			elif controlPoint._parent is not self._parent:
+				ex = NotOwnedError("Point isn't owned by the parent shape.")
+				ex.add_note(f"Got point {controlPoint} owned by {controlPoint._parent!r}.")
+				raise ex from ValueError("Parameter 'controlPoint' isn't owned by parameter 'parent'.")
+		except (ValueError, TypeError, Cartesian2DError):
+			if self._parent is None:
+				self._start._parent = None
+				self._end._parent =   None
+
+			raise
+
+		self._controlPoints = (controlPoint, )
+
+		if self._parent is None:
+			self.Parent = parent
+
+	@readonly
+	def ControlPoint(self) -> Point2D[Coordinate]:
+		"""
+		Read-only property to return the curve's control point.
+
+		:returns: Control point of the curve.
+		"""
+		return self._controlPoints[0]
+
+	def _PointAt(self, t: Union[int, float]) -> Point2D[float]:
+		"""
+		Compute the point of the curve at a curve parameter, without checking the parameter.
+
+		:param t: The curve parameter, from 0 to 1.
+		:returns: A new 2D-point on the curve.
+		"""
+		start =        self._start
+		controlPoint = self._controlPoints[0]
+		end =          self._end
+		inverse =      1 - t
+		return Point2D(
+			inverse ** 2 * start._x + 2 * inverse * t * controlPoint._x + t ** 2 * end._x,
+			inverse ** 2 * start._y + 2 * inverse * t * controlPoint._y + t ** 2 * end._y
+		)
+
+	@readonly
+	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the curve.
+
+		The box encloses the start and end point, and the points of the curve with the smallest or largest x- or
+		y-coordinate between them. The control point's box is larger, if the curve doesn't pass the control point.
+
+		:returns: A new bounding box.
+		"""
+		start =        self._start
+		controlPoint = self._controlPoints[0]
+		end =          self._end
+		parameters =   []
+		for startValue, controlValue, endValue in (
+			(start._x, controlPoint._x, end._x),
+			(start._y, controlPoint._y, end._y)
+		):
+			denominator = startValue - 2 * controlValue + endValue
+			if denominator != 0 and 0 < (t := (startValue - controlValue) / denominator) < 1:
+				parameters.append(t)
+
+		return BoundingBox2D.FromPoints((start, end, *(self._PointAt(t) for t in parameters)))
+
+	def Copy(self) -> Self:
+		"""
+		Create a new 2D quadratic Bezier curve segment as a copy of this one.
+
+		The copy holds copies of the start point, control point and end point.
+
+		:returns: Copy of this 2D quadratic Bezier curve segment.
+		"""
+		return self.__class__(self._start, self._controlPoints[0], self._end)
+
+	def __repr__(self) -> str:
+		"""
+		Returns the 2D quadratic Bezier curve segment's string representation.
+
+		:returns: The string representation of the 2D quadratic Bezier curve segment.
+		"""
+		return f"QuadraticBezierSegment2D({self._start}, {self._controlPoints[0]}, {self._end})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the 2D quadratic Bezier curve segment's string equivalent.
+
+		:returns: The string equivalent of the 2D quadratic Bezier curve segment.
+		"""
+		return f"({self._start} .. controls {self._controlPoints[0]} .. {self._end})"
+
+
+@export
+class CubicBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate]):
+	"""
+	An implementation of a 2D cartesian cubic Bezier curve segment, having two control points.
+
+	The curve leaves its start point towards the first control point and arrives at its end point from the second
+	control point's direction.
+	"""
+
+	def __init__(
+		self,
+		start:         Point2D[Coordinate],
+		controlPoint1: Point2D[Coordinate],
+		controlPoint2: Point2D[Coordinate],
+		end:           Point2D[Coordinate],
+		*,
+		copyPoints:    bool = True,
+		parent:        Nullable[Union[Shape, Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a 2-dimensional cubic Bezier curve segment from its start point, two control points and end point.
+
+		:param start:                Start point of the curve.
+		:param controlPoint1:        First control point of the curve, next to the start point.
+		:param controlPoint2:        Second control point of the curve, next to the end point.
+		:param end:                  End point of the curve.
+		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                             ``True``.
+		:param parent:               Optional, the shape this curve is an edge of, or the group or canvas the curve is
+		                             added to. Default: ``None``.
+		:raises ValueError:          If parameter 'start' is None.
+		:raises TypeError:           If parameter 'start' is not of type :class:`Point2D`.
+		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while parameter 'parent' isn't a
+		                             shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:       If parameter 'start' isn't owned by parameter 'parent'.
+		:raises ValueError:          If parameter 'controlPoint1' is None.
+		:raises TypeError:           If parameter 'controlPoint1' is not of type :class:`Point2D`.
+		:raises DuplicatePointError: If parameter 'controlPoint1' is the same point as parameter 'start' or 'end', while
+		                             parameter 'parent' isn't a shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'controlPoint1' is owned by another element, while parameter 'parent'
+		                             isn't a shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:       If parameter 'controlPoint1' isn't owned by parameter 'parent'.
+		:raises ValueError:          If parameter 'controlPoint2' is None.
+		:raises TypeError:           If parameter 'controlPoint2' is not of type :class:`Point2D`.
+		:raises DuplicatePointError: If parameter 'controlPoint2' is the same point as parameter 'start', 'end' or
+		                             'controlPoint1', while parameter 'parent' isn't a shape and 'copyPoints' is
+		                             ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'controlPoint2' is owned by another element, while parameter 'parent'
+		                             isn't a shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:       If parameter 'controlPoint2' isn't owned by parameter 'parent'.
+		:raises ValueError:          If parameter 'end' is None.
+		:raises TypeError:           If parameter 'end' is not of type :class:`Point2D`.
+		:raises DuplicatePointError: If parameter 'end' is the same point as parameter 'start', while parameter 'parent'
+		                             isn't a shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'end' is owned by another element, while parameter 'parent' isn't a
+		                             shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:       If parameter 'end' isn't owned by parameter 'parent'.
+		:raises ValueError:          If parameter 'copyPoints' is None.
+		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape`,
+		                             :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:raises ValueError:          If parameter 'parent' is a shape, while 'copyPoints' is ``True``. |br|
+		                             An edge references the points of its parent shape: use ``copyPoints=False``.
+		"""
+		from pyTooling.Cartesian2D.Groups import Container2DMixin
+
+		super().__init__(start, end, copyPoints=copyPoints, parent=None if isinstance(parent, Container2DMixin) else parent)
+
+		try:
+			for name, controlPoint in (
+				("controlPoint1", controlPoint1),
+				("controlPoint2", controlPoint2)
+			):
+				if controlPoint is None:
+					raise ValueError(f"Parameter '{name}' is None.")
+				elif not isinstance(controlPoint, Point2D):
+					ex = TypeError(f"Parameter '{name}' is not of type 'Point2D'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(controlPoint)}'.")
+					raise ex
+
+			if self._parent is None:
+				if copyPoints:
+					controlPoint1 = controlPoint1.Copy()
+					controlPoint2 = controlPoint2.Copy()
+				else:
+					for name, controlPoint in (
+						("controlPoint1", controlPoint1),
+						("controlPoint2", controlPoint2)
+					):
+						for otherName, point in (
+							("start", start),
+							("end",   end)
+						):
+							if controlPoint is point:
+								ex = DuplicatePointError("Point is given twice.")
+								ex.add_note(f"Got point {point}.")
+								ex.add_note("Use 'copyPoints=True' to copy the points.")
+								raise ex from ValueError(f"Parameter '{name}' is the same point as parameter '{otherName}'.")
+
+						if controlPoint._parent is not None:
+							ex = AlreadyOwnedError("Point is owned by another element already.")
+							ex.add_note(f"Got point {controlPoint} owned by {controlPoint._parent!r}.")
+							ex.add_note("Use 'copyPoints=True' to copy the point.")
+							raise ex from ValueError(f"Parameter '{name}' is owned by another element.")
+
+					if controlPoint2 is controlPoint1:
+						ex = DuplicatePointError("Point is given twice.")
+						ex.add_note(f"Got point {controlPoint2}.")
+						ex.add_note("Use 'copyPoints=True' to copy the points.")
+						raise ex from ValueError("Parameter 'controlPoint2' is the same point as parameter 'controlPoint1'.")
+
+				controlPoint1._parent = self
+				controlPoint2._parent = self
+			else:
+				for name, controlPoint in (
+					("controlPoint1", controlPoint1),
+					("controlPoint2", controlPoint2)
+				):
+					if controlPoint._parent is not self._parent:
+						ex = NotOwnedError("Point isn't owned by the parent shape.")
+						ex.add_note(f"Got point {controlPoint} owned by {controlPoint._parent!r}.")
+						raise ex from ValueError(f"Parameter '{name}' isn't owned by parameter 'parent'.")
+		except (ValueError, TypeError, Cartesian2DError):
+			if self._parent is None:
+				self._start._parent = None
+				self._end._parent =   None
+
+			raise
+
+		self._controlPoints = (controlPoint1, controlPoint2)
+
+		if self._parent is None:
+			self.Parent = parent
+
+	@readonly
+	def ControlPoint1(self) -> Point2D[Coordinate]:
+		"""
+		Read-only property to return the curve's first control point, next to the start point.
+
+		:returns: First control point of the curve.
+		"""
+		return self._controlPoints[0]
+
+	@readonly
+	def ControlPoint2(self) -> Point2D[Coordinate]:
+		"""
+		Read-only property to return the curve's second control point, next to the end point.
+
+		:returns: Second control point of the curve.
+		"""
+		return self._controlPoints[1]
+
+	def _PointAt(self, t: Union[int, float]) -> Point2D[float]:
+		"""
+		Compute the point of the curve at a curve parameter, without checking the parameter.
+
+		:param t: The curve parameter, from 0 to 1.
+		:returns: A new 2D-point on the curve.
+		"""
+		start =         self._start
+		controlPoint1 = self._controlPoints[0]
+		controlPoint2 = self._controlPoints[1]
+		end =           self._end
+		inverse =       1 - t
+		return Point2D(
+			inverse ** 3 * start._x + 3 * inverse ** 2 * t * controlPoint1._x + 3 * inverse * t ** 2 * controlPoint2._x +
+			t ** 3 * end._x,
+			inverse ** 3 * start._y + 3 * inverse ** 2 * t * controlPoint1._y + 3 * inverse * t ** 2 * controlPoint2._y +
+			t ** 3 * end._y
+		)
+
+	@readonly
+	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the curve.
+
+		The box encloses the start and end point, and the points of the curve with the smallest or largest x- or
+		y-coordinate between them. The control points' box is larger, if the curve doesn't pass the control points.
+
+		:returns: A new bounding box.
+		"""
+		start =         self._start
+		controlPoint1 = self._controlPoints[0]
+		controlPoint2 = self._controlPoints[1]
+		end =           self._end
+		parameters =    []
+		for startValue, controlValue1, controlValue2, endValue in (
+			(start._x, controlPoint1._x, controlPoint2._x, end._x),
+			(start._y, controlPoint1._y, controlPoint2._y, end._y)
+		):
+			quadratic = 3 * (controlValue1 - controlValue2) + endValue - startValue
+			linear =    2 * (startValue - 2 * controlValue1 + controlValue2)
+			constant =  controlValue1 - startValue
+			if quadratic != 0:
+				discriminant = linear ** 2 - 4 * quadratic * constant
+				if discriminant >= 0:
+					root = sqrt(discriminant)
+					for t in ((-linear + root) / (2 * quadratic), (-linear - root) / (2 * quadratic)):
+						if 0 < t < 1:
+							parameters.append(t)
+			elif linear != 0 and 0 < (t := -constant / linear) < 1:
+				parameters.append(t)
+
+		return BoundingBox2D.FromPoints((start, end, *(self._PointAt(t) for t in parameters)))
+
+	def Copy(self) -> Self:
+		"""
+		Create a new 2D cubic Bezier curve segment as a copy of this one.
+
+		The copy holds copies of the start point, both control points and the end point.
+
+		:returns: Copy of this 2D cubic Bezier curve segment.
+		"""
+		return self.__class__(self._start, self._controlPoints[0], self._controlPoints[1], self._end)
+
+	def __repr__(self) -> str:
+		"""
+		Returns the 2D cubic Bezier curve segment's string representation.
+
+		:returns: The string representation of the 2D cubic Bezier curve segment.
+		"""
+		return f"CubicBezierSegment2D({self._start}, {self._controlPoints[0]}, {self._controlPoints[1]}, {self._end})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the 2D cubic Bezier curve segment's string equivalent.
+
+		:returns: The string equivalent of the 2D cubic Bezier curve segment.
+		"""
+		return f"({self._start} .. controls {self._controlPoints[0]} and {self._controlPoints[1]} .. {self._end})"
