@@ -1438,6 +1438,10 @@ groups. An element belongs to at most one group, its :attr:`~pyTooling.Cartesian
 * :attr:`~pyTooling.Cartesian3D.Element3D.BoundingBox` in its frame and
   :attr:`~pyTooling.Cartesian3D.Element3D.AbsoluteBoundingBox` relative to the origin;
 * :meth:`~pyTooling.Cartesian3D.Element3D.Move`, shifting it in its frame;
+* :meth:`~pyTooling.Cartesian3D.Element3D.MirrorX`, :meth:`~pyTooling.Cartesian3D.Element3D.MirrorY` and
+  :meth:`~pyTooling.Cartesian3D.Element3D.MirrorZ`, mirroring it at a plane parallel to the yz-, xz- or xy-plane (the
+  x-, y- or z-coordinates flip), through an edge or the center of its bounding box, named by an
+  :class:`~pyTooling.Cartesian3D.Alignment3D` and optionally shifted by an offset;
 * :meth:`~pyTooling.Cartesian3D.Element3D.MoveTo`, moving it into another group - by default keeping its absolute
   position, so its local coordinates change;
 * :meth:`~pyTooling.Cartesian3D.Element3D.AlignTo`, moving it so an edge or the center of its bounding box aligns
