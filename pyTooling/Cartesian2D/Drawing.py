@@ -532,43 +532,52 @@ class Font(metaclass=ExtendedType, slots=True):
 	renderer maps it to its format.
 
 	Bold, small caps and the posture of the letters (:class:`FontStyle`) are independent of each other, as in CSS.
+
+	The average width of a character, :attr:`CharacterWidth`, is used to estimate the width of a text.
 	"""
 
-	_family:    str        #: Font name or generic font family.
-	_size:      float      #: Font size in points.
-	_bold:      bool       #: If ``True``, the font is bold.
-	_smallCaps: bool       #: If ``True``, the lower-case letters are small capitals.
-	_fontStyle: FontStyle  #: Posture of the letters.
+	_family:         str        #: Font name or generic font family.
+	_size:           float      #: Font size in points.
+	_bold:           bool       #: If ``True``, the font is bold.
+	_smallCaps:      bool       #: If ``True``, the lower-case letters are small capitals.
+	_fontStyle:      FontStyle  #: Posture of the letters.
+	_characterWidth: float      #: Average advance width of a character, as a factor of the font size.
 
 	def __init__(
 		self,
-		family:    str,
-		size:      float,
+		family:         str,
+		size:           float,
 		*,
-		bold:      bool = False,
-		smallCaps: bool = False,
-		fontStyle: FontStyle = FontStyle.Upright
+		bold:           bool = False,
+		smallCaps:      bool = False,
+		fontStyle:      FontStyle = FontStyle.Upright,
+		characterWidth: float = 0.6
 	) -> None:
 		"""
 		Initializes a font from its family, size and style.
 
-		:param family:      Font name or generic font family.
-		:param size:        Font size in points.
-		:param bold:        Optional, if ``True``, the font is bold. Default: ``False``.
-		:param smallCaps:   Optional, if ``True``, the lower-case letters are small capitals. Default: ``False``.
-		:param fontStyle:   Optional, posture of the letters. Default: ``FontStyle.Upright``.
-		:raises ValueError: If parameter 'family' is None.
-		:raises TypeError:  If parameter 'family' is not of type :class:`str`.
-		:raises ValueError: If parameter 'family' is empty.
-		:raises ValueError: If parameter 'size' is None.
-		:raises TypeError:  If parameter 'size' is not of type :class:`float` or :class:`int`.
-		:raises ValueError: If parameter 'size' isn't positive.
-		:raises ValueError: If parameter 'bold' is None.
-		:raises TypeError:  If parameter 'bold' is not of type :class:`bool`.
-		:raises ValueError: If parameter 'smallCaps' is None.
-		:raises TypeError:  If parameter 'smallCaps' is not of type :class:`bool`.
-		:raises ValueError: If parameter 'fontStyle' is None.
-		:raises TypeError:  If parameter 'fontStyle' is not of type :class:`FontStyle`.
+		:param family:         Font name or generic font family.
+		:param size:           Font size in points.
+		:param bold:           Optional, if ``True``, the font is bold. Default: ``False``.
+		:param smallCaps:      Optional, if ``True``, the lower-case letters are small capitals. Default: ``False``.
+		:param fontStyle:      Optional, posture of the letters. Default: ``FontStyle.Upright``.
+		:param characterWidth: Optional, average advance width of a character, as a factor of the font size. Default:
+		                       ``0.6``, the advance width of common monospace fonts.
+		:raises ValueError:    If parameter 'family' is None.
+		:raises TypeError:     If parameter 'family' is not of type :class:`str`.
+		:raises ValueError:    If parameter 'family' is empty.
+		:raises ValueError:    If parameter 'size' is None.
+		:raises TypeError:     If parameter 'size' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:    If parameter 'size' isn't positive.
+		:raises ValueError:    If parameter 'bold' is None.
+		:raises TypeError:     If parameter 'bold' is not of type :class:`bool`.
+		:raises ValueError:    If parameter 'smallCaps' is None.
+		:raises TypeError:     If parameter 'smallCaps' is not of type :class:`bool`.
+		:raises ValueError:    If parameter 'fontStyle' is None.
+		:raises TypeError:     If parameter 'fontStyle' is not of type :class:`FontStyle`.
+		:raises ValueError:    If parameter 'characterWidth' is None.
+		:raises TypeError:     If parameter 'characterWidth' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:    If parameter 'characterWidth' isn't positive.
 		"""
 		if family is None:
 			raise ValueError("Parameter 'family' is None.")
@@ -608,11 +617,23 @@ class Font(metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(fontStyle)}'.")
 			raise ex
 
-		self._family =    family
-		self._size =      size
-		self._bold =      bold
-		self._smallCaps = smallCaps
-		self._fontStyle = fontStyle
+		if characterWidth is None:
+			raise ValueError("Parameter 'characterWidth' is None.")
+		elif not isinstance(characterWidth, (int, float)):
+			ex = TypeError("Parameter 'characterWidth' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(characterWidth)}'.")
+			raise ex
+		elif characterWidth <= 0:
+			ex = ValueError("Parameter 'characterWidth' isn't positive.")
+			ex.add_note(f"Got value '{characterWidth}'.")
+			raise ex
+
+		self._family =         family
+		self._size =           size
+		self._bold =           bold
+		self._smallCaps =      smallCaps
+		self._fontStyle =      fontStyle
+		self._characterWidth = characterWidth
 
 	@readonly
 	def Family(self) -> str:
@@ -659,12 +680,21 @@ class Font(metaclass=ExtendedType, slots=True):
 		"""
 		return self._fontStyle
 
+	@readonly
+	def CharacterWidth(self) -> float:
+		"""
+		Read-only property to access the average advance width of a character (:attr:`_characterWidth`).
+
+		:returns: The average width of a character, as a factor of the font size.
+		"""
+		return self._characterWidth
+
 	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two fonts for equality.
 
 		:param other:      Operand to compare against.
-		:returns:          ``True``, if both fonts have the same family, size and style.
+		:returns:          ``True``, if both fonts have the same family, size, style and character width.
 		:raises TypeError: If the second operand is not of type :class:`Font`.
 		"""
 		if not isinstance(other, Font):
@@ -675,7 +705,8 @@ class Font(metaclass=ExtendedType, slots=True):
 
 		return (
 			self._family == other._family and self._size == other._size and self._bold is other._bold and
-			self._smallCaps is other._smallCaps and self._fontStyle is other._fontStyle
+			self._smallCaps is other._smallCaps and self._fontStyle is other._fontStyle and
+			self._characterWidth == other._characterWidth
 		)
 
 	def __ne__(self, other: Any) -> bool:
@@ -683,7 +714,7 @@ class Font(metaclass=ExtendedType, slots=True):
 		Compare two fonts for inequality.
 
 		:param other:      Operand to compare against.
-		:returns:          ``True``, if the fonts differ in family, size or style.
+		:returns:          ``True``, if the fonts differ in family, size, style or character width.
 		:raises TypeError: If the second operand is not of type :class:`Font`.
 		"""
 		if not isinstance(other, Font):
@@ -694,16 +725,17 @@ class Font(metaclass=ExtendedType, slots=True):
 
 		return (
 			self._family != other._family or self._size != other._size or self._bold is not other._bold or
-			self._smallCaps is not other._smallCaps or self._fontStyle is not other._fontStyle
+			self._smallCaps is not other._smallCaps or self._fontStyle is not other._fontStyle or
+			self._characterWidth != other._characterWidth
 		)
 
 	def __hash__(self) -> int:
 		"""
-		Returns a hash of the font's family, size and style, so equal fonts have the same hash.
+		Returns a hash of the font's family, size, style and character width, so equal fonts have the same hash.
 
 		:returns: The hash value.
 		"""
-		return hash((self._family, self._size, self._bold, self._smallCaps, self._fontStyle))
+		return hash((self._family, self._size, self._bold, self._smallCaps, self._fontStyle, self._characterWidth))
 
 	def __repr__(self) -> str:
 		"""
@@ -713,7 +745,7 @@ class Font(metaclass=ExtendedType, slots=True):
 		"""
 		return (
 			f"Font({self._family!r}, {self._size}, bold={self._bold}, smallCaps={self._smallCaps}, "
-			f"fontStyle={self._fontStyle})"
+			f"fontStyle={self._fontStyle}, characterWidth={self._characterWidth})"
 		)
 
 

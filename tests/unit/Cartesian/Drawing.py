@@ -332,6 +332,32 @@ class Fonts(Testcase):
 
 		self.assertIs(FontStyle.Slanted, font.FontStyle)
 
+	def test_Font_CharacterWidth(self) -> None:
+		font = Font("sans-serif", 10, characterWidth=0.5)
+
+		self.assertEqual(0.5, font.CharacterWidth)
+		self.assertEqual(0.6, Font("monospace", 10).CharacterWidth)
+
+	def test_Font_CharacterWidthNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Font("serif", 10, characterWidth=None)
+
+		self.assertEqual("Parameter 'characterWidth' is None.", str(context.exception))
+
+	def test_Font_CharacterWidthStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Font("serif", 10, characterWidth="0.5")
+
+		self.assertEqual("Parameter 'characterWidth' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Font_CharacterWidthZero(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Font("serif", 10, characterWidth=0)
+
+		self.assertEqual("Parameter 'characterWidth' isn't positive.", str(context.exception))
+		self.assertListEqual(["Got value '0'."], context.exception.__notes__)
+
 	def test_Font_FamilyNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = Font(None, 10)
@@ -510,6 +536,8 @@ class Comparison(Testcase):
 		self.assertFalse(Font("serif", 10) == Font("serif", 10, smallCaps=True))
 		self.assertTrue(Font("serif", 10, fontStyle=FontStyle.Italic) != Font("serif", 10, fontStyle=FontStyle.Slanted))
 		self.assertTrue(Font("serif", 10) != Font("serif", 10, smallCaps=True))
+		self.assertTrue(Font("serif", 10) != Font("serif", 10, characterWidth=0.5))
+		self.assertFalse(Font("serif", 10) == Font("serif", 10, characterWidth=0.5))
 		self.assertTrue(Font("serif", 10) != Font("sans-serif", 10))
 		self.assertTrue(Font("serif", 10) != Font("serif", 10, bold=True))
 		self.assertFalse(Font("serif", 10) != Font("serif", 10))
@@ -582,7 +610,7 @@ class Representation(Testcase):
 
 	def test_Font_repr(self) -> None:
 		self.assertEqual(
-			"Font('monospace', 10, bold=True, smallCaps=False, fontStyle=FontStyle.Upright)",
+			"Font('monospace', 10, bold=True, smallCaps=False, fontStyle=FontStyle.Upright, characterWidth=0.6)",
 			repr(Font("monospace", 10, bold=True))
 		)
 
