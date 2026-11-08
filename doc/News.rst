@@ -20,8 +20,8 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D.Shapes`: closed shapes derive from the abstract
      :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` and report their ``Area`` and ``Perimeter``; a polygon and a
      trapezium compute both from their corners.
-   * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.PolyLine`, an open chain of two or
-     more points with line segments as edges, measuring its length.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.PolyLine` is a path of line
+     segments, built from two or more points, open or closed.
    * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: points, offsets, sizes, segments and shapes support
      :func:`copy.copy` and :func:`copy.deepcopy`, and segments and shapes have a ``Copy()`` method. A copy shares no
      point with the original.
