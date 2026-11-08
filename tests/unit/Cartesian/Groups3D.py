@@ -203,7 +203,10 @@ class Membership(Testcase):
 
 		self.assertEqual("Element is owned by another element already.", str(context.exception))
 		self.assertListEqual(
-			["Got LineSegment3D((0, 0, 0), (1, 1, 1)) owned by Group3D((0, 0, 0), children=1)."],
+			[
+				"Got LineSegment3D((0, 0, 0), (1, 1, 1)) owned by Group3D((0, 0, 0), children=1).",
+				"Use 'MoveTo' to move it between groups."
+			],
 			context.exception.__notes__
 		)
 		self.assertEqual("Parameter 'child' belongs to another element.", str(context.exception.__cause__))
@@ -644,3 +647,228 @@ class Moving(Testcase):
 
 		self.assertEqual("Parameter 'offset' is not of type 'Offset3D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_MoveTo(self) -> None:
+		"""Moving a segment to another group keeps its absolute position."""
+		line =   LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		_ =      Group3D(Offset3D(10, 0, 0), (line, ))
+		target = Group3D(Offset3D(0, 20, 30))
+
+		line.MoveTo(target)
+
+		self.assertIs(target, line.Parent)
+		self.assertTupleEqual((11, -18, -27), line.Start.ToTuple())
+		self.assertTupleEqual((11, 2, 3), line.Start.Absolute.ToTuple())
+
+	def test_MoveTo_LocalPosition(self) -> None:
+		line =   LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		_ =      Group3D(Offset3D(10, 0, 0), (line, ))
+		target = Group3D(Offset3D(0, 20, 30))
+
+		line.MoveTo(target, keepPosition=False)
+
+		self.assertIs(target, line.Parent)
+		self.assertTupleEqual((1, 2, 3), line.Start.ToTuple())
+		self.assertTupleEqual((1, 22, 33), line.Start.Absolute.ToTuple())
+
+	def test_MoveTo_None(self) -> None:
+		line = LineSegment3D(Point3D(0, 0, 0), Point3D(2, 0, 0))
+		_ =    Group3D(Offset3D(10, 5, 1), (line, ))
+
+		line.MoveTo(None)
+
+		self.assertIsNone(line.Parent)
+		self.assertTupleEqual(((10, 5, 1), (12, 5, 1)), line.ToTuple())
+
+	def test_MoveTo_Group(self) -> None:
+		"""Moving a group changes its offset only: its children keep their local coordinates."""
+		line =   LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		inner =  Group3D(Offset3D(3, 3, 3), (line, ))
+		_ =      Group3D(Offset3D(10, 0, 0), (inner, ))
+		target = Group3D(Offset3D(0, 20, 30))
+
+		inner.MoveTo(target)
+
+		self.assertTupleEqual((13, -17, -27), inner.Offset.ToTuple())
+		self.assertTupleEqual((1, 2, 3), line.Start.ToTuple())
+		self.assertTupleEqual((14, 5, 6), line.Start.Absolute.ToTuple())
+
+	def test_MoveTo_keepPositionNone(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(ValueError) as context:
+			line.MoveTo(Group3D(), keepPosition=None)
+
+		self.assertEqual("Parameter 'keepPosition' is None.", str(context.exception))
+		self.assertIsNone(line.Parent)
+
+	def test_MoveTo_keepPositionInt(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(TypeError) as context:
+			line.MoveTo(Group3D(), keepPosition=1)
+
+		self.assertEqual("Parameter 'keepPosition' is not of type 'bool'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_MoveTo_Cycle(self) -> None:
+		inner = Group3D(Offset3D(1, 1, 1))
+		outer = Group3D(children=(inner, ))
+
+		with self.assertRaises(GroupCycleError):
+			outer.MoveTo(inner)
+
+		self.assertTupleEqual((0, 0, 0), outer.Offset.ToTuple())
+		self.assertIsNone(outer.Parent)
+
+
+class Distributing(Testcase):
+	def test_X(self) -> None:
+		line1 = LineSegment3D(Point3D(-1, 0, 0), Point3D(1, 0, 0))
+		line2 = LineSegment3D(Point3D(1, 0, 0), Point3D(5, 0, 0))
+		line3 = LineSegment3D(Point3D(3, 5, 1), Point3D(5, 5, 1))
+		line4 = LineSegment3D(Point3D(19, 0, 0), Point3D(21, 0, 0))
+		group = Group3D(children=(line4, line2, line1, line3))
+
+		group.DistributeX()
+
+		self.assertEqual(BoundingBox3D(-1, 0, 0, 1, 0, 0), line1.BoundingBox)
+		self.assertEqual(BoundingBox3D(5, 0, 0, 9, 0, 0), line2.BoundingBox)
+		self.assertEqual(BoundingBox3D(13, 5, 1, 15, 5, 1), line3.BoundingBox)
+		self.assertEqual(BoundingBox3D(19, 0, 0, 21, 0, 0), line4.BoundingBox)
+
+	def test_Y(self) -> None:
+		line1 = LineSegment3D(Point3D(0, 0, 0), Point3D(0, 2, 0))
+		line2 = LineSegment3D(Point3D(5, 3, 1), Point3D(5, 4, 1))
+		line3 = LineSegment3D(Point3D(1, 9, 2), Point3D(1, 12, 2))
+		group = Group3D(children=(line1, line2, line3))
+
+		group.DistributeY()
+
+		self.assertEqual(BoundingBox3D(5, 5, 1, 5, 6, 1), line2.BoundingBox)
+		self.assertEqual(BoundingBox3D(1, 9, 2, 1, 12, 2), line3.BoundingBox)
+
+	def test_Z(self) -> None:
+		line1 = LineSegment3D(Point3D(0, 0, 0), Point3D(0, 0, 2))
+		line2 = LineSegment3D(Point3D(1, 5, 3), Point3D(1, 5, 4))
+		line3 = LineSegment3D(Point3D(2, 1, 9), Point3D(2, 1, 12))
+		group = Group3D(children=(line3, line1, line2))
+
+		group.DistributeZ()
+
+		self.assertEqual(BoundingBox3D(0, 0, 0, 0, 0, 2), line1.BoundingBox)
+		self.assertEqual(BoundingBox3D(1, 5, 5, 1, 5, 6), line2.BoundingBox)
+		self.assertEqual(BoundingBox3D(2, 1, 9, 2, 1, 12), line3.BoundingBox)
+
+	def test_TwoChildren(self) -> None:
+		line1 = LineSegment3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
+		line2 = LineSegment3D(Point3D(3, 0, 0), Point3D(4, 0, 0))
+		group = Group3D(children=(line1, line2))
+
+		group.DistributeX()
+
+		self.assertTupleEqual(((0, 0, 0), (1, 0, 0)), line1.ToTuple())
+		self.assertTupleEqual(((3, 0, 0), (4, 0, 0)), line2.ToTuple())
+
+	def test_Gap_X(self) -> None:
+		line1 = LineSegment3D(Point3D(-1, 0, 0), Point3D(1, 0, 0))
+		line2 = LineSegment3D(Point3D(1, 0, 0), Point3D(5, 0, 0))
+		line3 = LineSegment3D(Point3D(19, 5, 1), Point3D(21, 5, 1))
+		group = Group3D(children=(line3, line2, line1))
+
+		group.DistributeX(3)
+
+		self.assertEqual(BoundingBox3D(-1, 0, 0, 1, 0, 0), line1.BoundingBox)
+		self.assertEqual(BoundingBox3D(4, 0, 0, 8, 0, 0), line2.BoundingBox)
+		self.assertEqual(BoundingBox3D(11, 5, 1, 13, 5, 1), line3.BoundingBox)
+
+	def test_Gap_Y(self) -> None:
+		line1 = LineSegment3D(Point3D(0, 0, 0), Point3D(0, 2, 0))
+		line2 = LineSegment3D(Point3D(5, 3, 1), Point3D(5, 4, 1))
+		group = Group3D(children=(line1, line2))
+
+		group.DistributeY(0.5)
+
+		self.assertEqual(BoundingBox3D(0, 0, 0, 0, 2, 0), line1.BoundingBox)
+		self.assertEqual(BoundingBox3D(5, 2.5, 1, 5, 3.5, 1), line2.BoundingBox)
+
+	def test_Gap_Z(self) -> None:
+		line1 = LineSegment3D(Point3D(0, 0, 0), Point3D(0, 0, 2))
+		line2 = LineSegment3D(Point3D(1, 5, 3), Point3D(1, 5, 4))
+		group = Group3D(children=(line2, line1))
+
+		group.DistributeZ(2)
+
+		self.assertEqual(BoundingBox3D(0, 0, 0, 0, 0, 2), line1.BoundingBox)
+		self.assertEqual(BoundingBox3D(1, 5, 4, 1, 5, 5), line2.BoundingBox)
+
+	def test_Gap_Zero(self) -> None:
+		line1 = LineSegment3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
+		line2 = LineSegment3D(Point3D(5, 0, 0), Point3D(6, 0, 0))
+		group = Group3D(children=(line1, line2))
+
+		group.DistributeX(0)
+
+		self.assertTupleEqual(((1, 0, 0), (2, 0, 0)), line2.ToTuple())
+
+	def test_Gap_OneChild(self) -> None:
+		line =  LineSegment3D(Point3D(3, 0, 0), Point3D(4, 0, 0))
+		group = Group3D(children=(line, ))
+
+		group.DistributeX(1)
+
+		self.assertTupleEqual(((3, 0, 0), (4, 0, 0)), line.ToTuple())
+
+	def test_Gap_Str(self) -> None:
+		group = Group3D()
+
+		with self.assertRaises(TypeError) as context:
+			group.DistributeX("1")
+
+		self.assertEqual("Parameter 'gap' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Gap_Negative(self) -> None:
+		group = Group3D()
+
+		with self.assertRaises(ValueError) as context:
+			group.DistributeX(-1)
+
+		self.assertEqual("Parameter 'gap' is negative.", str(context.exception))
+		self.assertListEqual(["Got value '-1'."], context.exception.__notes__)
+
+	def test_Gap_Y_Str(self) -> None:
+		group = Group3D()
+
+		with self.assertRaises(TypeError) as context:
+			group.DistributeY("1")
+
+		self.assertEqual("Parameter 'gap' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Gap_Y_Negative(self) -> None:
+		group = Group3D()
+
+		with self.assertRaises(ValueError) as context:
+			group.DistributeY(-1)
+
+		self.assertEqual("Parameter 'gap' is negative.", str(context.exception))
+		self.assertListEqual(["Got value '-1'."], context.exception.__notes__)
+
+	def test_Gap_Z_Str(self) -> None:
+		group = Group3D()
+
+		with self.assertRaises(TypeError) as context:
+			group.DistributeZ("1")
+
+		self.assertEqual("Parameter 'gap' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Gap_Z_Negative(self) -> None:
+		group = Group3D()
+
+		with self.assertRaises(ValueError) as context:
+			group.DistributeZ(-1)
+
+		self.assertEqual("Parameter 'gap' is negative.", str(context.exception))
+		self.assertListEqual(["Got value '-1'."], context.exception.__notes__)

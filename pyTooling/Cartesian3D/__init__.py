@@ -42,6 +42,7 @@ An implementation of 3D cartesian data structures for Python.
 """
 from __future__            import annotations
 
+from enum                  import Enum
 from math                  import atan2, sqrt
 from typing                import TYPE_CHECKING, Any, ClassVar, Generic, Iterable, Optional as Nullable, Self, Union
 
@@ -54,6 +55,26 @@ from pyTooling.Cartesian2D import Coordinate, AlreadyOwnedError, DuplicatePointE
 
 if TYPE_CHECKING:
 	from pyTooling.Cartesian3D.Groups import Group3D
+
+
+@export
+class Alignment3D(Enum):
+	"""
+	Edge or center of a bounding box, two elements are aligned at.
+
+	The members name the smaller or larger coordinate, like :class:`BoundingBox3D`, so they don't depend on the direction
+	of an axis.
+	"""
+
+	MinX =    0  #: Align the smallest x-coordinates.
+	CenterX = 1  #: Align the centers in x-direction.
+	MaxX =    2  #: Align the largest x-coordinates.
+	MinY =    3  #: Align the smallest y-coordinates.
+	CenterY = 4  #: Align the centers in y-direction.
+	MaxY =    5  #: Align the largest y-coordinates.
+	MinZ =    6  #: Align the smallest z-coordinates.
+	CenterZ = 7  #: Align the centers in z-direction.
+	MaxZ =    8  #: Align the largest z-coordinates.
 
 
 @export
@@ -94,7 +115,7 @@ class Base3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		Only an :class:`Element3D` can be assigned a parent. Assigning a group moves the element into it, assigning
 		``None`` removes it from its parent. The element keeps its local coordinates, so its absolute position changes with
-		the frame.
+		the frame. Use :meth:`Element3D.MoveTo` to keep the absolute position.
 
 		:returns:                The parent, or ``None``, if this object has no parent.
 		:raises TypeError:       If an assigned value is not of a type in :attr:`_PARENT_TYPE`.
@@ -569,6 +590,90 @@ class Element3D(Base3D[Coordinate], Generic[Coordinate]):
 
 		:param offset: The 3D-offset to move by.
 		"""
+
+	def MoveTo(self, parent: Nullable[Group3D], keepPosition: bool = True) -> None:
+		"""
+		Move the element into another group.
+
+		With ``keepPosition``, the element is moved by the difference of both frames, so its absolute position stays.
+		Otherwise, it keeps its local coordinates, like an assignment to :attr:`Parent`.
+
+		:param parent:           The new parent group, or ``None`` for no parent.
+		:param keepPosition:     Optional, if ``True``, the absolute position is kept. Default: ``True``.
+		:raises TypeError:       If parameter 'parent' is not of type :class:`~pyTooling.Cartesian3D.Groups.Group3D`.
+		:raises GroupCycleError: If parameter 'parent' is this element or one of its descendants.
+		:raises ValueError:      If parameter 'keepPosition' is None.
+		:raises TypeError:       If parameter 'keepPosition' is not of type :class:`bool`.
+		"""
+		if keepPosition is None:
+			raise ValueError("Parameter 'keepPosition' is None.")
+		elif not isinstance(keepPosition, bool):
+			ex = TypeError("Parameter 'keepPosition' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(keepPosition)}'.")
+			raise ex
+
+		frame =          self.Frame
+		previousOffset = Offset3D(0, 0, 0) if frame is None else frame.AbsoluteOffset
+
+		self.Parent = parent
+
+		if not keepPosition:
+			return
+
+		if (frame := self.Frame) is None:
+			self.Move(previousOffset)
+		else:
+			self.Move(previousOffset - frame.AbsoluteOffset)
+
+	def AlignTo(self, reference: Element3D[Coordinate], alignment: Alignment3D) -> None:
+		"""
+		Move the element, so an edge or the center of its bounding box aligns with the one of another element.
+
+		Both elements may be in different frames: their absolute bounding boxes are compared.
+
+		:param reference:   The element to align with. It isn't moved.
+		:param alignment:   The edge or center to align.
+		:raises ValueError: If parameter 'reference' is None.
+		:raises TypeError:  If parameter 'reference' is not of type :class:`Element3D`.
+		:raises ValueError: If parameter 'alignment' is None.
+		:raises TypeError:  If parameter 'alignment' is not of type :class:`Alignment3D`.
+		"""
+		if reference is None:
+			raise ValueError("Parameter 'reference' is None.")
+		elif not isinstance(reference, Element3D):
+			ex = TypeError("Parameter 'reference' is not of type 'Element3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(reference)}'.")
+			raise ex
+
+		if alignment is None:
+			raise ValueError("Parameter 'alignment' is None.")
+		elif not isinstance(alignment, Alignment3D):
+			ex = TypeError("Parameter 'alignment' is not of type 'Alignment3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
+			raise ex
+
+		box =          self.AbsoluteBoundingBox
+		referenceBox = reference.AbsoluteBoundingBox
+		if alignment is Alignment3D.MinX:
+			offset = Offset3D(referenceBox._minX - box._minX, 0, 0)
+		elif alignment is Alignment3D.CenterX:
+			offset = Offset3D((referenceBox._minX + referenceBox._maxX - box._minX - box._maxX) / 2, 0, 0)
+		elif alignment is Alignment3D.MaxX:
+			offset = Offset3D(referenceBox._maxX - box._maxX, 0, 0)
+		elif alignment is Alignment3D.MinY:
+			offset = Offset3D(0, referenceBox._minY - box._minY, 0)
+		elif alignment is Alignment3D.CenterY:
+			offset = Offset3D(0, (referenceBox._minY + referenceBox._maxY - box._minY - box._maxY) / 2, 0)
+		elif alignment is Alignment3D.MaxY:
+			offset = Offset3D(0, referenceBox._maxY - box._maxY, 0)
+		elif alignment is Alignment3D.MinZ:
+			offset = Offset3D(0, 0, referenceBox._minZ - box._minZ)
+		elif alignment is Alignment3D.CenterZ:
+			offset = Offset3D(0, 0, (referenceBox._minZ + referenceBox._maxZ - box._minZ - box._maxZ) / 2)
+		else:
+			offset = Offset3D(0, 0, referenceBox._maxZ - box._maxZ)
+
+		self.Move(offset)
 
 
 Point3D._PARENT_TYPE = (Element3D, )

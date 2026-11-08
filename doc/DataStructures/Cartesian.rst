@@ -1384,9 +1384,13 @@ groups. An element belongs to at most one group, its :attr:`~pyTooling.Cartesian
 
 * :attr:`~pyTooling.Cartesian3D.Element3D.BoundingBox` in its frame and
   :attr:`~pyTooling.Cartesian3D.Element3D.AbsoluteBoundingBox` relative to the origin;
-* :meth:`~pyTooling.Cartesian3D.Element3D.Move`, shifting it in its frame.
+* :meth:`~pyTooling.Cartesian3D.Element3D.Move`, shifting it in its frame;
+* :meth:`~pyTooling.Cartesian3D.Element3D.MoveTo`, moving it into another group - by default keeping its absolute
+  position, so its local coordinates change;
+* :meth:`~pyTooling.Cartesian3D.Element3D.AlignTo`, moving it so an edge or the center of its bounding box aligns
+  with another element's - see :class:`~pyTooling.Cartesian3D.Alignment3D`. Both elements may be in different groups.
 
-Assigning :attr:`~pyTooling.Cartesian3D.Element3D.Parent` moves an element into a group and keeps its local
+Assigning :attr:`~pyTooling.Cartesian3D.Element3D.Parent` moves an element into a group too, but keeps its local
 coordinates. A group can't become its own descendant: that raises :exc:`~pyTooling.Cartesian2D.GroupCycleError`.
 Every segment and group takes a keyword-only parameter ``parent``: a group given there registers the new element, as
 :meth:`~pyTooling.Cartesian3D.Groups.Group3D.AddChild` does.
@@ -1422,9 +1426,12 @@ children stay as they are.
 
 Children are given to the constructor or added by :meth:`~pyTooling.Cartesian3D.Groups.Group3D.AddChild`, and removed
 by :meth:`~pyTooling.Cartesian3D.Groups.Group3D.RemoveChild`; a child of another group raises
-:exc:`~pyTooling.Cartesian2D.AlreadyOwnedError`, removing an element of another group
-:exc:`~pyTooling.Cartesian2D.NotOwnedError`. A group without children has no bounding box and raises
-:exc:`~pyTooling.Cartesian2D.Groups.EmptyGroupError`. Subtracting points of different groups raises
+:exc:`~pyTooling.Cartesian2D.AlreadyOwnedError` - use :meth:`~pyTooling.Cartesian3D.Element3D.MoveTo` to move it -,
+removing an element of another group :exc:`~pyTooling.Cartesian2D.NotOwnedError`. A group without children has no
+bounding box and raises :exc:`~pyTooling.Cartesian2D.Groups.EmptyGroupError`.
+:meth:`~pyTooling.Cartesian3D.Groups.Group3D.DistributeX`, :meth:`~pyTooling.Cartesian3D.Groups.Group3D.DistributeY`
+and :meth:`~pyTooling.Cartesian3D.Groups.Group3D.DistributeZ` move the children along that axis, so the gaps between
+them are equal. Subtracting points of different groups raises
 :exc:`~pyTooling.Cartesian2D.NotInSameFrameError`; subtract their absolute positions instead.
 
 .. seealso::

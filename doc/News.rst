@@ -72,7 +72,9 @@ Version 10.x (2026)
      :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError` instead of being shared; points and line segments of different
      frames raise :exc:`~pyTooling.Cartesian2D.NotInSameFrameError` when combined.
    * :mod:`pyTooling.Cartesian3D.Groups`: a :class:`~pyTooling.Cartesian3D.Groups.Group3D` holds segments and groups at
-     an offset, with coordinates relative to the group. Elements report absolute positions and bounding boxes.
+     an offset, with coordinates relative to the group. Elements report absolute positions and bounding boxes, move
+     between groups keeping their position, align to each other at an :class:`~pyTooling.Cartesian3D.Alignment3D` and
+     are distributed along an axis.
    * :mod:`pyTooling.Cartesian2D.Drawing`: drawing styles as values - colors derived from the abstract
      :class:`~pyTooling.Cartesian2D.Drawing.Color`, converting to RGBA by ``ToRGBA()``, as
      :class:`~pyTooling.Cartesian2D.Drawing.RGBAColor` (RGB and opacity, parsed from ``#rrggbb``/``#rrggbbaa``),
