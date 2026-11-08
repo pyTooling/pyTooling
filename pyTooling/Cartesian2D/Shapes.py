@@ -1357,7 +1357,7 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 		"""
 		Move the path by moving all its points (inplace).
 
-		Each joint moves once, and each edge moves its other points, like an arc's center.
+		Each joint moves once, and each edge moves its other points, like a Bezier curve's control points.
 
 		:param offset:      The 2D-offset to move by.
 		:raises ValueError: If parameter 'offset' is None.

@@ -2295,7 +2295,7 @@ class ElementData(Testcase):
 		self.assertIsNot(value, newArc.Value)
 		self.assertListEqual([1, 2], newArc.Value)
 		self.assertIsNot(arc["nets"], newArc["nets"])
-		self.assertIs(newArc, newArc.Center.Parent)
+		self.assertIs(newArc, newArc.Start.Parent)
 
 	def test_ArcSegment_ToChord(self) -> None:
 		"""The chord is a new line segment without value or key-value-pairs."""
@@ -2379,14 +2379,18 @@ class ElementData(Testcase):
 
 class ArcInstantiation(Testcase):
 	def test_Counterclockwise(self) -> None:
+		"""The center is converted to the sagitta: the arc bulges 1 - sqrt(2) / 2 to the right of its chord."""
 		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
 
 		self.assertIsInstance(arc, Segment2D)
 		self.assertTupleEqual((1, 0), arc.Start.ToTuple())
 		self.assertTupleEqual((0, 1), arc.End.ToTuple())
-		self.assertTupleEqual((0, 0), arc.Center.ToTuple())
+		self.assertAlmostEqual(0, arc.Center.X)
+		self.assertAlmostEqual(0, arc.Center.Y)
 		self.assertIs(SweepDirection.Counterclockwise, arc.Direction)
-		self.assertEqual(1.0, arc.Radius)
+		self.assertAlmostEqual(1, arc.Radius)
+		self.assertEqual(0.5, arc.ChordPosition)
+		self.assertAlmostEqual(sqrt(2) / 2 - 1, arc.Height)
 
 	def test_Float(self) -> None:
 		arc = ArcSegment2D(
@@ -2403,7 +2407,7 @@ class ArcInstantiation(Testcase):
 			Point2D(1, 0), Point2D(0.0, 1.0000000001), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise
 		)
 
-		self.assertEqual(1.0, arc.Radius)
+		self.assertTrue(isclose(1, arc.Radius))
 
 	def test_StartNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -2479,6 +2483,16 @@ class ArcInstantiation(Testcase):
 		self.assertIsNone(start.Parent)
 		self.assertIsNone(end.Parent)
 
+	def test_Center_NoChord(self) -> None:
+		"""An arc isn't a circle: a center can't make a full circle."""
+		with self.assertRaises(ValueError) as context:
+			_ = ArcSegment2D(Point2D(1, 0), Point2D(1, 0), center=Point2D(0, 0), direction=SweepDirection.Clockwise)
+
+		self.assertEqual("Parameter 'end' is at the position of parameter 'start'.", str(context.exception))
+		self.assertListEqual(
+			["Got point (1, 0).", "An arc needs a chord from the start point to the end point."],
+			context.exception.__notes__
+		)
 
 
 class ArcCircleParameters(Testcase):
@@ -2492,7 +2506,8 @@ class ArcCircleParameters(Testcase):
 		self.assertEqual(1.0, arc.Radius)
 		self.assertIs(SweepDirection.Counterclockwise, arc.Direction)
 		self.assertEqual(BoundingBox2D(0, -1, 2, 0), arc.BoundingBox)
-		self.assertIs(arc, arc.Center.Parent)
+		self.assertEqual(-1.0, arc.Height)
+		self.assertIsNone(arc.Center.Parent)
 		self.assertIsNone(arcPoint.Parent)
 
 	def test_ArcPoint_Clockwise(self) -> None:
@@ -2538,7 +2553,7 @@ class ArcCircleParameters(Testcase):
 
 		self.assertEqual("Parameter 'end' is at the position of parameter 'start'.", str(context.exception))
 		self.assertListEqual(
-			["Got point (0, 0).", "An arc through 'arcPoint' needs a chord from the start point to the end point."],
+			["Got point (0, 0).", "An arc needs a chord from the start point to the end point."],
 			context.exception.__notes__
 		)
 
@@ -2560,7 +2575,7 @@ class ArcCircleParameters(Testcase):
 		self.assertEqual(1.0, arc.Radius)
 		self.assertIs(SweepDirection.Clockwise, arc.Direction)
 		self.assertEqual(BoundingBox2D(0, 0, 2, 1), arc.BoundingBox)
-		self.assertIs(arc, arc.Center.Parent)
+		self.assertEqual(1, arc.Height)
 
 	def test_Height_Negative(self) -> None:
 		"""The arc passes (2, -1): center (2, 1.5), radius 2.5."""
@@ -2635,7 +2650,7 @@ class ArcCircleParameters(Testcase):
 
 		self.assertEqual("Parameter 'end' is at the position of parameter 'start'.", str(context.exception))
 		self.assertListEqual(
-			["Got point (1, 2).", "An arc with a 'height' needs a chord from the start point to the end point."],
+			["Got point (1, 2).", "An arc needs a chord from the start point to the end point."],
 			context.exception.__notes__
 		)
 
@@ -2675,14 +2690,15 @@ class ArcCircleParameters(Testcase):
 		)
 
 	def test_Edge(self) -> None:
-		"""An edge's computed center is owned by the shape."""
+		"""An edge references the shape's end points; its center is computed."""
 		polygon = Polygon((Point2D(0, 0), Point2D(2, 0), Point2D(1, 5)))
 		start, end, _ = polygon.Points
 
 		edge = ArcSegment2D(start, end, height=1, copyPoints=False, parent=polygon)
 
 		self.assertIs(polygon, edge.Parent)
-		self.assertIs(polygon, edge.Center.Parent)
+		self.assertIs(polygon, edge.End.Parent)
+		self.assertIsNone(edge.Center.Parent)
 
 
 class ArcChord(Testcase):
@@ -2705,10 +2721,10 @@ class ArcGeometry(Testcase):
 	def test_QuarterCounterclockwise(self) -> None:
 		arc = ArcSegment2D(Point2D(2, 0), Point2D(0, 2), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
 
-		self.assertEqual(0.0, arc.StartAngle)
-		self.assertEqual(pi / 2, arc.EndAngle)
-		self.assertEqual(pi / 2, arc.SweepAngle)
-		self.assertEqual(pi, arc.Length)
+		self.assertAlmostEqual(0, arc.StartAngle)
+		self.assertTrue(isclose(pi / 2, arc.EndAngle))
+		self.assertTrue(isclose(pi / 2, arc.SweepAngle))
+		self.assertTrue(isclose(pi, arc.Length))
 
 	def test_QuarterClockwise(self) -> None:
 		"""The same points clockwise: the arc takes the long way round."""
@@ -2720,9 +2736,9 @@ class ArcGeometry(Testcase):
 	def test_StartAngle_Negative(self) -> None:
 		arc = ArcSegment2D(Point2D(0, -1), Point2D(-1, 0), center=Point2D(0, 0), direction=SweepDirection.Clockwise)
 
-		self.assertEqual(-pi / 2, arc.StartAngle)
-		self.assertEqual(pi, arc.EndAngle)
-		self.assertEqual(-pi / 2, arc.SweepAngle)
+		self.assertTrue(isclose(-pi / 2, arc.StartAngle))
+		self.assertTrue(isclose(pi, arc.EndAngle))
+		self.assertTrue(isclose(-pi / 2, arc.SweepAngle))
 
 	def test_Semicircle(self) -> None:
 		arc = ArcSegment2D(Point2D(3, 4), Point2D(-3, -4), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
@@ -2731,23 +2747,10 @@ class ArcGeometry(Testcase):
 		self.assertTrue(isclose(pi, arc.SweepAngle))
 		self.assertTrue(isclose(5 * pi, arc.Length))
 
-	def test_FullCircle(self) -> None:
-		"""A start and an end point at the same position make a full circle."""
-		counterclockwise = ArcSegment2D(
-			Point2D(1, 0), Point2D(1, 0), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise
-		)
-		clockwise =        ArcSegment2D(
-			Point2D(1, 0), Point2D(1, 0), center=Point2D(0, 0), direction=SweepDirection.Clockwise
-		)
-
-		self.assertEqual(2 * pi, counterclockwise.SweepAngle)
-		self.assertEqual(-2 * pi, clockwise.SweepAngle)
-		self.assertEqual(2 * pi, clockwise.Length)
-
 	def test_Length_Center(self) -> None:
 		arc = ArcSegment2D(Point2D(6, 5), Point2D(5, 6), center=Point2D(5, 5), direction=SweepDirection.Counterclockwise)
 
-		self.assertEqual(pi / 2, arc.Length)
+		self.assertTrue(isclose(pi / 2, arc.Length))
 
 
 class ArcBounds(Testcase):
@@ -2785,11 +2788,6 @@ class ArcBounds(Testcase):
 
 		self.assertEqual(BoundingBox2D(3, 3, 4, 4), arc.BoundingBox)
 
-	def test_FullCircle(self) -> None:
-		arc = ArcSegment2D(Point2D(3, 2), Point2D(3, 2), center=Point2D(1, 2), direction=SweepDirection.Clockwise)
-
-		self.assertEqual(BoundingBox2D(-1, 0, 3, 4), arc.BoundingBox)
-
 	def test_ReadOnly(self) -> None:
 		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
 
@@ -2799,32 +2797,19 @@ class ArcBounds(Testcase):
 
 class ArcEndPoints(Testcase):
 	def test_Start(self) -> None:
-		arc =      ArcSegment2D(
-			Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise
-		)
+		"""An assigned start point needs no check: the arc keeps its relative height over the new chord."""
+		arc =      ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)
 		previous = arc.Start
-		point =    Point2D(-1, 0)
+		point =    Point2D(-2, 0)
 
 		arc.Start = point
 
 		self.assertIs(point, arc.Start)
 		self.assertIs(arc, point.Parent)
 		self.assertIsNone(previous.Parent)
-		self.assertEqual(3 * pi / 2, arc.SweepAngle)
-
-	def test_Start_NotOnCircle(self) -> None:
-		arc =   ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
-		start = arc.Start
-
-		with self.assertRaises(ValueError) as context:
-			arc.Start = Point2D(2, 0)
-
-		self.assertEqual("Parameter 'start' isn't on the arc's circle.", str(context.exception))
-		self.assertListEqual(
-			["Got point (2, 0), while the circle around (0, 0) has radius 1.0."],
-			context.exception.__notes__
-		)
-		self.assertIs(start, arc.Start)
+		self.assertEqual(2, arc.Height)
+		self.assertTupleEqual((0.0, 0.0), arc.Center.ToTuple())
+		self.assertEqual(2, arc.Radius)
 
 	def test_Start_None(self) -> None:
 		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
@@ -2853,41 +2838,33 @@ class ArcEndPoints(Testcase):
 		self.assertEqual("Point is given twice.", str(context.exception))
 
 	def test_Start_Alias(self) -> None:
-		"""The deprecated alias checks the circle too."""
-		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
+		arc =   ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)
+		point = Point2D(-2, 0)
 
-		with self.assertRaises(ValueError):
-			arc.start = Point2D(2, 0)
+		arc.start = point
+
+		self.assertIs(point, arc.Start)
 
 	def test_End(self) -> None:
-		arc =   ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
-		point = Point2D(0, -1)
+		"""The arc turns with its chord: the end point above the start point puts the bulge on the left."""
+		arc =   ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)
+		point = Point2D(0, 2)
 
 		arc.End = point
 
 		self.assertIs(point, arc.End)
 		self.assertIs(arc, point.Parent)
-		self.assertEqual(3 * pi / 2, arc.SweepAngle)
-
-	def test_End_NotOnCircle(self) -> None:
-		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
-		end = arc.End
-
-		with self.assertRaises(ValueError) as context:
-			arc.End = Point2D(0, 0.5)
-
-		self.assertEqual("Parameter 'end' isn't on the arc's circle.", str(context.exception))
-		self.assertListEqual(
-			["Got point (0, 0.5), while the circle around (0, 0) has radius 1.0."],
-			context.exception.__notes__
-		)
-		self.assertIs(end, arc.End)
+		self.assertAlmostEqual(0, arc.Center.X)
+		self.assertAlmostEqual(1, arc.Center.Y)
+		self.assertEqual(BoundingBox2D(-1, 0, 0, 2), arc.BoundingBox)
 
 	def test_End_Alias(self) -> None:
-		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
+		arc =   ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)
+		point = Point2D(0, 2)
 
-		with self.assertRaises(ValueError):
-			arc.end = Point2D(0, 0.5)
+		arc.end = point
+
+		self.assertIs(point, arc.End)
 
 	def test_Center_ReadOnly(self) -> None:
 		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
@@ -2903,75 +2880,52 @@ class ArcEndPoints(Testcase):
 
 
 class ArcOwnership(Testcase):
-	def test_Copy(self) -> None:
-		"""An arc owns copies of the given points; the given points stay without owner."""
-		center = Point2D(0, 0)
+	def test_Center(self) -> None:
+		"""A given center is only read; the arc's center is a new point on each access."""
+		center = Point2D(1, 0)
 
-		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=center, direction=SweepDirection.Counterclockwise)
+		arc = ArcSegment2D(Point2D(0, 0), Point2D(2, 0), center=center, direction=SweepDirection.Clockwise)
 
-		self.assertIsNot(center, arc.Center)
 		self.assertIsNone(center.Parent)
-		self.assertIs(arc, arc.Center.Parent)
+		self.assertIsNot(center, arc.Center)
+		self.assertIsNot(arc.Center, arc.Center)
+		self.assertIsNone(arc.Center.Parent)
 		self.assertIs(arc, arc.Start.Parent)
 
 	def test_Reference(self) -> None:
-		start =  Point2D(1, 0)
-		end =    Point2D(0, 1)
-		center = Point2D(0, 0)
+		start =  Point2D(0, 0)
+		end =    Point2D(2, 0)
+		center = Point2D(1, 0)
 
-		arc = ArcSegment2D(start, end, center=center, direction=SweepDirection.Counterclockwise, copyPoints=False)
+		arc = ArcSegment2D(start, end, center=center, direction=SweepDirection.Clockwise, copyPoints=False)
 
-		self.assertIs(center, arc.Center)
+		self.assertIs(start, arc.Start)
 		self.assertIs(arc, start.Parent)
 		self.assertIs(arc, end.Parent)
-		self.assertIs(arc, center.Parent)
+		self.assertIsNone(center.Parent)
 
 	def test_OwnedCenter(self) -> None:
-		line =  LineSegment2D(Point2D(0, 0), Point2D(4, 6))
-		start = Point2D(1, 0)
-		end =   Point2D(0, 1)
+		"""A center owned by another element is only read, so it stays with its owner."""
+		line = LineSegment2D(Point2D(1, 0), Point2D(4, 6))
 
-		with self.assertRaises(AlreadyOwnedError) as context:
-			_ = ArcSegment2D(start, end, center=line.Start, direction=SweepDirection.Counterclockwise, copyPoints=False)
+		arc = ArcSegment2D(Point2D(0, 0), Point2D(2, 0), center=line.Start, direction=SweepDirection.Clockwise)
 
-		self.assertEqual("Point is owned by another element already.", str(context.exception))
-		self.assertListEqual(
-			["Got point (0, 0) owned by LineSegment2D((0, 0), (4, 6)).", "Use 'copyPoints=True' to copy the point."],
-			context.exception.__notes__
-		)
-		self.assertIsInstance(context.exception.__cause__, ValueError)
-		self.assertEqual("Parameter 'center' is owned by another element.", str(context.exception.__cause__))
 		self.assertIs(line, line.Start.Parent)
-		self.assertIsNone(start.Parent)
-		self.assertIsNone(end.Parent)
+		self.assertTupleEqual((1.0, 0.0), arc.Center.ToTuple())
 
 	def test_Edge(self) -> None:
-		"""An arc with a shape as parent references the shape's points, the center too."""
-		polygon = Polygon((Point2D(1, 0), Point2D(0, 1), Point2D(0, 0)))
-		start, end, center = polygon.Points
+		"""An arc with a shape as parent references the shape's end points; a center needn't belong to the shape."""
+		polygon = Polygon((Point2D(0, 0), Point2D(2, 0), Point2D(1, 5)))
+		start, end, _ = polygon.Points
 
 		edge = ArcSegment2D(
-			start, end, center=center, direction=SweepDirection.Counterclockwise, copyPoints=False, parent=polygon
+			start, end, center=Point2D(1, 0), direction=SweepDirection.Clockwise, copyPoints=False, parent=polygon
 		)
 
 		self.assertIs(polygon, edge.Parent)
-		self.assertIs(center, edge.Center)
-		self.assertIs(polygon, center.Parent)
+		self.assertIs(start, edge.Start)
 		self.assertIs(polygon, edge.Start.Parent)
-
-	def test_Edge_CenterNotOwned(self) -> None:
-		polygon = Polygon((Point2D(1, 0), Point2D(0, 1), Point2D(0, 0)))
-		start, end, _ = polygon.Points
-
-		with self.assertRaises(NotOwnedError) as context:
-			_ = ArcSegment2D(
-				start, end, center=Point2D(0, 0), direction=SweepDirection.Counterclockwise, copyPoints=False, parent=polygon
-			)
-
-		self.assertEqual("Point isn't owned by the parent shape.", str(context.exception))
-		self.assertListEqual(["Got point (0, 0) owned by None."], context.exception.__notes__)
-		self.assertEqual("Parameter 'center' isn't owned by parameter 'parent'.", str(context.exception.__cause__))
-		self.assertIs(polygon, start.Parent)
+		self.assertTupleEqual((1.0, 0.0), edge.Center.ToTuple())
 
 	def test_Edge_Start(self) -> None:
 		"""An edge can't replace its points."""
@@ -2989,27 +2943,27 @@ class ArcOwnership(Testcase):
 
 class ArcCopy(Testcase):
 	def test_Copy(self) -> None:
-		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Clockwise)
+		arc = ArcSegment2D(Point2D(0, 0), Point2D(2, 0), center=Point2D(1, 0), direction=SweepDirection.Clockwise)
 
 		newArc = arc.Copy()
 		newArc.Move(Offset2D(5, 5))
 
 		self.assertIs(ArcSegment2D, type(newArc))
-		self.assertIsNot(arc.Center, newArc.Center)
-		self.assertIs(newArc, newArc.Center.Parent)
+		self.assertIsNot(arc.Start, newArc.Start)
+		self.assertIs(newArc, newArc.Start.Parent)
 		self.assertIs(SweepDirection.Clockwise, newArc.Direction)
-		self.assertTupleEqual((0, 0), arc.Center.ToTuple())
-		self.assertTupleEqual((5, 5), newArc.Center.ToTuple())
+		self.assertEqual(1, newArc.Height)
+		self.assertTupleEqual((1.0, 0.0), arc.Center.ToTuple())
+		self.assertTupleEqual((6.0, 5.0), newArc.Center.ToTuple())
 
 	def test_copy(self) -> None:
-		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Clockwise)
+		arc = ArcSegment2D(Point2D(0, 0), Point2D(2, 0), center=Point2D(1, 0), direction=SweepDirection.Clockwise)
 
 		newArc = copy(arc)
 
 		self.assertIs(ArcSegment2D, type(newArc))
 		self.assertIsNot(arc.Start, newArc.Start)
-		self.assertIsNot(arc.Center, newArc.Center)
-		self.assertTupleEqual((0, 0), newArc.Center.ToTuple())
+		self.assertTupleEqual((1.0, 0.0), newArc.Center.ToTuple())
 
 	def test_deepcopy(self) -> None:
 		"""A deep copy owns its points and isn't in the group of the original."""
@@ -3022,21 +2976,34 @@ class ArcCopy(Testcase):
 
 		self.assertIs(ArcSegment2D, type(newArc))
 		self.assertIsNone(newArc.Parent)
-		self.assertIs(newArc, newArc.Center.Parent)
+		self.assertIs(newArc, newArc.Start.Parent)
 		self.assertIs(newArc, newArc.End.Parent)
 		self.assertTupleEqual((arc, ), group.Children)
 
 
 class ArcMoving(Testcase):
 	def test_Move(self) -> None:
-		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
+		arc = ArcSegment2D(Point2D(0, 0), Point2D(2, 0), center=Point2D(1, 0), direction=SweepDirection.Clockwise)
 
 		arc.Move(Offset2D(2, 3))
 
-		self.assertTupleEqual((3, 3), arc.Start.ToTuple())
-		self.assertTupleEqual((2, 4), arc.End.ToTuple())
-		self.assertTupleEqual((2, 3), arc.Center.ToTuple())
-		self.assertEqual(BoundingBox2D(2, 3, 3, 4), arc.BoundingBox)
+		self.assertTupleEqual((2, 3), arc.Start.ToTuple())
+		self.assertTupleEqual((4, 3), arc.End.ToTuple())
+		self.assertTupleEqual((3.0, 3.0), arc.Center.ToTuple())
+		self.assertEqual(BoundingBox2D(2, 3, 4, 4), arc.BoundingBox)
+
+	def test_MoveEnd(self) -> None:
+		"""Moving an end point keeps the arc's shape: its height scales with the chord, its circle follows."""
+		arc = ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)
+		end = arc.End
+
+		end += Offset2D(2, 0)
+
+		self.assertEqual(2, arc.Height)
+		self.assertTupleEqual((2.0, 0.0), arc.Center.ToTuple())
+		self.assertEqual(2, arc.Radius)
+		self.assertIs(SweepDirection.Clockwise, arc.Direction)
+		self.assertEqual(BoundingBox2D(0, 0, 4, 2), arc.BoundingBox)
 
 	def test_Move_None(self) -> None:
 		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
@@ -3045,7 +3012,7 @@ class ArcMoving(Testcase):
 			arc.Move(None)
 
 		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
-		self.assertTupleEqual((0, 0), arc.Center.ToTuple())
+		self.assertTupleEqual((1, 0), arc.Start.ToTuple())
 
 
 class ArcMirroring(Testcase):
@@ -3082,14 +3049,14 @@ class ArcMirroring(Testcase):
 
 	def test_Canvas(self) -> None:
 		"""Flipping a canvas keeps the arc's appearance: its bounding box stays at the same distance from the top."""
-		arc =    ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Clockwise)
+		arc =    ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)
 		canvas = Canvas2D(YAxisDirection.Up, Size2D(10, 10), (arc, ))
 
 		canvas.Mirror()
 
-		self.assertTupleEqual((0, 10), arc.Center.ToTuple())
+		self.assertTupleEqual((1.0, 10.0), arc.Center.ToTuple())
 		self.assertIs(SweepDirection.Counterclockwise, arc.Direction)
-		self.assertEqual(BoundingBox2D(-1, 9, 1, 11), arc.BoundingBox)
+		self.assertEqual(BoundingBox2D(0, 9, 2, 10), arc.BoundingBox)
 
 
 class ArcGroups(Testcase):
@@ -3102,7 +3069,7 @@ class ArcGroups(Testcase):
 
 		self.assertIs(group, arc.Parent)
 		self.assertTupleEqual((arc, ), group.Children)
-		self.assertIs(group, arc.Center.Frame)
+		self.assertIs(group, arc.Start.Frame)
 		self.assertEqual(BoundingBox2D(9, 19, 11, 21), arc.AbsoluteBoundingBox)
 		self.assertEqual(BoundingBox2D(9, 19, 11, 21), group.BoundingBox)
 
@@ -3138,14 +3105,14 @@ class ArcGroups(Testcase):
 
 class ArcRepresentation(Testcase):
 	def test_repr(self) -> None:
-		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
+		arc = ArcSegment2D(Point2D(0, 0), Point2D(2, 0), center=Point2D(1, 0), direction=SweepDirection.Counterclockwise)
 
-		self.assertEqual("ArcSegment2D((1, 0), (0, 1), center=(0, 0), direction=Counterclockwise)", repr(arc))
+		self.assertEqual("ArcSegment2D((0, 0), (2, 0), chordPosition=0.5, height=-1.0)", repr(arc))
 
 	def test_str(self) -> None:
-		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Clockwise)
+		arc = ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)
 
-		self.assertEqual("((1, 0) → (0, 1) around (0, 0), clockwise)", str(arc))
+		self.assertEqual("((0, 0) → (2, 0), height 1.0 at 0.5)", str(arc))
 
 
 class BezierInstantiation(Testcase):
