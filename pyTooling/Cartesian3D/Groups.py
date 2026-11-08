@@ -502,6 +502,23 @@ class Group3D(Element3D[Coordinate], Container3DMixin, Generic[Coordinate]):
 		for child in self._children:
 			child._MirrorZ(0)
 
+	def _MirrorAt(self, normal: Offset3D[float], distance: float) -> None:
+		"""
+		Mirror the group at a plane by mirroring its :attr:`Offset` like a point (inplace).
+
+		The children are mirrored at the plane through the group's origin with the same normal.
+
+		:param normal:   The normal of the plane, of length 1.
+		:param distance: The signed distance of the plane from the frame's origin.
+		"""
+		offset = self._offset
+		factor = 2 * (normal.Dot(offset) - distance)
+		offset._xOffset -= factor * normal._xOffset
+		offset._yOffset -= factor * normal._yOffset
+		offset._zOffset -= factor * normal._zOffset
+		for child in self._children:
+			child._MirrorAt(normal, 0)
+
 	def Copy(self) -> Self:
 		"""
 		Create a new group as a copy of this group.

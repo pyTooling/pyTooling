@@ -34,7 +34,7 @@ Unit tests for :mod:`pyTooling.Cartesian3D.Groups` - groups, frames, absolute co
 from copy                         import copy, deepcopy
 from math                         import isclose, pi
 
-from pyTooling.Cartesian3D        import Point3D, Offset3D, BoundingBox3D, Alignment3D, YZPlane3D, XZPlane3D, \
+from pyTooling.Cartesian3D        import Point3D, Offset3D, BoundingBox3D, Alignment3D, Plane3D, YZPlane3D, XZPlane3D, \
                                          XYPlane3D, Element3D, Segment3D, LineSegment3D
 from pyTooling.Cartesian3D.Groups import Group3D
 from pyTooling.Cartesian2D        import AlreadyOwnedError, NotOwnedError, DuplicatePointError, GroupCycleError, \
@@ -984,6 +984,51 @@ class Mirroring(Testcase):
 
 		self.assertEqual(BoundingBox3D(-11, 0, 0, -10, 1, 1), line1.AbsoluteBoundingBox)
 		self.assertEqual(BoundingBox3D(-1, 5, 0, 0, 6, 1), line2.AbsoluteBoundingBox)
+
+	def test_MirrorAt_Oblique(self) -> None:
+		"""At the plane x = y, a group swaps its offset's x and y, and its children are mirrored at x = y too."""
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(3, 4, 5))
+		inner = Group3D(Offset3D(3, 4, 5), (line, ))
+		outer = Group3D(Offset3D(10, 20, 30), (inner, ))
+
+		outer.MirrorAt(Plane3D(Offset3D(1, -1, 0), 0))
+
+		self.assertTupleEqual((20, 10, 30), tuple(round(value, 9) for value in outer.Offset.ToTuple()))
+		self.assertTupleEqual((4, 3, 5), tuple(round(value, 9) for value in inner.Offset.ToTuple()))
+		self.assertTupleEqual((2, 1, 3), tuple(round(value, 9) for value in line.Start.ToTuple()))
+		self.assertTupleEqual((26, 14, 38), tuple(round(value, 9) for value in line.Start.Absolute.ToTuple()))
+
+	def test_MirrorAt_Oblique_Child(self) -> None:
+		"""The plane is in absolute coordinates: a child is mirrored in its group's frame, the groups stay."""
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(3, 4, 5))
+		inner = Group3D(Offset3D(3, 4, 5), (line, ))
+		outer = Group3D(Offset3D(10, 20, 30), (inner, ))
+
+		line.MirrorAt(Plane3D(Offset3D(1, -1, 0), 0))
+
+		self.assertTupleEqual((10, 20, 30), outer.Offset.ToTuple())
+		self.assertTupleEqual((3, 4, 5), inner.Offset.ToTuple())
+		self.assertTupleEqual((26, 14, 38), tuple(round(value, 9) for value in line.Start.Absolute.ToTuple()))
+
+	def test_MirrorAt_Oblique_Nested(self) -> None:
+		"""Mirroring nested groups equals mirroring the same element without groups, at a plane not through the origin."""
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(4, -3, 2))
+		free =  LineSegment3D(Point3D(15, 27, 39), Point3D(18, 22, 38))
+		inner = Group3D(Offset3D(3, 4, 5), (line, ))
+		outer = Group3D(Offset3D(11, 21, 31), (inner, ))
+		plane = Plane3D(Offset3D(1, 2, 3), 7)
+
+		outer.MirrorAt(plane)
+		free.MirrorAt(plane)
+
+		self.assertTupleEqual(
+			tuple(round(value, 9) for value in free.Start.ToTuple()),
+			tuple(round(value, 9) for value in line.Start.Absolute.ToTuple())
+		)
+		self.assertTupleEqual(
+			tuple(round(value, 9) for value in free.End.ToTuple()),
+			tuple(round(value, 9) for value in line.End.Absolute.ToTuple())
+		)
 
 	def test_MirrorAt_Empty(self) -> None:
 		"""A group without children mirrors its offset: the plane needs no bounding box."""

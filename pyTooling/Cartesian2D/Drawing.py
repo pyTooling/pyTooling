@@ -2575,6 +2575,17 @@ class Text(Element2D[Coordinate], StyleMixin, Generic[Coordinate]):
 		"""
 		self._position._x = twiceAxis - self._position._x
 
+	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+		"""
+		Mirror the text at a line by mirroring its position (inplace).
+
+		The glyphs aren't mirrored, and the alignment and anchor stay.
+
+		:param normal:   The normal of the line, of length 1.
+		:param distance: The signed distance of the line from the frame's origin.
+		"""
+		self._position._MirrorAt(normal, distance)
+
 	def Copy(self) -> Self:
 		"""
 		Create a new text as a copy of this text.

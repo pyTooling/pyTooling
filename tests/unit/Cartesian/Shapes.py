@@ -37,6 +37,7 @@ from math                         import cos, isclose, pi, radians, sin, sqrt
 
 from pyTooling.Cartesian2D        import Point2D, Offset2D, Size2D, BoundingBox2D, LineSegment2D, ArcSegment2D, \
                                          QuadraticBezierSegment2D, CubicBezierSegment2D, Alignment2D, SweepDirection, \
+                                         Line2D, VerticalLine2D, HorizontalLine2D, \
                                          AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
                                          NotInSameFrameError, CrossingEdgesError, Cartesian2DError
 from pyTooling.Cartesian2D.Shapes import Shape, Geometry2D, EllipticalGeometry2D, Polygon, PolyLine, Trapezium, \
@@ -60,7 +61,7 @@ class Instantiation(Testcase):
 
 		self.assertEqual(
 			"Class 'Shape' is abstract. The following methods: 'BoundingBox', 'Move', '_MirrorX', "
-			"'_MirrorY' need to be overridden in a derived class.",
+			"'_MirrorY', '_MirrorAt' need to be overridden in a derived class.",
 			str(context.exception)
 		)
 
@@ -70,7 +71,7 @@ class Instantiation(Testcase):
 
 		self.assertEqual(
 			"Class 'Geometry2D' is abstract. The following methods: 'BoundingBox', 'Move', '_MirrorX', "
-			"'_MirrorY', 'Area', 'Perimeter' need to be overridden in a derived class.",
+			"'_MirrorY', '_MirrorAt', 'Area', 'Perimeter' need to be overridden in a derived class.",
 			str(context.exception)
 		)
 
@@ -4056,6 +4057,150 @@ class PathMoving(Testcase):
 
 		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+
+class ObliqueMirroring(Testcase):
+	def test_Polygon(self) -> None:
+		"""Mirroring at the line x = y swaps the coordinates of all corners; the edges follow."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+
+		polygon.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertTupleEqual(
+			((0, 0), (1, 4), (3, 2)),
+			tuple((round(point.X, 9), round(point.Y, 9)) for point in polygon.Points)
+		)
+
+		self.assertIs(polygon.Points[1], polygon.Segments[0].End)
+
+	def test_Trapezium(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		trapezium.MirrorAt(Line2D(Offset2D(3, 4), 0))
+
+		self.assertIs(Trapezium, type(trapezium))
+		self.assertAlmostEqual(6.0, trapezium.Area)
+
+	def test_Rectangle(self) -> None:
+		"""A rectangle stays a rectangle: it keeps its edge lengths and right angles."""
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+
+		rectangle.MirrorAt(Line2D(Offset2D(1, 2), 3))
+
+		self.assertIs(Rectangle, type(rectangle))
+		self.assertAlmostEqual(4.0, rectangle.Segments[0].Length)
+		self.assertAlmostEqual(2.0, rectangle.Segments[1].Length)
+		self.assertAlmostEqual(pi / 2, rectangle.Segments[0].AngleTo(rectangle.Segments[1]))
+		self.assertAlmostEqual(8.0, rectangle.Area)
+
+	def test_Square(self) -> None:
+		square = Square(Point2D(1, 1), Point2D(3, 1), Point2D(3, 3), Point2D(1, 3))
+
+		square.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertIs(Square, type(square))
+		self.assertTupleEqual(
+			((1, 1), (1, 3), (3, 3), (3, 1)),
+			tuple((round(point.X, 9), round(point.Y, 9)) for point in square.Points)
+		)
+
+	def test_Circle(self) -> None:
+		circle = Circle(Point2D(0, 0), 2)
+
+		circle.MirrorAt(Line2D(Offset2D(3, 4), 25))
+
+		self.assertAlmostEqual(6, circle.Center.X)
+		self.assertAlmostEqual(8, circle.Center.Y)
+		self.assertEqual(2, circle.Radius)
+
+	def test_Ellipse(self) -> None:
+		"""An ellipse is axis-aligned by definition, an oblique line would rotate it."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		with self.assertRaises(InvalidOperationError) as context:
+			ellipse.MirrorAt(Line2D(Offset2D(3, 4), 10))
+
+		self.assertEqual("Mirroring an axis-aligned shape at an oblique line isn't supported.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got element Ellipse((1, 2), 3, 2) and line Line2D((0.6, 0.8), 2.0).",
+				"An ellipse is axis-aligned; mirror it at a vertical or horizontal line."
+			],
+			context.exception.__notes__
+		)
+		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
+
+	def test_Ellipse_Line2D(self) -> None:
+		"""A general line with normal (1, 0) or (0, 1) mirrors an ellipse."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		ellipse.MirrorAt(Line2D(Offset2D(0, -2), -10))
+		ellipse.MirrorAt(Line2D.FromPoints(Point2D(4, 0), Point2D(4, 1)))
+
+		self.assertTupleEqual((7.0, 8.0), ellipse.Center.ToTuple())
+		self.assertEqual(3, ellipse.RadiusX)
+
+	def test_Ellipse_MirrorAtHook(self) -> None:
+		"""The hook delegates a vertical or horizontal line to the axis mirrors and raises for an oblique line."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		ellipse._MirrorAt(Offset2D(1, 0), 4)
+		ellipse._MirrorAt(Offset2D(0, 1), -1)
+
+		self.assertTupleEqual((7, -4), ellipse.Center.ToTuple())
+		with self.assertRaises(InvalidOperationError) as context:
+			ellipse._MirrorAt(Offset2D(0.6, 0.8), 2.0)
+
+		self.assertEqual("Mirroring an ellipse at an oblique line isn't supported.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got ellipse Ellipse((7, -4), 3, 2) and a line with normal (0.6, 0.8) and distance 2.0.",
+				"An ellipse is axis-aligned; mirror it at a vertical or horizontal line."
+			],
+			context.exception.__notes__
+		)
+
+	def test_Path(self) -> None:
+		"""Each joint is mirrored once; the arc reverses its direction, the control point is mirrored."""
+		path = openPath()
+
+		path.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertTupleEqual(
+			((0, 0), (0, 4), (4, 4), (4, 0)),
+			tuple((round(point.X, 9), round(point.Y, 9)) for point in path.Points)
+		)
+
+		self.assertIs(SweepDirection.Clockwise, path.Segments[1].Direction)
+		self.assertAlmostEqual(2, path.Segments[1].Center.X)
+		self.assertAlmostEqual(4, path.Segments[1].Center.Y)
+		self.assertAlmostEqual(6, path.Segments[2].ControlPoint.X)
+		self.assertAlmostEqual(2, path.Segments[2].ControlPoint.Y)
+
+	def test_PolyLine(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+
+		polyline.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertTupleEqual(
+			((0, 0), (1, 4), (3, 2)),
+			tuple((round(point.X, 9), round(point.Y, 9)) for point in polyline.Points)
+		)
+
+	def test_TwoAxes(self) -> None:
+		"""Mirroring a polygon at x = y and at x = -y equals mirroring it at both axes."""
+		polygon1 = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+		polygon2 = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+
+		polygon1.MirrorAt(Line2D(Offset2D(1, -1), 0))
+		polygon1.MirrorAt(Line2D(Offset2D(1, 1), 0))
+		polygon2.MirrorAt(VerticalLine2D(0))
+		polygon2.MirrorAt(HorizontalLine2D(0))
+
+		self.assertTupleEqual(
+			tuple(point.ToTuple() for point in polygon2.Points),
+			tuple((round(point.X, 9), round(point.Y, 9)) for point in polygon1.Points)
+		)
 
 
 class PathMirroring(Testcase):

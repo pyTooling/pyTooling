@@ -394,6 +394,18 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 		for point in self._points:
 			point._x = twiceAxis - point._x
 
+	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+		"""
+		Mirror the polygon at a line by mirroring all its corners (inplace).
+
+		Its edges share the corners, so they mirror along. A trapezium, rectangle or square stays one.
+
+		:param normal:   The normal of the line, of length 1.
+		:param distance: The signed distance of the line from the frame's origin.
+		"""
+		for point in self._points:
+			point._MirrorAt(normal, distance)
+
 	def __repr__(self) -> str:
 		"""
 		Returns the polygon's string representation.
@@ -811,6 +823,15 @@ class EllipticalGeometry2D(Geometry2D[Coordinate], Generic[Coordinate]):
 		:param twiceAxis: Twice the x-coordinate of the axis.
 		"""
 		self._center._x = twiceAxis - self._center._x
+
+	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+		"""
+		Mirror the shape at a line by mirroring its center (inplace).
+
+		:param normal:   The normal of the line, of length 1.
+		:param distance: The signed distance of the line from the frame's origin.
+		"""
+		self._center._MirrorAt(normal, distance)
 
 
 @export
@@ -1326,6 +1347,36 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		radiusY = self._radiusY
 		return BoundingBox2D(center._x - radiusX, center._y - radiusY, center._x + radiusX, center._y + radiusY)
 
+	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+		"""
+		Mirror the ellipse at a vertical or horizontal line by mirroring its center (inplace).
+
+		A line with normal ``(1, 0)`` or ``(0, 1)`` mirrors the ellipse like :meth:`_MirrorX` or :meth:`_MirrorY`.
+
+		:param normal:                 The normal of the line, of length 1.
+		:param distance:               The signed distance of the line from the frame's origin.
+		:raises InvalidOperationError: If the line is oblique. |br|
+		                               An ellipse is axis-aligned; mirror it at a vertical or horizontal line.
+		"""
+		if normal._yOffset == 0:
+			self._MirrorX(2 * distance * normal._xOffset)
+		elif normal._xOffset == 0:
+			self._MirrorY(2 * distance * normal._yOffset)
+		else:
+			ex = InvalidOperationError("Mirroring an ellipse at an oblique line isn't supported.")
+			ex.add_note(f"Got ellipse {self!r} and a line with normal {normal} and distance {distance}.")
+			ex.add_note("An ellipse is axis-aligned; mirror it at a vertical or horizontal line.")
+			raise ex
+
+	@readonly
+	def _CanMirrorAtObliqueLine(self) -> bool:
+		"""
+		Read-only property to return, if the ellipse can be mirrored at an oblique line.
+
+		:returns: ``False``, as an ellipse is axis-aligned.
+		"""
+		return False
+
 	def __repr__(self) -> str:
 		"""
 		Returns the ellipse's string representation.
@@ -1641,6 +1692,21 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 
 		for segment in self._segments:
 			segment._MirrorInnerX(twiceAxis)
+
+	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+		"""
+		Mirror the path at a line by mirroring all its points (inplace).
+
+		Each joint is mirrored once, and each edge mirrors its other points; an arc reverses its direction.
+
+		:param normal:   The normal of the line, of length 1.
+		:param distance: The signed distance of the line from the frame's origin.
+		"""
+		for point in self._points:
+			point._MirrorAt(normal, distance)
+
+		for segment in self._segments:
+			segment._MirrorInnerAt(normal, distance)
 
 	def ToPolyLine(self) -> PolyLine[Coordinate]:
 		"""
