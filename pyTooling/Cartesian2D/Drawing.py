@@ -56,7 +56,7 @@ from pyTooling.MetaClasses        import ExtendedType, abstractclass, abstractme
 from pyTooling.Common             import getFullyQualifiedName
 from pyTooling.Cartesian2D        import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Shapes, \
                                          AlreadyOwnedError
-from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection
+from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, Container2DMixin, YAxisDirection
 
 
 @export
@@ -914,8 +914,22 @@ class LineSegment2D(Cartesian2D.LineSegment2D[Coordinate], StrokeMixin, Generic[
 		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
 		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
-		super().__init__(start, end, copyPoints=copyPoints, value=value, keyValuePairs=keyValuePairs)
-		StrokeMixin.__init__(self, stroke=stroke)
+		super().__init__(
+			start,
+			end,
+			copyPoints=copyPoints,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
+
+		try:
+			StrokeMixin.__init__(self, stroke=stroke)
+		except TypeError:
+			self._start._parent = None
+			self._end._parent =   None
+
+			raise
 
 		self.Parent = parent
 
@@ -929,6 +943,9 @@ class LineSegment2D(Cartesian2D.LineSegment2D[Coordinate], StrokeMixin, Generic[
 		:returns: Copy of this line segment.
 		"""
 		return self.__class__(self._start, self._end, stroke=self._stroke, value=self._value, keyValuePairs=self._dict)
+
+
+LineSegment2D._PARENT_TYPE = (Group2D, Canvas2D)
 
 
 @export
@@ -980,8 +997,21 @@ class Polygon(Shapes.Polygon[Coordinate], StyleMixin, Generic[Coordinate]):
 		                               :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
 		                               :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
-		super().__init__(points, copyPoints=copyPoints, value=value, keyValuePairs=keyValuePairs)
-		StyleMixin.__init__(self, stroke=stroke, fill=fill)
+		super().__init__(
+			points,
+			copyPoints=copyPoints,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
+
+		try:
+			StyleMixin.__init__(self, stroke=stroke, fill=fill)
+		except TypeError:
+			for point in self._points:
+				point._parent = None
+
+			raise
 
 		self.Parent = parent
 
@@ -1048,7 +1078,15 @@ class Trapezium(Shapes.Trapezium[Coordinate], StyleMixin, Generic[Coordinate]):
 		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
 		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
-		super().__init__(p00, p01, p11, p10, value=value, keyValuePairs=keyValuePairs)
+		super().__init__(
+			p00,
+			p01,
+			p11,
+			p10,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
 		StyleMixin.__init__(self, stroke=stroke, fill=fill)
 
 		self.Parent = parent
@@ -1119,7 +1157,15 @@ class Rectangle(Shapes.Rectangle[Coordinate], StyleMixin, Generic[Coordinate]):
 		:raises ValueError:   If two consecutive corners are the same point.
 		:raises ValueError:   If an inner angle isn't 90 |degree|.
 		"""
-		super().__init__(p00, p01, p11, p10, value=value, keyValuePairs=keyValuePairs)
+		super().__init__(
+			p00,
+			p01,
+			p11,
+			p10,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
 		StyleMixin.__init__(self, stroke=stroke, fill=fill)
 
 		self.Parent = parent
@@ -1191,7 +1237,15 @@ class Square(Shapes.Square[Coordinate], StyleMixin, Generic[Coordinate]):
 		:raises ValueError:   If an inner angle isn't 90 |degree|.
 		:raises ValueError:   If adjacent edges have different lengths.
 		"""
-		super().__init__(p00, p01, p11, p10, value=value, keyValuePairs=keyValuePairs)
+		super().__init__(
+			p00,
+			p01,
+			p11,
+			p10,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
 		StyleMixin.__init__(self, stroke=stroke, fill=fill)
 
 		self.Parent = parent
@@ -1259,8 +1313,21 @@ class Circle(Shapes.Circle[Coordinate], StyleMixin, Generic[Coordinate]):
 		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
 		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
-		super().__init__(center, radius, copyPoints=copyPoints, value=value, keyValuePairs=keyValuePairs)
-		StyleMixin.__init__(self, stroke=stroke, fill=fill)
+		super().__init__(
+			center,
+			radius,
+			copyPoints=copyPoints,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
+
+		try:
+			StyleMixin.__init__(self, stroke=stroke, fill=fill)
+		except TypeError:
+			self._center._parent = None
+
+			raise
 
 		self.Parent = parent
 
