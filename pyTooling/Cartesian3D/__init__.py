@@ -1087,6 +1087,82 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 	zOffset = ZOffset
 
+	@readonly
+	def Length(self) -> float:
+		"""
+		Read-only property to return the Euclidean length of this 3D-offset.
+
+		:returns: The Euclidean length.
+		"""
+		return sqrt(self._xOffset ** 2 + self._yOffset ** 2 + self._zOffset ** 2)
+
+	def Dot(self, other: Offset3D[Coordinate]) -> Coordinate:
+		"""
+		Compute the dot product of this 3D-offset and another 3D-offset.
+
+		The dot product ``x1 * x2 + y1 * y2 + z1 * z2`` is zero for perpendicular offsets.
+
+		:param other:       The second 3D-offset.
+		:returns:           The dot product.
+		:raises ValueError: If parameter 'other' is None.
+		:raises TypeError:  If parameter 'other' is not of type :class:`Offset3D`.
+		"""
+		if other is None:
+			raise ValueError("Parameter 'other' is None.")
+		elif not isinstance(other, Offset3D):
+			ex = TypeError("Parameter 'other' is not of type 'Offset3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self._xOffset * other._xOffset + self._yOffset * other._yOffset + self._zOffset * other._zOffset
+
+	def Cross(self, other: Offset3D[Coordinate]) -> Offset3D[Coordinate]:
+		"""
+		Compute the cross product of this 3D-offset and another 3D-offset and create a new 3D-offset.
+
+		The cross product is perpendicular to both offsets, its length is the area of the parallelogram they span, and it
+		is a zero offset for parallel offsets. The offsets and the cross product form a right-handed system: the cross
+		product of ``(1, 0, 0)`` and ``(0, 1, 0)`` is ``(0, 0, 1)``.
+
+		:param other:       The second 3D-offset.
+		:returns:           A new 3D-offset.
+		:raises ValueError: If parameter 'other' is None.
+		:raises TypeError:  If parameter 'other' is not of type :class:`Offset3D`.
+		"""
+		if other is None:
+			raise ValueError("Parameter 'other' is None.")
+		elif not isinstance(other, Offset3D):
+			ex = TypeError("Parameter 'other' is not of type 'Offset3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self.__class__(
+			self._yOffset * other._zOffset - self._zOffset * other._yOffset,
+			self._zOffset * other._xOffset - self._xOffset * other._zOffset,
+			self._xOffset * other._yOffset - self._yOffset * other._xOffset
+		)
+
+	def Normalized(self) -> Offset3D[float]:
+		"""
+		Create a new 3D-offset of length 1 in the direction of this 3D-offset.
+
+		:returns:                      A new 3D-offset of length 1.
+		:raises InvalidOperationError: If this 3D-offset is a zero offset. |br|
+		                               A zero offset has no direction.
+		"""
+		if self._xOffset == 0 and self._yOffset == 0 and self._zOffset == 0:
+			ex = InvalidOperationError("A zero offset can't be normalized.")
+			ex.add_note(f"Got offset {self}.")
+			ex.add_note("A zero offset has no direction.")
+			raise ex
+
+		length = sqrt(self._xOffset ** 2 + self._yOffset ** 2 + self._zOffset ** 2)
+		return self.__class__(
+			self._xOffset / length,
+			self._yOffset / length,
+			self._zOffset / length
+		)
+
 	def Copy(self) -> Self:
 		"""
 		Create a new 3D-offset as a copy of this 3D-offset.
@@ -1259,6 +1335,66 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
+
+		return self
+
+	def __mul__(self, other: Any) -> Offset3D[Coordinate]:
+		"""
+		Multiplies this 3D-offset by a number and creates a new 3D-offset (``offset * number``).
+
+		:param other:      The factor.
+		:returns:          A new 3D-offset scaled by the factor.
+		:raises TypeError: If the second operand is not of type :class:`float` or :class:`int`.
+		"""
+		if not isinstance(other, (int, float)):
+			ex = TypeError("Second operand is not supported by * operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: float, int")
+			raise ex
+
+		return self.__class__(
+			self._xOffset * other,
+			self._yOffset * other,
+			self._zOffset * other
+		)
+
+	def __rmul__(self, other: Any) -> Offset3D[Coordinate]:
+		"""
+		Multiplies a number by this 3D-offset and creates a new 3D-offset (``number * offset``).
+
+		:param other:      The factor.
+		:returns:          A new 3D-offset scaled by the factor.
+		:raises TypeError: If the first operand is not of type :class:`float` or :class:`int`.
+		"""
+		if not isinstance(other, (int, float)):
+			ex = TypeError("First operand is not supported by * operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for first operand: float, int")
+			raise ex
+
+		return self.__class__(
+			other * self._xOffset,
+			other * self._yOffset,
+			other * self._zOffset
+		)
+
+	def __imul__(self, other: Any) -> Self:
+		"""
+		Multiplies this 3D-offset by a number (inplace).
+
+		:param other:      The factor.
+		:returns:          This 3D-offset.
+		:raises TypeError: If the second operand is not of type :class:`float` or :class:`int`.
+		"""
+		if not isinstance(other, (int, float)):
+			ex = TypeError("Second operand is not supported by *= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: float, int")
+			raise ex
+
+		self._xOffset *= other
+		self._yOffset *= other
+		self._zOffset *= other
 
 		return self
 
