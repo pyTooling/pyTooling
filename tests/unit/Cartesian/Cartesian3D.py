@@ -33,10 +33,13 @@ Unit tests for :mod:`pyTooling.Cartesian3D`: points, offsets and sizes, their co
 arithmetic.
 """
 from copy                  import copy, deepcopy
-from math                  import pi, sqrt
+from math                  import isclose, pi, sqrt
 
-from pyTooling.Cartesian3D import Origin3D, Point3D, Offset3D, Size3D, BoundingBox3D, Segment3D, LineSegment3D
-from pyTooling.Exceptions  import InvalidOperationError
+from pyTooling.Cartesian3D import Base3D, Element3D, Origin3D, Point3D, Offset3D, Size3D, BoundingBox3D, Segment3D, \
+                                  LineSegment3D
+from pyTooling.Cartesian2D import AlreadyOwnedError, DuplicatePointError
+from pyTooling.Exceptions  import AlreadyInHierarchyError, DuplicateElementError, InvalidOperationError
+from pyTooling.MetaClasses import AbstractClassError
 from pyTooling.Testing     import Testcase
 
 
@@ -1578,3 +1581,364 @@ class Moving(Testcase):
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
 
+
+class Hierarchy(Testcase):
+	def test_Base(self) -> None:
+		with self.assertRaises(AbstractClassError):
+			_ = Base3D()
+
+	def test_Element3D(self) -> None:
+		with self.assertRaises(AbstractClassError):
+			_ = Element3D()
+
+	def test_Point(self) -> None:
+		self.assertIsInstance(Point3D(1, 2, 3), Base3D)
+		self.assertNotIsInstance(Point3D(1, 2, 3), Element3D)
+
+	def test_Origin(self) -> None:
+		origin = Origin3D()
+
+		self.assertIsInstance(origin, Base3D)
+		self.assertIsNone(origin.Parent)
+		self.assertIsNone(origin.Frame)
+
+	def test_Segment(self) -> None:
+		self.assertIsInstance(Segment3D(Point3D(1, 2, 3), Point3D(4, 6, 8)), Element3D)
+		self.assertIsInstance(LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8)), Element3D)
+
+	def test_Slots(self) -> None:
+		"""The parent is a slot of the base-class only."""
+		self.assertTupleEqual(("_parent", ), Base3D.__slots__)
+		self.assertTupleEqual((), Element3D.__slots__)
+		self.assertNotIn("_parent", Point3D.__slots__)
+		self.assertNotIn("_parent", Segment3D.__slots__)
+
+
+class Ownership(Testcase):
+	def test_Point(self) -> None:
+		point = Point3D(1, 2, 3)
+
+		self.assertIsNone(point.Parent)
+		self.assertIsNone(point.Frame)
+
+	def test_Point_Parent(self) -> None:
+		"""The parent parameter sets the owner, but the point isn't registered."""
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		start = line.Start
+		end =   line.End
+
+		point = Point3D(7, 8, 9, parent=line)
+
+		self.assertIs(line, point.Parent)
+		self.assertIs(start, line.Start)
+		self.assertIs(end, line.End)
+		self.assertIs(line, start.Parent)
+
+	def test_Point_ParentNone(self) -> None:
+		point = Point3D(1, 2, 3, parent=None)
+
+		self.assertIsNone(point.Parent)
+
+	def test_Point_ParentInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Point3D(1, 2, 3, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Element3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Point_ParentPoint(self) -> None:
+		"""A point can't own another point."""
+		with self.assertRaises(TypeError) as context:
+			_ = Point3D(1, 2, 3, parent=Point3D(4, 5, 6))
+
+		self.assertEqual("Parameter 'parent' is not of type 'Element3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian3D.Point3D'."], context.exception.__notes__)
+
+	def test_Point_ParentPositional(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(TypeError):
+			_ = Point3D(1, 2, 3, line)
+
+	def test_Point_Parent_Copy(self) -> None:
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		point = Point3D(7, 8, 9, parent=line)
+
+		self.assertIsNone(point.Copy().Parent)
+		self.assertIsNone(copy(point).Parent)
+		self.assertIsNone(deepcopy(point).Parent)
+
+	def test_Point_Parent_ToOtherSegment(self) -> None:
+		"""A point with a parent is owned, so another segment can't take it without copying."""
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		point = Point3D(7, 8, 9, parent=line)
+
+		with self.assertRaises(AlreadyOwnedError):
+			_ = LineSegment3D(point, Point3D(9, 9, 9), copyPoints=False)
+
+		other = LineSegment3D(point, Point3D(9, 9, 9))
+
+		self.assertIs(other, other.Start.Parent)
+		self.assertIsNot(point, other.Start)
+		self.assertIs(line, point.Parent)
+
+	def test_Point_Parent_ToParentSegment(self) -> None:
+		"""The parent segment can replace its points with a point of which it is the owner."""
+		line =     LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		start =    line.Start
+		end =      line.End
+		newStart = Point3D(7, 8, 9, parent=line)
+		newEnd =   Point3D(9, 9, 9, parent=line)
+
+		line.Start = newStart
+		line.End =   newEnd
+
+		self.assertIs(newStart, line.Start)
+		self.assertIs(newEnd, line.End)
+		self.assertIsNone(start.Parent)
+		self.assertIsNone(end.Parent)
+
+	def test_Point_ReadOnly(self) -> None:
+		point = Point3D(1, 2, 3)
+
+		with self.assertRaises(AttributeError):
+			point.Parent = LineSegment3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
+
+		self.assertIsNone(point.Parent)
+
+	def test_Point_Copy(self) -> None:
+		"""A copy of an owned point has no owner."""
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		point = line.Start.Copy()
+
+		self.assertIsNone(point.Parent)
+
+	def test_LineSegment_Copy(self) -> None:
+		"""A segment owns copies of the given points; the given points stay without owner."""
+		start = Point3D(1, 2, 3)
+		end =   Point3D(4, 6, 8)
+
+		line = LineSegment3D(start, end)
+
+		self.assertIsNone(line.Parent)
+		self.assertIsNone(line.Frame)
+		self.assertIs(line, line.Start.Parent)
+		self.assertIs(line, line.End.Parent)
+		self.assertIsNone(start.Parent)
+		self.assertIsNone(end.Parent)
+
+	def test_LineSegment_Reference(self) -> None:
+		start = Point3D(1, 2, 3)
+		end =   Point3D(4, 6, 8)
+
+		line = LineSegment3D(start, end, copyPoints=False)
+
+		self.assertIs(line, start.Parent)
+		self.assertIs(line, end.Parent)
+
+	def test_LineSegment_OwnedStart(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			_ = LineSegment3D(line.Start, Point3D(7, 8, 9), copyPoints=False)
+
+		self.assertEqual("Point is owned by another element already.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got point (1, 2, 3) owned by LineSegment3D((1, 2, 3), (4, 6, 8)).",
+				"Use 'copyPoints=True' to copy the point."
+			],
+			context.exception.__notes__
+		)
+		self.assertIsInstance(context.exception, AlreadyInHierarchyError)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("Parameter 'start' is owned by another element.", str(context.exception.__cause__))
+		self.assertIs(line, line.Start.Parent)
+
+	def test_LineSegment_OwnedEnd(self) -> None:
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		start = Point3D(7, 8, 9)
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			_ = LineSegment3D(start, line.End, copyPoints=False)
+
+		self.assertEqual("Point is owned by another element already.", str(context.exception))
+		self.assertEqual("Parameter 'end' is owned by another element.", str(context.exception.__cause__))
+		self.assertIsNone(start.Parent)
+		self.assertIs(line, line.End.Parent)
+
+	def test_LineSegment_SamePoint(self) -> None:
+		point = Point3D(1, 2, 3)
+
+		with self.assertRaises(DuplicatePointError) as context:
+			_ = LineSegment3D(point, point, copyPoints=False)
+
+		self.assertIsInstance(context.exception, DuplicateElementError)
+		self.assertEqual("Point is given twice.", str(context.exception))
+		self.assertListEqual(
+			["Got point (1, 2, 3).", "Use 'copyPoints=True' to copy the points."],
+			context.exception.__notes__
+		)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("Parameter 'end' is the same point as parameter 'start'.", str(context.exception.__cause__))
+		self.assertIsNone(point.Parent)
+
+	def test_LineSegment_EqualCoordinates(self) -> None:
+		"""Two different point objects with equal coordinates aren't a duplicate."""
+		start = Point3D(1, 2, 3)
+		end =   Point3D(1, 2, 3)
+
+		line = LineSegment3D(start, end, copyPoints=False)
+
+		self.assertIs(start, line.Start)
+		self.assertIs(end, line.End)
+		self.assertEqual(0.0, line.Length)
+
+	def test_LineSegment_SamePoint_Copy(self) -> None:
+		point = Point3D(1, 2, 3)
+
+		line = LineSegment3D(point, point)
+
+		self.assertIsNot(line.Start, line.End)
+		self.assertEqual(0.0, line.Length)
+
+	def test_Segment_copyPointsPositional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Segment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), False)
+
+	def test_LineSegment_copyPointsPositional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), False)
+
+	def test_LineSegment_copyPointsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), copyPoints=None)
+
+		self.assertEqual("Parameter 'copyPoints' is None.", str(context.exception))
+
+	def test_LineSegment_copyPointsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), copyPoints=0)
+
+		self.assertEqual("Parameter 'copyPoints' is not of type 'bool'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_LineSegment_Start(self) -> None:
+		"""An assigned start point is owned by the segment, the previous one is released."""
+		line =     LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		previous = line.Start
+		point =    Point3D(7, 8, 9)
+
+		line.Start = point
+
+		self.assertIs(line, point.Parent)
+		self.assertIsNone(previous.Parent)
+
+	def test_LineSegment_Start_Same(self) -> None:
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		start = line.Start
+
+		line.Start = start
+
+		self.assertIs(start, line.Start)
+		self.assertIs(line, start.Parent)
+
+	def test_LineSegment_Start_Owned(self) -> None:
+		line1 = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		line2 = LineSegment3D(Point3D(7, 8, 9), Point3D(9, 9, 9))
+		start = line1.Start
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			line1.Start = line2.Start
+
+		self.assertEqual("Point is owned by another element already.", str(context.exception))
+		self.assertListEqual(
+			["Got point (7, 8, 9) owned by LineSegment3D((7, 8, 9), (9, 9, 9))."],
+			context.exception.__notes__
+		)
+		self.assertEqual("Parameter 'start' is owned by another element.", str(context.exception.__cause__))
+		self.assertIs(start, line1.Start)
+		self.assertIs(line2, line2.Start.Parent)
+
+	def test_LineSegment_Start_End(self) -> None:
+		"""The segment's own end point can't become its start point."""
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(DuplicatePointError) as context:
+			line.Start = line.End
+
+		self.assertEqual("Point is given twice.", str(context.exception))
+		self.assertListEqual(["Got point (4, 6, 8)."], context.exception.__notes__)
+		self.assertEqual("Parameter 'start' is the segment's end point.", str(context.exception.__cause__))
+
+	def test_LineSegment_End(self) -> None:
+		line =     LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		previous = line.End
+		point =    Point3D(7, 8, 9)
+
+		line.End = point
+
+		self.assertIs(line, point.Parent)
+		self.assertIsNone(previous.Parent)
+
+	def test_LineSegment_End_Start(self) -> None:
+		"""The segment's own start point can't become its end point."""
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(DuplicatePointError) as context:
+			line.End = line.Start
+
+		self.assertEqual("Point is given twice.", str(context.exception))
+		self.assertListEqual(["Got point (1, 2, 3)."], context.exception.__notes__)
+		self.assertEqual("Parameter 'end' is the segment's start point.", str(context.exception.__cause__))
+
+	def test_LineSegment_End_Same(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		end =  line.End
+
+		line.End = end
+
+		self.assertIs(end, line.End)
+		self.assertIs(line, end.Parent)
+
+	def test_LineSegment_End_Owned(self) -> None:
+		line1 = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		line2 = LineSegment3D(Point3D(7, 8, 9), Point3D(9, 9, 9))
+		end =   line1.End
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			line1.End = line2.End
+
+		self.assertEqual("Point is owned by another element already.", str(context.exception))
+		self.assertListEqual(
+			["Got point (9, 9, 9) owned by LineSegment3D((7, 8, 9), (9, 9, 9))."],
+			context.exception.__notes__
+		)
+		self.assertEqual("Parameter 'end' is owned by another element.", str(context.exception.__cause__))
+		self.assertIs(end, line1.End)
+
+
+class ParentTypes(Testcase):
+	def test_Point(self) -> None:
+		self.assertTupleEqual((Element3D, ), Point3D._PARENT_TYPE)
+
+	def test_Origin(self) -> None:
+		self.assertTupleEqual((Element3D, ), Origin3D._PARENT_TYPE)
+
+
+class Frames(Testcase):
+	def test_Point_Minus_Point(self) -> None:
+		"""Points of two standalone segments have no frame, so they can be subtracted."""
+		line1 = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		line2 = LineSegment3D(Point3D(7, 8, 9), Point3D(9, 9, 9))
+
+		offset = line2.Start - line1.Start
+
+		self.assertTupleEqual((6, 6, 6), offset.ToTuple())
+
+	def test_LineSegment_AngleTo(self) -> None:
+		line1 = LineSegment3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
+		line2 = LineSegment3D(Point3D(5, 5, 5), Point3D(5, 5, 7))
+
+		self.assertTrue(isclose(pi / 2, line1.AngleTo(line2)))

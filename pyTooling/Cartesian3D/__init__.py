@@ -41,37 +41,114 @@ An implementation of 3D cartesian data structures for Python.
 from __future__            import annotations
 
 from math                  import atan2, sqrt
-from typing                import Any, Generic, Iterable, Self, Union
+from typing                import Any, ClassVar, Generic, Iterable, Optional as Nullable, Self, Union
 
 from pyTooling.Decorators  import readonly, export
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Exceptions  import InvalidOperationError
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Cartesian2D import Coordinate
+from pyTooling.Cartesian2D import Coordinate, AlreadyOwnedError, DuplicatePointError, NotInSameFrameError
 
 
 @export
-class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+@abstractclass
+class Base3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+	"""
+	Abstract base-class of everything having a parent and coordinates relative to a frame: points and segments.
+
+	A frame is what the coordinates are relative to. Every frame is an instance of this class.
+	"""
+
+	_PARENT_TYPE: ClassVar[tuple[type, ...]]  #: Types a parent of this class can have.
+
+	_parent: Nullable[Base3D[Coordinate]]  #: Parent of this object, or ``None``.
+
+	def __init__(self, *, parent: Nullable[Base3D[Coordinate]] = None) -> None:
+		"""
+		Initializes the parent relation.
+
+		:param parent:     Optional, the parent of this object. Default: ``None``, no parent.
+		:raises TypeError: If parameter 'parent' is not of a type in :attr:`_PARENT_TYPE`.
+		"""
+		if parent is not None and not isinstance(parent, self._PARENT_TYPE):
+			typeNames = " or ".join(f"'{parentType.__name__}'" for parentType in self._PARENT_TYPE)
+			ex =        TypeError(f"Parameter 'parent' is not of type {typeNames}.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+
+		self._parent = parent
+
+	@readonly
+	def Parent(self) -> Nullable[Base3D[Coordinate]]:
+		"""
+		Read-only property to access the parent of this object (:attr:`_parent`).
+
+		A point's parent is the segment owning it.
+
+		:returns: The parent, or ``None``, if this object has no parent.
+		"""
+		return self._parent
+
+	@readonly
+	def Frame(self) -> Nullable[Base3D[Coordinate]]:
+		"""
+		Read-only property to return the frame this object's coordinates are relative to.
+
+		The frame comes from the parent. An object without a parent has no frame, its coordinates are relative to the
+		origin.
+
+		:returns: The frame, or ``None``, if this object has no frame.
+		"""
+		return None if self._parent is None else self._parent._ChildFrame
+
+	@readonly
+	def _ChildFrame(self) -> Nullable[Base3D[Coordinate]]:
+		"""
+		Read-only property to access the frame the coordinates of this object's children are relative to (:attr:`Frame`).
+
+		:returns: This object's frame, or ``None``, if this object has no frame.
+		"""
+		return self.Frame
+
+
+@export
+class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 	"""An implementation of a 3D cartesian point."""
 
 	_x: Coordinate  #: The x-direction coordinate.
 	_y: Coordinate  #: The y-direction coordinate.
 	_z: Coordinate  #: The z-direction coordinate.
 
-	def __init__(self, x: Coordinate, y: Coordinate, z: Coordinate) -> None:
+	def __init__(
+		self,
+		x:      Coordinate,
+		y:      Coordinate,
+		z:      Coordinate,
+		*,
+		parent: Nullable[Element3D[Coordinate]] = None
+	) -> None:
 		"""
 		Initializes a 3-dimensional point.
+
+		A segment takes ownership of the point, when it's given the point instead of copying it.
+
+		Parameter ``parent`` sets the owner, but doesn't register the point in it: the parent's points don't change. The
+		point is in the parent's frame, so it can be combined with the parent's points.
 
 		:param x:           X-coordinate.
 		:param y:           Y-coordinate.
 		:param z:           Z-coordinate.
+		:param parent:      Optional, the segment owning the point. Default: ``None``, no owner.
 		:raises ValueError: If parameter 'x' is None.
 		:raises TypeError:  If parameter 'x' is not of type :class:`float` or :class:`int`.
 		:raises ValueError: If parameter 'y' is None.
 		:raises TypeError:  If parameter 'y' is not of type :class:`float` or :class:`int`.
 		:raises ValueError: If parameter 'z' is None.
 		:raises TypeError:  If parameter 'z' is not of type :class:`float` or :class:`int`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`Element3D`.
 		"""
+		super().__init__(parent=parent)
+
 		if x is None:
 			raise ValueError("Parameter 'x' is None.")
 		elif not isinstance(x, (int, float)):
@@ -179,6 +256,8 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Create a new 3D-point as a copy of this 3D point.
 
+		The copy has no owner.
+
 		:returns: Copy of this 3D-point.
 
 		.. seealso::
@@ -267,11 +346,17 @@ class Point3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Subtract two 3D-Points from each other and create a new 3D-offset.
 
-		:param other:      A 3D-point as :class:`Point3D`.
-		:returns:          A new 3D-offset representing the distance between these two points.
-		:raises TypeError: If parameter 'other' is not of type :class:`Point3D`.
+		:param other:                The second 3D-point as :class:`Point3D`.
+		:returns:                    A new 3D-offset representing the distance between these two points.
+		:raises TypeError:           If parameter 'other' is not of type :class:`Point3D`.
+		:raises NotInSameFrameError: If parameter 'other' is in another frame than this point.
 		"""
 		if isinstance(other, Point3D):
+			if self.Frame is not other.Frame:
+				ex = NotInSameFrameError("Points are in different frames.")
+				ex.add_note(f"Got points {self} and {other}.")
+				raise ex from ValueError("Parameter 'other' is in another frame.")
+
 			return Offset3D(
 				self._x - other._x,
 				self._y - other._y,
@@ -347,6 +432,35 @@ class Origin3D(Point3D[Coordinate], Generic[Coordinate]):
 		:returns: The string representation of the 3D origin.
 		"""
 		return f"Origin3D({self._x}, {self._y}, {self._z})"
+
+
+@export
+class Element3D(Base3D[Coordinate], Generic[Coordinate]):
+	"""
+	Abstract base-class of all segments.
+
+	A derived class implements :attr:`BoundingBox` and :meth:`Move`.
+	"""
+
+	@readonly
+	@abstractmethod
+	def BoundingBox(self) -> BoundingBox3D[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the element.
+
+		:returns: A new bounding box.
+		"""
+
+	@abstractmethod
+	def Move(self, offset: Offset3D[Coordinate]) -> None:
+		"""
+		Move the element by moving all its points (inplace).
+
+		:param offset: The 3D-offset to move by.
+		"""
+
+
+Point3D._PARENT_TYPE = (Element3D, )
 
 
 @export
@@ -1293,24 +1407,42 @@ class BoundingBox3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 
 @export
-class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
-	"""An implementation of a 3D cartesian segment."""
+class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
+	"""
+	An implementation of a 3D cartesian segment.
+
+	A segment owns its start and end point.
+	"""
 
 	_start: Point3D[Coordinate]  #: Start point of a segment.
 	_end:   Point3D[Coordinate]  #: End point of a segment.
 
-	def __init__(self, start: Point3D[Coordinate], end: Point3D[Coordinate], copyPoints: bool = True) -> None:
+	def __init__(self, start: Point3D[Coordinate], end: Point3D[Coordinate], *, copyPoints: bool = True) -> None:
 		"""
 		Initializes a 3-dimensional segment.
 
-		:param start:       Start point of the segment.
-		:param end:         End point of the segment.
-		:param copyPoints:  Optional, if ``True``, the given points are copied instead of referenced.
-		:raises ValueError: If parameter 'start' is None.
-		:raises TypeError:  If parameter 'start' is not of type :class:`Point3D`.
-		:raises ValueError: If parameter 'end' is None.
-		:raises TypeError:  If parameter 'end' is not of type :class:`Point3D`.
+		:param start:                Start point of the segment.
+		:param end:                  End point of the segment.
+		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                             ``True``.
+		:raises ValueError:          If parameter 'start' is None.
+		:raises TypeError:           If parameter 'start' is not of type :class:`Point3D`.
+		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while 'copyPoints' is
+		                             ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'end' is None.
+		:raises TypeError:           If parameter 'end' is not of type :class:`Point3D`.
+		:raises DuplicatePointError: If parameter 'end' is the same point as parameter 'start', while 'copyPoints' is
+		                             ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'end' is owned by another element, while 'copyPoints' is
+		                             ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'copyPoints' is None.
+		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
 		"""
+		super().__init__()
+
 		if start is None:
 			raise ValueError("Parameter 'start' is None.")
 		elif not isinstance(start, Point3D):
@@ -1325,21 +1457,52 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")
 			raise ex
 
-		self._start = start.Copy() if copyPoints else start
-		self._end =   end.Copy()   if copyPoints else end
+		if copyPoints is None:
+			raise ValueError("Parameter 'copyPoints' is None.")
+		elif not isinstance(copyPoints, bool):
+			ex = TypeError("Parameter 'copyPoints' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
+			raise ex
+
+		if copyPoints:
+			start = start.Copy()
+			end =   end.Copy()
+		elif end is start:
+			ex = DuplicatePointError("Point is given twice.")
+			ex.add_note(f"Got point {start}.")
+			ex.add_note("Use 'copyPoints=True' to copy the points.")
+			raise ex from ValueError("Parameter 'end' is the same point as parameter 'start'.")
+		else:
+			for name, point in (
+				("start", start),
+				("end",   end)
+			):
+				if point._parent is not None:
+					ex = AlreadyOwnedError("Point is owned by another element already.")
+					ex.add_note(f"Got point {point} owned by {point._parent!r}.")
+					ex.add_note("Use 'copyPoints=True' to copy the point.")
+					raise ex from ValueError(f"Parameter '{name}' is owned by another element.")
+
+		start._parent = self
+		end._parent =   self
+		self._start =   start
+		self._end =     end
 
 	@property
 	def Start(self) -> Point3D[Coordinate]:
 		"""
 		Property to access the segment's start point (:attr:`_start`).
 
-		An assigned point is referenced, not copied.
+		An assigned point is referenced, not copied: the segment takes ownership of it and releases the previous start
+		point.
 
 		``start`` is a deprecated alias of this property; it is removed in v11.0.0.
 
-		:returns:           Start point of the segment.
-		:raises ValueError: If ``None`` is assigned.
-		:raises TypeError:  If an assigned value is not of type :class:`Point3D`.
+		:returns:                    Start point of the segment.
+		:raises ValueError:          If ``None`` is assigned.
+		:raises TypeError:           If an assigned value is not of type :class:`Point3D`.
+		:raises DuplicatePointError: If an assigned point is the segment's end point.
+		:raises AlreadyOwnedError:   If an assigned point is owned by another element.
 		"""
 		return self._start
 
@@ -1351,8 +1514,20 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'start' is not of type 'Point3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
 			raise ex
+		elif start is self._start:
+			return
+		elif start is self._end:
+			ex = DuplicatePointError("Point is given twice.")
+			ex.add_note(f"Got point {start}.")
+			raise ex from ValueError("Parameter 'start' is the segment's end point.")
+		elif start._parent is not None and start._parent is not self:
+			ex = AlreadyOwnedError("Point is owned by another element already.")
+			ex.add_note(f"Got point {start} owned by {start._parent!r}.")
+			raise ex from ValueError("Parameter 'start' is owned by another element.")
 
-		self._start = start
+		self._start._parent = None
+		start._parent =       self
+		self._start =         start
 
 	start = Start
 
@@ -1361,13 +1536,16 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		Property to access the segment's end point (:attr:`_end`).
 
-		An assigned point is referenced, not copied.
+		An assigned point is referenced, not copied: the segment takes ownership of it and releases the previous end
+		point.
 
 		``end`` is a deprecated alias of this property; it is removed in v11.0.0.
 
-		:returns:           End point of the segment.
-		:raises ValueError: If ``None`` is assigned.
-		:raises TypeError:  If an assigned value is not of type :class:`Point3D`.
+		:returns:                    End point of the segment.
+		:raises ValueError:          If ``None`` is assigned.
+		:raises TypeError:           If an assigned value is not of type :class:`Point3D`.
+		:raises DuplicatePointError: If an assigned point is the segment's start point.
+		:raises AlreadyOwnedError:   If an assigned point is owned by another element.
 		"""
 		return self._end
 
@@ -1379,8 +1557,20 @@ class Segment3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'end' is not of type 'Point3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")
 			raise ex
+		elif end is self._end:
+			return
+		elif end is self._start:
+			ex = DuplicatePointError("Point is given twice.")
+			ex.add_note(f"Got point {end}.")
+			raise ex from ValueError("Parameter 'end' is the segment's start point.")
+		elif end._parent is not None and end._parent is not self:
+			ex = AlreadyOwnedError("Point is owned by another element already.")
+			ex.add_note(f"Got point {end} owned by {end._parent!r}.")
+			raise ex from ValueError("Parameter 'end' is owned by another element.")
 
-		self._end = end
+		self._end._parent = None
+		end._parent =       self
+		self._end =         end
 
 	end = End
 
@@ -1461,12 +1651,13 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 		The angle is the one between both segments' directions, from ``0`` (same direction) to :data:`math.pi` (opposite
 		directions).
 
-		:param other:       The second line segment.
-		:returns:           The angle in radians.
-		:raises ValueError: If parameter 'other' is None.
-		:raises TypeError:  If parameter 'other' is not of type :class:`LineSegment3D`.
-		:raises ValueError: If parameter 'other' has length 0.
-		:raises ValueError: If this line segment has length 0.
+		:param other:                The second line segment.
+		:returns:                    The angle in radians.
+		:raises ValueError:          If parameter 'other' is None.
+		:raises TypeError:           If parameter 'other' is not of type :class:`LineSegment3D`.
+		:raises NotInSameFrameError: If parameter 'other' is in another frame than this line segment.
+		:raises ValueError:          If parameter 'other' has length 0.
+		:raises ValueError:          If this line segment has length 0.
 		"""
 		if other is None:
 			raise ValueError("Parameter 'other' is None.")
@@ -1474,6 +1665,10 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 			ex = TypeError("Parameter 'other' is not of type 'LineSegment3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
+		elif self.Frame is not other.Frame:
+			ex = NotInSameFrameError("Line segments are in different frames.")
+			ex.add_note(f"Got line segments {self} and {other}.")
+			raise ex from ValueError("Parameter 'other' is in another frame.")
 		elif other._start._x == other._end._x and other._start._y == other._end._y and other._start._z == other._end._z:
 			ex = ValueError("Parameter 'other' has length 0.")
 			ex.add_note(f"Got line segment {other}.")
