@@ -86,6 +86,9 @@ Version 10.x (2026)
      :class:`~pyTooling.Cartesian2D.Drawing.FontStyle`: upright, italic or slanted).
    * :mod:`pyTooling.Cartesian2D.Drawing`: drawable shapes with the names of their geometry classes (``Polygon``,
      ``Trapezium``, ``Rectangle``, ``Square``, ``Circle``, ``LineSegment2D``), drawn with a ``Stroke`` and a ``Fill``.
+   * :mod:`pyTooling.Cartesian2D.Drawing`: a drawable :class:`~pyTooling.Cartesian2D.Drawing.Ellipse`,
+     :class:`~pyTooling.Cartesian2D.Drawing.Path` and :class:`~pyTooling.Cartesian2D.Drawing.PolyLine`; an open path or
+     polyline has a stroke only, a closed one a fill too.
    * :mod:`pyTooling.Cartesian2D.Drawing`: a :class:`~pyTooling.Cartesian2D.Drawing.Text` of one or more lines, aligned
      horizontally and anchored vertically at its position, with an estimated bounding box.
    * :mod:`pyTooling.Cartesian3D`: every element mirrors at a plane through an edge or the center of its bounding box

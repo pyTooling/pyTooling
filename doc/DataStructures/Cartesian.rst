@@ -1277,7 +1277,9 @@ A drawable shape is a geometry class with a style, and has **the same name**:
 checked, measured, moved, mirrored and grouped like one. :mod:`~pyTooling.Cartesian2D.Drawing` has a drawable
 :class:`~pyTooling.Cartesian2D.Drawing.Polygon`, :class:`~pyTooling.Cartesian2D.Drawing.Trapezium`,
 :class:`~pyTooling.Cartesian2D.Drawing.Rectangle`, :class:`~pyTooling.Cartesian2D.Drawing.Square`,
-:class:`~pyTooling.Cartesian2D.Drawing.Circle` and :class:`~pyTooling.Cartesian2D.Drawing.LineSegment2D`.
+:class:`~pyTooling.Cartesian2D.Drawing.Circle`, :class:`~pyTooling.Cartesian2D.Drawing.Ellipse`,
+:class:`~pyTooling.Cartesian2D.Drawing.Path`, :class:`~pyTooling.Cartesian2D.Drawing.PolyLine` and
+:class:`~pyTooling.Cartesian2D.Drawing.LineSegment2D`.
 
 The constructors take the geometry's parameters, the keyword-only parameters ``value`` and ``keyValuePairs`` of every
 :ref:`element <STRUCT/Cartesian2D/Element2D>`, and the keyword-only parameters ``stroke`` and ``fill``:
@@ -1287,24 +1289,28 @@ The constructors take the geometry's parameters, the keyword-only parameters ``v
 
 Both are properties with a setter; a value of another type raises :exc:`TypeError`. A line segment has no area, so it
 has a stroke only (:class:`~pyTooling.Cartesian2D.Drawing.StrokeMixin`); the shapes have both
-(:class:`~pyTooling.Cartesian2D.Drawing.StyleMixin`). ``Copy()`` and :func:`copy.copy` return a drawable shape of the
-same class with copied points, the same style objects and value, and a shallow copy of the key-value-pairs.
-:func:`copy.deepcopy` keeps the same style objects too, and copies the value and the key-value-pairs deeply.
+(:class:`~pyTooling.Cartesian2D.Drawing.StyleMixin`). A path or polyline encloses an area only when it is closed: a
+fill for an open one raises :exc:`ValueError`, given to the constructor or assigned. ``Copy()`` and :func:`copy.copy`
+return a drawable shape of the same class with copied points, the same style objects and value, and a shallow copy of
+the key-value-pairs. :func:`copy.deepcopy` keeps the same style objects too, and copies the value and the
+key-value-pairs deeply.
 
 .. code-block:: Python
 
    from pyTooling.Cartesian2D         import Point2D
-   from pyTooling.Cartesian2D.Drawing import Circle, Fill, Rectangle, RGBAColor, Stroke
+   from pyTooling.Cartesian2D.Drawing import Circle, Fill, PolyLine, Rectangle, RGBAColor, Stroke
    from pyTooling.Cartesian2D.Groups  import Canvas2D, YAxisDirection
 
    outline = Stroke(1, RGBAColor(0, 0, 0))
    canvas =  Canvas2D(YAxisDirection.Down)
    box =     Rectangle(Point2D(0, 0), Point2D(40, 0), Point2D(40, 20), Point2D(0, 20), stroke=outline, parent=canvas)
    dot =     Circle(Point2D(40, 10), 3, stroke=outline, fill=Fill(RGBAColor(255, 255, 255)), parent=canvas)
+   wire =    PolyLine((Point2D(40, 10), Point2D(60, 10), Point2D(60, 30)), stroke=outline, parent=canvas)
 
    box.Fill = Fill(RGBAColor.Parse("#ffffe0"))
    dot.BoundingBox                    # BoundingBox2D(37, 7, 43, 13)
-   len(canvas.Children)               # 2
+   len(canvas.Children)               # 3
+   wire.IsClosed                      # False
 
 A drawable shape checks its ``parent`` first and registers in it when its geometry and styles are checked, so a failing
 check leaves nothing in the group or canvas, and points given with ``copyPoints=False`` stay free. A drawable line

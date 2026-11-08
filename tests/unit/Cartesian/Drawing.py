@@ -39,7 +39,7 @@ from pyTooling.Cartesian2D         import Point2D, Offset2D, Size2D, BoundingBox
 from pyTooling.Cartesian2D.Groups  import Group2D, Canvas2D, YAxisDirection
 from pyTooling.Cartesian2D.Drawing import TextAlignment, VerticalAnchor, LineStyle, Color, RGBAColor, Stroke, Fill, \
                                           FontStyle, Font, StrokeMixin, StyleMixin, LineSegment2D, Polygon, Trapezium, \
-                                          Rectangle, Square, Circle, Text
+                                          Rectangle, Square, Circle, Ellipse, Path, PolyLine, Text
 from pyTooling.MetaClasses         import ExtendedType, AbstractClassError
 from pyTooling.Testing             import Testcase
 
@@ -623,6 +623,13 @@ STROKE = Stroke(1, RGBAColor(0, 0, 0))
 FILL = Fill(RGBAColor(255, 128, 0))
 """An orange area, shared by the tests."""
 
+TRIANGLE = (
+	GeometricLineSegment2D(Point2D(0, 0), Point2D(4, 0)),
+	GeometricLineSegment2D(Point2D(4, 0), Point2D(2, 3)),
+	GeometricLineSegment2D(Point2D(2, 3), Point2D(0, 0))
+)
+"""The edges of a triangle, shared by the tests: a path copies its segments."""
+
 
 class Drawables(Testcase):
 	def test_LineSegment(self) -> None:
@@ -709,8 +716,66 @@ class Drawables(Testcase):
 		self.assertTupleEqual((2, 3), circle.Center.ToTuple())
 		self.assertIs(STROKE, circle.Stroke)
 
+	def test_Ellipse(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, stroke=STROKE, fill=FILL)
+
+		self.assertIsInstance(ellipse, Shapes.Ellipse)
+		self.assertIsInstance(ellipse, StyleMixin)
+		self.assertIs(STROKE, ellipse.Stroke)
+		self.assertIs(FILL, ellipse.Fill)
+		self.assertEqual(BoundingBox2D(-2, 0, 4, 4), ellipse.BoundingBox)
+
+	def test_Ellipse_copyPoints(self) -> None:
+		center =  Point2D(1, 2)
+		ellipse = Ellipse(center, 3, 2, copyPoints=False, fill=FILL)
+
+		self.assertIs(center, ellipse.Center)
+		self.assertIs(ellipse, center.Parent)
+
+	def test_Path(self) -> None:
+		path = Path(TRIANGLE, closed=True, stroke=STROKE, fill=FILL)
+
+		self.assertIsInstance(path, Shapes.Path)
+		self.assertIsInstance(path, StyleMixin)
+		self.assertIs(STROKE, path.Stroke)
+		self.assertIs(FILL, path.Fill)
+		self.assertEqual(3, len(path.Segments))
+		self.assertTrue(path.IsClosed)
+
+	def test_Path_Open(self) -> None:
+		path = Path(TRIANGLE[:2], stroke=STROKE)
+
+		self.assertIs(STROKE, path.Stroke)
+		self.assertIsNone(path.Fill)
+		self.assertFalse(path.IsClosed)
+
+	def test_PolyLine(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), closed=True, stroke=STROKE, fill=FILL)
+
+		self.assertIsInstance(polyline, Shapes.PolyLine)
+		self.assertNotIsInstance(polyline, Path)
+		self.assertIsInstance(polyline, StyleMixin)
+		self.assertIs(STROKE, polyline.Stroke)
+		self.assertIs(FILL, polyline.Fill)
+		self.assertEqual(3, len(polyline.Segments))
+
+	def test_PolyLine_Open(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE)
+
+		self.assertIs(STROKE, polyline.Stroke)
+		self.assertIsNone(polyline.Fill)
+		self.assertEqual(1, len(polyline.Segments))
+
+	def test_PolyLine_copyPoints(self) -> None:
+		points =   (Point2D(0, 0), Point2D(4, 0))
+		polyline = PolyLine(points, copyPoints=False, stroke=STROKE)
+
+		self.assertTupleEqual(points, polyline.Points)
+		for point in points:
+			self.assertIs(polyline, point.Parent)
+
 	def test_Slots(self) -> None:
-		for drawableClass in (LineSegment2D, Polygon, Trapezium, Rectangle, Square, Circle):
+		for drawableClass in (LineSegment2D, Polygon, Trapezium, Rectangle, Square, Circle, Ellipse, Path, PolyLine):
 			self.assertIsInstance(drawableClass, ExtendedType)
 			self.assertNotIn("__dict__", dir(drawableClass))
 
@@ -774,6 +839,43 @@ class StyleParameters(Testcase):
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 
+	def test_Ellipse_StrokeStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Ellipse(Point2D(1, 2), 3, 2, stroke="black")
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Path_FillColor(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Path(TRIANGLE, closed=True, fill=RGBAColor(0, 0, 0))
+
+		self.assertEqual("Parameter 'fill' is not of type 'Fill'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.RGBAColor'."], context.exception.__notes__)
+
+	def test_Path_FillOpen(self) -> None:
+		"""An open path has no area, so it has no fill."""
+		with self.assertRaises(ValueError) as context:
+			_ = Path(TRIANGLE[:2], stroke=STROKE, fill=FILL)
+
+		self.assertEqual("Parameter 'fill' is given, while 'closed' is False.", str(context.exception))
+		self.assertListEqual(["Only a closed path encloses an area."], context.exception.__notes__)
+
+	def test_PolyLine_StrokeInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), stroke=1)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_PolyLine_FillOpen(self) -> None:
+		"""An open polyline has no area, so it has no fill."""
+		with self.assertRaises(ValueError) as context:
+			_ = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), fill=FILL)
+
+		self.assertEqual("Parameter 'fill' is given, while 'closed' is False.", str(context.exception))
+		self.assertListEqual(["Only a closed polyline encloses an area."], context.exception.__notes__)
+
 class StyleProperties(Testcase):
 	def test_Stroke(self) -> None:
 		line =   LineSegment2D(Point2D(1, 2), Point2D(4, 6))
@@ -832,6 +934,66 @@ class StyleProperties(Testcase):
 		self.assertIs(circle1.Stroke, circle2.Stroke)
 		self.assertIs(circle1.Fill, circle2.Fill)
 
+
+	def test_Fill_Path(self) -> None:
+		path = Path(TRIANGLE, closed=True)
+
+		path.Fill = FILL
+
+		self.assertIs(FILL, path.Fill)
+
+	def test_Fill_PathOpen(self) -> None:
+		path = Path(TRIANGLE[:2], stroke=STROKE)
+
+		with self.assertRaises(ValueError) as context:
+			path.Fill = FILL
+
+		self.assertEqual("Parameter 'fill' is given, while the path is open.", str(context.exception))
+		self.assertListEqual(["Only a closed path encloses an area."], context.exception.__notes__)
+		self.assertIsNone(path.Fill)
+
+	def test_Fill_PathOpenNone(self) -> None:
+		path = Path(TRIANGLE[:2], stroke=STROKE)
+
+		path.Fill = None
+
+		self.assertIsNone(path.Fill)
+
+	def test_Fill_PathOpenStroke(self) -> None:
+		"""The type is checked before the path's closing."""
+		path = Path(TRIANGLE[:2])
+
+		with self.assertRaises(TypeError) as context:
+			path.Fill = STROKE
+
+		self.assertEqual("Parameter 'fill' is not of type 'Fill'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.Stroke'."], context.exception.__notes__)
+
+	def test_Fill_PolyLine(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), closed=True, fill=FILL)
+
+		polyline.Fill = None
+
+		self.assertIsNone(polyline.Fill)
+
+	def test_Fill_PolyLineOpen(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)))
+
+		with self.assertRaises(ValueError) as context:
+			polyline.Fill = FILL
+
+		self.assertEqual("Parameter 'fill' is given, while the polyline is open.", str(context.exception))
+		self.assertListEqual(["Only a closed polyline encloses an area."], context.exception.__notes__)
+		self.assertIsNone(polyline.Fill)
+
+	def test_Fill_PolyLineOpenInt(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)))
+
+		with self.assertRaises(TypeError) as context:
+			polyline.Fill = 1
+
+		self.assertEqual("Parameter 'fill' is not of type 'Fill'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 class Parents(Testcase):
 	def test_LineSegment(self) -> None:
@@ -1022,6 +1184,102 @@ class Parents(Testcase):
 
 		self.assertTupleEqual((), group.Children)
 
+
+	def test_Ellipse(self) -> None:
+		group =   Group2D()
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, parent=group)
+
+		self.assertTupleEqual((ellipse, ), group.Children)
+
+	def test_Ellipse_Int(self) -> None:
+		"""A wrong parent leaves the given center free."""
+		center = Point2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Ellipse(center, 3, 2, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(center.Parent)
+
+	def test_Path(self) -> None:
+		canvas = Canvas2D()
+		path =   Path(TRIANGLE, closed=True, fill=FILL, parent=canvas)
+
+		self.assertIs(canvas, path.Parent)
+		self.assertTupleEqual((path, ), canvas.Children)
+
+	def test_Path_Int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Path(TRIANGLE, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_PolyLine(self) -> None:
+		group =    Group2D()
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE, parent=group)
+
+		self.assertIs(group, polyline.Parent)
+		self.assertTupleEqual((polyline, ), group.Children)
+
+	def test_PolyLine_Int(self) -> None:
+		"""A wrong parent leaves the given points free."""
+		points = (Point2D(0, 0), Point2D(4, 0))
+
+		with self.assertRaises(TypeError) as context:
+			_ = PolyLine(points, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		for point in points:
+			self.assertIsNone(point.Parent)
+
+	def test_FailingStyle_Ellipse(self) -> None:
+		group =  Group2D()
+		center = Point2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Ellipse(center, 3, 2, copyPoints=False, stroke=FILL, parent=group)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.Fill'."], context.exception.__notes__)
+		self.assertTupleEqual((), group.Children)
+		self.assertIsNone(center.Parent)
+
+	def test_FailingStyle_Path(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(ValueError):
+			_ = Path(TRIANGLE[:2], fill=FILL, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_FailingStyle_PolyLine(self) -> None:
+		"""A fill of an open polyline leaves nothing registered and the given points free."""
+		group =  Group2D()
+		points = (Point2D(0, 0), Point2D(4, 0))
+
+		with self.assertRaises(ValueError) as context:
+			_ = PolyLine(points, copyPoints=False, fill=FILL, parent=group)
+
+		self.assertEqual("Parameter 'fill' is given, while 'closed' is False.", str(context.exception))
+		self.assertTupleEqual((), group.Children)
+		for point in points:
+			self.assertIsNone(point.Parent)
+
+	def test_FailingStyle_PolyLineStroke(self) -> None:
+		group =  Group2D()
+		points = (Point2D(0, 0), Point2D(4, 0))
+
+		with self.assertRaises(TypeError) as context:
+			_ = PolyLine(points, copyPoints=False, stroke=1, parent=group)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertTupleEqual((), group.Children)
+		for point in points:
+			self.assertIsNone(point.Parent)
 
 class Copies(Testcase):
 	def test_LineSegment(self) -> None:
@@ -1225,6 +1483,106 @@ class Copies(Testcase):
 		self.assertListEqual([1, 2], newText.Value)
 		self.assertTupleEqual((text, ), group.Children)
 
+	def test_Ellipse(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, stroke=STROKE, fill=FILL)
+
+		newEllipse = ellipse.Copy()
+
+		self.assertIs(Ellipse, type(newEllipse))
+		self.assertIsNot(ellipse.Center, newEllipse.Center)
+		self.assertEqual(3, newEllipse.RadiusX)
+		self.assertEqual(2, newEllipse.RadiusY)
+		self.assertIs(STROKE, newEllipse.Stroke)
+		self.assertIs(FILL, newEllipse.Fill)
+
+	def test_Ellipse_copy(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, fill=FILL)
+
+		newEllipse = copy(ellipse)
+
+		self.assertIs(Ellipse, type(newEllipse))
+		self.assertIs(FILL, newEllipse.Fill)
+
+	def test_Ellipse_deepcopy(self) -> None:
+		group =   Group2D()
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, stroke=STROKE, fill=FILL, value=[1, 2], parent=group)
+
+		newEllipse = deepcopy(ellipse)
+
+		self.assertIs(Ellipse, type(newEllipse))
+		self.assertIsNone(newEllipse.Parent)
+		self.assertIs(newEllipse, newEllipse.Center.Parent)
+		self.assertEqual(3, newEllipse.RadiusX)
+		self.assertEqual(2, newEllipse.RadiusY)
+		self.assertIs(STROKE, newEllipse.Stroke)
+		self.assertIs(FILL, newEllipse.Fill)
+		self.assertIsNot(ellipse.Value, newEllipse.Value)
+		self.assertListEqual([1, 2], newEllipse.Value)
+		self.assertTupleEqual((ellipse, ), group.Children)
+
+	def test_Path(self) -> None:
+		path = Path(TRIANGLE, closed=True, stroke=STROKE, fill=FILL)
+
+		newPath = path.Copy()
+
+		self.assertIs(Path, type(newPath))
+		self.assertIsNot(path.Points[0], newPath.Points[0])
+		self.assertTrue(newPath.IsClosed)
+		self.assertIs(STROKE, newPath.Stroke)
+		self.assertIs(FILL, newPath.Fill)
+
+	def test_Path_copy(self) -> None:
+		path = Path(TRIANGLE[:2], stroke=STROKE)
+
+		newPath = copy(path)
+
+		self.assertIs(Path, type(newPath))
+		self.assertIs(STROKE, newPath.Stroke)
+		self.assertIsNone(newPath.Fill)
+
+	def test_Path_deepcopy(self) -> None:
+		value = [1, 2]
+		path =  Path(TRIANGLE, closed=True, stroke=STROKE, fill=FILL, value=value)
+
+		newPath = deepcopy(path)
+
+		self.assertIs(Path, type(newPath))
+		self.assertIsNot(path.Points[0], newPath.Points[0])
+		self.assertIsNot(value, newPath.Value)
+		self.assertListEqual(value, newPath.Value)
+		self.assertIs(STROKE, newPath.Stroke)
+		self.assertIs(FILL, newPath.Fill)
+
+	def test_PolyLine(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), closed=True, stroke=STROKE, fill=FILL)
+
+		newPolyLine = polyline.Copy()
+
+		self.assertIs(PolyLine, type(newPolyLine))
+		self.assertIsNot(polyline.Points[0], newPolyLine.Points[0])
+		self.assertTrue(newPolyLine.IsClosed)
+		self.assertIs(STROKE, newPolyLine.Stroke)
+		self.assertIs(FILL, newPolyLine.Fill)
+
+	def test_PolyLine_copy(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE)
+
+		newPolyLine = copy(polyline)
+
+		self.assertIs(PolyLine, type(newPolyLine))
+		self.assertIs(STROKE, newPolyLine.Stroke)
+
+	def test_PolyLine_deepcopy(self) -> None:
+		value =    [1, 2]
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE, value=value)
+
+		newPolyLine = deepcopy(polyline)
+
+		self.assertIs(PolyLine, type(newPolyLine))
+		self.assertIsNot(polyline.Points[0], newPolyLine.Points[0])
+		self.assertIsNot(value, newPolyLine.Value)
+		self.assertListEqual(value, newPolyLine.Value)
+		self.assertIs(STROKE, newPolyLine.Stroke)
 
 
 class ElementData(Testcase):
@@ -1454,6 +1812,39 @@ class ElementData(Testcase):
 		self.assertEqual(1, text["layer"])
 		self.assertEqual(2, newText["layer"])
 
+
+	def test_Ellipse_Copy(self) -> None:
+		value =   [1, 2]
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, fill=FILL, value=value, keyValuePairs={"layer": 1})
+
+		newEllipse =          ellipse.Copy()
+		newEllipse["layer"] = 2
+
+		self.assertIs(value, newEllipse.Value)
+		self.assertEqual(1, ellipse["layer"])
+		self.assertEqual(2, newEllipse["layer"])
+
+	def test_Path_Copy(self) -> None:
+		value = [1, 2]
+		path =  Path(TRIANGLE, closed=True, fill=FILL, value=value, keyValuePairs={"layer": 1})
+
+		newPath =          path.Copy()
+		newPath["layer"] = 2
+
+		self.assertIs(value, newPath.Value)
+		self.assertEqual(1, path["layer"])
+		self.assertEqual(2, newPath["layer"])
+
+	def test_PolyLine_Copy(self) -> None:
+		value =    [1, 2]
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE, value=value, keyValuePairs={"layer": 1})
+
+		newPolyLine =          polyline.Copy()
+		newPolyLine["layer"] = 2
+
+		self.assertIs(value, newPolyLine.Value)
+		self.assertEqual(1, polyline["layer"])
+		self.assertEqual(2, newPolyLine["layer"])
 
 MONOSPACE = Font("monospace", 10)
 """A 10 point monospace font: a character is 6 points wide, a line 10 points high, the next baseline 12 points below."""
