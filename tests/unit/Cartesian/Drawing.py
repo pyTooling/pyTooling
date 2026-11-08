@@ -31,7 +31,7 @@
 """
 Unit tests for :mod:`pyTooling.Cartesian2D.Drawing` - colors, strokes, fills, fonts, drawable shapes and texts.
 """
-from copy                          import copy
+from copy                          import copy, deepcopy
 from math                          import isclose
 
 from pyTooling.Cartesian2D         import Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, Shapes, \
@@ -1096,6 +1096,135 @@ class Copies(Testcase):
 		self.assertIsNot(circle.Center, newCircle.Center)
 		self.assertIs(STROKE, newCircle.Stroke)
 		self.assertIs(FILL, newCircle.Fill)
+
+	def test_LineSegment_deepcopy(self) -> None:
+		group = Group2D()
+		line =  LineSegment2D(Point2D(1, 2), Point2D(4, 6), stroke=STROKE, value=[1, 2], parent=group)
+
+		newLine = deepcopy(line)
+
+		self.assertIs(LineSegment2D, type(newLine))
+		self.assertIsNone(newLine.Parent)
+		self.assertIs(newLine, newLine.Start.Parent)
+		self.assertIs(STROKE, newLine.Stroke)
+		self.assertIsNot(line.Value, newLine.Value)
+		self.assertListEqual([1, 2], newLine.Value)
+		self.assertTupleEqual((line, ), group.Children)
+
+	def test_Polygon_deepcopy(self) -> None:
+		group =   Group2D()
+		polygon = Polygon(
+			(Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)),
+			stroke=STROKE,
+			fill=FILL,
+			value=[1, 2],
+			parent=group
+		)
+
+		newPolygon = deepcopy(polygon)
+
+		self.assertIs(Polygon, type(newPolygon))
+		self.assertIsNone(newPolygon.Parent)
+		self.assertIs(newPolygon, newPolygon.Points[0].Parent)
+		self.assertIs(STROKE, newPolygon.Stroke)
+		self.assertIs(FILL, newPolygon.Fill)
+		self.assertIsNot(polygon.Value, newPolygon.Value)
+		self.assertListEqual([1, 2], newPolygon.Value)
+		self.assertTupleEqual((polygon, ), group.Children)
+
+	def test_Trapezium_deepcopy(self) -> None:
+		group =     Group2D()
+		trapezium = Trapezium(
+			Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3),
+			stroke=STROKE,
+			fill=FILL,
+			value=[1, 2],
+			parent=group
+		)
+
+		newTrapezium = deepcopy(trapezium)
+
+		self.assertIs(Trapezium, type(newTrapezium))
+		self.assertIsNone(newTrapezium.Parent)
+		self.assertIs(newTrapezium, newTrapezium.Points[0].Parent)
+		self.assertIs(STROKE, newTrapezium.Stroke)
+		self.assertIs(FILL, newTrapezium.Fill)
+		self.assertIsNot(trapezium.Value, newTrapezium.Value)
+		self.assertListEqual([1, 2], newTrapezium.Value)
+		self.assertTupleEqual((trapezium, ), group.Children)
+
+	def test_Rectangle_deepcopy(self) -> None:
+		group =     Group2D()
+		rectangle = Rectangle(
+			Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2),
+			stroke=STROKE,
+			fill=FILL,
+			value=[1, 2],
+			parent=group
+		)
+
+		newRectangle = deepcopy(rectangle)
+
+		self.assertIs(Rectangle, type(newRectangle))
+		self.assertIsNone(newRectangle.Parent)
+		self.assertIs(newRectangle, newRectangle.Points[0].Parent)
+		self.assertIs(STROKE, newRectangle.Stroke)
+		self.assertIs(FILL, newRectangle.Fill)
+		self.assertIsNot(rectangle.Value, newRectangle.Value)
+		self.assertListEqual([1, 2], newRectangle.Value)
+		self.assertTupleEqual((rectangle, ), group.Children)
+
+	def test_Square_deepcopy(self) -> None:
+		group =  Group2D()
+		square = Square(
+			Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2),
+			stroke=STROKE,
+			fill=FILL,
+			value=[1, 2],
+			parent=group
+		)
+
+		newSquare = deepcopy(square)
+
+		self.assertIs(Square, type(newSquare))
+		self.assertIsNone(newSquare.Parent)
+		self.assertIs(newSquare, newSquare.Points[0].Parent)
+		self.assertIs(STROKE, newSquare.Stroke)
+		self.assertIs(FILL, newSquare.Fill)
+		self.assertIsNot(square.Value, newSquare.Value)
+		self.assertListEqual([1, 2], newSquare.Value)
+		self.assertTupleEqual((square, ), group.Children)
+
+	def test_Circle_deepcopy(self) -> None:
+		group =  Group2D()
+		circle = Circle(Point2D(1, 2), 3, stroke=STROKE, fill=FILL, value=[1, 2], parent=group)
+
+		newCircle = deepcopy(circle)
+
+		self.assertIs(Circle, type(newCircle))
+		self.assertIsNone(newCircle.Parent)
+		self.assertIs(newCircle, newCircle.Center.Parent)
+		self.assertIs(STROKE, newCircle.Stroke)
+		self.assertIs(FILL, newCircle.Fill)
+		self.assertIsNot(circle.Value, newCircle.Value)
+		self.assertListEqual([1, 2], newCircle.Value)
+		self.assertTupleEqual((circle, ), group.Children)
+
+	def test_Text_deepcopy(self) -> None:
+		group = Group2D()
+		text =  Text(Point2D(0, 0), "clock", font=Font("monospace", 10), fill=FILL, value=[1, 2], parent=group)
+
+		newText = deepcopy(text)
+
+		self.assertIs(Text, type(newText))
+		self.assertIsNone(newText.Parent)
+		self.assertIs(newText, newText.Position.Parent)
+		self.assertIs(FILL, newText.Fill)
+		self.assertIs(text.Font, newText.Font)
+		self.assertIsNot(text.Value, newText.Value)
+		self.assertListEqual([1, 2], newText.Value)
+		self.assertTupleEqual((text, ), group.Children)
+
 
 
 class ElementData(Testcase):

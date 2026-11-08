@@ -2769,6 +2769,23 @@ class Copy(Testcase):
 			self.assertIs(points[index], segment.Start)
 			self.assertIs(points[(index + 1) % len(points)], segment.End)
 
+	def test_Polygon_deepcopy_Group(self) -> None:
+		"""A deep copy owns its corners and isn't in the group of the original."""
+		group =   Group2D()
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=group)
+
+		newPolygon = deepcopy(polygon)
+
+		self.assertIs(Polygon, type(newPolygon))
+		self.assertIsNone(newPolygon.Parent)
+		for corner in newPolygon.Points:
+			self.assertIs(newPolygon, corner.Parent)
+
+		for segment in newPolygon.Segments:
+			self.assertIs(newPolygon, segment.Parent)
+
+		self.assertTupleEqual((polygon, ), group.Children)
+
 	def test_PolyLine(self) -> None:
 		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5)))
 
@@ -2870,6 +2887,20 @@ class Copy(Testcase):
 			self.assertIs(points[index], segment.Start)
 			self.assertIs(points[(index + 1) % 4], segment.End)
 
+	def test_Trapezium_deepcopy_Group(self) -> None:
+		"""A deep copy owns its corners and isn't in the group of the original."""
+		group =     Group2D()
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), parent=group)
+
+		newTrapezium = deepcopy(trapezium)
+
+		self.assertIs(Trapezium, type(newTrapezium))
+		self.assertIsNone(newTrapezium.Parent)
+		for corner in newTrapezium.Points:
+			self.assertIs(newTrapezium, corner.Parent)
+
+		self.assertTupleEqual((trapezium, ), group.Children)
+
 	def test_Rectangle(self) -> None:
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
 
@@ -2893,6 +2924,20 @@ class Copy(Testcase):
 
 		self.assertIs(Rectangle, type(newRectangle))
 		self.assertTupleEqual(((0, 0), (4, 0), (4, 2), (0, 2)), tuple(point.ToTuple() for point in newRectangle.Points))
+
+	def test_Rectangle_deepcopy_Group(self) -> None:
+		"""A deep copy owns its corners and isn't in the group of the original."""
+		group =     Group2D()
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), parent=group)
+
+		newRectangle = deepcopy(rectangle)
+
+		self.assertIs(Rectangle, type(newRectangle))
+		self.assertIsNone(newRectangle.Parent)
+		for corner in newRectangle.Points:
+			self.assertIs(newRectangle, corner.Parent)
+
+		self.assertTupleEqual((rectangle, ), group.Children)
 
 	def test_Rectangle_MovedCorner(self) -> None:
 		"""A copy checks the corners again: a rectangle whose corner was moved isn't a rectangle anymore."""
@@ -2927,6 +2972,20 @@ class Copy(Testcase):
 		self.assertIs(Square, type(newSquare))
 		self.assertTupleEqual(((0, 0), (2, 0), (2, 2), (0, 2)), tuple(point.ToTuple() for point in newSquare.Points))
 
+	def test_Square_deepcopy_Group(self) -> None:
+		"""A deep copy owns its corners and isn't in the group of the original."""
+		group =  Group2D()
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), parent=group)
+
+		newSquare = deepcopy(square)
+
+		self.assertIs(Square, type(newSquare))
+		self.assertIsNone(newSquare.Parent)
+		for corner in newSquare.Points:
+			self.assertIs(newSquare, corner.Parent)
+
+		self.assertTupleEqual((square, ), group.Children)
+
 	def test_Circle(self) -> None:
 		circle = Circle(Point2D(1, 2), 3)
 
@@ -2960,6 +3019,18 @@ class Copy(Testcase):
 		self.assertIsNot(circle.Center, newCircle.Center)
 		self.assertEqual(3, newCircle.Radius)
 		self.assertTupleEqual((1, 2), newCircle.Center.ToTuple())
+
+	def test_Circle_deepcopy_Group(self) -> None:
+		"""A deep copy owns its center and isn't in the group of the original."""
+		group =  Group2D()
+		circle = Circle(Point2D(1, 2), 3, parent=group)
+
+		newCircle = deepcopy(circle)
+
+		self.assertIs(Circle, type(newCircle))
+		self.assertIsNone(newCircle.Parent)
+		self.assertIs(newCircle, newCircle.Center.Parent)
+		self.assertTupleEqual((circle, ), group.Children)
 
 	def test_Ellipse(self) -> None:
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
@@ -2998,6 +3069,18 @@ class Copy(Testcase):
 		self.assertEqual(3, newEllipse.RadiusX)
 		self.assertEqual(2, newEllipse.RadiusY)
 		self.assertTupleEqual((1, 2), newEllipse.Center.ToTuple())
+
+	def test_Ellipse_deepcopy_Group(self) -> None:
+		"""A deep copy owns its center and isn't in the group of the original."""
+		group =   Group2D()
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, parent=group)
+
+		newEllipse = deepcopy(ellipse)
+
+		self.assertIs(Ellipse, type(newEllipse))
+		self.assertIsNone(newEllipse.Parent)
+		self.assertIs(newEllipse, newEllipse.Center.Parent)
+		self.assertTupleEqual((ellipse, ), group.Children)
 
 
 class Representation(Testcase):
@@ -3252,6 +3335,22 @@ class ElementData(Testcase):
 		self.assertEqual(1, trapezium["layer"])
 		self.assertEqual(2, newTrapezium["layer"])
 
+	def test_Trapezium_deepcopy(self) -> None:
+		value =     [1, 2]
+		trapezium = Trapezium(
+			Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3),
+			value=value,
+			keyValuePairs={"nets": ["a"]}
+		)
+
+		newTrapezium = deepcopy(trapezium)
+
+		self.assertIs(Trapezium, type(newTrapezium))
+		self.assertIsNot(value, newTrapezium.Value)
+		self.assertListEqual([1, 2], newTrapezium.Value)
+		self.assertIsNot(trapezium["nets"], newTrapezium["nets"])
+		self.assertListEqual(["a"], newTrapezium["nets"])
+
 	def test_Rectangle(self) -> None:
 		value =     object()
 		rectangle = Rectangle(
@@ -3294,6 +3393,22 @@ class ElementData(Testcase):
 		self.assertIs(value, newRectangle.Value)
 		self.assertEqual(1, rectangle["layer"])
 		self.assertEqual(2, newRectangle["layer"])
+
+	def test_Rectangle_deepcopy(self) -> None:
+		value =     [1, 2]
+		rectangle = Rectangle(
+			Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2),
+			value=value,
+			keyValuePairs={"nets": ["a"]}
+		)
+
+		newRectangle = deepcopy(rectangle)
+
+		self.assertIs(Rectangle, type(newRectangle))
+		self.assertIsNot(value, newRectangle.Value)
+		self.assertListEqual([1, 2], newRectangle.Value)
+		self.assertIsNot(rectangle["nets"], newRectangle["nets"])
+		self.assertListEqual(["a"], newRectangle["nets"])
 
 	def test_Square(self) -> None:
 		value =  object()
@@ -3338,6 +3453,22 @@ class ElementData(Testcase):
 		self.assertEqual(1, square["layer"])
 		self.assertEqual(2, newSquare["layer"])
 
+	def test_Square_deepcopy(self) -> None:
+		value =  [1, 2]
+		square = Square(
+			Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2),
+			value=value,
+			keyValuePairs={"nets": ["a"]}
+		)
+
+		newSquare = deepcopy(square)
+
+		self.assertIs(Square, type(newSquare))
+		self.assertIsNot(value, newSquare.Value)
+		self.assertListEqual([1, 2], newSquare.Value)
+		self.assertIsNot(square["nets"], newSquare["nets"])
+		self.assertListEqual(["a"], newSquare["nets"])
+
 	def test_Circle(self) -> None:
 		value =  object()
 		circle = Circle(Point2D(1, 2), 3, value=value, keyValuePairs={"layer": 1})
@@ -3381,6 +3512,18 @@ class ElementData(Testcase):
 		self.assertIs(value, newCircle.Value)
 		self.assertIsNot(circle._dict, newCircle._dict)
 
+	def test_Circle_deepcopy(self) -> None:
+		value =  [1, 2]
+		circle = Circle(Point2D(1, 2), 3, value=value, keyValuePairs={"nets": ["a"]})
+
+		newCircle = deepcopy(circle)
+
+		self.assertIs(Circle, type(newCircle))
+		self.assertIsNot(value, newCircle.Value)
+		self.assertListEqual([1, 2], newCircle.Value)
+		self.assertIsNot(circle["nets"], newCircle["nets"])
+		self.assertListEqual(["a"], newCircle["nets"])
+
 	def test_Ellipse(self) -> None:
 		value =   object()
 		ellipse = Ellipse(Point2D(1, 2), 3, 2, value=value, keyValuePairs={"layer": 1})
@@ -3423,6 +3566,18 @@ class ElementData(Testcase):
 
 		self.assertIs(value, newEllipse.Value)
 		self.assertIsNot(ellipse._dict, newEllipse._dict)
+
+	def test_Ellipse_deepcopy(self) -> None:
+		value =   [1, 2]
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, value=value, keyValuePairs={"nets": ["a"]})
+
+		newEllipse = deepcopy(ellipse)
+
+		self.assertIs(Ellipse, type(newEllipse))
+		self.assertIsNot(value, newEllipse.Value)
+		self.assertListEqual([1, 2], newEllipse.Value)
+		self.assertIsNot(ellipse["nets"], newEllipse["nets"])
+		self.assertListEqual(["a"], newEllipse["nets"])
 
 	def test_Path(self) -> None:
 		value = object()

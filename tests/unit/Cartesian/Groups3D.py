@@ -31,6 +31,7 @@
 """
 Unit tests for :mod:`pyTooling.Cartesian3D.Groups` - groups, frames, absolute coordinates and mirroring.
 """
+from copy                         import deepcopy
 from math                         import isclose, pi
 
 from pyTooling.Cartesian3D        import Point3D, Offset3D, BoundingBox3D, Alignment3D, Element3D, Segment3D, \
@@ -945,6 +946,32 @@ class Mirroring(Testcase):
 		self.assertTupleEqual((1, 2, 3), group.Offset.ToTuple())
 
 
+class Copy(Testcase):
+	def test_Group_deepcopy(self) -> None:
+		"""A deep copy holds copies of the children and isn't in the group of the original."""
+		line =   LineSegment3D(Point3D(0, 0, 0), Point3D(4, 0, 2))
+		inner =  Group3D(Offset3D(1, 1, 1), (LineSegment3D(Point3D(1, 2, 3), Point3D(2, 3, 4)), ))
+		parent = Group3D()
+		group =  Group3D(Offset3D(1, 2, 3), (line, inner), parent=parent)
+
+		newGroup = deepcopy(group)
+		newLine =  newGroup.Children[0]
+		newInner = newGroup.Children[1]
+
+		self.assertIs(Group3D, type(newGroup))
+		self.assertIsNone(newGroup.Parent)
+		self.assertIsNot(group.Offset, newGroup.Offset)
+		self.assertTupleEqual((1, 2, 3), newGroup.Offset.ToTuple())
+		self.assertIsNot(line, newLine)
+		self.assertIs(newGroup, newLine.Parent)
+		self.assertIs(newLine, newLine.Start.Parent)
+		self.assertIsNot(inner, newInner)
+		self.assertIs(newGroup, newInner.Parent)
+		self.assertIs(newInner, newInner.Children[0].Parent)
+		self.assertIs(group, line.Parent)
+		self.assertTupleEqual((group, ), parent.Children)
+
+
 class ElementData(Testcase):
 	def test_Group(self) -> None:
 		value = object()
@@ -989,6 +1016,17 @@ class ElementData(Testcase):
 		del group["layer"]
 
 		self.assertEqual(0, len(group))
+
+	def test_Group_deepcopy(self) -> None:
+		value = [1, 2]
+		group = Group3D(value=value, keyValuePairs={"nets": ["a"]})
+
+		newGroup = deepcopy(group)
+
+		self.assertIsNot(value, newGroup.Value)
+		self.assertListEqual([1, 2], newGroup.Value)
+		self.assertIsNot(group["nets"], newGroup["nets"])
+		self.assertListEqual(["a"], newGroup["nets"])
 
 	def test_Group_Parent(self) -> None:
 		"""A child with a value and key-value-pairs registers in its parent like any other."""

@@ -778,6 +778,31 @@ class Copy(Testcase):
 		self.assertIsNot(line.End, newLine.End)
 		self.assertTupleEqual(((1, 2), (2, 3)), newLine.ToTuple())
 
+	def test_LineSegment_deepcopy_Group(self) -> None:
+		"""A deep copy owns its points and isn't in the group of the original."""
+		group = Group2D()
+		line =  LineSegment2D(Point2D(1, 2), Point2D(2, 3), parent=group)
+
+		newLine = deepcopy(line)
+
+		self.assertIsNone(newLine.Parent)
+		self.assertIs(newLine, newLine.Start.Parent)
+		self.assertIs(newLine, newLine.End.Parent)
+		self.assertTupleEqual((line, ), group.Children)
+
+	def test_LineSegment_deepcopy_Edge(self) -> None:
+		"""A deep copy of an edge owns copies of the shape's corners and isn't an edge of the shape."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		edge =    polygon.Segments[0]
+
+		newLine = deepcopy(edge)
+
+		self.assertIsNone(newLine.Parent)
+		self.assertIs(newLine, newLine.Start.Parent)
+		self.assertIsNot(polygon.Points[0], newLine.Start)
+		self.assertIs(polygon, polygon.Points[0].Parent)
+		self.assertTupleEqual(((0, 0), (4, 0)), newLine.ToTuple())
+
 	def test_LineSegment_Origin(self) -> None:
 		line = LineSegment2D(Origin2D(), Point2D(2, 3), copyPoints=False)
 

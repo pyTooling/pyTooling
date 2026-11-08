@@ -916,6 +916,18 @@ class Copy(Testcase):
 		self.assertIsNot(line.End, newLine.End)
 		self.assertTupleEqual(((1, 2, 3), (2, 3, 4)), newLine.ToTuple())
 
+	def test_LineSegment_deepcopy_Group(self) -> None:
+		"""A deep copy owns its points and isn't in the group of the original."""
+		group = Group3D()
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(2, 3, 4), parent=group)
+
+		newLine = deepcopy(line)
+
+		self.assertIsNone(newLine.Parent)
+		self.assertIs(newLine, newLine.Start.Parent)
+		self.assertIs(newLine, newLine.End.Parent)
+		self.assertTupleEqual((line, ), group.Children)
+
 	def test_LineSegment_Origin(self) -> None:
 		line = LineSegment3D(Origin3D(), Point3D(2, 3, 4), copyPoints=False)
 

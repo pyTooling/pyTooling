@@ -42,7 +42,8 @@ The coordinates of everything inside a group are relative to the group, so movin
 """
 from __future__                   import annotations
 
-from typing                       import Any, Generic, Hashable, Iterable, Mapping, Optional as Nullable
+from copy                         import deepcopy
+from typing                       import Any, Generic, Hashable, Iterable, Mapping, Optional as Nullable, Self
 
 from pyTooling.Decorators         import export, readonly
 from pyTooling.MetaClasses        import ExtendedType
@@ -500,6 +501,23 @@ class Group3D(Element3D[Coordinate], Container3DMixin, Generic[Coordinate]):
 		self._offset._zOffset = twiceAxis - self._offset._zOffset
 		for child in self._children:
 			child._MirrorZ(0)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this group for :func:`copy.deepcopy`.
+
+		The copy holds a copy of the offset, deep copies of the children, and deep copies of the :attr:`Value` and the
+		key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this group.
+		"""
+		return self.__class__(
+			self._offset,
+			(deepcopy(child, memo) for child in self._children),
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
 
 	def __repr__(self) -> str:
 		"""

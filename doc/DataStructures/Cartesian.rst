@@ -59,7 +59,8 @@ Features
 * **Drawing styles** - colors, strokes, fills and fonts as values, which elements can share, and drawable shapes
   carrying an outline and a fill.
 * **Independent copies** - ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` return an object sharing no point
-  with the original. A shape's copy is of the same class, and its edges share the copied corners.
+  with the original. A shape's copy is of the same class, and its edges share the copied corners. A copy owns its
+  points and isn't in a group.
 * Conversion to plain tuples through ``ToTuple``, for handing coordinates to a library that expects them.
 
 
@@ -990,7 +991,8 @@ An element carries an optional :attr:`~pyTooling.Cartesian2D.Element2D.Value` an
 ``keyValuePairs``. The value is any object, for example the model object a shape draws. The key-value-pairs are read
 and written with the dictionary syntax; ``in``, :pycode:`len(element)` and iterating an element address the
 key-value-pairs, not its points or children. ``Copy()`` and :func:`copy.copy` keep the value (the same object) and copy
-the key-value-pairs shallowly; :func:`copy.deepcopy` copies both deeply. Points carry neither, to stay small.
+the key-value-pairs shallowly; :func:`copy.deepcopy` copies both deeply. Points carry neither, to stay small. A copy
+isn't in the group or canvas of the original.
 
 .. code-block:: Python
 
@@ -1043,6 +1045,8 @@ are equal: either at a given distance after the first child, or evenly between t
 
 The frame of a point, segment or shape inside a group is that group. Subtracting points of different groups raises
 :exc:`~pyTooling.Cartesian2D.NotInSameFrameError`; subtract their absolute positions instead.
+
+:func:`copy.deepcopy` copies a group or a canvas with deep copies of its children. The copy of a group has no parent.
 
 .. seealso::
 
@@ -1195,6 +1199,7 @@ Both are properties with a setter; a value of another type raises :exc:`TypeErro
 has a stroke only (:class:`~pyTooling.Cartesian2D.Drawing.StrokeMixin`); the shapes have both
 (:class:`~pyTooling.Cartesian2D.Drawing.StyleMixin`). ``Copy()`` and :func:`copy.copy` return a drawable shape of the
 same class with copied points, the same style objects and value, and a shallow copy of the key-value-pairs.
+:func:`copy.deepcopy` keeps the same style objects too, and copies the value and the key-value-pairs deeply.
 
 .. code-block:: Python
 
@@ -1538,7 +1543,8 @@ Every segment and group takes a keyword-only parameter ``parent``: a group given
 An element carries an optional :attr:`~pyTooling.Cartesian3D.Element3D.Value` and arbitrary key-value-pairs
 (:class:`~pyTooling.DataModel.KeyValuePairsMixin`), given by the keyword-only parameters ``value`` and
 ``keyValuePairs``, as in 2D. ``Copy()`` and :func:`copy.copy` keep the value (the same object) and copy the
-key-value-pairs shallowly; :func:`copy.deepcopy` copies both deeply. Points carry neither.
+key-value-pairs shallowly; :func:`copy.deepcopy` copies both deeply. Points carry neither. A copy isn't in the group of
+the original.
 
 .. code-block:: Python
 
@@ -1589,7 +1595,8 @@ bounding box and raises :exc:`~pyTooling.Cartesian2D.Groups.EmptyGroupError`.
 :meth:`~pyTooling.Cartesian3D.Groups.Group3D.DistributeX`, :meth:`~pyTooling.Cartesian3D.Groups.Group3D.DistributeY`
 and :meth:`~pyTooling.Cartesian3D.Groups.Group3D.DistributeZ` move the children along that axis, so the gaps between
 them are equal. Subtracting points of different groups raises
-:exc:`~pyTooling.Cartesian2D.NotInSameFrameError`; subtract their absolute positions instead.
+:exc:`~pyTooling.Cartesian2D.NotInSameFrameError`; subtract their absolute positions instead. :func:`copy.deepcopy`
+copies a group with deep copies of its children, without its parent.
 
 .. seealso::
 

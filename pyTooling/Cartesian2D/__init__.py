@@ -2040,6 +2040,22 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		"""
 		return self.Copy()
 
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this 2D-segment for :func:`copy.deepcopy`.
+
+		The copy holds copies of the start and end point, and deep copies of the :attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this 2D-segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._end,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
 	def _CopyAsEdge(self, start: Point2D[Coordinate], end: Point2D[Coordinate], shape: Shape) -> Self:
 		"""
 		Create a copy of this segment as an edge of a shape, between two of the shape's points.
