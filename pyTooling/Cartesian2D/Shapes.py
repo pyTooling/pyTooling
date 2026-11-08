@@ -866,6 +866,235 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 
 
 @export
+class Ellipse(Geometry2D[Coordinate], Generic[Coordinate]):
+	"""
+	An ellipse is a round shape, whose outline is stretched along the x-axis and the y-axis by two radii.
+
+	Its axes are parallel to the coordinate axes. An ellipse with equal radii is a circle.
+	"""
+	_center:  Point2D[Coordinate]  #: Center point of the ellipse.
+	_radiusX: Coordinate           #: Radius of the ellipse in x-direction.
+	_radiusY: Coordinate           #: Radius of the ellipse in y-direction.
+
+	def __init__(
+		self,
+		center:        Point2D[Coordinate],
+		radiusX:       Coordinate,
+		radiusY:       Coordinate,
+		*,
+		copyPoints:    bool = True,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes an ellipse by its center and its radii in x- and y-direction.
+
+		The ellipse owns its center. A referenced center (``copyPoints=False``) must not be owned by another element.
+
+		:param center:             Center point of the ellipse.
+		:param radiusX:            Radius of the ellipse in x-direction.
+		:param radiusY:            Radius of the ellipse in y-direction.
+		:param copyPoints:         Optional, if ``True``, the given center is copied instead of referenced. Default:
+		                           ``True``.
+		:param value:              Optional, value of the ellipse. Default: ``None``.
+		:param keyValuePairs:      Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:             Optional, the group or canvas the ellipse is added to. Default: ``None``, no parent.
+		:raises ValueError:        If parameter 'center' is None.
+		:raises TypeError:         If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError: If parameter 'center' is owned by another element, while 'copyPoints' is ``False``. |br|
+		                           Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:        If parameter 'radiusX' is None.
+		:raises TypeError:         If parameter 'radiusX' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:        If parameter 'radiusX' isn't positive.
+		:raises ValueError:        If parameter 'radiusY' is None.
+		:raises TypeError:         If parameter 'radiusY' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:        If parameter 'radiusY' isn't positive.
+		:raises ValueError:        If parameter 'copyPoints' is None.
+		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:         If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
+
+		if center is None:
+			raise ValueError("Parameter 'center' is None.")
+		elif not isinstance(center, Point2D):
+			ex = TypeError("Parameter 'center' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(center)}'.")
+			raise ex
+
+		for name, radius in (
+			("radiusX", radiusX),
+			("radiusY", radiusY)
+		):
+			if radius is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(radius, (int, float)):
+				ex = TypeError(f"Parameter '{name}' is not of type 'float' or 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(radius)}'.")
+				raise ex
+			elif radius <= 0:
+				ex = ValueError(f"Parameter '{name}' isn't positive.")
+				ex.add_note(f"Got value '{radius}'.")
+				raise ex
+
+		if copyPoints is None:
+			raise ValueError("Parameter 'copyPoints' is None.")
+		elif not isinstance(copyPoints, bool):
+			ex = TypeError("Parameter 'copyPoints' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
+			raise ex
+
+		if not copyPoints and center._parent is not None:
+			ex = AlreadyOwnedError("Point is owned by another element already.")
+			ex.add_note(f"Got point {center} owned by {center._parent!r}.")
+			ex.add_note("Use 'copyPoints=True' to copy the point.")
+			raise ex from ValueError("Parameter 'center' is owned by another element.")
+
+		self._center =         center.Copy() if copyPoints else center
+		self._radiusX =        radiusX
+		self._radiusY =        radiusY
+		self._center._parent = self
+
+		self.Parent = parent
+
+	def Copy(self) -> Self:
+		"""
+		Create a new ellipse as a copy of this ellipse.
+
+		The copy holds a copy of the center point. It references the same :attr:`Value` and holds a shallow copy of the
+		key-value-pairs.
+
+		:returns: Copy of this ellipse.
+		"""
+		return self.__class__(self._center, self._radiusX, self._radiusY, value=self._value, keyValuePairs=self._dict)
+
+	def __copy__(self) -> Self:
+		"""
+		Returns a copy of this ellipse for :func:`copy.copy`.
+
+		:returns: Copy of this ellipse.
+		"""
+		return self.Copy()
+
+	@readonly
+	def Center(self) -> Point2D[Coordinate]:
+		"""
+		Read-only property to access the ellipse's center point (:attr:`_center`).
+
+		:returns: Center point of the ellipse.
+		"""
+		return self._center
+
+	@readonly
+	def RadiusX(self) -> Coordinate:
+		"""
+		Read-only property to access the ellipse's radius in x-direction (:attr:`_radiusX`).
+
+		:returns: Radius of the ellipse in x-direction.
+		"""
+		return self._radiusX
+
+	@readonly
+	def RadiusY(self) -> Coordinate:
+		"""
+		Read-only property to access the ellipse's radius in y-direction (:attr:`_radiusY`).
+
+		:returns: Radius of the ellipse in y-direction.
+		"""
+		return self._radiusY
+
+	@readonly
+	def Perimeter(self) -> float:
+		"""
+		Read-only property to return the ellipse's approximate perimeter (circumference), the length of its outline.
+
+		It is Ramanujan's second approximation, which is exact for equal radii. Otherwise, it is slightly too small: the
+		relative error stays below 0.04 %.
+
+		:returns: Perimeter of the ellipse.
+		"""
+		radiusX =      self._radiusX
+		radiusY =      self._radiusY
+		squaredRatio = ((radiusX - radiusY) / (radiusX + radiusY)) ** 2
+		return pi * (radiusX + radiusY) * (1 + 3 * squaredRatio / (10 + sqrt(4 - 3 * squaredRatio)))
+
+	@readonly
+	def Area(self) -> float:
+		"""
+		Read-only property to return the ellipse's area.
+
+		:returns: Area of the ellipse.
+		"""
+		return pi * self._radiusX * self._radiusY
+
+	@readonly
+	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the ellipse.
+
+		The box reaches :attr:`RadiusX` from the :attr:`Center` in x-direction and :attr:`RadiusY` in y-direction.
+
+		:returns: A new bounding box.
+		"""
+		center =  self._center
+		radiusX = self._radiusX
+		radiusY = self._radiusY
+		return BoundingBox2D(center._x - radiusX, center._y - radiusY, center._x + radiusX, center._y + radiusY)
+
+	def Move(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the ellipse by moving its center (inplace).
+
+		:param offset:      The 2D-offset to move by.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		"""
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, Offset2D):
+			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		self._center += offset
+
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the ellipse at a horizontal axis by mirroring its center (inplace).
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
+		"""
+		self._center._y = twiceAxis - self._center._y
+
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the ellipse at a vertical axis by mirroring its center (inplace).
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		self._center._x = twiceAxis - self._center._x
+
+	def __repr__(self) -> str:
+		"""
+		Returns the ellipse's string representation.
+
+		:returns: The string representation of the ellipse.
+		"""
+		return f"Ellipse({self._center}, {self._radiusX}, {self._radiusY})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the ellipse's string equivalent.
+
+		:returns: The string equivalent of the ellipse.
+		"""
+		return f"({self._center}, rx={self._radiusX}, ry={self._radiusY})"
+
+
+@export
 class Path(Shape[Coordinate], Generic[Coordinate]):
 	"""
 	A path is a chain of connected segments: line segments, arcs and Bezier curves.

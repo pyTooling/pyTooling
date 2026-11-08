@@ -29,7 +29,8 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - polygon, polyline, trapezium, rectangle, square, circle and path.
+Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - polygon, polyline, trapezium, rectangle, square, circle, ellipse
+and path.
 """
 from copy                         import copy, deepcopy
 from math                         import cos, isclose, pi, radians, sin, sqrt
@@ -39,7 +40,7 @@ from pyTooling.Cartesian2D        import Point2D, Offset2D, Size2D, BoundingBox2
                                          AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
                                          NotInSameFrameError, CrossingEdgesError, Cartesian2DError
 from pyTooling.Cartesian2D.Shapes import Shape, Geometry2D, Polygon, PolyLine, Trapezium, Rectangle, Square, Circle, \
-                                         Path
+                                         Ellipse, Path
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection
 from pyTooling.Exceptions         import InvalidOperationError
 from pyTooling.MetaClasses        import ExtendedType, AbstractClassError
@@ -76,7 +77,7 @@ class Instantiation(Testcase):
 	def test_Hierarchy(self) -> None:
 		"""Closed shapes are geometries; a path is a shape only."""
 		self.assertTrue(issubclass(Geometry2D, Shape))
-		for geometry in (Polygon, Trapezium, Rectangle, Square, Circle):
+		for geometry in (Polygon, Trapezium, Rectangle, Square, Circle, Ellipse):
 			with self.subTest(geometry=geometry):
 				self.assertTrue(issubclass(geometry, Geometry2D))
 
@@ -88,6 +89,8 @@ class Instantiation(Testcase):
 		self.assertFalse(issubclass(PolyLine, Geometry2D))
 		self.assertIsInstance(Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))), Geometry2D)
 		self.assertIsInstance(Circle(Point2D(1, 2), 3), Geometry2D)
+		self.assertIsInstance(Ellipse(Point2D(1, 2), 3, 2), Geometry2D)
+		self.assertFalse(issubclass(Circle, Ellipse))
 
 	def test_Polygon(self) -> None:
 		point0 = Point2D(0, 0)
@@ -584,6 +587,95 @@ class Instantiation(Testcase):
 		self.assertEqual("Parameter 'copyPoints' is not of type 'bool'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
+	def test_Ellipse_int(self) -> None:
+		center = Point2D(1, 2)
+
+		ellipse = Ellipse(center, 3, 2)
+
+		self.assertIsInstance(ellipse, Shape)
+		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
+		self.assertEqual(3, ellipse.RadiusX)
+		self.assertEqual(2, ellipse.RadiusY)
+
+	def test_Ellipse_float(self) -> None:
+		ellipse = Ellipse(Point2D(1.5, 2.5), 0.5, 1.25)
+
+		self.assertTupleEqual((1.5, 2.5), ellipse.Center.ToTuple())
+		self.assertEqual(0.5, ellipse.RadiusX)
+		self.assertEqual(1.25, ellipse.RadiusY)
+
+	def test_Ellipse_EqualRadii(self) -> None:
+		"""An ellipse with equal radii is allowed, it is a circle."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 3)
+
+		self.assertEqual(ellipse.RadiusX, ellipse.RadiusY)
+
+	def test_Ellipse_CenterNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Ellipse(None, 3, 2)
+
+		self.assertEqual("Parameter 'center' is None.", str(context.exception))
+
+	def test_Ellipse_CenterStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Ellipse("1, 2", 3, 2)
+
+		self.assertEqual("Parameter 'center' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Ellipse_RadiusXNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Ellipse(Point2D(1, 2), None, 2)
+
+		self.assertEqual("Parameter 'radiusX' is None.", str(context.exception))
+
+	def test_Ellipse_RadiusXStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Ellipse(Point2D(1, 2), "3", 2)
+
+		self.assertEqual("Parameter 'radiusX' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Ellipse_RadiusXZero(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Ellipse(Point2D(1, 2), 0, 2)
+
+		self.assertEqual("Parameter 'radiusX' isn't positive.", str(context.exception))
+		self.assertListEqual(["Got value '0'."], context.exception.__notes__)
+
+	def test_Ellipse_RadiusYNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Ellipse(Point2D(1, 2), 3, None)
+
+		self.assertEqual("Parameter 'radiusY' is None.", str(context.exception))
+
+	def test_Ellipse_RadiusYStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Ellipse(Point2D(1, 2), 3, "2")
+
+		self.assertEqual("Parameter 'radiusY' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Ellipse_RadiusYNegative(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Ellipse(Point2D(1, 2), 3, -1.5)
+
+		self.assertEqual("Parameter 'radiusY' isn't positive.", str(context.exception))
+		self.assertListEqual(["Got value '-1.5'."], context.exception.__notes__)
+
+	def test_Ellipse_copyPointsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Ellipse(Point2D(1, 2), 3, 2, copyPoints=None)
+
+		self.assertEqual("Parameter 'copyPoints' is None.", str(context.exception))
+
+	def test_Ellipse_copyPointsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Ellipse(Point2D(1, 2), 3, 2, copyPoints=1)
+
+		self.assertEqual("Parameter 'copyPoints' is not of type 'bool'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
 
 class CrossingEdges(Testcase):
 	def test_BowTie(self) -> None:
@@ -747,6 +839,20 @@ class Slots(Testcase):
 		self.assertFalse(hasattr(circle, "__dict__"))
 		self.assertEqual("circle", circle._label)
 
+	def test_Ellipse(self) -> None:
+		class LabeledEllipse(Ellipse, metaclass=ExtendedType, slots=True):
+			_label: str
+
+			def __init__(self, center: Point2D, radiusX: int, radiusY: int, label: str) -> None:
+				super().__init__(center, radiusX, radiusY)
+				self._label = label
+
+		ellipse = LabeledEllipse(Point2D(1, 2), 3, 2, "ellipse")
+
+		self.assertTupleEqual(("_label", ), LabeledEllipse.__slots__)
+		self.assertFalse(hasattr(ellipse, "__dict__"))
+		self.assertEqual("ellipse", ellipse._label)
+
 
 class Corners(Testcase):
 	def test_Polygon(self) -> None:
@@ -837,6 +943,25 @@ class Corners(Testcase):
 		circle = Circle(center, 3, copyPoints=False)
 
 		self.assertIs(center, circle.Center)
+
+	def test_Ellipse_Copy(self) -> None:
+		"""The center is a copy: moving the given point afterwards doesn't change the ellipse."""
+		center = Point2D(1, 2)
+
+		ellipse = Ellipse(center, 3, 2)
+		center += (5, 5)
+
+		self.assertIsNot(center, ellipse.Center)
+		self.assertTupleEqual((6, 7), center.ToTuple())
+		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
+
+	def test_Ellipse_Reference(self) -> None:
+		"""With ``copyPoints=False``, the center is the given point."""
+		center = Point2D(1, 2)
+
+		ellipse = Ellipse(center, 3, 2, copyPoints=False)
+
+		self.assertIs(center, ellipse.Center)
 
 	def test_Trapezium(self) -> None:
 		point00 = Point2D(1, 1)
@@ -1004,6 +1129,18 @@ class Properties(Testcase):
 			polyline.Segments = ()
 
 		self.assertIs(segments, polyline.Segments)
+
+	def test_Ellipse_Radii(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		with self.assertRaises(AttributeError):
+			ellipse.RadiusX = 4
+
+		with self.assertRaises(AttributeError):
+			ellipse.RadiusY = 4
+
+		self.assertEqual(3, ellipse.RadiusX)
+		self.assertEqual(2, ellipse.RadiusY)
 
 
 class Aliases(Testcase):
@@ -1226,6 +1363,32 @@ class Measurements(Testcase):
 
 		self.assertEqual(5.0, polyline.Length)
 
+	def test_Ellipse_Area(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		self.assertTrue(isclose(6 * pi, ellipse.Area))
+
+	def test_Ellipse_Perimeter(self) -> None:
+		"""Ramanujan's approximation, compared with the exact value of the elliptic integral."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		self.assertTrue(isclose(15.865439589290589, ellipse.Perimeter, rel_tol=1e-9))
+
+	def test_Ellipse_Perimeter_Flat(self) -> None:
+		"""The approximation is slightly too small, at most by 0.04 %, for a very flat ellipse."""
+		ellipse = Ellipse(Point2D(0, 0), 1, 0.000001)
+
+		self.assertLess(ellipse.Perimeter, 4.0)
+		self.assertTrue(isclose(4.0, ellipse.Perimeter, rel_tol=4.1e-4))
+
+	def test_Ellipse_Perimeter_Circle(self) -> None:
+		"""With equal radii, the approximation is the circle's perimeter."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 3)
+		circle =  Circle(Point2D(1, 2), 3)
+
+		self.assertTrue(isclose(circle.Perimeter, ellipse.Perimeter))
+		self.assertTrue(isclose(circle.Area, ellipse.Area))
+
 
 class Bounds(Testcase):
 	def test_Polygon(self) -> None:
@@ -1274,6 +1437,11 @@ class Bounds(Testcase):
 		circle = Circle(Point2D(1, 2), 3)
 
 		self.assertTupleEqual((-2, -1, 4, 5), circle.BoundingBox.ToTuple())
+
+	def test_Ellipse(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		self.assertTupleEqual((-2, 0, 4, 4), ellipse.BoundingBox.ToTuple())
 
 	def test_ReadOnly(self) -> None:
 		circle = Circle(Point2D(1, 2), 3)
@@ -1411,6 +1579,35 @@ class Moving(Testcase):
 		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
+
+	def test_Ellipse(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+		center =  ellipse.Center
+
+		ellipse.Move(Offset2D(2, -2))
+
+		self.assertIs(center, ellipse.Center)
+		self.assertTupleEqual((3, 0), ellipse.Center.ToTuple())
+		self.assertEqual(3, ellipse.RadiusX)
+		self.assertEqual(2, ellipse.RadiusY)
+
+	def test_Ellipse_None(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		with self.assertRaises(ValueError) as context:
+			ellipse.Move(None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+
+	def test_Ellipse_tuple(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		with self.assertRaises(TypeError) as context:
+			ellipse.Move((1, 2))
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
 
 
 class Mirroring(Testcase):
@@ -1633,6 +1830,58 @@ class Mirroring(Testcase):
 		)
 		self.assertListEqual(["Got value 'Alignment2D.MaxY'."], context.exception.__notes__)
 		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
+
+	def test_Ellipse_MirrorY(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		ellipse.MirrorY(Alignment2D.MaxY)
+
+		self.assertTupleEqual((1, 6), ellipse.Center.ToTuple())
+		self.assertEqual(3, ellipse.RadiusX)
+		self.assertEqual(2, ellipse.RadiusY)
+
+	def test_Ellipse_MirrorY_Default(self) -> None:
+		"""An ellipse mirrored at its center stays in place."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		ellipse.MirrorY()
+
+		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
+
+	def test_Ellipse_MirrorY_AxisStr(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		with self.assertRaises(TypeError) as context:
+			ellipse.MirrorY("MaxY")
+
+		self.assertEqual("Parameter 'axis' is not of type 'Alignment2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
+
+	def test_Ellipse_MirrorX(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		ellipse.MirrorX(Alignment2D.MaxX, 1)
+
+		self.assertTupleEqual((9, 2), ellipse.Center.ToTuple())
+		self.assertEqual(3, ellipse.RadiusX)
+		self.assertEqual(2, ellipse.RadiusY)
+
+	def test_Ellipse_MirrorX_MinX(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		ellipse.MirrorX(Alignment2D.MinX)
+
+		self.assertTupleEqual((-5, 2), ellipse.Center.ToTuple())
+
+	def test_Ellipse_MirrorX_OffsetNone(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		with self.assertRaises(ValueError) as context:
+			ellipse.MirrorX(Alignment2D.MinX, None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
 
 
 class Ownership(Testcase):
@@ -1897,6 +2146,45 @@ class Ownership(Testcase):
 		self.assertEqual("Parameter 'center' is owned by another element.", str(context.exception.__cause__))
 		self.assertIs(polygon, polygon.Points[2].Parent)
 
+	def test_Ellipse(self) -> None:
+		center = Point2D(1, 2)
+
+		ellipse = Ellipse(center, 3, 2)
+
+		self.assertIsNone(center.Parent)
+		self.assertIs(ellipse, ellipse.Center.Parent)
+
+	def test_Ellipse_Reference(self) -> None:
+		center = Point2D(1, 2)
+
+		ellipse = Ellipse(center, 3, 2, copyPoints=False)
+
+		self.assertIs(ellipse, center.Parent)
+
+	def test_Ellipse_Owned(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			_ = Ellipse(circle.Center, 3, 2, copyPoints=False)
+
+		self.assertEqual("Point is owned by another element already.", str(context.exception))
+		self.assertListEqual(
+			["Got point (1, 1) owned by Circle((1, 1), 1).", "Use 'copyPoints=True' to copy the point."],
+			context.exception.__notes__
+		)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual("Parameter 'center' is owned by another element.", str(context.exception.__cause__))
+		self.assertIs(circle, circle.Center.Parent)
+
+	def test_Ellipse_Owned_Copy(self) -> None:
+		"""An owned center is fine to copy."""
+		circle = Circle(Point2D(1, 1), 1)
+
+		ellipse = Ellipse(circle.Center, 3, 2)
+
+		self.assertIs(circle, circle.Center.Parent)
+		self.assertIs(ellipse, ellipse.Center.Parent)
+
 	def test_Copy(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 
@@ -1924,6 +2212,10 @@ class Ownership(Testcase):
 	def test_Circle_copyPointsPositional(self) -> None:
 		with self.assertRaises(TypeError):
 			_ = Circle(Point2D(1, 2), 3, False)
+
+	def test_Ellipse_copyPointsPositional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Ellipse(Point2D(1, 2), 3, 2, False)
 
 	def test_Edge_copyPoints(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
@@ -2035,6 +2327,9 @@ class Hashing(Testcase):
 
 	def test_Circle(self) -> None:
 		self.assertEqual(2, len({Circle(Point2D(1, 2), 3), Circle(Point2D(1, 2), 3)}))
+
+	def test_Ellipse(self) -> None:
+		self.assertEqual(2, len({Ellipse(Point2D(1, 2), 3, 2), Ellipse(Point2D(1, 2), 3, 2)}))
 
 	def test_Offset2D(self) -> None:
 		"""An offset compares by value, so it isn't hashable."""
@@ -2362,6 +2657,44 @@ class Copy(Testcase):
 		self.assertEqual(3, newCircle.Radius)
 		self.assertTupleEqual((1, 2), newCircle.Center.ToTuple())
 
+	def test_Ellipse(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		newEllipse = ellipse.Copy()
+		newCenter =  newEllipse.Center
+		newCenter += (1, 1)
+
+		self.assertIs(Ellipse, type(newEllipse))
+		self.assertIsNot(ellipse, newEllipse)
+		self.assertIsNot(ellipse.Center, newEllipse.Center)
+		self.assertIs(newEllipse, newEllipse.Center.Parent)
+		self.assertEqual(3, newEllipse.RadiusX)
+		self.assertEqual(2, newEllipse.RadiusY)
+		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
+		self.assertTupleEqual((2, 3), newEllipse.Center.ToTuple())
+
+	def test_Ellipse_copy(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		newEllipse = copy(ellipse)
+
+		self.assertIs(Ellipse, type(newEllipse))
+		self.assertIsNot(ellipse.Center, newEllipse.Center)
+		self.assertEqual(3, newEllipse.RadiusX)
+		self.assertEqual(2, newEllipse.RadiusY)
+		self.assertTupleEqual((1, 2), newEllipse.Center.ToTuple())
+
+	def test_Ellipse_deepcopy(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		newEllipse = deepcopy(ellipse)
+
+		self.assertIs(Ellipse, type(newEllipse))
+		self.assertIsNot(ellipse.Center, newEllipse.Center)
+		self.assertEqual(3, newEllipse.RadiusX)
+		self.assertEqual(2, newEllipse.RadiusY)
+		self.assertTupleEqual((1, 2), newEllipse.Center.ToTuple())
+
 
 class Representation(Testcase):
 	def test_Trapezium_repr(self) -> None:
@@ -2403,6 +2736,16 @@ class Representation(Testcase):
 		circle = Circle(Point2D(1.5, 2), 0.5)
 
 		self.assertEqual("((1.5, 2), r=0.5)", str(circle))
+
+	def test_Ellipse_repr(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		self.assertEqual("Ellipse((1, 2), 3, 2)", repr(ellipse))
+
+	def test_Ellipse_str(self) -> None:
+		ellipse = Ellipse(Point2D(1.5, 2), 0.5, 1.25)
+
+		self.assertEqual("((1.5, 2), rx=0.5, ry=1.25)", str(ellipse))
 
 
 class ElementData(Testcase):
@@ -2733,6 +3076,49 @@ class ElementData(Testcase):
 
 		self.assertIs(value, newCircle.Value)
 		self.assertIsNot(circle._dict, newCircle._dict)
+
+	def test_Ellipse(self) -> None:
+		value =   object()
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, value=value, keyValuePairs={"layer": 1})
+
+		self.assertIs(value, ellipse.Value)
+		self.assertEqual(1, ellipse["layer"])
+
+	def test_Ellipse_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Ellipse(Point2D(1, 2), 3, 2, keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Ellipse_Value(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		ellipse.Value =    "ellipse"
+		ellipse["layer"] = 1
+
+		self.assertEqual("ellipse", ellipse.Value)
+		self.assertEqual(1, len(ellipse))
+
+	def test_Ellipse_Copy(self) -> None:
+		value =   [1, 2]
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, value=value, keyValuePairs={"layer": 1})
+
+		newEllipse =          ellipse.Copy()
+		newEllipse["layer"] = 2
+
+		self.assertIs(value, newEllipse.Value)
+		self.assertEqual(1, ellipse["layer"])
+		self.assertEqual(2, newEllipse["layer"])
+
+	def test_Ellipse_copy(self) -> None:
+		value =   [1, 2]
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, value=value, keyValuePairs={"layer": 1})
+
+		newEllipse = copy(ellipse)
+
+		self.assertIs(value, newEllipse.Value)
+		self.assertIsNot(ellipse._dict, newEllipse._dict)
 
 	def test_Path(self) -> None:
 		value = object()
