@@ -351,8 +351,15 @@ point at a distance from the start point, whatever the length of the direction; 
    str(ray)                           # '(1, 2) + t * (3, 4), t >= 0'
    ray.PointAt(5)                     # (4.0, 6.0)
 
-Like a line, a ray is a **value** in absolute coordinates: its properties are read-only, it compares with ``==`` and
-``!=`` by start point and direction, and is hashable. Two rays with directions of different length aren't equal.
+Like a line, a ray is a **value** in absolute coordinates: its properties are read-only, and it is hashable. Two rays
+are equal (``==``), if they start at the same point and their directions point the same way - the cross product of the
+directions is zero and their dot product is positive. The lengths of the directions don't matter, and integer
+coordinates compare exactly:
+
+.. code-block:: Python
+
+   Ray2D(Point2D(1, 2), Offset2D(3, 4)) == Ray2D(Point2D(1, 2), Offset2D(6, 8))     # True
+   Ray2D(Point2D(1, 2), Offset2D(3, 4)) == Ray2D(Point2D(1, 2), Offset2D(-3, -4))   # False, opposite direction
 
 
 .. _STRUCT/Cartesian2D/Segment2D:
@@ -1514,7 +1521,9 @@ Ray3D
 A :class:`~pyTooling.Cartesian3D.Ray3D` is the 3D counterpart of a :ref:`Ray2D <STRUCT/Cartesian2D/Ray2D>`: a
 half-line from a start point (:attr:`~pyTooling.Cartesian3D.Ray3D.Start`) in a direction
 (:attr:`~pyTooling.Cartesian3D.Ray3D.Direction`, an :class:`~pyTooling.Cartesian3D.Offset3D`), a value in absolute
-coordinates. :meth:`~pyTooling.Cartesian3D.Ray3D.PointAt` returns the point at a distance from the start point.
+coordinates. :meth:`~pyTooling.Cartesian3D.Ray3D.PointAt` returns the point at a distance from the start point. Two
+rays are equal, if they start at the same point and their directions point the same way: all three components of the
+cross product are zero and the dot product is positive.
 
 .. code-block:: Python
 
