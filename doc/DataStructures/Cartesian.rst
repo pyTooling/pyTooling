@@ -56,6 +56,7 @@ Features
   element knows the model object it draws.
 * **A canvas knowing its y-axis** - a :class:`~pyTooling.Cartesian2D.Groups.Canvas2D` is the root of a drawing, with
   the y-axis pointing up (mathematics) or down (screen, SVG), and flips a whole drawing to the other direction.
+* **Drawing styles** - colors, strokes, fills and fonts as values, which elements can share.
 * **Independent copies** - ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` return an object sharing no point
   with the original. A shape's copy is of the same class, and its edges share the copied corners.
 * Conversion to plain tuples through ``ToTuple``, for handing coordinates to a library that expects them.
@@ -91,7 +92,8 @@ Out of Scope
   type** in the packages using them. |br|
   For doing real geometry have a look at `NumPy <https://numpy.org/>`__ or
   `Shapely <https://shapely.readthedocs.io/>`__.
-* Rendering. Nothing here draws anything - ``ToTuple`` hands the numbers to whatever does.
+* Rendering. Styles describe how an element looks, but nothing here draws anything - ``ToTuple`` hands the numbers
+  to whatever does.
 * Coordinate systems other than cartesian - no polar, spherical or geographic coordinates.
 
 
@@ -1015,6 +1017,78 @@ to :meth:`~pyTooling.Cartesian2D.Element2D.AlignTo`. An element of another canva
 
    :ref:`STRUCT/Cartesian2D/Group2D`
       |rarr| The nested container, placed at an offset.
+
+
+.. _STRUCT/Cartesian2D/Drawing:
+
+Drawing
+*******
+
+The styles live in :mod:`pyTooling.Cartesian2D.Drawing`. They are **values**: their properties are read-only, they
+compare with ``==`` and ``!=`` by value and are hashable, so any number of elements can share one style object. A
+style of another type in a comparison raises :exc:`TypeError`.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D.Drawing import Fill, Font, LineStyle, RGBAColor, Stroke
+
+   black =   RGBAColor(0, 0, 0)
+   outline = Stroke(1.5, black, LineStyle.Dashed)
+   shade =   Fill(RGBAColor.Parse("#ff800080"))
+   label =   Font("monospace", 10, bold=True)
+
+   shade.Color.Alpha                  # 0.50196...
+   shade.Color.ToHex()                # '#ff800080'
+   outline == Stroke(1.5, black, LineStyle.Dashed)   # True
+
+
+.. _STRUCT/Cartesian2D/Color:
+
+Color
+=====
+
+:class:`~pyTooling.Cartesian2D.Drawing.Color` is the abstract base-class of all colors. A color is given in a color
+system, and every color converts to red, green and blue components and an opacity with
+:meth:`~pyTooling.Cartesian2D.Drawing.Color.ToRGBA`, so a renderer handles any color. A stroke or fill takes a color of
+any color system. A further color system, like HSL or CMYK, is a class derived from
+:class:`~pyTooling.Cartesian2D.Drawing.Color` implementing :meth:`~pyTooling.Cartesian2D.Drawing.Color.ToRGBA`.
+
+An :class:`~pyTooling.Cartesian2D.Drawing.RGBAColor` has a :attr:`~pyTooling.Cartesian2D.Drawing.RGBAColor.Red`,
+:attr:`~pyTooling.Cartesian2D.Drawing.RGBAColor.Green` and :attr:`~pyTooling.Cartesian2D.Drawing.RGBAColor.Blue`
+component, integers from 0 to 255, and an opacity :attr:`~pyTooling.Cartesian2D.Drawing.RGBAColor.Alpha` from ``0.0``
+(transparent) to ``1.0`` (opaque, the default). A component out of range raises :exc:`ValueError`. Its
+:meth:`~pyTooling.Cartesian2D.Drawing.RGBAColor.ToRGBA` returns the color itself.
+
+:meth:`~pyTooling.Cartesian2D.Drawing.RGBAColor.Parse` reads the hexadecimal form of CSS and SVG, ``#rrggbb`` or
+``#rrggbbaa``, and :meth:`~pyTooling.Cartesian2D.Drawing.RGBAColor.ToHex` and :func:`str` return it. The opacity is
+stored as given, but written with two hexadecimal digits, so ``ToHex()`` rounds it to a multiple of 1/255.
+
+
+.. _STRUCT/Cartesian2D/Stroke:
+
+Stroke and Fill
+===============
+
+A :class:`~pyTooling.Cartesian2D.Drawing.Stroke` is the style of a line or an outline: a positive
+:attr:`~pyTooling.Cartesian2D.Drawing.Stroke.Width` in the unit of the coordinates, a
+:attr:`~pyTooling.Cartesian2D.Drawing.Stroke.Color` and a :class:`~pyTooling.Cartesian2D.Drawing.LineStyle`: ``Solid``
+(the default), ``Dashed`` or ``Dotted``. A :class:`~pyTooling.Cartesian2D.Drawing.Fill` is the style of an area, its
+:attr:`~pyTooling.Cartesian2D.Drawing.Fill.Color`.
+
+
+.. _STRUCT/Cartesian2D/Font:
+
+Font
+====
+
+A :class:`~pyTooling.Cartesian2D.Drawing.Font` has a :attr:`~pyTooling.Cartesian2D.Drawing.Font.Family` and a
+:attr:`~pyTooling.Cartesian2D.Drawing.Font.Size` in points. The family is a font name or a generic family, as in CSS -
+``"DejaVu Sans Mono"`` or ``"monospace"``; a renderer maps it to its format.
+
+Its style has three independent parts, as in CSS: the font is :attr:`~pyTooling.Cartesian2D.Drawing.Font.Bold` or not,
+has :attr:`~pyTooling.Cartesian2D.Drawing.Font.SmallCaps` or not, and its letters have a posture, the
+:attr:`~pyTooling.Cartesian2D.Drawing.Font.FontStyle`: a :class:`~pyTooling.Cartesian2D.Drawing.FontStyle` of
+``Upright`` (the default), ``Italic`` or ``Slanted``.
 
 
 .. _STRUCT/Cartesian3D:
