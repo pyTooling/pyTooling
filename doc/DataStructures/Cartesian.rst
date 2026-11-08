@@ -37,9 +37,10 @@ Features
   closed, like SVG's ``<path>``.
 * **Shapes placed by their corners**, so a shape is positioned by the points it is built from - a circle by its
   center.
-* Shapes validated on construction: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with any number of corners, the
-  four-cornered :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` narrowed down to a
-  :class:`~pyTooling.Cartesian2D.Shapes.Square`, and a :class:`~pyTooling.Cartesian2D.Shapes.Circle`.
+* Shapes validated on construction: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with any number of corners, an
+  open :class:`~pyTooling.Cartesian2D.Shapes.PolyLine`, the four-cornered
+  :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` narrowed down to a :class:`~pyTooling.Cartesian2D.Shapes.Square`,
+  and a :class:`~pyTooling.Cartesian2D.Shapes.Circle`.
 * **Closed shapes measured** - every :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D`, like a polygon or a circle,
   reports the area it encloses and its perimeter; a circle its diameter too.
 * **Bounding boxes** - every shape and segment reports the smallest axis-aligned
@@ -472,8 +473,9 @@ the copy has no owner.
 point is in the shape's frame, so it can be combined with the shape's points, and it can replace the start or end point
 of its parent segment.
 
-The edges of a polygon or trapezium are views: they reference the shape's corners, but don't own them. Moving an edge
-moves the corners it references; replacing an edge's point raises :exc:`~pyTooling.Cartesian2D.NotOwnedError`.
+The edges of a shape, like those of a polygon or a polyline, are views: they reference the shape's corners, but don't
+own them. Moving an edge moves the corners it references; replacing an edge's point raises
+:exc:`~pyTooling.Cartesian2D.NotOwnedError`.
 
 .. code-block:: Python
 
@@ -500,9 +502,9 @@ Shapes
 
 The shapes live in :mod:`pyTooling.Cartesian2D.Shapes`. The four-cornered shapes form a chain in which **each class
 is the one above it with one more constraint**. The constraint is checked in the constructor, so an object that exists
-is an object of that shape. A polygon and a circle stand beside that chain. All of them are closed shapes, deriving
-from :ref:`Geometry2D <STRUCT/Cartesian2D/Geometry2D>`; a :ref:`path <STRUCT/Cartesian2D/Path>` is a shape, but no
-geometry.
+is an object of that shape. A polygon, a polyline and a circle stand beside that chain. The closed shapes derive from
+:ref:`Geometry2D <STRUCT/Cartesian2D/Geometry2D>`; a polyline and a :ref:`path <STRUCT/Cartesian2D/Path>` are
+shapes, but no geometries.
 
 
 .. _STRUCT/Cartesian2D/Shape:
@@ -594,8 +596,47 @@ place later aren't checked again.
 
    :ref:`STRUCT/Cartesian2D/Geometry2D`
       |rarr| Its base-class, the base-class of the closed 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/PolyLine`
+      |rarr| The open chain of points, without an edge back to the first one.
    :ref:`STRUCT/Cartesian2D/Trapezium`
       |rarr| The polygon with exactly four corners, given as four parameters.
+
+
+.. _STRUCT/Cartesian2D/PolyLine:
+
+PolyLine
+========
+
+A :class:`~pyTooling.Cartesian2D.Shapes.PolyLine` is an open chain of two or more points, given as one iterable of
+:class:`~pyTooling.Cartesian2D.Point2D` in drawing order - a polygon without the edge from the last point back to
+the first one, like SVG's ``<polyline>``.
+
+It keeps both views: :attr:`~pyTooling.Cartesian2D.Shapes.PolyLine.Points`, the points as a tuple, and
+:attr:`~pyTooling.Cartesian2D.Shapes.PolyLine.Segments`, one :class:`~pyTooling.Cartesian2D.LineSegment2D` edge less
+than points, with consecutive edges sharing a point object. The points are copied by default; ``copyPoints=False``
+keeps the given points instead. The polyline owns its points, and its edges have the polyline as parent.
+:attr:`~pyTooling.Cartesian2D.Shapes.PolyLine.Length` is the sum of the edges' lengths, a :class:`float`.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D
+   from pyTooling.Cartesian2D.Shapes import PolyLine
+
+   zigzag = PolyLine((Point2D(0, 0), Point2D(3, 4), Point2D(6, 0)))
+   str(zigzag)                        # ((0, 0) → (3, 4) → (6, 0))
+   len(zigzag.Segments)               # 2
+   zigzag.Length                      # 10.0
+
+A point that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`, fewer than two points raise
+:exc:`~pyTooling.Cartesian2D.NotEnoughCornersError`. The points are not checked any further: edges may cross each
+other, and the last point may lie on the first one.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Shape`
+      |rarr| Its base-class, the base-class of the 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/Polygon`
+      |rarr| The closed chain of three or more corners.
 
 
 .. _STRUCT/Cartesian2D/Trapezium:
