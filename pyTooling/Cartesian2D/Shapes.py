@@ -807,11 +807,11 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		return 2 * self._radius
 
 	@readonly
-	def Circumference(self) -> float:
+	def Perimeter(self) -> float:
 		"""
-		Read-only property to return the circle's circumference, the length of its outline.
+		Read-only property to return the circle's perimeter (circumference), the length of its outline.
 
-		:returns: Circumference of the circle.
+		:returns: Perimeter of the circle.
 		"""
 		return 2 * pi * self._radius
 

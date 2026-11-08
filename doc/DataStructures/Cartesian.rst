@@ -40,7 +40,7 @@ Features
 * Shapes validated on construction: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with any number of corners, the
   four-cornered :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` narrowed down to a
   :class:`~pyTooling.Cartesian2D.Shapes.Square`, and a :class:`~pyTooling.Cartesian2D.Shapes.Circle`.
-* **A circle measured** - it reports its diameter, circumference and area.
+* **A circle measured** - it reports its diameter, perimeter and area.
 * **Bounding boxes** - every shape and segment reports the smallest axis-aligned
   :class:`~pyTooling.Cartesian2D.BoundingBox2D` enclosing it, and bounding boxes unite, intersect and contain points.
 * **Shapes and segments moved as a whole** - ``Move(offset)`` shifts all their points in place.
@@ -639,7 +639,7 @@ point instead. The circle owns its center.
 Three read-only properties measure it:
 
 * :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Diameter` - twice the radius, in the radius' type;
-* :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Circumference` - the length of its outline, a :class:`float`;
+* :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Perimeter` - the length of its outline (circumference), a :class:`float`;
 * :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Area` - the area it encloses, a :class:`float`.
 
 .. code-block:: Python

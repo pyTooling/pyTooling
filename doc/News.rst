@@ -16,7 +16,7 @@ Version 10.x (2026)
 
    * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with three or more
      corners, and a :class:`~pyTooling.Cartesian2D.Shapes.Circle` by center and radius, measuring its diameter,
-     circumference and area.
+     perimeter and area.
    * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: points, offsets, sizes, segments and shapes support
      :func:`copy.copy` and :func:`copy.deepcopy`, and segments and shapes have a ``Copy()`` method. A copy shares no
      point with the original.

@@ -857,10 +857,10 @@ class Measurements(Testcase):
 
 		self.assertEqual(2.5, circle.Diameter)
 
-	def test_Circle_Circumference(self) -> None:
+	def test_Circle_Perimeter(self) -> None:
 		circle = Circle(Point2D(1, 2), 3)
 
-		self.assertTrue(isclose(6 * pi, circle.Circumference))
+		self.assertTrue(isclose(6 * pi, circle.Perimeter))
 
 	def test_Circle_Area(self) -> None:
 		circle = Circle(Point2D(1, 2), 3)
