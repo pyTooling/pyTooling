@@ -1460,77 +1460,77 @@ class Hierarchy(Testcase):
 
 
 class Mirroring(Testcase):
-	def test_MirrorHorizontally(self) -> None:
+	def test_MirrorY(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorHorizontally()
+		line.MirrorY()
 
 		self.assertTupleEqual(((1, 6), (4, 2)), line.ToTuple())
 
-	def test_MirrorHorizontally_MinY(self) -> None:
+	def test_MirrorY_MinY(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorHorizontally(Alignment.MinY)
+		line.MirrorY(Alignment.MinY)
 
 		self.assertTupleEqual(((1, 2), (4, -2)), line.ToTuple())
 
-	def test_MirrorHorizontally_MaxY(self) -> None:
+	def test_MirrorY_MaxY(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorHorizontally(Alignment.MaxY)
+		line.MirrorY(Alignment.MaxY)
 
 		self.assertTupleEqual(((1, 10), (4, 6)), line.ToTuple())
 
-	def test_MirrorHorizontally_Offset(self) -> None:
+	def test_MirrorY_Offset(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorHorizontally(Alignment.MinY, 1)
+		line.MirrorY(Alignment.MinY, 1)
 
 		self.assertTupleEqual(((1, 4), (4, 0)), line.ToTuple())
 
-	def test_MirrorHorizontally_FloatOffset(self) -> None:
+	def test_MirrorY_FloatOffset(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorHorizontally(Alignment.MaxY, -0.5)
+		line.MirrorY(Alignment.MaxY, -0.5)
 
 		self.assertTupleEqual(((1, 9.0), (4, 5.0)), line.ToTuple())
 
-	def test_MirrorHorizontally_Int(self) -> None:
+	def test_MirrorY_Int(self) -> None:
 		"""An axis between two integer coordinates keeps integer coordinates."""
 		line = LineSegment2D(Point2D(1, 1), Point2D(4, 6))
 
-		line.MirrorHorizontally(Alignment.CenterY)
+		line.MirrorY(Alignment.CenterY)
 
 		self.assertTupleEqual(((1, 6), (4, 1)), line.ToTuple())
 		self.assertIs(int, type(line.Start.Y))
 		self.assertIs(int, type(line.End.Y))
 
-	def test_MirrorHorizontally_AxisNone(self) -> None:
+	def test_MirrorY_AxisNone(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		with self.assertRaises(ValueError) as context:
-			line.MirrorHorizontally(None)
+			line.MirrorY(None)
 
 		self.assertEqual("Parameter 'axis' is None.", str(context.exception))
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
-	def test_MirrorHorizontally_AxisStr(self) -> None:
+	def test_MirrorY_AxisStr(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		with self.assertRaises(TypeError) as context:
-			line.MirrorHorizontally("MinY")
+			line.MirrorY("MinY")
 
 		self.assertEqual("Parameter 'axis' is not of type 'Alignment'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
-	def test_MirrorHorizontally_AxisX(self) -> None:
+	def test_MirrorY_AxisX(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		for axis in (Alignment.MinX, Alignment.CenterX, Alignment.MaxX):
 			with self.subTest(axis=axis):
 				with self.assertRaises(ValueError) as context:
-					line.MirrorHorizontally(axis)
+					line.MirrorY(axis)
 
 				self.assertEqual(
 					"Parameter 'axis' is not Alignment.MinY, Alignment.CenterY or Alignment.MaxY.",
@@ -1540,96 +1540,96 @@ class Mirroring(Testcase):
 
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
-	def test_MirrorHorizontally_OffsetNone(self) -> None:
+	def test_MirrorY_OffsetNone(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		with self.assertRaises(ValueError) as context:
-			line.MirrorHorizontally(Alignment.MinY, None)
+			line.MirrorY(Alignment.MinY, None)
 
 		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
-	def test_MirrorHorizontally_OffsetStr(self) -> None:
+	def test_MirrorY_OffsetStr(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		with self.assertRaises(TypeError) as context:
-			line.MirrorHorizontally(Alignment.MinY, "1")
+			line.MirrorY(Alignment.MinY, "1")
 
 		self.assertEqual("Parameter 'offset' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
-	def test_MirrorVertically(self) -> None:
+	def test_MirrorX(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorVertically()
+		line.MirrorX()
 
 		self.assertTupleEqual(((4, 2), (1, 6)), line.ToTuple())
 
-	def test_MirrorVertically_MinX(self) -> None:
+	def test_MirrorX_MinX(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorVertically(Alignment.MinX)
+		line.MirrorX(Alignment.MinX)
 
 		self.assertTupleEqual(((1, 2), (-2, 6)), line.ToTuple())
 
-	def test_MirrorVertically_MaxX(self) -> None:
+	def test_MirrorX_MaxX(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorVertically(Alignment.MaxX)
+		line.MirrorX(Alignment.MaxX)
 
 		self.assertTupleEqual(((7, 2), (4, 6)), line.ToTuple())
 
-	def test_MirrorVertically_Offset(self) -> None:
+	def test_MirrorX_Offset(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorVertically(Alignment.MaxX, -1)
+		line.MirrorX(Alignment.MaxX, -1)
 
 		self.assertTupleEqual(((5, 2), (2, 6)), line.ToTuple())
 
-	def test_MirrorVertically_FloatOffset(self) -> None:
+	def test_MirrorX_FloatOffset(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorVertically(Alignment.MinX, 0.5)
+		line.MirrorX(Alignment.MinX, 0.5)
 
 		self.assertTupleEqual(((2.0, 2), (-1.0, 6)), line.ToTuple())
 
-	def test_MirrorVertically_Int(self) -> None:
+	def test_MirrorX_Int(self) -> None:
 		"""An axis between two integer coordinates keeps integer coordinates."""
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorVertically(Alignment.CenterX)
+		line.MirrorX(Alignment.CenterX)
 
 		self.assertTupleEqual(((4, 2), (1, 6)), line.ToTuple())
 		self.assertIs(int, type(line.Start.X))
 		self.assertIs(int, type(line.End.X))
 
-	def test_MirrorVertically_AxisNone(self) -> None:
+	def test_MirrorX_AxisNone(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		with self.assertRaises(ValueError) as context:
-			line.MirrorVertically(None)
+			line.MirrorX(None)
 
 		self.assertEqual("Parameter 'axis' is None.", str(context.exception))
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
-	def test_MirrorVertically_AxisStr(self) -> None:
+	def test_MirrorX_AxisStr(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		with self.assertRaises(TypeError) as context:
-			line.MirrorVertically("MinX")
+			line.MirrorX("MinX")
 
 		self.assertEqual("Parameter 'axis' is not of type 'Alignment'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
-	def test_MirrorVertically_AxisY(self) -> None:
+	def test_MirrorX_AxisY(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		for axis in (Alignment.MinY, Alignment.CenterY, Alignment.MaxY):
 			with self.subTest(axis=axis):
 				with self.assertRaises(ValueError) as context:
-					line.MirrorVertically(axis)
+					line.MirrorX(axis)
 
 				self.assertEqual(
 					"Parameter 'axis' is not Alignment.MinX, Alignment.CenterX or Alignment.MaxX.",
@@ -1639,20 +1639,20 @@ class Mirroring(Testcase):
 
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
-	def test_MirrorVertically_OffsetNone(self) -> None:
+	def test_MirrorX_OffsetNone(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		with self.assertRaises(ValueError) as context:
-			line.MirrorVertically(Alignment.MinX, None)
+			line.MirrorX(Alignment.MinX, None)
 
 		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
-	def test_MirrorVertically_OffsetStr(self) -> None:
+	def test_MirrorX_OffsetStr(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		with self.assertRaises(TypeError) as context:
-			line.MirrorVertically(Alignment.MinX, "1")
+			line.MirrorX(Alignment.MinX, "1")
 
 		self.assertEqual("Parameter 'offset' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)

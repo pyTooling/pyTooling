@@ -534,10 +534,10 @@ segments and groups. An element belongs to at most one group or canvas, its
 * :attr:`~pyTooling.Cartesian2D.Element2D.BoundingBox` in its frame and
   :attr:`~pyTooling.Cartesian2D.Element2D.AbsoluteBoundingBox` relative to the origin;
 * :meth:`~pyTooling.Cartesian2D.Element2D.Move`, shifting it in its frame;
-* :meth:`~pyTooling.Cartesian2D.Element2D.MirrorHorizontally` and
-  :meth:`~pyTooling.Cartesian2D.Element2D.MirrorVertically`, mirroring it at a horizontal or vertical axis through
-  an edge or the center of its bounding box, named by an :class:`~pyTooling.Cartesian2D.Alignment` and optionally
-  shifted by an offset;
+* :meth:`~pyTooling.Cartesian2D.Element2D.MirrorX` and :meth:`~pyTooling.Cartesian2D.Element2D.MirrorY`, mirroring
+  it vertically at a vertical axis (the x-coordinates flip) or horizontally at a horizontal axis (the y-coordinates
+  flip), through an edge or the center of its bounding box, named by an :class:`~pyTooling.Cartesian2D.Alignment` and
+  optionally shifted by an offset;
 * :meth:`~pyTooling.Cartesian2D.Element2D.MoveTo`, moving it into another group - by default keeping its absolute
   position, so its local coordinates change;
 * :meth:`~pyTooling.Cartesian2D.Element2D.AlignTo`, moving it so an edge or the center of its bounding box aligns

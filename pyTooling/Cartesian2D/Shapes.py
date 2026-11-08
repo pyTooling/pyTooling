@@ -224,7 +224,7 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		for point in self._points:
 			point += offset
 
-	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the polygon at a horizontal axis by mirroring all its corners (inplace).
 
@@ -235,7 +235,7 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		for point in self._points:
 			point._y = twiceAxis - point._y
 
-	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the polygon at a vertical axis by mirroring all its corners (inplace).
 
@@ -496,7 +496,7 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		for point in self._points:
 			point += offset
 
-	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the trapezium at a horizontal axis by mirroring all its corners (inplace).
 
@@ -507,7 +507,7 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		for point in self._points:
 			point._y = twiceAxis - point._y
 
-	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the trapezium at a vertical axis by mirroring all its corners (inplace).
 
@@ -823,7 +823,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 
 		self._center += offset
 
-	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the circle at a horizontal axis by mirroring its center (inplace).
 
@@ -831,7 +831,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		"""
 		self._center._y = twiceAxis - self._center._y
 
-	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the circle at a vertical axis by mirroring its center (inplace).
 

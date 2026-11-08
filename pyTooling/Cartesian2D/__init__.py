@@ -524,8 +524,8 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 	An element belongs to at most one group or canvas, its :attr:`Parent`. Its coordinates are relative to its parent, an
 	element without a parent is relative to the origin.
 
-	A derived class implements :attr:`BoundingBox`, :meth:`Move`, :meth:`_MirrorVertically` and
-	:meth:`_MirrorHorizontally`. Its initializer takes the keyword-only parameter ``parent`` and assigns it to
+	A derived class implements :attr:`BoundingBox`, :meth:`Move`, :meth:`_MirrorX` and
+	:meth:`_MirrorY`. Its initializer takes the keyword-only parameter ``parent`` and assigns it to
 	:attr:`Parent` as its last statement, when the element is fully initialized.
 	"""
 
@@ -609,9 +609,9 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		:param offset: The 2D-offset to move by.
 		"""
 
-	def MirrorVertically(self, axis: Alignment = Alignment.CenterX, offset: Coordinate = 0) -> None:
+	def MirrorX(self, axis: Alignment = Alignment.CenterX, offset: Coordinate = 0) -> None:
 		r"""
-		Mirror the element at a vertical axis through its bounding box (inplace).
+		Mirror the element vertically, at a vertical axis through its bounding box (inplace).
 
 		The axis runs through the smallest x-coordinate (``MinX``), the center (``CenterX``) or the largest x-coordinate
 		(``MaxX``) of the element's :attr:`BoundingBox`, shifted by ``offset`` in x-direction. For an axis at ``x = a``,
@@ -666,19 +666,19 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		else:
 			twiceAxis = 2 * box._maxX
 
-		self._MirrorVertically(twiceAxis + 2 * offset)
+		self._MirrorX(twiceAxis + 2 * offset)
 
 	@abstractmethod
-	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the element at a vertical axis, so every x-coordinate ``x`` becomes ``twiceAxis - x`` (inplace).
 
 		:param twiceAxis: Twice the x-coordinate of the axis.
 		"""
 
-	def MirrorHorizontally(self, axis: Alignment = Alignment.CenterY, offset: Coordinate = 0) -> None:
+	def MirrorY(self, axis: Alignment = Alignment.CenterY, offset: Coordinate = 0) -> None:
 		r"""
-		Mirror the element at a horizontal axis through its bounding box (inplace).
+		Mirror the element horizontally, at a horizontal axis through its bounding box (inplace).
 
 		The axis runs through the smallest y-coordinate (``MinY``), the center (``CenterY``) or the largest y-coordinate
 		(``MaxY``) of the element's :attr:`BoundingBox`, shifted by ``offset`` in y-direction. For an axis at ``y = a``,
@@ -732,10 +732,10 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		else:
 			twiceAxis = 2 * box._maxY
 
-		self._MirrorHorizontally(twiceAxis + 2 * offset)
+		self._MirrorY(twiceAxis + 2 * offset)
 
 	@abstractmethod
-	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the element at a horizontal axis, so every y-coordinate ``y`` becomes ``twiceAxis - y`` (inplace).
 
@@ -1884,7 +1884,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		self._start += offset
 		self._end +=   offset
 
-	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the segment at a horizontal axis by mirroring its start and end point (inplace).
 
@@ -1895,7 +1895,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		self._start._y = twiceAxis - self._start._y
 		self._end._y =   twiceAxis - self._end._y
 
-	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the segment at a vertical axis by mirroring its start and end point (inplace).
 

@@ -441,7 +441,7 @@ class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
 
 		self._offset += offset
 
-	def _MirrorHorizontally(self, twiceAxis: Coordinate) -> None:
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the group at a horizontal axis by mirroring the y-component of its :attr:`Offset` (inplace).
 
@@ -451,9 +451,9 @@ class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
 		"""
 		self._offset._yOffset = twiceAxis - self._offset._yOffset
 		for child in self._children:
-			child._MirrorHorizontally(0)
+			child._MirrorY(0)
 
-	def _MirrorVertically(self, twiceAxis: Coordinate) -> None:
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the group at a vertical axis by mirroring the x-component of its :attr:`Offset` (inplace).
 
@@ -463,7 +463,7 @@ class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
 		"""
 		self._offset._xOffset = twiceAxis - self._offset._xOffset
 		for child in self._children:
-			child._MirrorVertically(0)
+			child._MirrorX(0)
 
 	def __repr__(self) -> str:
 		"""
@@ -669,7 +669,7 @@ class Canvas(Base[Coordinate], ContainerMixin, Generic[Coordinate]):
 		"""
 		height = 0 if self._size is None else self._size._height
 		for child in self._children:
-			child._MirrorHorizontally(height)
+			child._MirrorY(height)
 
 		self._direction = YAxisDirection.Down if self._direction is YAxisDirection.Up else YAxisDirection.Up
 

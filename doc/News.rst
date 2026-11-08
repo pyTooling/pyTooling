@@ -32,7 +32,7 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D.Groups`: a :class:`~pyTooling.Cartesian2D.Groups.Canvas` is the root of a drawing,
      with the y-axis pointing up or down and an optional size. :meth:`~pyTooling.Cartesian2D.Groups.Canvas.Mirror`
      flips a drawing to the other direction. Every element mirrors at an axis through an edge or the center of its
-     bounding box with ``MirrorHorizontally(axis, offset)`` and ``MirrorVertically(axis, offset)``.
+     bounding box with ``MirrorX(axis, offset)`` and ``MirrorY(axis, offset)``.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:
