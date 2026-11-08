@@ -111,6 +111,11 @@ Version 10.x (2026)
      coordinates, :class:`~pyTooling.Cartesian3D.YZPlane3D` ``x = c``, :class:`~pyTooling.Cartesian3D.XZPlane3D`
      ``y = c`` and :class:`~pyTooling.Cartesian3D.XYPlane3D` ``z = c``. Every element mirrors at a plane with
      :meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt`. A :class:`~pyTooling.Cartesian3D.Ray3D` is a half-line.
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: offsets are vectors:
+     :attr:`~pyTooling.Cartesian2D.Offset2D.Length`, :meth:`~pyTooling.Cartesian2D.Offset2D.Dot`,
+     :meth:`~pyTooling.Cartesian2D.Offset2D.Cross` (a number in 2D, a new :class:`~pyTooling.Cartesian3D.Offset3D` in
+     3D), :meth:`~pyTooling.Cartesian2D.Offset2D.Normalized` and multiplication by a number (``offset * 2``,
+     ``2 * offset``, ``offset *= 2``).
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

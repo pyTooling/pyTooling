@@ -30,6 +30,8 @@ Features
   coordinate type, so a grid of integers and a drawing of floats use the same classes.
 * **Points and offsets as separate types**, with the arithmetic relating them: a point plus an offset is a point, a
   point minus a point is an offset - in both the copying and the in-place form.
+* **Offsets as vectors** - an offset reports its length, computes dot and cross products, normalizes to length 1 and
+  scales by a number.
 * **Distances measured** - a line segment reports its length and its angle.
 * **Curved segments** - a circular :class:`~pyTooling.Cartesian2D.ArcSegment2D` around a center, reporting its
   radius, angles and length, and quadratic and cubic Bezier curves, with exact bounding boxes.
@@ -211,6 +213,44 @@ subtract with each other, and negate:
    diag  = right + Offset2D(0, 1)     # Offset2D(1, 1)
 
 Unlike a point, an offset compares with ``==`` and ``!=`` - two displacements are equal when their components are.
+
+An offset is also a **vector**, with the vector operations:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Expression
+     - Result
+   * - ``offset.Length``
+     - The Euclidean length, a :class:`float`.
+   * - ``offset.Dot(other)``
+     - The dot product ``x1 * x2 + y1 * y2``, zero for perpendicular offsets.
+   * - ``offset.Cross(other)``
+     - The cross product ``x1 * y2 - y1 * x2``, a number in 2D: zero for parallel offsets, positive if ``other`` points
+       counterclockwise from ``offset``.
+   * - ``offset.Normalized()``
+     - A new offset of length 1 in the same direction, with :class:`float` components.
+   * - ``offset * number``, ``number * offset``
+     - A new offset, scaled by the number.
+   * - ``offset *= number``
+     - The **same** offset, scaled in place.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D import Offset2D
+
+   direction = Offset2D(3, 4)
+
+   direction.Length                   # 5.0
+   direction.Dot(Offset2D(-4, 3))     # 0, perpendicular
+   direction.Cross(Offset2D(6, 8))    # 0, parallel
+   direction.Normalized()             # Offset2D(0.6, 0.8)
+   2 * direction                      # Offset2D(6, 8)
+
+``Dot()`` and ``Cross()`` take an :class:`~pyTooling.Cartesian2D.Offset2D` only; ``None`` raises :exc:`ValueError`,
+another type :exc:`TypeError`. A factor other than an :class:`int` or :class:`float` raises :exc:`TypeError`, and
+normalizing a zero offset raises :exc:`~pyTooling.Exceptions.InvalidOperationError`, as it has no direction.
 
 .. seealso::
 
@@ -1435,6 +1475,23 @@ Offset3D
 :class:`~pyTooling.Cartesian3D.Offset3D` holds :attr:`~pyTooling.Cartesian3D.Offset3D.XOffset`,
 :attr:`~pyTooling.Cartesian3D.Offset3D.YOffset` and :attr:`~pyTooling.Cartesian3D.Offset3D.ZOffset`, and negates, adds,
 subtracts and compares as its 2D counterpart does.
+
+The vector operations are the same too, except for the cross product:
+:meth:`~pyTooling.Cartesian3D.Offset3D.Cross` returns a new :class:`~pyTooling.Cartesian3D.Offset3D`, perpendicular to
+both offsets. The offsets and their cross product form a right-handed system, and the cross product of parallel offsets
+is a zero offset.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian3D import Offset3D
+
+   xAxis = Offset3D(1, 0, 0)
+   yAxis = Offset3D(0, 1, 0)
+
+   xAxis.Cross(yAxis)                 # Offset3D(0, 0, 1)
+   yAxis.Cross(xAxis)                 # Offset3D(0, 0, -1)
+   Offset3D(2, 3, 6).Length           # 7.0
+   Offset3D(2, 3, 6).Dot(xAxis)       # 2
 
 .. seealso::
 
