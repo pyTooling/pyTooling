@@ -485,10 +485,13 @@ exactly one group of keyword parameters describing the circle; none or more than
 The geometry behind arcs and circles is public: :func:`~pyTooling.Cartesian2D.chordPoint` computes the point at a
 height over a chord, :func:`~pyTooling.Cartesian2D.circumcenter` the center of the circle through three points.
 
-A ``center`` or an ``arcPoint`` is converted to the sagitta, the height at the chord's midpoint. An arc isn't a circle:
-a start and an end point at the same position have no chord and raise :exc:`ValueError`, whatever the group - also
-when assigned to :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Start` or :attr:`~pyTooling.Cartesian2D.ArcSegment2D.End`.
-An end point moved in place onto the other one isn't checked: the arc has no center then.
+A ``center`` or an ``arcPoint`` is converted to the sagitta, the height at the chord's midpoint, and
+:attr:`~pyTooling.Cartesian2D.ArcSegment2D.Center` computes the center back from it, so a given center can come back
+with different last digits (``0.9999999999999432`` for ``1``); compare it with :func:`math.isclose`. An arc isn't a
+circle: a start and an end point at the same position have no chord and raise :exc:`ValueError`, whatever the group -
+also when assigned to :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Start` or
+:attr:`~pyTooling.Cartesian2D.ArcSegment2D.End`. An end point moved in place onto the other one isn't checked: the arc
+has no center then.
 
 Moving an end point, or assigning another point to :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Start` or
 :attr:`~pyTooling.Cartesian2D.ArcSegment2D.End`, keeps the arc's shape: its height scales with the chord, and its

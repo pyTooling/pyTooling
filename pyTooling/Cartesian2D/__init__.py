@@ -3147,6 +3147,8 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		Read-only property to return the center point of the arc's circle.
 
 		The center is computed from the end points, the :attr:`ChordPosition` and the :attr:`Height` on each access.
+		A center given to the constructor is therefore not returned as given: it can differ in the last digits of a
+		:class:`float` (e.g. ``0.9999999999999432`` for ``1``), so compare it with :func:`math.isclose`.
 
 		:returns: A new 2D-point without owner.
 		"""
