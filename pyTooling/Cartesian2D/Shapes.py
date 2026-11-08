@@ -871,7 +871,7 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 
 
 @export
-class Ellipse(Shape[Coordinate], Generic[Coordinate]):
+class Ellipse(Geometry2D[Coordinate], Generic[Coordinate]):
 	"""
 	An ellipse is a round shape, whose outline is stretched along the x-axis and the y-axis by two radii.
 
@@ -1012,14 +1012,14 @@ class Ellipse(Shape[Coordinate], Generic[Coordinate]):
 		return self._radiusY
 
 	@readonly
-	def Circumference(self) -> float:
+	def Perimeter(self) -> float:
 		"""
-		Read-only property to return the ellipse's approximate circumference, the length of its outline.
+		Read-only property to return the ellipse's approximate perimeter (circumference), the length of its outline.
 
 		It is Ramanujan's second approximation, which is exact for equal radii. Otherwise, it is slightly too small: the
 		relative error stays below 0.04 %.
 
-		:returns: Circumference of the ellipse.
+		:returns: Perimeter of the ellipse.
 		"""
 		radiusX =      self._radiusX
 		radiusY =      self._radiusY

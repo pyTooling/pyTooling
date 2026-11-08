@@ -77,7 +77,7 @@ class Instantiation(Testcase):
 	def test_Hierarchy(self) -> None:
 		"""Closed shapes are geometries; a path is a shape only."""
 		self.assertTrue(issubclass(Geometry2D, Shape))
-		for geometry in (Polygon, Trapezium, Rectangle, Square, Circle):
+		for geometry in (Polygon, Trapezium, Rectangle, Square, Circle, Ellipse):
 			with self.subTest(geometry=geometry):
 				self.assertTrue(issubclass(geometry, Geometry2D))
 
@@ -89,6 +89,8 @@ class Instantiation(Testcase):
 		self.assertFalse(issubclass(PolyLine, Geometry2D))
 		self.assertIsInstance(Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))), Geometry2D)
 		self.assertIsInstance(Circle(Point2D(1, 2), 3), Geometry2D)
+		self.assertIsInstance(Ellipse(Point2D(1, 2), 3, 2), Geometry2D)
+		self.assertFalse(issubclass(Circle, Ellipse))
 
 	def test_Polygon(self) -> None:
 		point0 = Point2D(0, 0)
@@ -1366,25 +1368,25 @@ class Measurements(Testcase):
 
 		self.assertTrue(isclose(6 * pi, ellipse.Area))
 
-	def test_Ellipse_Circumference(self) -> None:
+	def test_Ellipse_Perimeter(self) -> None:
 		"""Ramanujan's approximation, compared with the exact value of the elliptic integral."""
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
 
-		self.assertTrue(isclose(15.865439589290589, ellipse.Circumference, rel_tol=1e-9))
+		self.assertTrue(isclose(15.865439589290589, ellipse.Perimeter, rel_tol=1e-9))
 
-	def test_Ellipse_Circumference_Flat(self) -> None:
+	def test_Ellipse_Perimeter_Flat(self) -> None:
 		"""The approximation is slightly too small, at most by 0.04 %, for a very flat ellipse."""
 		ellipse = Ellipse(Point2D(0, 0), 1, 0.000001)
 
-		self.assertLess(ellipse.Circumference, 4.0)
-		self.assertTrue(isclose(4.0, ellipse.Circumference, rel_tol=4.1e-4))
+		self.assertLess(ellipse.Perimeter, 4.0)
+		self.assertTrue(isclose(4.0, ellipse.Perimeter, rel_tol=4.1e-4))
 
-	def test_Ellipse_Circumference_Circle(self) -> None:
-		"""With equal radii, the approximation is the circle's circumference."""
+	def test_Ellipse_Perimeter_Circle(self) -> None:
+		"""With equal radii, the approximation is the circle's perimeter."""
 		ellipse = Ellipse(Point2D(1, 2), 3, 3)
 		circle =  Circle(Point2D(1, 2), 3)
 
-		self.assertTrue(isclose(circle.Perimeter, ellipse.Circumference))
+		self.assertTrue(isclose(circle.Perimeter, ellipse.Perimeter))
 		self.assertTrue(isclose(circle.Area, ellipse.Area))
 
 

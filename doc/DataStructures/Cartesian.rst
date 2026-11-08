@@ -43,8 +43,7 @@ Features
   :class:`~pyTooling.Cartesian2D.Shapes.Square`, a :class:`~pyTooling.Cartesian2D.Shapes.Circle` and an axis-aligned
   :class:`~pyTooling.Cartesian2D.Shapes.Ellipse`.
 * **Closed shapes measured** - every :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D`, like a polygon or a circle,
-  reports the area it encloses and its perimeter; a circle its diameter too, an ellipse its area and an approximate
-  circumference.
+  reports the area it encloses and its perimeter, an ellipse an approximate one; a circle its diameter too.
 * **Bounding boxes** - every shape and segment reports the smallest axis-aligned
   :class:`~pyTooling.Cartesian2D.BoundingBox2D` enclosing it, and bounding boxes unite, intersect and contain points.
 * **Shapes and segments moved as a whole** - ``Move(offset)`` shifts all their points in place.
@@ -713,11 +712,12 @@ radii, SVG's ``rx`` and ``ry``: :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Rad
 Its axes are parallel to the coordinate axes; an ellipse can't be rotated. The center is copied by default;
 ``copyPoints=False`` keeps the given point instead. The ellipse owns its center.
 
-Two read-only properties measure it:
+An ellipse is a closed shape, a :ref:`Geometry2D <STRUCT/Cartesian2D/Geometry2D>`, measured by two read-only
+properties:
 
 * :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Area` - the area it encloses, a :class:`float`;
-* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Circumference` - the length of its outline, a :class:`float`. It is
-  Ramanujan's second approximation: exact for equal radii, otherwise less than 0.04 % too small.
+* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Perimeter` - the length of its outline (circumference), a
+  :class:`float`. It is Ramanujan's second approximation: exact for equal radii, otherwise less than 0.04 % too small.
 
 .. code-block:: Python
 
@@ -727,7 +727,7 @@ Two read-only properties measure it:
    egg = Ellipse(Point2D(10, 5), 3, 2)
    egg.BoundingBox                    # BoundingBox2D(7, 3, 13, 7)
    egg.Area                           # 18.849...
-   egg.Circumference                  # 15.865...
+   egg.Perimeter                      # 15.865...
 
 A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D` or a radius that isn't a number raises
 :exc:`TypeError`; a radius of 0 or below raises :exc:`ValueError`. Equal radii are accepted: such an ellipse is a
@@ -735,8 +735,8 @@ circle, but not a :class:`~pyTooling.Cartesian2D.Shapes.Circle` object.
 
 .. seealso::
 
-   :ref:`STRUCT/Cartesian2D/Shape`
-      |rarr| Its base-class, the base-class of the 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/Geometry2D`
+      |rarr| Its base-class, the base-class of the closed 2-dimensional shapes.
    :ref:`STRUCT/Cartesian2D/Circle`
       |rarr| The round shape with one radius.
 

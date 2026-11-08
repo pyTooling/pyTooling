@@ -23,7 +23,8 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.PolyLine` is a path of line
      segments, built from two or more points, open or closed.
    * :mod:`pyTooling.Cartesian2D.Shapes`: an axis-aligned :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` by center and
-     two radii, measuring its area and its circumference (Ramanujan's approximation).
+     two radii, a :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` with its area and its perimeter (Ramanujan's
+     approximation).
    * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: points, offsets, sizes, segments and shapes support
      :func:`copy.copy` and :func:`copy.deepcopy`, and segments and shapes have a ``Copy()`` method. A copy shares no
      point with the original.
