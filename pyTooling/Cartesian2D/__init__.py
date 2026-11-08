@@ -2270,7 +2270,7 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		start =         ray._start
 		direction =     ray._direction
 		startDistance = normal._xOffset * start._x + normal._yOffset * start._y - self._distance
-		approach =      normal.Dot(direction)
+		approach =      normal.ScalarProduct(direction)
 		return startDistance == 0 or startDistance * approach < 0
 
 	def Intersection(self, ray: Ray2D[Coordinate]) -> Point2D[float]:
@@ -2299,7 +2299,7 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		start =         ray._start
 		direction =     ray._direction
 		startDistance = normal._xOffset * start._x + normal._yOffset * start._y - self._distance
-		approach =      normal.Dot(direction)
+		approach =      normal.ScalarProduct(direction)
 		if startDistance == 0:
 			return Point2D(start._x, start._y)
 		elif approach == 0:

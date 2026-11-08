@@ -2157,7 +2157,7 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				raise ex
 
 		start =  first.Absolute
-		normal = (second.Absolute - start).Cross(third.Absolute - start)
+		normal = (second.Absolute - start).VectorProduct(third.Absolute - start)
 		if normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
 			ex = ValueError("Parameters 'first', 'second' and 'third' are on one line.")
 			ex.add_note(f"Got points {first}, {second} and {third}.")
@@ -2210,7 +2210,7 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got type '{getFullyQualifiedName(vector)}'.")
 				raise ex
 
-		normal = u.Cross(v)
+		normal = u.VectorProduct(v)
 		if normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
 			ex = ValueError("Parameters 'u' and 'v' are parallel.")
 			ex.add_note(f"Got offsets {u} and {v}.")
@@ -2362,7 +2362,7 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		startDistance = (
 			normal._xOffset * start._x + normal._yOffset * start._y + normal._zOffset * start._z - self._distance
 		)
-		approach = normal.Dot(direction)
+		approach = normal.ScalarProduct(direction)
 		return startDistance == 0 or startDistance * approach < 0
 
 	def Intersection(self, ray: Ray3D[Coordinate]) -> Point3D[float]:
@@ -2393,7 +2393,7 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		startDistance = (
 			normal._xOffset * start._x + normal._yOffset * start._y + normal._zOffset * start._z - self._distance
 		)
-		approach = normal.Dot(direction)
+		approach = normal.ScalarProduct(direction)
 		if startDistance == 0:
 			return Point3D(start._x, start._y, start._z)
 		elif approach == 0:
