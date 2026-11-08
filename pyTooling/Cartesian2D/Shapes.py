@@ -186,21 +186,16 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got {len(pointList)} points.")
 			raise ex from ValueError("Parameter 'points' has fewer than 3 points.")
 
-		def orientation(
-			first:  Point2D[Coordinate],
-			second: Point2D[Coordinate],
-			third:  Point2D[Coordinate]
-		) -> Coordinate:
+		def orientation(start: Point2D[Coordinate], end: Point2D[Coordinate], point: Point2D[Coordinate]) -> Coordinate:
 			"""
-			Nested function computing on which side of the line from the first to the second point the third point is.
+			Nested function computing on which side of the line from the start point to the end point a point is.
 
-			:param first:  Start of the line.
-			:param second: End of the line.
-			:param third:  The point to check.
-			:returns:      Positive, if the third point is on the left, negative, if it is on the right, 0, if it is on the
-			               line.
+			:param start: Start point of the line.
+			:param end:   End point of the line.
+			:param point: The point to check.
+			:returns:     Positive, if the point is on the left, negative, if it is on the right, 0, if it is on the line.
 			"""
-			return (second._x - first._x) * (third._y - first._y) - (second._y - first._y) * (third._x - first._x)
+			return (end._x - start._x) * (point._y - start._y) - (end._y - start._y) * (point._x - start._x)
 
 		count = len(pointList)
 		for index in range(count):
