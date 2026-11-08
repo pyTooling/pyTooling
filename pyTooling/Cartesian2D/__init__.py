@@ -534,6 +534,11 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 	assigns ``parent`` to :attr:`Parent` as its last statement, when the element is fully initialized.
 	"""
 
+	# WORKAROUND: Python <3.13
+	# A type variable with a default (PEP 696) isn't supported by Python 3.11 and 3.12. Use it when their support gets
+	# dropped:
+	# ValueType = TypeVar("ValueType", default=Any)
+	# class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate, ValueType]): ... _value: ValueType
 	_value: Any  #: Value of the element.
 
 	def __init__(
