@@ -34,11 +34,15 @@ Unit tests for :mod:`pyTooling.Cartesian2D.Drawing` - colors, strokes, fills, fo
 from copy                          import copy, deepcopy
 from math                          import isclose
 
-from pyTooling.Cartesian2D         import Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, Shapes, \
-                                          AlreadyOwnedError, LineSegment2D as GeometricLineSegment2D
+from pyTooling.Cartesian2D         import Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, SweepDirection, \
+                                          Shapes, AlreadyOwnedError, LineSegment2D as GeometricLineSegment2D, \
+                                          ArcSegment2D as GeometricArcSegment2D, \
+                                          QuadraticBezierSegment2D as GeometricQuadraticBezierSegment2D, \
+                                          CubicBezierSegment2D as GeometricCubicBezierSegment2D
 from pyTooling.Cartesian2D.Groups  import Group2D, Canvas2D, YAxisDirection
 from pyTooling.Cartesian2D.Drawing import TextAlignment, VerticalAnchor, LineStyle, Color, RGBAColor, Stroke, Fill, \
-                                          FontStyle, Font, StrokeMixin, StyleMixin, LineSegment2D, Polygon, Trapezium, \
+                                          FontStyle, Font, StrokeMixin, StyleMixin, LineSegment2D, ArcSegment2D, \
+                                          QuadraticBezierSegment2D, CubicBezierSegment2D, Polygon, Trapezium, \
                                           Rectangle, Square, Circle, Ellipse, Path, PolyLine, Text
 from pyTooling.MetaClasses         import ExtendedType, AbstractClassError
 from pyTooling.Testing             import Testcase
@@ -774,12 +778,62 @@ class Drawables(Testcase):
 		for point in points:
 			self.assertIs(polyline, point.Parent)
 
+	def test_ArcSegment(self) -> None:
+		arc = ArcSegment2D(
+			Point2D(0, 0), Point2D(4, 0),
+			center=Point2D(2, 0),
+			direction=SweepDirection.Clockwise,
+			stroke=STROKE
+		)
+
+		self.assertIsInstance(arc, GeometricArcSegment2D)
+		self.assertIsInstance(arc, StrokeMixin)
+		self.assertNotIsInstance(arc, StyleMixin)
+		self.assertIs(STROKE, arc.Stroke)
+		self.assertTrue(isclose(2, arc.Radius))
+
+	def test_ArcSegment_Default(self) -> None:
+		arc = ArcSegment2D(Point2D(0, 0), Point2D(4, 0), height=1)
+
+		self.assertIsNone(arc.Stroke)
+		self.assertTrue(isclose(1, arc.Height))
+
+	def test_QuadraticBezierSegment(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), stroke=STROKE)
+
+		self.assertIsInstance(curve, GeometricQuadraticBezierSegment2D)
+		self.assertIsInstance(curve, StrokeMixin)
+		self.assertNotIsInstance(curve, StyleMixin)
+		self.assertIs(STROKE, curve.Stroke)
+		self.assertEqual(BoundingBox2D(0, 0, 4, 2), curve.BoundingBox)
+
+	def test_CubicBezierSegment(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0), stroke=STROKE)
+
+		self.assertIsInstance(curve, GeometricCubicBezierSegment2D)
+		self.assertIsInstance(curve, StrokeMixin)
+		self.assertNotIsInstance(curve, StyleMixin)
+		self.assertIs(STROKE, curve.Stroke)
+		self.assertEqual(BoundingBox2D(0, 0, 4, 3), curve.BoundingBox)
+
+	def test_CubicBezierSegment_copyPoints(self) -> None:
+		points = (Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+		curve =  CubicBezierSegment2D(*points, copyPoints=False)
+
+		for point in points:
+			self.assertIs(curve, point.Parent)
+
 	def test_Slots(self) -> None:
-		for drawableClass in (LineSegment2D, Polygon, Trapezium, Rectangle, Square, Circle, Ellipse, Path, PolyLine):
+		for drawableClass in (
+			LineSegment2D, ArcSegment2D, QuadraticBezierSegment2D, CubicBezierSegment2D, Polygon, Trapezium, Rectangle,
+			Square, Circle, Ellipse, Path, PolyLine
+		):
 			self.assertIsInstance(drawableClass, ExtendedType)
 			self.assertNotIn("__dict__", dir(drawableClass))
 
 		self.assertTupleEqual(("_stroke", ), LineSegment2D.__slots__)
+		self.assertTupleEqual(("_stroke", ), ArcSegment2D.__slots__)
+		self.assertTupleEqual(("_stroke", ), CubicBezierSegment2D.__slots__)
 		self.assertTupleEqual(("_stroke", "_fill"), Polygon.__slots__)
 
 
@@ -795,6 +849,32 @@ class StyleParameters(Testcase):
 		"""A line has no area, so it has no parameter 'fill'."""
 		with self.assertRaises(TypeError):
 			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), fill=FILL)
+
+	def test_ArcSegment_StrokeColor(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = ArcSegment2D(Point2D(0, 0), Point2D(4, 0), height=1, stroke=RGBAColor(0, 0, 0))
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.RGBAColor'."], context.exception.__notes__)
+
+	def test_ArcSegment_Fill(self) -> None:
+		"""An arc has no area, so it has no parameter 'fill'."""
+		with self.assertRaises(TypeError):
+			_ = ArcSegment2D(Point2D(0, 0), Point2D(4, 0), height=1, fill=FILL)
+
+	def test_QuadraticBezierSegment_StrokeInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), stroke=1)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_CubicBezierSegment_StrokeFill(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0), stroke=FILL)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.Fill'."], context.exception.__notes__)
 
 	def test_Polygon_StrokeFill(self) -> None:
 		with self.assertRaises(TypeError) as context:
@@ -1030,6 +1110,71 @@ class Parents(Testcase):
 		self.assertIsNone(start.Parent)
 		self.assertIsNone(end.Parent)
 
+	def test_ArcSegment(self) -> None:
+		group = Group2D()
+		arc =   ArcSegment2D(Point2D(0, 0), Point2D(4, 0), height=1, stroke=STROKE, parent=group)
+
+		self.assertIs(group, arc.Parent)
+		self.assertTupleEqual((arc, ), group.Children)
+
+	def test_ArcSegment_Int(self) -> None:
+		"""A wrong parent leaves the given points free."""
+		start = Point2D(0, 0)
+		end =   Point2D(4, 0)
+
+		with self.assertRaises(TypeError) as context:
+			_ = ArcSegment2D(start, end, height=1, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(start.Parent)
+		self.assertIsNone(end.Parent)
+
+	def test_ArcSegment_Shape(self) -> None:
+		"""A drawable arc is no edge of a shape."""
+		path = Shapes.Path((GeometricLineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+
+		with self.assertRaises(TypeError) as context:
+			_ = ArcSegment2D(path.Points[0], path.Points[1], height=1, copyPoints=False, parent=path)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Shapes.Path'."], context.exception.__notes__)
+		self.assertIs(path, path.Points[0].Parent)
+
+	def test_QuadraticBezierSegment(self) -> None:
+		canvas = Canvas2D()
+		curve =  QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), parent=canvas)
+
+		self.assertTupleEqual((curve, ), canvas.Children)
+
+	def test_QuadraticBezierSegment_Int(self) -> None:
+		points = (Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		with self.assertRaises(TypeError) as context:
+			_ = QuadraticBezierSegment2D(*points, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		for point in points:
+			self.assertIsNone(point.Parent)
+
+	def test_CubicBezierSegment(self) -> None:
+		group = Group2D()
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0), parent=group)
+
+		self.assertTupleEqual((curve, ), group.Children)
+
+	def test_CubicBezierSegment_Int(self) -> None:
+		points = (Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+
+		with self.assertRaises(TypeError) as context:
+			_ = CubicBezierSegment2D(*points, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		for point in points:
+			self.assertIsNone(point.Parent)
+
 	def test_Polygon(self) -> None:
 		canvas =  Canvas2D()
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), fill=FILL, parent=canvas)
@@ -1148,6 +1293,47 @@ class Parents(Testcase):
 		self.assertTupleEqual((), group.Children)
 		self.assertIsNone(start.Parent)
 		self.assertIsNone(end.Parent)
+
+	def test_FailingStyle_ArcSegment(self) -> None:
+		group = Group2D()
+		start = Point2D(0, 0)
+		end =   Point2D(4, 0)
+
+		with self.assertRaises(TypeError) as context:
+			_ = ArcSegment2D(start, end, height=1, copyPoints=False, stroke=1, parent=group)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertTupleEqual((), group.Children)
+		self.assertIsNone(start.Parent)
+		self.assertIsNone(end.Parent)
+
+	def test_FailingStyle_QuadraticBezierSegment(self) -> None:
+		"""A failing style check leaves the control point free too."""
+		group =  Group2D()
+		points = (Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		with self.assertRaises(TypeError) as context:
+			_ = QuadraticBezierSegment2D(*points, copyPoints=False, stroke=FILL, parent=group)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.Fill'."], context.exception.__notes__)
+		self.assertTupleEqual((), group.Children)
+		for point in points:
+			self.assertIsNone(point.Parent)
+
+	def test_FailingStyle_CubicBezierSegment(self) -> None:
+		group =  Group2D()
+		points = (Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+
+		with self.assertRaises(TypeError) as context:
+			_ = CubicBezierSegment2D(*points, copyPoints=False, stroke="black", parent=group)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual((), group.Children)
+		for point in points:
+			self.assertIsNone(point.Parent)
 
 	def test_FailingStyle_Polygon(self) -> None:
 		group =  Group2D()
@@ -1298,6 +1484,81 @@ class Copies(Testcase):
 
 		self.assertIs(LineSegment2D, type(newLine))
 		self.assertIs(STROKE, newLine.Stroke)
+
+	def test_ArcSegment(self) -> None:
+		arc = ArcSegment2D(Point2D(0, 0), Point2D(4, 0), height=1, chordPosition=0.25, stroke=STROKE)
+
+		newArc = arc.Copy()
+
+		self.assertIs(ArcSegment2D, type(newArc))
+		self.assertIsNot(arc.Start, newArc.Start)
+		self.assertEqual(0.25, newArc.ChordPosition)
+		self.assertTrue(isclose(1, newArc.Height))
+		self.assertIs(STROKE, newArc.Stroke)
+
+	def test_ArcSegment_copy(self) -> None:
+		arc = ArcSegment2D(Point2D(0, 0), Point2D(4, 0), height=1, stroke=STROKE)
+
+		newArc = copy(arc)
+
+		self.assertIs(ArcSegment2D, type(newArc))
+		self.assertIs(STROKE, newArc.Stroke)
+
+	def test_ArcSegment_deepcopy(self) -> None:
+		value = [1, 2]
+		arc =   ArcSegment2D(Point2D(0, 0), Point2D(4, 0), height=1, stroke=STROKE, value=value)
+
+		newArc = deepcopy(arc)
+
+		self.assertIs(ArcSegment2D, type(newArc))
+		self.assertIsNot(arc.Start, newArc.Start)
+		self.assertIsNot(value, newArc.Value)
+		self.assertListEqual(value, newArc.Value)
+		self.assertIs(STROKE, newArc.Stroke)
+
+	def test_QuadraticBezierSegment(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), stroke=STROKE)
+
+		newCurve = curve.Copy()
+
+		self.assertIs(QuadraticBezierSegment2D, type(newCurve))
+		self.assertIsNot(curve.ControlPoint, newCurve.ControlPoint)
+		self.assertTupleEqual((2, 4), newCurve.ControlPoint.ToTuple())
+		self.assertIs(STROKE, newCurve.Stroke)
+
+	def test_QuadraticBezierSegment_deepcopy(self) -> None:
+		value = [1, 2]
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), stroke=STROKE, value=value)
+
+		newCurve = deepcopy(curve)
+
+		self.assertIs(QuadraticBezierSegment2D, type(newCurve))
+		self.assertIsNot(value, newCurve.Value)
+		self.assertIs(STROKE, newCurve.Stroke)
+
+	def test_CubicBezierSegment(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0), stroke=STROKE)
+
+		newCurve = copy(curve)
+
+		self.assertIs(CubicBezierSegment2D, type(newCurve))
+		self.assertIsNot(curve.ControlPoint2, newCurve.ControlPoint2)
+		self.assertTupleEqual((4, 4), newCurve.ControlPoint2.ToTuple())
+		self.assertIs(STROKE, newCurve.Stroke)
+
+	def test_CubicBezierSegment_deepcopy(self) -> None:
+		value = [1, 2]
+		curve = CubicBezierSegment2D(
+			Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0),
+			stroke=STROKE,
+			value=value
+		)
+
+		newCurve = deepcopy(curve)
+
+		self.assertIs(CubicBezierSegment2D, type(newCurve))
+		self.assertIsNot(value, newCurve.Value)
+		self.assertIs(STROKE, newCurve.Stroke)
 
 	def test_Polygon(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), stroke=STROKE, fill=FILL)
@@ -1613,6 +1874,32 @@ class ElementData(Testcase):
 		self.assertIs(value, newLineSegment.Value)
 		self.assertEqual(1, line["layer"])
 		self.assertEqual(2, newLineSegment["layer"])
+
+	def test_ArcSegment_Copy(self) -> None:
+		value = [1, 2]
+		arc =   ArcSegment2D(Point2D(0, 0), Point2D(4, 0), height=1, value=value, keyValuePairs={"layer": 1})
+
+		newArc =          arc.Copy()
+		newArc["layer"] = 2
+
+		self.assertIs(value, newArc.Value)
+		self.assertEqual(1, arc["layer"])
+		self.assertEqual(2, newArc["layer"])
+
+	def test_CubicBezierSegment_Copy(self) -> None:
+		value = [1, 2]
+		curve = CubicBezierSegment2D(
+			Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0),
+			value=value,
+			keyValuePairs={"layer": 1}
+		)
+
+		newCurve =          curve.Copy()
+		newCurve["layer"] = 2
+
+		self.assertIs(value, newCurve.Value)
+		self.assertEqual(1, curve["layer"])
+		self.assertEqual(2, newCurve["layer"])
 
 	def test_Polygon(self) -> None:
 		value =   object()

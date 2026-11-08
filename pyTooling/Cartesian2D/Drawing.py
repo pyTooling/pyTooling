@@ -56,7 +56,7 @@ from pyTooling.Decorators         import export, readonly
 from pyTooling.MetaClasses        import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Common             import getFullyQualifiedName
 from pyTooling.Cartesian2D        import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Segment2D, Shapes, \
-                                         AlreadyOwnedError
+                                         AlreadyOwnedError, SweepDirection
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, Container2DMixin, YAxisDirection
 
 
@@ -965,6 +965,417 @@ class LineSegment2D(Cartesian2D.LineSegment2D[Coordinate], StrokeMixin, Generic[
 
 
 LineSegment2D._PARENT_TYPE = (Group2D, Canvas2D)
+
+
+@export
+class ArcSegment2D(Cartesian2D.ArcSegment2D[Coordinate], StrokeMixin, Generic[Coordinate]):
+	"""
+	A drawable arc segment: a :class:`pyTooling.Cartesian2D.ArcSegment2D` drawn with a :class:`Stroke`.
+
+	An arc has no area, so it has no fill.
+	"""
+
+	def __init__(
+		self,
+		start:         Point2D[Coordinate],
+		end:           Point2D[Coordinate],
+		*,
+		center:        Nullable[Point2D[Coordinate]] = None,
+		direction:     Nullable[SweepDirection] = None,
+		arcPoint:      Nullable[Point2D[Coordinate]] = None,
+		chordPosition: Nullable[float] = None,
+		height:        Nullable[Coordinate] = None,
+		copyPoints:    bool = True,
+		stroke:        Nullable[Stroke] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a drawable arc segment from its start and end point, one group of parameters for its circle and its
+		style.
+
+		Exactly one group of parameters describes the arc's circle, as for a :class:`pyTooling.Cartesian2D.ArcSegment2D`:
+		``center`` and ``direction``, or ``arcPoint``, or ``height`` and optionally ``chordPosition``.
+
+		:param start:                Start point of the arc.
+		:param end:                  End point of the arc.
+		:param center:               Optional, center point of the arc's circle. Default: ``None``.
+		:param direction:            Optional, direction, in which the arc sweeps from its start point to its end point.
+		                             Default: ``None``.
+		:param arcPoint:             Optional, a point of the arc between the start and the end point. Default: ``None``.
+		:param chordPosition:        Optional, the root point's position on the chord, as a fraction from 0 (start point)
+		                             to 1 (end point). Default: ``None``, which uses ``0.5``, the chord's midpoint.
+		:param height:               Optional, the arc's signed distance from the chord at the root point. Default:
+		                             ``None``.
+		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                             ``True``.
+		:param stroke:               Optional, style of the line. Default: ``None``, no line.
+		:param value:                Optional, value of the arc. Default: ``None``.
+		:param keyValuePairs:        Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:               Optional, the group or canvas the arc is added to. Default: ``None``, no parent.
+		:raises ValueError:          If parameter 'start' is None.
+		:raises TypeError:           If parameter 'start' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while 'copyPoints' is ``False``.
+		                             |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'end' is None.
+		:raises TypeError:           If parameter 'end' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises DuplicatePointError: If parameter 'end' is the same point as parameter 'start', while 'copyPoints' is
+		                             ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'end' is owned by another element, while 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'end' is at the position of parameter 'start'. |br|
+		                             An arc needs a chord from the start point to the end point.
+		:raises ValueError:          If parameter 'center' is None, while 'direction' is given.
+		:raises TypeError:           If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:          If parameter 'center' is at the position of parameter 'start'.
+		:raises ValueError:          If parameter 'center' has another distance to parameter 'end' than to parameter
+		                             'start'.
+		:raises ValueError:          If parameter 'direction' is None, while 'center' is given.
+		:raises TypeError:           If parameter 'direction' is not of type
+		                             :class:`~pyTooling.Cartesian2D.SweepDirection`.
+		:raises TypeError:           If parameter 'arcPoint' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:          If parameter 'arcPoint' is on the line through parameter 'start' and parameter 'end'.
+		:raises TypeError:           If parameter 'chordPosition' is not of type :class:`float`.
+		:raises ValueError:          If parameter 'chordPosition' is out of range 0..1.
+		:raises ValueError:          If parameter 'height' is None, while 'chordPosition' is given.
+		:raises TypeError:           If parameter 'height' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:          If parameter 'height' is 0.
+		:raises ValueError:          If parameter 'copyPoints' is None.
+		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:           If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:raises ValueError:          If no group of parameters for the circle is given. |br|
+		                             Give 'center' and 'direction', or 'arcPoint', or 'height' and optionally
+		                             'chordPosition'.
+		:raises ValueError:          If parameters of more than one group for the circle are given. |br|
+		                             Give 'center' and 'direction', or 'arcPoint', or 'height' and optionally
+		                             'chordPosition'.
+		"""
+		super().__init__(
+			start,
+			end,
+			center=center,
+			direction=direction,
+			arcPoint=arcPoint,
+			chordPosition=chordPosition,
+			height=height,
+			copyPoints=copyPoints,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
+
+		try:
+			StrokeMixin.__init__(self, stroke=stroke)
+		except TypeError:
+			self._start._parent = None
+			self._end._parent =   None
+
+			raise
+
+		self.Parent = parent
+
+	def Copy(self) -> Self:
+		"""
+		Create a new drawable arc segment as a copy of this arc segment.
+
+		The copy holds copies of the start and end point, has the same chord position and height, and the same stroke. It
+		references the same :attr:`Value` and holds a shallow copy of the key-value-pairs.
+
+		:returns: Copy of this arc segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._end,
+			chordPosition=self._chordPosition,
+			height=self.Height,
+			stroke=self._stroke,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this drawable arc segment for :func:`copy.deepcopy`.
+
+		The copy holds copies of the start and end point, has the same chord position, height and stroke, and deep copies
+		of the :attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this arc segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._end,
+			chordPosition=self._chordPosition,
+			height=self.Height,
+			stroke=self._stroke,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
+
+ArcSegment2D._PARENT_TYPE = (Group2D, Canvas2D)
+
+
+@export
+class QuadraticBezierSegment2D(Cartesian2D.QuadraticBezierSegment2D[Coordinate], StrokeMixin, Generic[Coordinate]):
+	"""
+	A drawable quadratic Bezier curve segment: a :class:`pyTooling.Cartesian2D.QuadraticBezierSegment2D` drawn with a
+	:class:`Stroke`.
+
+	A curve has no area, so it has no fill.
+	"""
+
+	def __init__(
+		self,
+		start:         Point2D[Coordinate],
+		controlPoint:  Point2D[Coordinate],
+		end:           Point2D[Coordinate],
+		*,
+		copyPoints:    bool = True,
+		stroke:        Nullable[Stroke] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a drawable quadratic Bezier curve segment from its start point, control point, end point and style.
+
+		:param start:                Start point of the curve.
+		:param controlPoint:         Control point of the curve.
+		:param end:                  End point of the curve.
+		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                             ``True``.
+		:param stroke:               Optional, style of the line. Default: ``None``, no line.
+		:param value:                Optional, value of the curve. Default: ``None``.
+		:param keyValuePairs:        Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:               Optional, the group or canvas the curve is added to. Default: ``None``, no parent.
+		:raises ValueError:          If parameter 'start' is None.
+		:raises TypeError:           If parameter 'start' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while 'copyPoints' is ``False``.
+		                             |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'controlPoint' is None.
+		:raises TypeError:           If parameter 'controlPoint' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises DuplicatePointError: If parameter 'controlPoint' is the same point as parameter 'start' or 'end', while
+		                             'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'controlPoint' is owned by another element, while 'copyPoints' is
+		                             ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'end' is None.
+		:raises TypeError:           If parameter 'end' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises DuplicatePointError: If parameter 'end' is the same point as parameter 'start', while 'copyPoints' is
+		                             ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'end' is owned by another element, while 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'copyPoints' is None.
+		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:           If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(
+			start,
+			controlPoint,
+			end,
+			copyPoints=copyPoints,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
+
+		try:
+			StrokeMixin.__init__(self, stroke=stroke)
+		except TypeError:
+			for point in (self._start, *self._controlPoints, self._end):
+				point._parent = None
+
+			raise
+
+		self.Parent = parent
+
+	def Copy(self) -> Self:
+		"""
+		Create a new drawable quadratic Bezier curve segment as a copy of this one.
+
+		The copy holds copies of the start point, control point and end point, and the same stroke. It references the
+		same :attr:`Value` and holds a shallow copy of the key-value-pairs.
+
+		:returns: Copy of this quadratic Bezier curve segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._controlPoints[0],
+			self._end,
+			stroke=self._stroke,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this drawable quadratic Bezier curve segment for :func:`copy.deepcopy`.
+
+		The copy holds copies of the start point, control point and end point, the same stroke, and deep copies of the
+		:attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this quadratic Bezier curve segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._controlPoints[0],
+			self._end,
+			stroke=self._stroke,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
+
+QuadraticBezierSegment2D._PARENT_TYPE = (Group2D, Canvas2D)
+
+
+@export
+class CubicBezierSegment2D(Cartesian2D.CubicBezierSegment2D[Coordinate], StrokeMixin, Generic[Coordinate]):
+	"""
+	A drawable cubic Bezier curve segment: a :class:`pyTooling.Cartesian2D.CubicBezierSegment2D` drawn with a
+	:class:`Stroke`.
+
+	A curve has no area, so it has no fill.
+	"""
+
+	def __init__(
+		self,
+		start:         Point2D[Coordinate],
+		controlPoint1: Point2D[Coordinate],
+		controlPoint2: Point2D[Coordinate],
+		end:           Point2D[Coordinate],
+		*,
+		copyPoints:    bool = True,
+		stroke:        Nullable[Stroke] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a drawable cubic Bezier curve segment from its start point, two control points, end point and style.
+
+		:param start:                Start point of the curve.
+		:param controlPoint1:        First control point of the curve, next to the start point.
+		:param controlPoint2:        Second control point of the curve, next to the end point.
+		:param end:                  End point of the curve.
+		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                             ``True``.
+		:param stroke:               Optional, style of the line. Default: ``None``, no line.
+		:param value:                Optional, value of the curve. Default: ``None``.
+		:param keyValuePairs:        Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:               Optional, the group or canvas the curve is added to. Default: ``None``, no parent.
+		:raises ValueError:          If parameter 'start' is None.
+		:raises TypeError:           If parameter 'start' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while 'copyPoints' is ``False``.
+		                             |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'controlPoint1' is None.
+		:raises TypeError:           If parameter 'controlPoint1' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises DuplicatePointError: If parameter 'controlPoint1' is the same point as parameter 'start' or 'end', while
+		                             'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'controlPoint1' is owned by another element, while 'copyPoints' is
+		                             ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'controlPoint2' is None.
+		:raises TypeError:           If parameter 'controlPoint2' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises DuplicatePointError: If parameter 'controlPoint2' is the same point as parameter 'start', 'end' or
+		                             'controlPoint1', while 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'controlPoint2' is owned by another element, while 'copyPoints' is
+		                             ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'end' is None.
+		:raises TypeError:           If parameter 'end' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises DuplicatePointError: If parameter 'end' is the same point as parameter 'start', while 'copyPoints' is
+		                             ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'end' is owned by another element, while 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'copyPoints' is None.
+		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:           If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(
+			start,
+			controlPoint1,
+			controlPoint2,
+			end,
+			copyPoints=copyPoints,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
+
+		try:
+			StrokeMixin.__init__(self, stroke=stroke)
+		except TypeError:
+			for point in (self._start, *self._controlPoints, self._end):
+				point._parent = None
+
+			raise
+
+		self.Parent = parent
+
+	def Copy(self) -> Self:
+		"""
+		Create a new drawable cubic Bezier curve segment as a copy of this one.
+
+		The copy holds copies of the start point, both control points and the end point, and the same stroke. It
+		references the same :attr:`Value` and holds a shallow copy of the key-value-pairs.
+
+		:returns: Copy of this cubic Bezier curve segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._controlPoints[0],
+			self._controlPoints[1],
+			self._end,
+			stroke=self._stroke,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this drawable cubic Bezier curve segment for :func:`copy.deepcopy`.
+
+		The copy holds copies of the start point, both control points and the end point, the same stroke, and deep copies
+		of the :attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this cubic Bezier curve segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._controlPoints[0],
+			self._controlPoints[1],
+			self._end,
+			stroke=self._stroke,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
+
+CubicBezierSegment2D._PARENT_TYPE = (Group2D, Canvas2D)
 
 
 @export
