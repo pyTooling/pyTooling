@@ -868,11 +868,27 @@ class CircleConstructors(Testcase):
 			_ = Circle.FromPoints((Point2D(0, 0), Point2D(2, 0), Point2D(1, 1), Point2D(3, 0)))
 
 		self.assertEqual(
-			"A point of parameter 'points' isn't on the circle through the first three points.",
+			"Parameter 'points' has points, which aren't on the circle through the first three points.",
 			str(context.exception)
 		)
 		self.assertListEqual(
 			["Got point (3, 0) at index 3 with distance 2.0 to the center, while the radius is 1.0."],
+			context.exception.__notes__
+		)
+
+	def test_FromPoints_OffCircle_Several(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Circle.FromPoints((Point2D(0, 0), Point2D(2, 0), Point2D(1, 1), Point2D(3, 0), Point2D(1, -1), Point2D(1, 3)))
+
+		self.assertEqual(
+			"Parameter 'points' has points, which aren't on the circle through the first three points.",
+			str(context.exception)
+		)
+		self.assertListEqual(
+			[
+				"Got point (3, 0) at index 3 with distance 2.0 to the center, while the radius is 1.0.",
+				"Got point (1, 3) at index 5 with distance 3.0 to the center, while the radius is 1.0."
+			],
 			context.exception.__notes__
 		)
 

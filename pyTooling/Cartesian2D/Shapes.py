@@ -777,7 +777,7 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 		:raises ValueError:   If parameter 'points' has fewer than 3 points.
 		:raises ValueError:   If two of the first three points of parameter 'points' are at the same position.
 		:raises ValueError:   If the first three points of parameter 'points' are on one line.
-		:raises ValueError:   If a further point of parameter 'points' isn't on the circle through the first three points.
+		:raises ValueError:   If further points of parameter 'points' aren't on the circle through the first three points.
 		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
 		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
@@ -827,14 +827,19 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 
 		center = ArcSegment2D._Circumcenter(first, second, third)
 		radius = sqrt((first._x - center._x) ** 2 + (first._y - center._y) ** 2)
+		notes =  []
 		for index, point in enumerate(pointList[3:], start=3):
 			distance = sqrt((point._x - center._x) ** 2 + (point._y - center._y) ** 2)
 			if not isclose(distance, radius):
-				ex = ValueError("A point of parameter 'points' isn't on the circle through the first three points.")
-				ex.add_note(
+				notes.append(
 					f"Got point {point} at index {index} with distance {distance} to the center, while the radius is {radius}."
 				)
-				raise ex
+
+		if len(notes) > 0:
+			ex = ValueError("Parameter 'points' has points, which aren't on the circle through the first three points.")
+			for note in notes:
+				ex.add_note(note)
+			raise ex
 
 		return cls(center, radius, copyPoints=False, value=value, keyValuePairs=keyValuePairs, parent=parent)
 
