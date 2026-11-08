@@ -31,6 +31,8 @@ Features
 * **Points and offsets as separate types**, with the arithmetic relating them: a point plus an offset is a point, a
   point minus a point is an offset - in both the copying and the in-place form.
 * **Distances measured** - a line segment reports its length and its angle.
+* **Curved segments** - a circular :class:`~pyTooling.Cartesian2D.ArcSegment2D` around a center, reporting its
+  radius, angles and length.
 * **Shapes placed by their corners**, so a shape is positioned by the points it is built from - a circle by its
   center.
 * Shapes validated on construction: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with any number of corners, the
@@ -61,7 +63,7 @@ Missing Features
 
 * Rotation and scaling - an element can be shifted and mirrored at a vertical or horizontal axis, but not rotated or
   scaled.
-* Shapes with curved edges other than a circle (ellipses, arcs).
+* Shapes with curved edges other than a circle, and elliptical arcs.
 * Exact containment and intersection tests (*is this point inside that rotated rectangle?*). Only bounding boxes are
   compared.
 * Area and perimeter of a polygon.
@@ -312,6 +314,105 @@ measurements:
       |rarr| Its base-class, the 2-dimensional segment.
    :ref:`STRUCT/Cartesian3D/LineSegment3D`
       |rarr| Its counterpart, the line segment in 3D.
+
+
+.. _STRUCT/Cartesian2D/CurvedSegments:
+
+Curved Segments
+===============
+
+A curved segment is a :ref:`segment <STRUCT/Cartesian2D/Segment2D>` too: it has a start and an end point, a group
+can hold it, and a shape can use it as an edge. Its other points, which define the curve, are owned like the start
+and end point: copied by default, referenced with ``copyPoints=False``, and moved and mirrored with the segment.
+
+.. _STRUCT/Cartesian2D/ArcSegment2D:
+
+ArcSegment2D
+------------
+
+An :class:`~pyTooling.Cartesian2D.ArcSegment2D` is a piece of a circle from a start to an end point. It stores its
+circle as the :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Center`, the
+:attr:`~pyTooling.Cartesian2D.ArcSegment2D.Radius` and the :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Direction` from
+the start to the end point, a :class:`~pyTooling.Cartesian2D.SweepDirection` - ``Counterclockwise`` or ``Clockwise``,
+seen with the y-axis pointing up. Besides the start and end point, the constructor takes exactly one group of keyword
+parameters describing the circle; none or more than one group raises :exc:`ValueError`:
+
+``center`` and ``direction``
+   The center of the circle and the direction. The end point must have the start point's distance to the center,
+   compared with :func:`math.isclose`. A start and an end point at the same position make a full circle.
+
+``arcPoint``
+   A third point of the arc: the arc runs from the start point through this point to the end point, so the order of
+   the three points gives the direction. Only its coordinates are used. Three points on a line raise
+   :exc:`ValueError`.
+
+``height`` and optionally ``chordPosition``
+   The arc's distance from its chord, the line segment from the start to the end point, measured perpendicular at a
+   root point. ``chordPosition`` places the root point on the chord, as a fraction from ``0.0`` at the start point to
+   ``1.0`` at the end point; the default ``0.5`` is the chord's midpoint, where the height is the arc's *sagitta*. A
+   positive height lies on the left of the chord, seen from the start point, so the arc runs clockwise; a negative
+   height lies on the right.
+
+.. code-block:: text
+
+                    arc point
+                .-------x-------.
+             .'         |         '.
+           /            | height     \
+    start x-------------+-------------x end
+                    root point
+          |<----------->|
+          chordPosition * chord length
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D import Point2D, ArcSegment2D, SweepDirection
+
+   start = Point2D(0, 0)
+   end =   Point2D(2, 0)
+
+   # Three times the upper half of the circle around (1, 0) with radius 1, clockwise:
+   byCenter =   ArcSegment2D(start, end, center=Point2D(1, 0), direction=SweepDirection.Clockwise)
+   byArcPoint = ArcSegment2D(start, end, arcPoint=Point2D(1, 1))
+   byHeight =   ArcSegment2D(start, end, height=1)
+
+   flat = ArcSegment2D(Point2D(0, 0), Point2D(4, 0), height=-1)
+   flat.Center                        # (2.0, 1.5)
+   flat.Radius                        # 2.5
+   flat.Direction                     # SweepDirection.Counterclockwise
+
+With ``arcPoint`` or ``height``, a start and an end point at the same position have no chord and raise
+:exc:`ValueError`. A point assigned to :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Start` or
+:attr:`~pyTooling.Cartesian2D.ArcSegment2D.End` must lie on the circle, compared with the radius by
+:func:`math.isclose`.
+
+* :attr:`~pyTooling.Cartesian2D.ArcSegment2D.StartAngle` and :attr:`~pyTooling.Cartesian2D.ArcSegment2D.EndAngle` -
+  the angles of both points seen from the center, in radians, from -:data:`math.pi` to :data:`math.pi`;
+* :attr:`~pyTooling.Cartesian2D.ArcSegment2D.SweepAngle` - the angle from the start to the end point, positive
+  counterclockwise and negative clockwise;
+* :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Length` - the radius times the absolute sweep angle;
+* :attr:`~pyTooling.Cartesian2D.ArcSegment2D.BoundingBox` - exact: where the arc passes the leftmost, rightmost,
+  lowest or highest point of its circle, it bulges past its start and end point;
+* :meth:`~pyTooling.Cartesian2D.ArcSegment2D.ToChord` - a new :class:`~pyTooling.Cartesian2D.LineSegment2D` from the
+  start to the end point.
+
+.. code-block:: Python
+
+   arc = ArcSegment2D(Point2D(2, 0), Point2D(-2, 0), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
+   arc.SweepAngle                     # 3.14159... (math.pi)
+   arc.Length                         # 6.28318...
+   arc.BoundingBox                    # BoundingBox2D(-2, 0, 2, 2.0)
+   arc.ToChord().Length               # 4.0
+   arc.MirrorY()                      # arc.Direction is SweepDirection.Clockwise
+
+Mirroring an arc reverses its direction, so the mirrored arc bulges to the other side.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Segment2D`
+      |rarr| Its base-class, the 2-dimensional segment.
+   :ref:`STRUCT/Cartesian2D/Circle`
+      |rarr| The full circle as a shape.
 
 
 .. _STRUCT/Cartesian2D/Ownership:

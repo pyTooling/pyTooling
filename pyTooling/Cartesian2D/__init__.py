@@ -40,8 +40,9 @@ An implementation of 2D cartesian data structures for Python.
 """
 from __future__            import annotations
 
+from copy                  import deepcopy
 from enum                  import Enum
-from math                  import atan2, sqrt
+from math                  import atan2, isclose, pi, sqrt
 from typing                import TYPE_CHECKING, Any, ClassVar, Generic, Hashable, Iterable, Mapping, \
                                   Optional as Nullable, Self, TypeVar, Union
 
@@ -75,6 +76,19 @@ class Alignment2D(Enum):
 	MinY =    3  #: Align the smallest y-coordinates.
 	CenterY = 4  #: Align the centers in y-direction.
 	MaxY =    5  #: Align the largest y-coordinates.
+
+
+@export
+class SweepDirection(Enum):
+	"""
+	Direction, in which an arc sweeps from its start point to its end point.
+
+	The names refer to a y-axis pointing up. On a canvas with the y-axis pointing down, as on a screen or in SVG, a
+	counterclockwise arc appears clockwise.
+	"""
+
+	Counterclockwise = 0  #: The angle grows from the start point to the end point.
+	Clockwise =        1  #: The angle shrinks from the start point to the end point.
 
 
 @export
@@ -1910,7 +1924,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 
 	def Move(self, offset: Offset2D[Coordinate]) -> None:
 		"""
-		Move the segment by moving its start and end point (inplace).
+		Move the segment by moving its start and end point and its other points (inplace).
 
 		An edge of a shape moves the shape's corners it references.
 
@@ -1927,10 +1941,20 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 
 		self._start += offset
 		self._end +=   offset
+		self._MoveInner(offset)
+
+	def _MoveInner(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the segment's points other than its start and end point (inplace).
+
+		A segment has no other points. A curved segment moves the points defining its curve.
+
+		:param offset: The 2D-offset to move by.
+		"""
 
 	def _MirrorY(self, twiceAxis: Coordinate) -> None:
 		"""
-		Mirror the segment at a horizontal axis by mirroring its start and end point (inplace).
+		Mirror the segment at a horizontal axis by mirroring its start and end point and its other points (inplace).
 
 		An edge of a shape mirrors the shape's corners it references.
 
@@ -1938,10 +1962,20 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		"""
 		self._start._y = twiceAxis - self._start._y
 		self._end._y =   twiceAxis - self._end._y
+		self._MirrorInnerY(twiceAxis)
+
+	def _MirrorInnerY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the segment's points other than its start and end point at a horizontal axis (inplace).
+
+		A segment has no other points. A curved segment mirrors the points defining its curve.
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
+		"""
 
 	def _MirrorX(self, twiceAxis: Coordinate) -> None:
 		"""
-		Mirror the segment at a vertical axis by mirroring its start and end point (inplace).
+		Mirror the segment at a vertical axis by mirroring its start and end point and its other points (inplace).
 
 		An edge of a shape mirrors the shape's corners it references.
 
@@ -1949,6 +1983,16 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		"""
 		self._start._x = twiceAxis - self._start._x
 		self._end._x =   twiceAxis - self._end._x
+		self._MirrorInnerX(twiceAxis)
+
+	def _MirrorInnerX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the segment's points other than its start and end point at a vertical axis (inplace).
+
+		A segment has no other points. A curved segment mirrors the points defining its curve.
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
 
 	def Copy(self) -> Self:
 		"""
@@ -2062,3 +2106,562 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		:returns: The string equivalent of the 2D line segment.
 		"""
 		return f"({self._start} → {self._end})"
+
+
+@export
+class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
+	"""
+	An implementation of a 2D cartesian circular arc segment.
+
+	The arc runs on a circle around its :attr:`Center`, from its start point to its end point in its :attr:`Direction`.
+	"""
+
+	_center:    Point2D[Coordinate]  #: Center point of the arc's circle.
+	_radius:    float                #: Radius of the arc's circle.
+	_direction: SweepDirection       #: Direction, in which the arc sweeps from its start point to its end point.
+
+	def __init__(
+		self,
+		start:         Point2D[Coordinate],
+		end:           Point2D[Coordinate],
+		*,
+		center:        Nullable[Point2D[Coordinate]] = None,
+		direction:     Nullable[SweepDirection] = None,
+		arcPoint:      Nullable[Point2D[Coordinate]] = None,
+		chordPosition: Nullable[Union[int, float]] = None,
+		height:        Nullable[Union[int, float]] = None,
+		copyPoints:    bool = True,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Shape, Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a 2-dimensional arc segment from its start and end point and one group of parameters for its circle.
+
+		Exactly one group of parameters describes the arc's circle:
+
+		* ``center`` and ``direction``: the center of the circle and the direction from the start point to the end point.
+		  The end point must have the start point's distance to the center, compared with :func:`math.isclose`. A start
+		  and an end point at the same position make a full circle.
+		* ``arcPoint``: a third point of the arc. The arc runs from the start point through this point to the end point.
+		  Only its coordinates are used; the arc doesn't keep it.
+		* ``height`` and optionally ``chordPosition``: the arc passes a point at the distance ``height`` from the chord,
+		  the line segment from the start point to the end point. The distance is measured perpendicular to the chord, at
+		  the root point at the fraction ``chordPosition`` of the chord from the start point. A positive height is on the
+		  left of the chord, seen from the start point, a negative height on the right. At the chord's midpoint, the height
+		  is the arc's sagitta.
+
+		The center of an arc given by ``arcPoint`` or ``height`` is computed; the arc owns it.
+
+		:param start:                Start point of the arc.
+		:param end:                  End point of the arc.
+		:param center:               Optional, center point of the arc's circle. Default: ``None``.
+		:param direction:            Optional, direction, in which the arc sweeps from its start point to its end point.
+		                             Default: ``None``.
+		:param arcPoint:             Optional, a point of the arc between the start and the end point. Default: ``None``.
+		:param chordPosition:        Optional, the root point's position on the chord, as a fraction from 0 (start point)
+		                             to 1 (end point). Default: ``None``, which uses ``0.5``, the chord's midpoint.
+		:param height:               Optional, the arc's signed distance from the chord at the root point. Default:
+		                             ``None``.
+		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                             ``True``.
+		:param value:                Optional, value of the arc. Default: ``None``.
+		:param keyValuePairs:        Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:               Optional, the shape this arc is an edge of, or the group or canvas the arc is added
+		                             to. Default: ``None``.
+		:raises ValueError:          If parameter 'start' is None.
+		:raises TypeError:           If parameter 'start' is not of type :class:`Point2D`.
+		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while parameter 'parent' isn't a
+		                             shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:       If parameter 'start' isn't owned by parameter 'parent'.
+		:raises ValueError:          If parameter 'end' is None.
+		:raises TypeError:           If parameter 'end' is not of type :class:`Point2D`.
+		:raises DuplicatePointError: If parameter 'end' is the same point as parameter 'start', while parameter 'parent'
+		                             isn't a shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'end' is owned by another element, while parameter 'parent' isn't a
+		                             shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:       If parameter 'end' isn't owned by parameter 'parent'.
+		:raises ValueError:          If parameter 'center' is None, while 'direction' is given.
+		:raises TypeError:           If parameter 'center' is not of type :class:`Point2D`.
+		:raises ValueError:          If parameter 'center' is at the position of parameter 'start'.
+		:raises ValueError:          If parameter 'center' has another distance to parameter 'end' than to parameter
+		                             'start'.
+		:raises AlreadyOwnedError:   If parameter 'center' is owned by another element, while parameter 'parent' isn't a
+		                             shape and 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises NotOwnedError:       If parameter 'center' isn't owned by parameter 'parent'.
+		:raises ValueError:          If parameter 'direction' is None, while 'center' is given.
+		:raises TypeError:           If parameter 'direction' is not of type :class:`SweepDirection`.
+		:raises TypeError:           If parameter 'arcPoint' is not of type :class:`Point2D`.
+		:raises ValueError:          If parameter 'arcPoint' is given, while parameter 'end' is at the position of parameter
+		                             'start'. |br|
+		                             An arc through 'arcPoint' needs a chord from the start point to the end point.
+		:raises ValueError:          If parameter 'arcPoint' is on the line through parameter 'start' and parameter 'end'.
+		:raises TypeError:           If parameter 'chordPosition' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:          If parameter 'chordPosition' is out of range 0..1.
+		:raises ValueError:          If parameter 'height' is None, while 'chordPosition' is given.
+		:raises TypeError:           If parameter 'height' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:          If parameter 'height' is 0.
+		:raises ValueError:          If parameter 'height' is given, while parameter 'end' is at the position of parameter
+		                             'start'. |br|
+		                             An arc with a 'height' needs a chord from the start point to the end point.
+		:raises ValueError:          If parameter 'copyPoints' is None.
+		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape`,
+		                             :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:raises ValueError:          If parameter 'parent' is a shape, while 'copyPoints' is ``True``. |br|
+		                             An edge references the points of its parent shape: use ``copyPoints=False``.
+		:raises ValueError:          If no group of parameters for the circle is given. |br|
+		                             Give 'center' and 'direction', or 'arcPoint', or 'height' and optionally
+		                             'chordPosition'.
+		:raises ValueError:          If parameters of more than one group for the circle are given. |br|
+		                             Give 'center' and 'direction', or 'arcPoint', or 'height' and optionally
+		                             'chordPosition'.
+		"""
+		from pyTooling.Cartesian2D.Groups import Container2DMixin
+
+		super().__init__(
+			start,
+			end,
+			copyPoints=copyPoints,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
+
+		start =  self._start
+		end =    self._end
+		chordX = end._x - start._x
+		chordY = end._y - start._y
+		try:
+			givenNames = []
+			if center is not None:
+				givenNames.append("'center'")
+			elif direction is not None:
+				givenNames.append("'direction'")
+
+			if arcPoint is not None:
+				givenNames.append("'arcPoint'")
+
+			if height is not None:
+				givenNames.append("'height'")
+			elif chordPosition is not None:
+				givenNames.append("'chordPosition'")
+
+			if len(givenNames) == 0:
+				ex = ValueError("Parameters 'center', 'arcPoint' and 'height' are None.")
+				ex.add_note("Give 'center' and 'direction', or 'arcPoint', or 'height' and optionally 'chordPosition'.")
+				raise ex
+			elif len(givenNames) > 1:
+				ex = ValueError(f"Parameters {', '.join(givenNames[:-1])} and {givenNames[-1]} are given together.")
+				ex.add_note("Give 'center' and 'direction', or 'arcPoint', or 'height' and optionally 'chordPosition'.")
+				raise ex
+
+			if center is not None or direction is not None:
+				if center is None:
+					raise ValueError("Parameter 'center' is None, while 'direction' is given.")
+				elif not isinstance(center, Point2D):
+					ex = TypeError("Parameter 'center' is not of type 'Point2D'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(center)}'.")
+					raise ex
+				elif (radius := sqrt((start._x - center._x) ** 2 + (start._y - center._y) ** 2)) == 0:
+					ex = ValueError("Parameter 'center' is at the position of parameter 'start'.")
+					ex.add_note(f"Got point {center}.")
+					raise ex
+				elif not isclose(sqrt((end._x - center._x) ** 2 + (end._y - center._y) ** 2), radius):
+					ex = ValueError("Parameter 'center' has another distance to parameter 'end' than to parameter 'start'.")
+					ex.add_note(
+						f"Got distance {radius} to start point {start} and "
+						f"{sqrt((end._x - center._x) ** 2 + (end._y - center._y) ** 2)} to end point {end}."
+					)
+					raise ex
+
+				if direction is None:
+					raise ValueError("Parameter 'direction' is None, while 'center' is given.")
+				elif not isinstance(direction, SweepDirection):
+					ex = TypeError("Parameter 'direction' is not of type 'SweepDirection'.")
+					ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
+					raise ex
+
+				if self._parent is None:
+					if copyPoints:
+						center = center.Copy()
+					elif center._parent is not None:
+						ex = AlreadyOwnedError("Point is owned by another element already.")
+						ex.add_note(f"Got point {center} owned by {center._parent!r}.")
+						ex.add_note("Use 'copyPoints=True' to copy the point.")
+						raise ex from ValueError("Parameter 'center' is owned by another element.")
+
+					center._parent = self
+				elif center._parent is not self._parent:
+					ex = NotOwnedError("Point isn't owned by the parent shape.")
+					ex.add_note(f"Got point {center} owned by {center._parent!r}.")
+					raise ex from ValueError("Parameter 'center' isn't owned by parameter 'parent'.")
+			else:
+				if arcPoint is not None:
+					if not isinstance(arcPoint, Point2D):
+						ex = TypeError("Parameter 'arcPoint' is not of type 'Point2D'.")
+						ex.add_note(f"Got type '{getFullyQualifiedName(arcPoint)}'.")
+						raise ex
+					elif chordX == 0 and chordY == 0:
+						ex = ValueError("Parameter 'end' is at the position of parameter 'start'.")
+						ex.add_note(f"Got point {end}.")
+						ex.add_note("An arc through 'arcPoint' needs a chord from the start point to the end point.")
+						raise ex
+					elif (arcPoint._x - start._x) * chordY - (arcPoint._y - start._y) * chordX == 0:
+						ex = ValueError("Parameter 'arcPoint' is on the line through parameter 'start' and parameter 'end'.")
+						ex.add_note(f"Got points {start}, {arcPoint} and {end}.")
+						raise ex
+
+					pointX = arcPoint._x - start._x
+					pointY = arcPoint._y - start._y
+				else:
+					if chordPosition is None:
+						chordPosition = 0.5
+					elif not isinstance(chordPosition, (int, float)):
+						ex = TypeError("Parameter 'chordPosition' is not of type 'float' or 'int'.")
+						ex.add_note(f"Got type '{getFullyQualifiedName(chordPosition)}'.")
+						raise ex
+					elif not 0 <= chordPosition <= 1:
+						ex = ValueError("Parameter 'chordPosition' is out of range 0..1.")
+						ex.add_note(f"Got value '{chordPosition}'.")
+						raise ex
+
+					if height is None:
+						raise ValueError("Parameter 'height' is None, while 'chordPosition' is given.")
+					elif not isinstance(height, (int, float)):
+						ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
+						ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
+						raise ex
+					elif height == 0:
+						raise ValueError("Parameter 'height' is 0.")
+					elif chordX == 0 and chordY == 0:
+						ex = ValueError("Parameter 'end' is at the position of parameter 'start'.")
+						ex.add_note(f"Got point {end}.")
+						ex.add_note("An arc with a 'height' needs a chord from the start point to the end point.")
+						raise ex
+
+					chordLength = sqrt(chordX ** 2 + chordY ** 2)
+					pointX =      chordPosition * chordX - height * chordY / chordLength
+					pointY =      chordPosition * chordY + height * chordX / chordLength
+
+				cross =       pointX * chordY - pointY * chordX
+				pointSquare = pointX ** 2 + pointY ** 2
+				chordSquare = chordX ** 2 + chordY ** 2
+				centerX =     (chordY * pointSquare - pointY * chordSquare) / (2 * cross)
+				centerY =     (pointX * chordSquare - chordX * pointSquare) / (2 * cross)
+				radius =      sqrt(centerX ** 2 + centerY ** 2)
+				direction =   SweepDirection.Counterclockwise if cross > 0 else SweepDirection.Clockwise
+				center =      Point2D(start._x + centerX, start._y + centerY)
+
+				center._parent = self if self._parent is None else self._parent
+		except (ValueError, TypeError, Cartesian2DError):
+			if self._parent is None:
+				start._parent = None
+				end._parent =   None
+
+			raise
+
+		self._center =    center
+		self._radius =    radius
+		self._direction = direction
+
+		if self._parent is None:
+			self.Parent = parent
+
+	@property
+	def Start(self) -> Point2D[Coordinate]:
+		"""
+		Property to access the arc's start point (:attr:`_start`).
+
+		An assigned point must lie on the arc's circle: its distance to the :attr:`Center` is compared with the
+		:attr:`Radius` by :func:`math.isclose`. It is referenced, not copied: the arc takes ownership of it and releases
+		the previous start point. An edge of a shape doesn't own its points, so it can't replace them.
+
+		``start`` is a deprecated alias of this property; it is removed in v11.0.0.
+
+		:returns:                    Start point of the arc.
+		:raises ValueError:          If ``None`` is assigned.
+		:raises TypeError:           If an assigned value is not of type :class:`Point2D`.
+		:raises ValueError:          If an assigned point isn't on the arc's circle.
+		:raises NotOwnedError:       If the arc is an edge of a shape.
+		:raises DuplicatePointError: If an assigned point is the arc's end point.
+		:raises AlreadyOwnedError:   If an assigned point is owned by another element.
+		"""
+		return self._start
+
+	@Start.setter
+	def Start(self, start: Point2D[Coordinate]) -> None:
+		center = self._center
+		if start is None:
+			raise ValueError("Parameter 'start' is None.")
+		elif not isinstance(start, Point2D):
+			ex = TypeError("Parameter 'start' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
+			raise ex
+		elif not isclose(sqrt((start._x - center._x) ** 2 + (start._y - center._y) ** 2), self._radius):
+			ex = ValueError("Parameter 'start' isn't on the arc's circle.")
+			ex.add_note(f"Got point {start}, while the circle around {center} has radius {self._radius}.")
+			raise ex
+
+		Segment2D.Start.fset(self, start)
+
+	start = Start
+
+	@property
+	def End(self) -> Point2D[Coordinate]:
+		"""
+		Property to access the arc's end point (:attr:`_end`).
+
+		An assigned point must lie on the arc's circle: its distance to the :attr:`Center` is compared with the
+		:attr:`Radius` by :func:`math.isclose`. It is referenced, not copied: the arc takes ownership of it and releases
+		the previous end point. An edge of a shape doesn't own its points, so it can't replace them.
+
+		``end`` is a deprecated alias of this property; it is removed in v11.0.0.
+
+		:returns:                    End point of the arc.
+		:raises ValueError:          If ``None`` is assigned.
+		:raises TypeError:           If an assigned value is not of type :class:`Point2D`.
+		:raises ValueError:          If an assigned point isn't on the arc's circle.
+		:raises NotOwnedError:       If the arc is an edge of a shape.
+		:raises DuplicatePointError: If an assigned point is the arc's start point.
+		:raises AlreadyOwnedError:   If an assigned point is owned by another element.
+		"""
+		return self._end
+
+	@End.setter
+	def End(self, end: Point2D[Coordinate]) -> None:
+		center = self._center
+		if end is None:
+			raise ValueError("Parameter 'end' is None.")
+		elif not isinstance(end, Point2D):
+			ex = TypeError("Parameter 'end' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")
+			raise ex
+		elif not isclose(sqrt((end._x - center._x) ** 2 + (end._y - center._y) ** 2), self._radius):
+			ex = ValueError("Parameter 'end' isn't on the arc's circle.")
+			ex.add_note(f"Got point {end}, while the circle around {center} has radius {self._radius}.")
+			raise ex
+
+		Segment2D.End.fset(self, end)
+
+	end = End
+
+	@readonly
+	def Center(self) -> Point2D[Coordinate]:
+		"""
+		Read-only property to access the center point of the arc's circle (:attr:`_center`).
+
+		:returns: Center point of the arc's circle.
+		"""
+		return self._center
+
+	@readonly
+	def Direction(self) -> SweepDirection:
+		"""
+		Read-only property to access the direction, in which the arc sweeps from its start point to its end point
+		(:attr:`_direction`).
+
+		Mirroring the arc changes it.
+
+		:returns: The arc's sweep direction.
+		"""
+		return self._direction
+
+	@readonly
+	def Radius(self) -> float:
+		"""
+		Read-only property to access the radius of the arc's circle (:attr:`_radius`).
+
+		:returns: Radius of the arc.
+		"""
+		return self._radius
+
+	@readonly
+	def StartAngle(self) -> float:
+		"""
+		Read-only property to return the angle of the start point, seen from the center.
+
+		The angle is measured from the positive x-direction towards the positive y-direction.
+
+		:returns: The angle in radians, from -:data:`math.pi` to :data:`math.pi`.
+		"""
+		return atan2(self._start._y - self._center._y, self._start._x - self._center._x)
+
+	@readonly
+	def EndAngle(self) -> float:
+		"""
+		Read-only property to return the angle of the end point, seen from the center.
+
+		The angle is measured from the positive x-direction towards the positive y-direction.
+
+		:returns: The angle in radians, from -:data:`math.pi` to :data:`math.pi`.
+		"""
+		return atan2(self._end._y - self._center._y, self._end._x - self._center._x)
+
+	@readonly
+	def SweepAngle(self) -> float:
+		"""
+		Read-only property to return the angle the arc sweeps from its start point to its end point.
+
+		The angle is positive for a counterclockwise arc and negative for a clockwise arc, so :attr:`StartAngle` plus
+		this angle is :attr:`EndAngle`, up to a multiple of 2 :data:`math.pi`. A start and an end point at the same position
+		make a full circle.
+
+		:returns: The angle in radians, from 0 to 2 :data:`math.pi` (counterclockwise) or from -2 :data:`math.pi` to 0
+		          (clockwise), without 0.
+		"""
+		if self._direction is SweepDirection.Counterclockwise:
+			sweepAngle = (self.EndAngle - self.StartAngle) % (2 * pi)
+			return 2 * pi if sweepAngle == 0 else sweepAngle
+		else:
+			sweepAngle = (self.StartAngle - self.EndAngle) % (2 * pi)
+			return -2 * pi if sweepAngle == 0 else -sweepAngle
+
+	@readonly
+	def Length(self) -> float:
+		"""
+		Read-only property to return the length of the arc, its radius times the absolute sweep angle.
+
+		:returns: Length of the arc.
+		"""
+		return self.Radius * abs(self.SweepAngle)
+
+	@readonly
+	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the arc.
+
+		The box encloses the start and end point, and each point of the circle with the smallest or largest x- or
+		y-coordinate, which the arc passes.
+
+		:returns: A new bounding box.
+		"""
+		start =      self._start
+		end =        self._end
+		center =     self._center
+		radius =     self.Radius
+		startAngle = self.StartAngle
+		sweepAngle = abs(self.SweepAngle)
+		minX =       min(start._x, end._x)
+		minY =       min(start._y, end._y)
+		maxX =       max(start._x, end._x)
+		maxY =       max(start._y, end._y)
+		for angle, x, y in (
+			(0.0,     center._x + radius, center._y),
+			(pi / 2,  center._x,          center._y + radius),
+			(pi,      center._x - radius, center._y),
+			(-pi / 2, center._x,          center._y - radius)
+		):
+			if self._direction is SweepDirection.Counterclockwise:
+				distance = (angle - startAngle) % (2 * pi)
+			else:
+				distance = (startAngle - angle) % (2 * pi)
+
+			if distance <= sweepAngle:
+				minX = min(minX, x)
+				minY = min(minY, y)
+				maxX = max(maxX, x)
+				maxY = max(maxY, y)
+
+		return BoundingBox2D(minX, minY, maxX, maxY)
+
+	def _MoveInner(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the arc's center (inplace).
+
+		:param offset: The 2D-offset to move by.
+		"""
+		self._center += offset
+
+	def _MirrorInnerY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the arc's center at a horizontal axis and reverse its direction (inplace).
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
+		"""
+		self._center._y = twiceAxis - self._center._y
+		if self._direction is SweepDirection.Counterclockwise:
+			self._direction = SweepDirection.Clockwise
+		else:
+			self._direction = SweepDirection.Counterclockwise
+
+	def _MirrorInnerX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the arc's center at a vertical axis and reverse its direction (inplace).
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		self._center._x = twiceAxis - self._center._x
+		if self._direction is SweepDirection.Counterclockwise:
+			self._direction = SweepDirection.Clockwise
+		else:
+			self._direction = SweepDirection.Counterclockwise
+
+	def Copy(self) -> Self:
+		"""
+		Create a new 2D arc segment as a copy of this 2D arc segment.
+
+		The copy holds copies of the start, end and center point. It references the same :attr:`Value` and holds a shallow
+		copy of the key-value-pairs.
+
+		:returns: Copy of this 2D arc segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._end,
+			center=self._center,
+			direction=self._direction,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+	def ToChord(self) -> LineSegment2D[Coordinate]:
+		"""
+		Create a new line segment from the arc's start point to its end point, the arc's chord.
+
+		The line segment holds copies of the start and end point. It has no parent, value or key-value-pairs.
+
+		:returns: A new line segment from the start point to the end point.
+		"""
+		return LineSegment2D(self._start, self._end)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this 2D arc segment for :func:`copy.deepcopy`.
+
+		The copy holds copies of the start, end and center point, and deep copies of the :attr:`Value` and the
+		key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this 2D arc segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._end,
+			center=self._center,
+			direction=self._direction,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
+	def __repr__(self) -> str:
+		"""
+		Returns the 2D arc segment's string representation.
+
+		:returns: The string representation of the 2D arc segment.
+		"""
+		return f"ArcSegment2D({self._start}, {self._end}, center={self._center}, direction={self._direction.name})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the 2D arc segment's string equivalent.
+
+		:returns: The string equivalent of the 2D arc segment.
+		"""
+		return f"({self._start} → {self._end} around {self._center}, {self._direction.name.lower()})"
