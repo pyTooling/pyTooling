@@ -67,6 +67,10 @@ Version 10.x (2026)
      :meth:`~pyTooling.Cartesian2D.Shapes.Path.PrependSegment`.
    * :mod:`pyTooling.Cartesian3D`: a :class:`~pyTooling.Cartesian3D.BoundingBox3D` value (union, overlap, point
      containment). Every segment returns its ``BoundingBox`` and moves in place with ``Move(offset)``.
+   * :mod:`pyTooling.Cartesian3D`: segments own their points (:attr:`Base3D.Parent
+     <pyTooling.Cartesian3D.Base3D.Parent>`). A point owned by another segment raises
+     :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError` instead of being shared; points and line segments of different
+     frames raise :exc:`~pyTooling.Cartesian2D.NotInSameFrameError` when combined.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:
@@ -89,6 +93,8 @@ Version 10.x (2026)
      :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with four corners, and so are a rectangle and a square: they
      inherit the polygon's members. A corner that is ``None`` or not a point raises the polygon's error, naming
      parameter ``points`` (was ``p00`` ... ``p10``).
+   * :mod:`pyTooling.Cartesian3D`: parameter ``copyPoints`` of :class:`~pyTooling.Cartesian3D.Segment3D` is
+     keyword-only, as in :mod:`pyTooling.Cartesian2D`.
 
    .. rubric:: Bug Fixes
 
