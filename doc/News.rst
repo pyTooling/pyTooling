@@ -97,6 +97,9 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D`: an :class:`~pyTooling.Cartesian2D.AxisAlignedLine2D` is the line ``x = c`` or
      ``y = c`` in absolute coordinates, a value. Every element mirrors at it with
      :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`, so elements of different groups mirror at the same line.
+   * :mod:`pyTooling.Cartesian3D`: an :class:`~pyTooling.Cartesian3D.AxisAlignedPlane3D` is the plane ``x = c``,
+     ``y = c`` or ``z = c`` in absolute coordinates, a value. Every element mirrors at it with
+     :meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt`, so elements of different groups mirror at the same plane.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

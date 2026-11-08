@@ -316,6 +316,11 @@ element's absolute bounding box, named by an :class:`~pyTooling.Cartesian2D.Alig
 Like a :ref:`style <STRUCT/Cartesian2D/Drawing>`, a line is a **value**: its properties are read-only, it compares
 with ``==`` and ``!=`` by value and is hashable.
 
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D/AxisAlignedPlane3D`
+      |rarr| Its counterpart, the plane parallel to a coordinate plane.
+
 
 .. _STRUCT/Cartesian2D/Segment2D:
 
@@ -1431,6 +1436,40 @@ touching at a face, an edge or a corner don't overlap. There is no conversion to
       |rarr| Its counterpart, the 2-dimensional bounding box.
 
 
+.. _STRUCT/Cartesian3D/AxisAlignedPlane3D:
+
+AxisAlignedPlane3D
+==================
+
+An :class:`~pyTooling.Cartesian3D.AxisAlignedPlane3D` is a plane parallel to a coordinate plane: the plane ``x = c``,
+``y = c`` or ``z = c``, parallel to the yz-, xz- or xy-plane, named by its
+:attr:`~pyTooling.Cartesian3D.AxisAlignedPlane3D.Axis`, an :class:`~pyTooling.Cartesian3D.Axis3D`, and its
+:attr:`~pyTooling.Cartesian3D.AxisAlignedPlane3D.Position`. Like the 2D line, it is a value in absolute coordinates:
+:meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt` mirrors an element of any group at it, and
+:meth:`~pyTooling.Cartesian3D.AxisAlignedPlane3D.FromElement` creates the plane through a face or the center of an
+element's absolute bounding box, named by an :class:`~pyTooling.Cartesian3D.Alignment3D`.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian3D        import Point3D, Offset3D, Alignment3D, Axis3D, AxisAlignedPlane3D, LineSegment3D
+   from pyTooling.Cartesian3D.Groups import Group3D
+
+   rod =   LineSegment3D(Point3D(0, 0, 0), Point3D(0, 0, 2))
+   part =  Group3D(Offset3D(10, 0, 1), (rod, ))
+   floor = AxisAlignedPlane3D(Axis3D.Z, 0)
+
+   str(floor)                         # 'z = 0'
+   rod.MirrorAt(floor)                # rod.End is (0, 0, -4), relative to part
+   rod.End.Absolute                   # (10, 0, -3)
+
+   AxisAlignedPlane3D.FromElement(rod, Alignment3D.MinZ)   # AxisAlignedPlane3D(Axis3D.Z, -3)
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/AxisAlignedLine2D`
+      |rarr| Its counterpart, the line parallel to a coordinate axis.
+
+
 .. _STRUCT/Cartesian3D/Segment3D:
 
 Segment3D
@@ -1576,6 +1615,9 @@ groups. An element belongs to at most one group, its :attr:`~pyTooling.Cartesian
   :meth:`~pyTooling.Cartesian3D.Element3D.MirrorZ`, mirroring it at a plane parallel to the yz-, xz- or xy-plane (the
   x-, y- or z-coordinates flip), through an edge or the center of its bounding box, named by an
   :class:`~pyTooling.Cartesian3D.Alignment3D` and optionally shifted by an offset;
+* :meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt`, mirroring it at an
+  :ref:`axis-aligned plane <STRUCT/Cartesian3D/AxisAlignedPlane3D>` in absolute coordinates, which several elements
+  can share;
 * :meth:`~pyTooling.Cartesian3D.Element3D.MoveTo`, moving it into another group - by default keeping its absolute
   position, so its local coordinates change;
 * :meth:`~pyTooling.Cartesian3D.Element3D.AlignTo`, moving it so an edge or the center of its bounding box aligns
