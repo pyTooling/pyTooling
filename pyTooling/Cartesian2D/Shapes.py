@@ -388,226 +388,6 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 
 
 @export
-class PolyLine(Shape[Coordinate], Generic[Coordinate]):
-	"""
-	A polyline is an open chain of two or more points (vertices) connected by straight edges (segments).
-	"""
-	_points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the polyline's points.
-	_segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the polyline's edges.
-
-	def __init__(
-		self,
-		points:        Iterable[Point2D[Coordinate]],
-		*,
-		copyPoints:    bool = True,
-		value:         Any = None,
-		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
-		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
-	) -> None:
-		"""
-		Initializes a polyline from its points.
-
-		The points are connected in the given order, from the first one to the last one.
-
-		The polyline owns its points. Referenced points (``copyPoints=False``) must not be owned by another element.
-
-		:param points:                 Points of the polyline.
-		:param copyPoints:             Optional, if ``True``, the given points are copied instead of referenced. Default:
-		                               ``True``.
-		:param value:                  Optional, value of the polyline. Default: ``None``.
-		:param keyValuePairs:          Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
-		:param parent:                 Optional, the group or canvas the polyline is added to. Default: ``None``, no
-		                               parent.
-		:raises ValueError:            If parameter 'points' is None.
-		:raises TypeError:             If parameter 'points' is not iterable.
-		:raises ValueError:            If an element of parameter 'points' is None.
-		:raises TypeError:             If an element of parameter 'points' is not of type
-		                               :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises AlreadyOwnedError:     If an element of parameter 'points' is owned by another element, while
-		                               'copyPoints' is ``False``. |br|
-		                               Use ``copyPoints=True`` to copy the point.
-		:raises DuplicatePointError:   If an element of parameter 'points' is given twice, while 'copyPoints' is
-		                               ``False``. |br|
-		                               Use ``copyPoints=True`` to copy the points.
-		:raises NotEnoughCornersError: If parameter 'points' has fewer than 2 points.
-		:raises ValueError:            If parameter 'copyPoints' is None.
-		:raises TypeError:             If parameter 'copyPoints' is not of type :class:`bool`.
-		:raises TypeError:             If parameter 'keyValuePairs' is not a mapping.
-		:raises TypeError:             If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D`
-		                               or :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
-		"""
-		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
-
-		if points is None:
-			raise ValueError("Parameter 'points' is None.")
-		elif not isinstance(points, Iterable):
-			ex = TypeError("Parameter 'points' is not iterable.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(points)}'.")
-			raise ex
-
-		if copyPoints is None:
-			raise ValueError("Parameter 'copyPoints' is None.")
-		elif not isinstance(copyPoints, bool):
-			ex = TypeError("Parameter 'copyPoints' is not of type 'bool'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
-			raise ex
-
-		pointList =  []
-		seenPoints = set()
-		for point in points:
-			if point is None:
-				raise ValueError("An element of parameter 'points' is None.")
-			elif not isinstance(point, Point2D):
-				ex = TypeError("An element of parameter 'points' is not of type 'Point2D'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
-				raise ex
-			elif copyPoints:
-				pointList.append(point.Copy())
-			elif point._parent is not None:
-				ex = AlreadyOwnedError("Point is owned by another element already.")
-				ex.add_note(f"Got point {point} owned by {point._parent!r}.")
-				ex.add_note("Use 'copyPoints=True' to copy the point.")
-				raise ex from ValueError("An element of parameter 'points' is owned by another element.")
-			elif point in seenPoints:
-				ex = DuplicatePointError("Point is given twice.")
-				ex.add_note(f"Got point {point}.")
-				ex.add_note("Use 'copyPoints=True' to copy the points.")
-				raise ex from ValueError("An element of parameter 'points' is given twice.")
-			else:
-				seenPoints.add(point)
-				pointList.append(point)
-
-		if len(pointList) < 2:
-			ex = NotEnoughCornersError("PolyLine has fewer than 2 points.")
-			ex.add_note(f"Got {len(pointList)} points.")
-			raise ex from ValueError("Parameter 'points' has fewer than 2 points.")
-
-		self._points = vertices = tuple(pointList)
-		for vertex in vertices:
-			vertex._parent = self
-
-		self._segments = tuple(
-			LineSegment2D(start, end, copyPoints=False, parent=self)
-			for start, end in zip(vertices[:-1], vertices[1:])
-		)
-
-		self.Parent = parent
-
-	def Copy(self) -> Self:
-		"""
-		Create a new polyline as a copy of this polyline.
-
-		The copy holds copies of the points, shared by its edges. It references the same :attr:`Value` and holds a shallow
-		copy of the key-value-pairs.
-
-		:returns: Copy of this polyline.
-		"""
-		return self.__class__(self._points, value=self._value, keyValuePairs=self._dict)
-
-	def __copy__(self) -> Self:
-		"""
-		Returns a copy of this polyline for :func:`copy.copy`.
-
-		:returns: Copy of this polyline.
-		"""
-		return self.Copy()
-
-	@readonly
-	def Points(self) -> tuple[Point2D[Coordinate], ...]:
-		"""
-		Read-only property to access the polyline's points (:attr:`_points`).
-
-		:returns: Tuple of points, in drawing order.
-		"""
-		return self._points
-
-	@readonly
-	def Segments(self) -> tuple[LineSegment2D[Coordinate], ...]:
-		"""
-		Read-only property to access the polyline's edges (:attr:`_segments`).
-
-		:returns: Tuple of edges, one less than points, from the first point to the last one.
-		"""
-		return self._segments
-
-	@readonly
-	def Length(self) -> float:
-		"""
-		Read-only property to return the polyline's length, the sum of its edges' lengths.
-
-		:returns: Length of the polyline.
-		"""
-		return sum(segment.Length for segment in self._segments)
-
-	@readonly
-	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
-		"""
-		Read-only property to return the smallest axis-aligned bounding box enclosing the polyline's points.
-
-		:returns: A new bounding box.
-		"""
-		return BoundingBox2D.FromPoints(self._points)
-
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
-		"""
-		Move the polyline by moving all its points (inplace).
-
-		Its edges share the points, so they move along.
-
-		:param offset:      The 2D-offset to move by.
-		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
-		"""
-		if offset is None:
-			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset2D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
-			raise ex
-
-		for point in self._points:
-			point += offset
-
-	def _MirrorY(self, twiceAxis: Coordinate) -> None:
-		"""
-		Mirror the polyline at a horizontal axis by mirroring all its points (inplace).
-
-		Its edges share the points, so they mirror along.
-
-		:param twiceAxis: Twice the y-coordinate of the axis.
-		"""
-		for point in self._points:
-			point._y = twiceAxis - point._y
-
-	def _MirrorX(self, twiceAxis: Coordinate) -> None:
-		"""
-		Mirror the polyline at a vertical axis by mirroring all its points (inplace).
-
-		Its edges share the points, so they mirror along.
-
-		:param twiceAxis: Twice the x-coordinate of the axis.
-		"""
-		for point in self._points:
-			point._x = twiceAxis - point._x
-
-	def __repr__(self) -> str:
-		"""
-		Returns the polyline's string representation.
-
-		:returns: The string representation of the polyline.
-		"""
-		return f"PolyLine({', '.join(str(point) for point in self._points)})"
-
-	def __str__(self) -> str:
-		"""
-		Returns the polyline's string equivalent.
-
-		:returns: The string equivalent of the polyline, its path from the first point to the last point.
-		"""
-		return f"({' → '.join(str(point) for point in self._points)})"
-
-
-@export
 class Trapezium(Polygon[Coordinate], Generic[Coordinate]):
 	"""
 	A Trapezium is a four-sided polygon, having four edges (sides) and four corners (vertices).
@@ -1367,3 +1147,178 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 		"""
 		segments = ", ".join(str(segment) for segment in self._segments)
 		return f"({segments}, closed)" if self._closed else f"({segments})"
+
+
+@export
+class PolyLine(Path[Coordinate], Generic[Coordinate]):
+	"""
+	A polyline is a path of line segments, connecting two or more points (vertices) by straight edges.
+
+	An open polyline runs from its first point to its last point. A closed polyline connects its last point back to its
+	first point; it needs three or more points.
+	"""
+
+	def __init__(
+		self,
+		points:        Iterable[Point2D[Coordinate]],
+		*,
+		closed:        bool = False,
+		copyPoints:    bool = True,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a polyline from its points.
+
+		The points are connected in the given order, from the first one to the last one, and for a closed polyline back to
+		the first one. Consecutive edges share their point.
+
+		The polyline owns its points. Referenced points (``copyPoints=False``) must not be owned by another element.
+
+		:param points:                 Points of the polyline.
+		:param closed:                 Optional, if ``True``, the last point is connected back to the first point. Default:
+		                               ``False``.
+		:param copyPoints:             Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                               ``True``.
+		:param value:                  Optional, value of the polyline. Default: ``None``.
+		:param keyValuePairs:          Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:                 Optional, the group or canvas the polyline is added to. Default: ``None``, no
+		                               parent.
+		:raises ValueError:            If parameter 'points' is None.
+		:raises TypeError:             If parameter 'points' is not iterable.
+		:raises ValueError:            If an element of parameter 'points' is None.
+		:raises TypeError:             If an element of parameter 'points' is not of type
+		                               :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError:     If an element of parameter 'points' is owned by another element, while
+		                               'copyPoints' is ``False``. |br|
+		                               Use ``copyPoints=True`` to copy the point.
+		:raises DuplicatePointError:   If an element of parameter 'points' is given twice, while 'copyPoints' is
+		                               ``False``. |br|
+		                               Use ``copyPoints=True`` to copy the points.
+		:raises NotEnoughCornersError: If parameter 'points' has fewer than 2 points.
+		:raises ValueError:            If parameter 'closed' is None.
+		:raises TypeError:             If parameter 'closed' is not of type :class:`bool`.
+		:raises NotEnoughCornersError: If parameter 'closed' is ``True``, while parameter 'points' has fewer than 3
+		                               points.
+		:raises ValueError:            If parameter 'copyPoints' is None.
+		:raises TypeError:             If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:             If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:             If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D`
+		                               or :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		# Path's initializer takes segments; a polyline is built from its points.
+		super(Path, self).__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
+
+		if points is None:
+			raise ValueError("Parameter 'points' is None.")
+		elif not isinstance(points, Iterable):
+			ex = TypeError("Parameter 'points' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(points)}'.")
+			raise ex
+
+		if closed is None:
+			raise ValueError("Parameter 'closed' is None.")
+		elif not isinstance(closed, bool):
+			ex = TypeError("Parameter 'closed' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(closed)}'.")
+			raise ex
+
+		if copyPoints is None:
+			raise ValueError("Parameter 'copyPoints' is None.")
+		elif not isinstance(copyPoints, bool):
+			ex = TypeError("Parameter 'copyPoints' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
+			raise ex
+
+		pointList =  []
+		seenPoints = set()
+		for point in points:
+			if point is None:
+				raise ValueError("An element of parameter 'points' is None.")
+			elif not isinstance(point, Point2D):
+				ex = TypeError("An element of parameter 'points' is not of type 'Point2D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+				raise ex
+			elif copyPoints:
+				pointList.append(point.Copy())
+			elif point._parent is not None:
+				ex = AlreadyOwnedError("Point is owned by another element already.")
+				ex.add_note(f"Got point {point} owned by {point._parent!r}.")
+				ex.add_note("Use 'copyPoints=True' to copy the point.")
+				raise ex from ValueError("An element of parameter 'points' is owned by another element.")
+			elif point in seenPoints:
+				ex = DuplicatePointError("Point is given twice.")
+				ex.add_note(f"Got point {point}.")
+				ex.add_note("Use 'copyPoints=True' to copy the points.")
+				raise ex from ValueError("An element of parameter 'points' is given twice.")
+			else:
+				seenPoints.add(point)
+				pointList.append(point)
+
+		if len(pointList) < 2:
+			ex = NotEnoughCornersError("PolyLine has fewer than 2 points.")
+			ex.add_note(f"Got {len(pointList)} points.")
+			raise ex from ValueError("Parameter 'points' has fewer than 2 points.")
+		elif closed and len(pointList) < 3:
+			ex = NotEnoughCornersError("Closed polyline has fewer than 3 points.")
+			ex.add_note(f"Got {len(pointList)} points.")
+			raise ex from ValueError("Parameter 'points' has fewer than 3 points, while parameter 'closed' is True.")
+
+		self._points = vertices = tuple(pointList)
+		for vertex in vertices:
+			vertex._parent = self
+
+		self._closed =   closed
+		self._segments = tuple(
+			LineSegment2D(start, end, copyPoints=False, parent=self)
+			for start, end in zip(vertices, (*vertices[1:], vertices[0]) if closed else vertices[1:])
+		)
+
+		self.Parent = parent
+
+	def Copy(self) -> Self:
+		"""
+		Create a new polyline as a copy of this polyline.
+
+		The copy holds copies of the points, shared by its edges. It references the same :attr:`Value` and holds a shallow
+		copy of the key-value-pairs.
+
+		:returns: Copy of this polyline.
+		"""
+		return self.__class__(self._points, closed=self._closed, value=self._value, keyValuePairs=self._dict)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this polyline for :func:`copy.deepcopy`.
+
+		The copy holds copies of the points, and deep copies of the :attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this polyline.
+		"""
+		return self.__class__(
+			self._points,
+			closed=self._closed,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
+	def __repr__(self) -> str:
+		"""
+		Returns the polyline's string representation.
+
+		:returns: The string representation of the polyline, its points, and ``closed=True`` for a closed polyline.
+		"""
+		points = ", ".join(str(point) for point in self._points)
+		return f"PolyLine({points}, closed=True)" if self._closed else f"PolyLine({points})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the polyline's string equivalent.
+
+		:returns: The string equivalent of the polyline, its points in drawing order, for a closed polyline back to the
+		          first point.
+		"""
+		points = (*self._points, self._points[0]) if self._closed else self._points
+		return f"({' → '.join(str(point) for point in points)})"

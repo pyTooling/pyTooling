@@ -84,6 +84,8 @@ class Instantiation(Testcase):
 		self.assertIsInstance(Square(Point2D(1, 1), Point2D(3, 1), Point2D(3, 3), Point2D(1, 3)), Polygon)
 		self.assertFalse(issubclass(Path, Geometry2D))
 		self.assertTrue(issubclass(Path, Shape))
+		self.assertTrue(issubclass(PolyLine, Path))
+		self.assertFalse(issubclass(PolyLine, Geometry2D))
 		self.assertIsInstance(Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))), Geometry2D)
 		self.assertIsInstance(Circle(Point2D(1, 2), 3), Geometry2D)
 
@@ -3166,3 +3168,86 @@ class PathRepresentation(Testcase):
 			"(((0, 0) → (4, 0)), ((4, 0) → (0, 0) around (2, 0), counterclockwise), closed)",
 			str(path)
 		)
+
+
+class ClosedPolyLine(Testcase):
+	def test_Closed(self) -> None:
+		"""The last point connects back to the first one; the first and last edge share it."""
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
+
+		self.assertTrue(polyline.IsClosed)
+		self.assertEqual(3, len(polyline.Points))
+		self.assertEqual(3, len(polyline.Segments))
+		self.assertIs(polyline.Points[0], polyline.Segments[2].End)
+		self.assertIs(polyline.Segments[0].Start, polyline.Segments[2].End)
+		self.assertEqual(12.0, polyline.Length)
+		self.assertEqual(BoundingBox2D(0, 0, 4, 3), polyline.BoundingBox)
+
+	def test_Open(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)))
+
+		self.assertFalse(polyline.IsClosed)
+		self.assertEqual(2, len(polyline.Segments))
+		self.assertEqual(7.0, polyline.Length)
+
+	def test_Closed_TwoPoints(self) -> None:
+		with self.assertRaises(NotEnoughCornersError) as context:
+			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), closed=True)
+
+		self.assertEqual("Closed polyline has fewer than 3 points.", str(context.exception))
+		self.assertListEqual(["Got 2 points."], context.exception.__notes__)
+		self.assertEqual(
+			"Parameter 'points' has fewer than 3 points, while parameter 'closed' is True.",
+			str(context.exception.__cause__)
+		)
+
+	def test_ClosedNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), closed=None)
+
+		self.assertEqual("Parameter 'closed' is None.", str(context.exception))
+
+	def test_ClosedInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), closed=1)
+
+		self.assertEqual("Parameter 'closed' is not of type 'bool'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Move(self) -> None:
+		"""The shared point moves once."""
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
+
+		polyline.Move(Offset2D(1, 1))
+
+		self.assertTupleEqual(((1, 1), (5, 1), (5, 4)), tuple(point.ToTuple() for point in polyline.Points))
+		self.assertTupleEqual(((5, 4), (1, 1)), polyline.Segments[2].ToTuple())
+
+	def test_MirrorX(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
+
+		polyline.MirrorX(Alignment2D.MinX)
+
+		self.assertTupleEqual(((0, 0), (-4, 0), (-4, 3)), tuple(point.ToTuple() for point in polyline.Points))
+
+	def test_Copy(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True, value=1, keyValuePairs={"a": 1})
+
+		for newPolyLine in (polyline.Copy(), copy(polyline), deepcopy(polyline)):
+			self.assertIs(PolyLine, type(newPolyLine))
+			self.assertTrue(newPolyLine.IsClosed)
+			self.assertIsNot(polyline.Points[0], newPolyLine.Points[0])
+			self.assertIs(newPolyLine.Points[0], newPolyLine.Segments[2].End)
+			self.assertEqual(1, newPolyLine.Value)
+			self.assertEqual(1, newPolyLine["a"])
+
+	def test_repr(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
+
+		self.assertEqual("PolyLine((0, 0), (4, 0), (4, 3), closed=True)", repr(polyline))
+
+	def test_str(self) -> None:
+		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
+
+		self.assertEqual("((0, 0) → (4, 0) → (4, 3) → (0, 0))", str(polyline))
+
