@@ -79,6 +79,8 @@ class Instantiation(Testcase):
 			with self.subTest(geometry=geometry):
 				self.assertTrue(issubclass(geometry, Geometry2D))
 
+		self.assertTrue(issubclass(Trapezium, Polygon))
+		self.assertIsInstance(Square(Point2D(1, 1), Point2D(3, 1), Point2D(3, 3), Point2D(1, 3)), Polygon)
 		self.assertFalse(issubclass(Path, Geometry2D))
 		self.assertTrue(issubclass(Path, Shape))
 		self.assertIsInstance(Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))), Geometry2D)
@@ -177,7 +179,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Trapezium("1, 1", point01, point11, point10)
 
-		self.assertEqual("Parameter 'p00' is not of type 'Point2D'.", str(context.exception))
+		self.assertEqual("An element of parameter 'points' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Trapezium_str2(self) -> None:
@@ -188,7 +190,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Trapezium(point00, "3, 1", point11, point10)
 
-		self.assertEqual("Parameter 'p01' is not of type 'Point2D'.", str(context.exception))
+		self.assertEqual("An element of parameter 'points' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Trapezium_str3(self) -> None:
@@ -199,7 +201,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Trapezium(point00, point01, "3, 3", point10)
 
-		self.assertEqual("Parameter 'p11' is not of type 'Point2D'.", str(context.exception))
+		self.assertEqual("An element of parameter 'points' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Trapezium_str4(self) -> None:
@@ -210,7 +212,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Trapezium(point00, point01, point11, "1, 3")
 
-		self.assertEqual("Parameter 'p10' is not of type 'Point2D'.", str(context.exception))
+		self.assertEqual("An element of parameter 'points' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Trapezium_None1(self) -> None:
@@ -221,7 +223,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(ValueError) as context:
 			_ = Trapezium(None, point01, point11, point10)
 
-		self.assertEqual("Parameter 'p00' is None.", str(context.exception))
+		self.assertEqual("An element of parameter 'points' is None.", str(context.exception))
 
 	def test_Trapezium_None2(self) -> None:
 		point00 = Point2D(0, 0)
@@ -231,7 +233,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(ValueError) as context:
 			_ = Trapezium(point00, None, point11, point10)
 
-		self.assertEqual("Parameter 'p01' is None.", str(context.exception))
+		self.assertEqual("An element of parameter 'points' is None.", str(context.exception))
 
 	def test_Trapezium_None3(self) -> None:
 		point00 = Point2D(0, 0)
@@ -241,7 +243,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(ValueError) as context:
 			_ = Trapezium(point00, point01, None, point10)
 
-		self.assertEqual("Parameter 'p11' is None.", str(context.exception))
+		self.assertEqual("An element of parameter 'points' is None.", str(context.exception))
 
 	def test_Trapezium_None4(self) -> None:
 		point00 = Point2D(0, 0)
@@ -251,7 +253,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(ValueError) as context:
 			_ = Trapezium(point00, point01, point11, None)
 
-		self.assertEqual("Parameter 'p10' is None.", str(context.exception))
+		self.assertEqual("An element of parameter 'points' is None.", str(context.exception))
 
 	def test_Rectangle(self) -> None:
 		"""A rectangle rotated against the axes: edges 4/2 and -1/2 are perpendicular."""
@@ -326,24 +328,24 @@ class Instantiation(Testcase):
 		point11 = Point2D(4, 3)
 		point10 = Point2D(2.88, -0.84)
 
-		with self.assertRaises(ValueError) as context:
+		with self.assertRaises(CrossingEdgesError) as context:
 			_ = Rectangle(point00, point01, point11, point10)
 
-		self.assertEqual("Inner angle of a rectangle is not 90°.", str(context.exception))
-		self.assertListEqual(["Got 16.26° at corner (4, 3)."], context.exception.__notes__)
+		self.assertEqual("Polygon has crossing edges.", str(context.exception))
+		self.assertListEqual(["Got edges ((0, 0) → (4, 0)) and ((4, 3) → (2.88, -0.84))."], context.exception.__notes__)
 
 	def test_Rectangle_SameCorners(self) -> None:
-		"""Two pairs of consecutive corners are the same point: opposite edges are equally long, both 0."""
+		"""Two pairs of consecutive corners are the same point: the edges between them touch each other."""
 		point00 = Point2D(0, 0)
 		point01 = Point2D(0, 0)
 		point11 = Point2D(4, 2)
 		point10 = Point2D(4, 2)
 
-		with self.assertRaises(ValueError) as context:
+		with self.assertRaises(CrossingEdgesError) as context:
 			_ = Rectangle(point00, point01, point11, point10)
 
-		self.assertEqual("Line segment (edge) has length 0.", str(context.exception))
-		self.assertListEqual(["Got corners (0, 0) and (0, 0)."], context.exception.__notes__)
+		self.assertEqual("Polygon has crossing edges.", str(context.exception))
+		self.assertListEqual(["Got edges ((0, 0) → (4, 2)) and ((4, 2) → (0, 0))."], context.exception.__notes__)
 
 	def test_Rectangle_str(self) -> None:
 		point00 = Point2D(0, 0)
@@ -353,7 +355,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Rectangle(point00, point01, point11, "-1, 2")
 
-		self.assertEqual("Parameter 'p10' is not of type 'Point2D'.", str(context.exception))
+		self.assertEqual("An element of parameter 'points' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Square(self) -> None:
@@ -428,7 +430,7 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Square("0, 0", point01, point11, point10)
 
-		self.assertEqual("Parameter 'p00' is not of type 'Point2D'.", str(context.exception))
+		self.assertEqual("An element of parameter 'points' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Circle_int(self) -> None:
@@ -559,6 +561,14 @@ class CrossingEdges(Testcase):
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(4, 1), Point2D(1, 1), Point2D(1, 3), Point2D(0, 3)))
 
 		self.assertEqual(6, len(polygon.Segments))
+
+	def test_Trapezium(self) -> None:
+		"""A trapezium is a polygon, so its edges must not cross either."""
+		with self.assertRaises(CrossingEdgesError) as context:
+			_ = Trapezium(Point2D(0, 0), Point2D(4, 4), Point2D(4, 0), Point2D(0, 4))
+
+		self.assertEqual("Polygon has crossing edges.", str(context.exception))
+		self.assertListEqual(["Got edges ((0, 0) → (4, 4)) and ((4, 0) → (0, 4))."], context.exception.__notes__)
 
 	def test_Error(self) -> None:
 		self.assertTrue(issubclass(CrossingEdgesError, Cartesian2DError))
@@ -1885,6 +1895,16 @@ class Copy(Testcase):
 
 
 class Representation(Testcase):
+	def test_Trapezium_repr(self) -> None:
+		trapezium = Trapezium(Point2D(0, 0), Point2D(6, 0), Point2D(4, 2), Point2D(1, 2))
+
+		self.assertEqual("Trapezium((0, 0), (6, 0), (4, 2), (1, 2))", repr(trapezium))
+
+	def test_Rectangle_str(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+
+		self.assertEqual("((0, 0) → (4, 0) → (4, 2) → (0, 2) → (0, 0))", str(rectangle))
+
 	def test_Polygon_repr(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 

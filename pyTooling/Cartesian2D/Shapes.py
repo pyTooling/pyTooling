@@ -383,7 +383,7 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 
 		:returns: The string representation of the polygon.
 		"""
-		return f"Polygon({', '.join(str(point) for point in self._points)})"
+		return f"{self.__class__.__name__}({', '.join(str(point) for point in self._points)})"
 
 	def __str__(self) -> str:
 		"""
@@ -395,12 +395,10 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 
 
 @export
-class Trapezium(Geometry2D[Coordinate], Generic[Coordinate]):
+class Trapezium(Polygon[Coordinate], Generic[Coordinate]):
 	"""
 	A Trapezium is a four-sided polygon, having four edges (sides) and four corners (vertices).
 	"""
-	_points:   tuple[Point2D[Coordinate], ...]        #: A tuple of 2D-points describing the trapezium.
-	_segments: tuple[LineSegment2D[Coordinate], ...]  #: A tuple of 2D line segments describing the trapezium.
 
 	def __init__(
 		self,
@@ -416,83 +414,29 @@ class Trapezium(Geometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		Initializes a trapezium with 4 corners.
 
-		:param p00:           First corner.
-		:param p01:           Second corner.
-		:param p11:           Third corner.
-		:param p10:           Fourth corner.
-		:param value:         Optional, value of the trapezium. Default: ``None``.
-		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
-		:param parent:        Optional, the group or canvas the trapezium is added to. Default: ``None``, no parent.
-		:raises ValueError:   If parameter 'p00' is None.
-		:raises TypeError:    If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError:   If parameter 'p01' is None.
-		:raises TypeError:    If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError:   If parameter 'p11' is None.
-		:raises TypeError:    If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError:   If parameter 'p10' is None.
-		:raises TypeError:    If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
-		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
-		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		The trapezium copies the given corners, as a :class:`Polygon` does by default.
+
+		:param p00:                 First corner.
+		:param p01:                 Second corner.
+		:param p11:                 Third corner.
+		:param p10:                 Fourth corner.
+		:param value:               Optional, value of the trapezium. Default: ``None``.
+		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:              Optional, the group or canvas the trapezium is added to. Default: ``None``, no parent.
+		:raises ValueError:         If parameter 'p00' is None.
+		:raises TypeError:          If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:         If parameter 'p01' is None.
+		:raises TypeError:          If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:         If parameter 'p11' is None.
+		:raises TypeError:          If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:         If parameter 'p10' is None.
+		:raises TypeError:          If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises CrossingEdgesError: If two edges have a point in common, which isn't their shared corner.
+		:raises TypeError:          If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:          If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                            :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
-		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
-
-		if p00 is None:
-			raise ValueError("Parameter 'p00' is None.")
-		elif not isinstance(p00, Point2D):
-			ex = TypeError("Parameter 'p00' is not of type 'Point2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(p00)}'.")
-			raise ex
-
-		if p01 is None:
-			raise ValueError("Parameter 'p01' is None.")
-		elif not isinstance(p01, Point2D):
-			ex = TypeError("Parameter 'p01' is not of type 'Point2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(p01)}'.")
-			raise ex
-
-		if p11 is None:
-			raise ValueError("Parameter 'p11' is None.")
-		elif not isinstance(p11, Point2D):
-			ex = TypeError("Parameter 'p11' is not of type 'Point2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(p11)}'.")
-			raise ex
-
-		if p10 is None:
-			raise ValueError("Parameter 'p10' is None.")
-		elif not isinstance(p10, Point2D):
-			ex = TypeError("Parameter 'p10' is not of type 'Point2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(p10)}'.")
-			raise ex
-
-		self._points = corners = (
-			_p00 := p00.Copy(),
-			_p01 := p01.Copy(),
-			_p11 := p11.Copy(),
-			_p10 := p10.Copy(),
-		)
-		for corner in corners:
-			corner._parent = self
-
-		self._segments = (
-			LineSegment2D(_p00, _p01, copyPoints=False, parent=self),
-			LineSegment2D(_p01, _p11, copyPoints=False, parent=self),
-			LineSegment2D(_p11, _p10, copyPoints=False, parent=self),
-			LineSegment2D(_p10, _p00, copyPoints=False, parent=self)
-		)
-
-		self.Parent = parent
-
-	@readonly
-	def Points(self) -> tuple[Point2D[Coordinate], ...]:
-		"""
-		Read-only property to access the trapezium's corners (:attr:`_points`).
-
-		``points`` is a deprecated, assignable alias of this property; it is removed in v11.0.0.
-
-		:returns: Tuple of corners, in drawing order.
-		"""
-		return self._points
+		super().__init__((p00, p01, p11, p10), value=value, keyValuePairs=keyValuePairs, parent=parent)
 
 	@property
 	def points(self) -> tuple[Point2D[Coordinate], ...]:
@@ -553,17 +497,6 @@ class Trapezium(Geometry2D[Coordinate], Generic[Coordinate]):
 
 		self._points = corners
 
-	@readonly
-	def Segments(self) -> tuple[LineSegment2D[Coordinate], ...]:
-		"""
-		Read-only property to access the trapezium's edges (:attr:`_segments`).
-
-		``segments`` is a deprecated, assignable alias of this property; it is removed in v11.0.0.
-
-		:returns: Tuple of edges, the last one connecting the last corner back to the first one.
-		"""
-		return self._segments
-
 	@property
 	def segments(self) -> tuple[LineSegment2D[Coordinate], ...]:
 		"""
@@ -603,87 +536,6 @@ class Trapezium(Geometry2D[Coordinate], Generic[Coordinate]):
 
 		self._segments = edges
 
-	@readonly
-	def Area(self) -> float:
-		"""
-		Read-only property to return the area enclosed by the trapezium.
-
-		The corners may be given clockwise or counterclockwise.
-
-		:returns: Area of the trapezium.
-		"""
-		corners =   self._points
-		twiceArea = 0
-		for corner, nextCorner in zip(corners, (*corners[1:], corners[0])):
-			twiceArea += corner._x * nextCorner._y - nextCorner._x * corner._y
-
-		return abs(twiceArea) / 2
-
-	@readonly
-	def Perimeter(self) -> float:
-		"""
-		Read-only property to return the perimeter of the trapezium, the sum of its edges' lengths.
-
-		:returns: Perimeter of the trapezium.
-		"""
-		corners =   self._points
-		perimeter = 0.0
-		for corner, nextCorner in zip(corners, (*corners[1:], corners[0])):
-			perimeter += sqrt((nextCorner._x - corner._x) ** 2 + (nextCorner._y - corner._y) ** 2)
-
-		return perimeter
-
-	@readonly
-	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
-		"""
-		Read-only property to return the smallest axis-aligned bounding box enclosing the trapezium's corners.
-
-		:returns: A new bounding box.
-		"""
-		return BoundingBox2D.FromPoints(self._points)
-
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
-		"""
-		Move the trapezium by moving all its corners (inplace).
-
-		Its edges share the corners, so they move along.
-
-		:param offset:      The 2D-offset to move by.
-		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
-		"""
-		if offset is None:
-			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset2D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
-			raise ex
-
-		for point in self._points:
-			point += offset
-
-	def _MirrorY(self, twiceAxis: Coordinate) -> None:
-		"""
-		Mirror the trapezium at a horizontal axis by mirroring all its corners (inplace).
-
-		Its edges share the corners, so they mirror along.
-
-		:param twiceAxis: Twice the y-coordinate of the axis.
-		"""
-		for point in self._points:
-			point._y = twiceAxis - point._y
-
-	def _MirrorX(self, twiceAxis: Coordinate) -> None:
-		"""
-		Mirror the trapezium at a vertical axis by mirroring all its corners (inplace).
-
-		Its edges share the corners, so they mirror along.
-
-		:param twiceAxis: Twice the x-coordinate of the axis.
-		"""
-		for point in self._points:
-			point._x = twiceAxis - point._x
-
 	def Copy(self) -> Self:
 		"""
 		Create a new trapezium as a copy of this trapezium.
@@ -695,14 +547,6 @@ class Trapezium(Geometry2D[Coordinate], Generic[Coordinate]):
 		:returns: Copy of this trapezium.
 		"""
 		return self.__class__(*self._points, value=self._value, keyValuePairs=self._dict)
-
-	def __copy__(self) -> Self:
-		"""
-		Returns a copy of this trapezium for :func:`copy.copy`.
-
-		:returns: Copy of this trapezium.
-		"""
-		return self.Copy()
 
 
 @export
@@ -725,27 +569,27 @@ class Rectangle(Trapezium[Coordinate]):
 		"""
 		Initializes a rectangle with 4 corners.
 
-		:param p00:           First corner.
-		:param p01:           Second corner.
-		:param p11:           Third corner.
-		:param p10:           Fourth corner.
-		:param value:         Optional, value of the rectangle. Default: ``None``.
-		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
-		:param parent:        Optional, the group or canvas the rectangle is added to. Default: ``None``, no parent.
-		:raises ValueError:   If parameter 'p00' is None.
-		:raises TypeError:    If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError:   If parameter 'p01' is None.
-		:raises TypeError:    If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError:   If parameter 'p11' is None.
-		:raises TypeError:    If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError:   If parameter 'p10' is None.
-		:raises TypeError:    If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
-		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
-		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
-		:raises ValueError:   If opposite edges have different lengths.
-		:raises ValueError:   If two consecutive corners are the same point.
-		:raises ValueError:   If an inner angle isn't 90 |degree|.
+		:param p00:                 First corner.
+		:param p01:                 Second corner.
+		:param p11:                 Third corner.
+		:param p10:                 Fourth corner.
+		:param value:               Optional, value of the rectangle. Default: ``None``.
+		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:              Optional, the group or canvas the rectangle is added to. Default: ``None``, no parent.
+		:raises ValueError:         If parameter 'p00' is None.
+		:raises TypeError:          If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:         If parameter 'p01' is None.
+		:raises TypeError:          If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:         If parameter 'p11' is None.
+		:raises TypeError:          If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:         If parameter 'p10' is None.
+		:raises TypeError:          If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises CrossingEdgesError: If two edges have a point in common, which isn't their shared corner.
+		:raises TypeError:          If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:          If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                            :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:raises ValueError:         If opposite edges have different lengths.
+		:raises ValueError:         If an inner angle isn't 90 |degree|.
 		"""
 		super().__init__(p00, p01, p11, p10, value=value, keyValuePairs=keyValuePairs)
 
@@ -755,12 +599,6 @@ class Rectangle(Trapezium[Coordinate]):
 			if not isclose(edge.Length, oppositeEdge.Length):
 				ex = ValueError("Opposite line segments (edges) have different lengths.")
 				ex.add_note(f"Got lengths {edge.Length} and {oppositeEdge.Length}.")
-				raise ex
-
-		for edge in self._segments[:2]:
-			if edge.Length == 0.0:
-				ex = ValueError("Line segment (edge) has length 0.")
-				ex.add_note(f"Got corners {edge._start} and {edge._end}.")
 				raise ex
 
 		for index in range(2):
@@ -795,28 +633,28 @@ class Square(Rectangle[Coordinate]):
 		"""
 		Initializes a square with 4 corners.
 
-		:param p00:           First corner.
-		:param p01:           Second corner.
-		:param p11:           Third corner.
-		:param p10:           Fourth corner.
-		:param value:         Optional, value of the square. Default: ``None``.
-		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
-		:param parent:        Optional, the group or canvas the square is added to. Default: ``None``, no parent.
-		:raises ValueError:   If parameter 'p00' is None.
-		:raises TypeError:    If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError:   If parameter 'p01' is None.
-		:raises TypeError:    If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError:   If parameter 'p11' is None.
-		:raises TypeError:    If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError:   If parameter 'p10' is None.
-		:raises TypeError:    If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
-		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
-		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
-		:raises ValueError:   If opposite edges have different lengths.
-		:raises ValueError:   If two consecutive corners are the same point.
-		:raises ValueError:   If an inner angle isn't 90 |degree|.
-		:raises ValueError:   If adjacent edges have different lengths.
+		:param p00:                 First corner.
+		:param p01:                 Second corner.
+		:param p11:                 Third corner.
+		:param p10:                 Fourth corner.
+		:param value:               Optional, value of the square. Default: ``None``.
+		:param keyValuePairs:       Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:              Optional, the group or canvas the square is added to. Default: ``None``, no parent.
+		:raises ValueError:         If parameter 'p00' is None.
+		:raises TypeError:          If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:         If parameter 'p01' is None.
+		:raises TypeError:          If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:         If parameter 'p11' is None.
+		:raises TypeError:          If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:         If parameter 'p10' is None.
+		:raises TypeError:          If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises CrossingEdgesError: If two edges have a point in common, which isn't their shared corner.
+		:raises TypeError:          If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:          If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                            :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:raises ValueError:         If opposite edges have different lengths.
+		:raises ValueError:         If an inner angle isn't 90 |degree|.
+		:raises ValueError:         If adjacent edges have different lengths.
 		"""
 		super().__init__(p00, p01, p11, p10, value=value, keyValuePairs=keyValuePairs)
 

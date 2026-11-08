@@ -603,26 +603,24 @@ place later aren't checked again.
 Trapezium
 =========
 
-A :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` is a four-sided polygon, built from four corners given in the
-order ``p00``, ``p01``, ``p11``, ``p10`` - around the outline, not across it.
-
-It keeps both views: :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Points`, the four corners it copied, and
-:attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Segments`, the four :class:`~pyTooling.Cartesian2D.LineSegment2D` edges
-between them. The segments are built with ``copyPoints=False``, so consecutive edges share a corner object and the
-outline stays closed.
+A :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` is a :ref:`polygon <STRUCT/Cartesian2D/Polygon>` with exactly
+four corners, given as four parameters in the order ``p00``, ``p01``, ``p11``, ``p10`` - around the outline, not
+across it. It copies them, and inherits everything else from the polygon: the corners in
+:attr:`~pyTooling.Cartesian2D.Shapes.Polygon.Points`, the four :class:`~pyTooling.Cartesian2D.LineSegment2D` edges in
+:attr:`~pyTooling.Cartesian2D.Shapes.Polygon.Segments` sharing the corners, its area and perimeter, and the check that
+its edges don't cross.
 
 Both properties are read-only. Their deprecated aliases ``points`` and ``segments`` are assignable until v11.0.0, but
 an assignment replaces only its own tuple: the other one isn't updated, and the shape of a
 :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` or :class:`~pyTooling.Cartesian2D.Shapes.Square` isn't checked again.
 
-A corner that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`.
+A corner that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`, crossing edges raise
+:exc:`~pyTooling.Cartesian2D.CrossingEdgesError`.
 
 .. seealso::
 
-   :ref:`STRUCT/Cartesian2D/Geometry2D`
-      |rarr| Its base-class, the base-class of the closed 2-dimensional shapes.
    :ref:`STRUCT/Cartesian2D/Polygon`
-      |rarr| The closed shape with any number of corners.
+      |rarr| Its base-class, the closed shape with any number of corners.
 
 
 .. _STRUCT/Cartesian2D/Rectangle:
@@ -632,9 +630,10 @@ Rectangle
 
 A :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` is a trapezium whose opposite edges are parallel and equal in
 length, with 90 |degree| inner angles. The constructor compares the opposite edges' lengths and the four inner angles,
-and raises :exc:`ValueError` when the four corners describe something else - a parallelogram, for example, or two
-consecutive corners at the same point. Lengths and angles are compared with :func:`math.isclose`, so a rectangle
-rotated by an arbitrary angle, with floating-point corners, is accepted.
+and raises :exc:`ValueError` when the four corners describe something else - a parallelogram, for example. Two
+consecutive corners at the same point make edges touching each other, which the polygon rejects with
+:exc:`~pyTooling.Cartesian2D.CrossingEdgesError`. Lengths and angles are compared with :func:`math.isclose`, so a
+rectangle rotated by an arbitrary angle, with floating-point corners, is accepted.
 
 .. seealso::
 
