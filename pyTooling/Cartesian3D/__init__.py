@@ -42,6 +42,7 @@ An implementation of 3D cartesian data structures for Python.
 """
 from __future__            import annotations
 
+from copy                  import deepcopy
 from enum                  import Enum
 from math                  import atan2, sqrt
 from typing                import TYPE_CHECKING, Any, ClassVar, Generic, Hashable, Iterable, Mapping, \
@@ -2134,6 +2135,22 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 		:returns: Copy of this 3D-segment.
 		"""
 		return self.Copy()
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this 3D-segment for :func:`copy.deepcopy`.
+
+		The copy holds copies of the start and end point, and deep copies of the :attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this 3D-segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._end,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
 
 
 @export
