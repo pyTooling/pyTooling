@@ -34,10 +34,11 @@ Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - polygon, trapezium, rectang
 from copy                         import copy, deepcopy
 from math                         import cos, isclose, pi, radians, sin, sqrt
 
-from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox, LineSegment2D, Alignment, AlreadyOwnedError, \
-                                         DuplicatePointError, NotEnoughCornersError, NotOwnedError, NotInSameFrameError
+from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox2D, LineSegment2D, Alignment2D, \
+                                         AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
+                                         NotInSameFrameError
 from pyTooling.Cartesian2D.Shapes import Shape, Polygon, Trapezium, Rectangle, Square, Circle
-from pyTooling.Cartesian2D.Groups import Group
+from pyTooling.Cartesian2D.Groups import Group2D
 from pyTooling.MetaClasses        import ExtendedType, AbstractClassError
 from pyTooling.Testing            import Testcase
 
@@ -871,7 +872,7 @@ class Bounds(Testcase):
 
 		box = polygon.BoundingBox
 
-		self.assertIs(BoundingBox, type(box))
+		self.assertIs(BoundingBox2D, type(box))
 		self.assertTupleEqual((-2, -1, 5, 5), box.ToTuple())
 
 	def test_Polygon_Moved(self) -> None:
@@ -903,7 +904,7 @@ class Bounds(Testcase):
 		circle = Circle(Point2D(1, 2), 3)
 
 		with self.assertRaises(AttributeError):
-			circle.BoundingBox = BoundingBox(0, 0, 1, 1)
+			circle.BoundingBox = BoundingBox2D(0, 0, 1, 1)
 
 
 class Moving(Testcase):
@@ -1002,7 +1003,7 @@ class Mirroring(Testcase):
 	def test_Polygon_MirrorY(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
-		polygon.MirrorY(Alignment.MaxY)
+		polygon.MirrorY(Alignment2D.MaxY)
 
 		self.assertTupleEqual(((0, 6), (4, 5), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
 		self.assertTupleEqual(((0, 6), (4, 5)), polygon.Segments[0].ToTuple())
@@ -1013,13 +1014,13 @@ class Mirroring(Testcase):
 		polygon.MirrorY()
 
 		self.assertTupleEqual(((0, 3), (4, 2), (2, 0)), tuple(point.ToTuple() for point in polygon.Points))
-		self.assertEqual(BoundingBox(0, 0, 4, 3), polygon.BoundingBox)
+		self.assertEqual(BoundingBox2D(0, 0, 4, 3), polygon.BoundingBox)
 
 	def test_Polygon_MirrorY_Edge(self) -> None:
 		"""An edge mirrors the polygon's corners it references."""
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
-		polygon.Segments[0].MirrorY(Alignment.MinY)
+		polygon.Segments[0].MirrorY(Alignment2D.MinY)
 
 		self.assertTupleEqual(((0, 0), (4, -1), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
 
@@ -1035,7 +1036,7 @@ class Mirroring(Testcase):
 	def test_Polygon_MirrorX(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
-		polygon.MirrorX(Alignment.MinX)
+		polygon.MirrorX(Alignment2D.MinX)
 
 		self.assertTupleEqual(((0, 0), (-4, 1), (-2, 3)), tuple(point.ToTuple() for point in polygon.Points))
 		self.assertTupleEqual(((0, 0), (-4, 1)), polygon.Segments[0].ToTuple())
@@ -1046,13 +1047,13 @@ class Mirroring(Testcase):
 		polygon.MirrorX()
 
 		self.assertTupleEqual(((4, 0), (0, 1), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
-		self.assertEqual(BoundingBox(0, 0, 4, 3), polygon.BoundingBox)
+		self.assertEqual(BoundingBox2D(0, 0, 4, 3), polygon.BoundingBox)
 
 	def test_Polygon_MirrorX_Edge(self) -> None:
 		"""An edge mirrors the polygon's corners it references."""
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
-		polygon.Segments[1].MirrorX(Alignment.MaxX)
+		polygon.Segments[1].MirrorX(Alignment2D.MaxX)
 
 		self.assertTupleEqual(((0, 0), (4, 1), (6, 3)), tuple(point.ToTuple() for point in polygon.Points))
 
@@ -1060,19 +1061,19 @@ class Mirroring(Testcase):
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
 		with self.assertRaises(ValueError) as context:
-			polygon.MirrorX(Alignment.MinY)
+			polygon.MirrorX(Alignment2D.MinY)
 
 		self.assertEqual(
-			"Parameter 'axis' is not Alignment.MinX, Alignment.CenterX or Alignment.MaxX.",
+			"Parameter 'axis' is not Alignment2D.MinX, Alignment2D.CenterX or Alignment2D.MaxX.",
 			str(context.exception)
 		)
-		self.assertListEqual(["Got value 'Alignment.MinY'."], context.exception.__notes__)
+		self.assertListEqual(["Got value 'Alignment2D.MinY'."], context.exception.__notes__)
 		self.assertTupleEqual(((0, 0), (4, 1), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
 
 	def test_Trapezium_MirrorY(self) -> None:
 		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
 
-		trapezium.MirrorY(Alignment.MinY, 1)
+		trapezium.MirrorY(Alignment2D.MinY, 1)
 
 		self.assertTupleEqual(((1, 3), (3, 3), (4, 1), (0, 1)), tuple(point.ToTuple() for point in trapezium.Points))
 
@@ -1080,7 +1081,7 @@ class Mirroring(Testcase):
 		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
 
 		with self.assertRaises(TypeError) as context:
-			trapezium.MirrorY(Alignment.MinY, "1")
+			trapezium.MirrorY(Alignment2D.MinY, "1")
 
 		self.assertEqual("Parameter 'offset' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
@@ -1089,7 +1090,7 @@ class Mirroring(Testcase):
 	def test_Trapezium_MirrorX(self) -> None:
 		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
 
-		trapezium.MirrorX(Alignment.CenterX)
+		trapezium.MirrorX(Alignment2D.CenterX)
 
 		self.assertTupleEqual(((3, 1), (1, 1), (0, 3), (4, 3)), tuple(point.ToTuple() for point in trapezium.Points))
 		self.assertTupleEqual(((3, 1), (1, 1)), trapezium.Segments[0].ToTuple())
@@ -1098,7 +1099,7 @@ class Mirroring(Testcase):
 		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
 
 		with self.assertRaises(ValueError) as context:
-			trapezium.MirrorX(Alignment.MinX, None)
+			trapezium.MirrorX(Alignment2D.MinX, None)
 
 		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
 		self.assertTupleEqual(((1, 1), (3, 1), (4, 3), (0, 3)), tuple(point.ToTuple() for point in trapezium.Points))
@@ -1106,7 +1107,7 @@ class Mirroring(Testcase):
 	def test_Circle_MirrorY(self) -> None:
 		circle = Circle(Point2D(1, 2), 3)
 
-		circle.MirrorY(Alignment.MaxY)
+		circle.MirrorY(Alignment2D.MaxY)
 
 		self.assertTupleEqual((1, 8), circle.Center.ToTuple())
 		self.assertEqual(3, circle.Radius)
@@ -1125,14 +1126,14 @@ class Mirroring(Testcase):
 		with self.assertRaises(TypeError) as context:
 			circle.MirrorY("MaxY")
 
-		self.assertEqual("Parameter 'axis' is not of type 'Alignment'.", str(context.exception))
+		self.assertEqual("Parameter 'axis' is not of type 'Alignment2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
 
 	def test_Circle_MirrorX(self) -> None:
 		circle = Circle(Point2D(1, 2), 3)
 
-		circle.MirrorX(Alignment.MaxX, 1)
+		circle.MirrorX(Alignment2D.MaxX, 1)
 
 		self.assertTupleEqual((9, 2), circle.Center.ToTuple())
 		self.assertEqual(3, circle.Radius)
@@ -1140,7 +1141,7 @@ class Mirroring(Testcase):
 	def test_Circle_MirrorX_MinX(self) -> None:
 		circle = Circle(Point2D(1, 2), 3)
 
-		circle.MirrorX(Alignment.MinX)
+		circle.MirrorX(Alignment2D.MinX)
 
 		self.assertTupleEqual((-5, 2), circle.Center.ToTuple())
 
@@ -1148,13 +1149,13 @@ class Mirroring(Testcase):
 		circle = Circle(Point2D(1, 2), 3)
 
 		with self.assertRaises(ValueError) as context:
-			circle.MirrorX(Alignment.MaxY)
+			circle.MirrorX(Alignment2D.MaxY)
 
 		self.assertEqual(
-			"Parameter 'axis' is not Alignment.MinX, Alignment.CenterX or Alignment.MaxX.",
+			"Parameter 'axis' is not Alignment2D.MinX, Alignment2D.CenterX or Alignment2D.MaxX.",
 			str(context.exception)
 		)
-		self.assertListEqual(["Got value 'Alignment.MaxY'."], context.exception.__notes__)
+		self.assertListEqual(["Got value 'Alignment2D.MaxY'."], context.exception.__notes__)
 		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
 
 
@@ -1461,12 +1462,12 @@ class Hashing(Testcase):
 	def test_BoundingBox(self) -> None:
 		"""A bounding box compares by value, so it isn't hashable."""
 		with self.assertRaises(TypeError):
-			_ = hash(BoundingBox(0, 0, 1, 1))
+			_ = hash(BoundingBox2D(0, 0, 1, 1))
 
 
 class Frames(Testcase):
 	def test_Point(self) -> None:
-		frame =   Group()
+		frame =   Group2D()
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=frame)
 
 		for corner in polygon.Points:
@@ -1476,15 +1477,15 @@ class Frames(Testcase):
 			self.assertIs(frame, segment.Frame)
 
 	def test_Point_Minus_Point(self) -> None:
-		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group())
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group2D())
 
 		offset = polygon.Points[2] - polygon.Points[0]
 
 		self.assertTupleEqual((2, 3), offset.ToTuple())
 
 	def test_Point_Minus_Point_OtherFrame(self) -> None:
-		polygon1 = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group())
-		polygon2 = Polygon((Point2D(1, 1), Point2D(5, 1), Point2D(3, 4)), parent=Group())
+		polygon1 = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group2D())
+		polygon2 = Polygon((Point2D(1, 1), Point2D(5, 1), Point2D(3, 4)), parent=Group2D())
 
 		with self.assertRaises(NotInSameFrameError) as context:
 			_ = polygon2.Points[0] - polygon1.Points[0]
@@ -1498,14 +1499,14 @@ class Frames(Testcase):
 		self.assertEqual("Parameter 'other' is in another frame.", str(context.exception.__cause__))
 
 	def test_Point_Minus_Point_NoFrame(self) -> None:
-		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group())
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group2D())
 
 		with self.assertRaises(NotInSameFrameError):
 			_ = polygon.Points[0] - Point2D(1, 1)
 
 	def test_AngleTo_OtherFrame(self) -> None:
-		polygon1 = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group())
-		polygon2 = Polygon((Point2D(1, 1), Point2D(5, 1), Point2D(3, 4)), parent=Group())
+		polygon1 = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group2D())
+		polygon2 = Polygon((Point2D(1, 1), Point2D(5, 1), Point2D(3, 4)), parent=Group2D())
 
 		with self.assertRaises(NotInSameFrameError) as context:
 			_ = polygon1.Segments[0].AngleTo(polygon2.Segments[0])
@@ -1515,7 +1516,7 @@ class Frames(Testcase):
 		self.assertEqual("Parameter 'other' is in another frame.", str(context.exception.__cause__))
 
 	def test_AngleTo_SameFrame(self) -> None:
-		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), parent=Group())
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), parent=Group2D())
 
 		angle = polygon.Segments[0].AngleTo(polygon.Segments[1])
 
@@ -1525,7 +1526,7 @@ class Frames(Testcase):
 class FramedPoints(Testcase):
 	def test_Parent(self) -> None:
 		"""A point with a shape as parent is in the shape's frame, but not one of its points."""
-		frame =   Group()
+		frame =   Group2D()
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=frame)
 
 		point = Point2D(1, 1, parent=polygon)

@@ -20,17 +20,17 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: points, offsets, sizes, segments and shapes support
      :func:`copy.copy` and :func:`copy.deepcopy`, and segments and shapes have a ``Copy()`` method. A copy shares no
      point with the original.
-   * :mod:`pyTooling.Cartesian2D`: a :class:`~pyTooling.Cartesian2D.BoundingBox` value (union, intersection, point
+   * :mod:`pyTooling.Cartesian2D`: a :class:`~pyTooling.Cartesian2D.BoundingBox2D` value (union, intersection, point
      containment). Every shape and segment returns its ``BoundingBox`` and moves in place with ``Move(offset)``.
-   * :mod:`pyTooling.Cartesian2D`: shapes and segments own their points (:attr:`Base.Parent
-     <pyTooling.Cartesian2D.Base.Parent>`). A point owned by another element raises
+   * :mod:`pyTooling.Cartesian2D`: shapes and segments own their points (:attr:`Base2D.Parent
+     <pyTooling.Cartesian2D.Base2D.Parent>`). A point owned by another element raises
      :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError` instead of being shared; points and line segments of different
      frames raise :exc:`~pyTooling.Cartesian2D.NotInSameFrameError` when combined.
-   * :mod:`pyTooling.Cartesian2D.Groups`: a :class:`~pyTooling.Cartesian2D.Groups.Group` holds shapes, segments and
+   * :mod:`pyTooling.Cartesian2D.Groups`: a :class:`~pyTooling.Cartesian2D.Groups.Group2D` holds shapes, segments and
      groups at an offset, with coordinates relative to the group. Elements report absolute positions and bounding
      boxes, move between groups keeping their position, align to each other and are distributed along an axis.
-   * :mod:`pyTooling.Cartesian2D.Groups`: a :class:`~pyTooling.Cartesian2D.Groups.Canvas` is the root of a drawing,
-     with the y-axis pointing up or down and an optional size. :meth:`~pyTooling.Cartesian2D.Groups.Canvas.Mirror`
+   * :mod:`pyTooling.Cartesian2D.Groups`: a :class:`~pyTooling.Cartesian2D.Groups.Canvas2D` is the root of a drawing,
+     with the y-axis pointing up or down and an optional size. :meth:`~pyTooling.Cartesian2D.Groups.Canvas2D.Mirror`
      flips a drawing to the other direction. Every element mirrors at an axis through an edge or the center of its
      bounding box with ``MirrorX(axis, offset)`` and ``MirrorY(axis, offset)``.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one

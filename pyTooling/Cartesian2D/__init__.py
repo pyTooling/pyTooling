@@ -53,19 +53,19 @@ from pyTooling.Common      import getFullyQualifiedName
 
 if TYPE_CHECKING:
 	from pyTooling.Cartesian2D.Shapes import Rectangle, Shape
-	from pyTooling.Cartesian2D.Groups import Group, Canvas
+	from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D
 
 
 Coordinate = TypeVar("Coordinate", bound=Union[int, float])
 
 
 @export
-class Alignment(Enum):
+class Alignment2D(Enum):
 	"""
 	Edge or center of a bounding box, two elements are aligned at.
 
-	The members name the smaller or larger coordinate, like :class:`BoundingBox`, so they don't depend on the direction of
-	an axis.
+	The members name the smaller or larger coordinate, like :class:`BoundingBox2D`, so they don't depend on the direction
+	of an axis.
 	"""
 
 	MinX =    0  #: Align the smallest x-coordinates.
@@ -136,7 +136,7 @@ class NotInSameFrameError(Cartesian2DError, NotInSameHierarchyError):
 
 @export
 @abstractclass
-class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+class Base2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""
 	Abstract base-class of everything having a parent and coordinates relative to a frame: points, segments, shapes,
 	groups and canvases.
@@ -147,9 +147,9 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 	_PARENT_TYPE: ClassVar[tuple[type, ...]]  #: Types a parent of this class can have.
 
-	_parent: Nullable[Base[Coordinate]]  #: Parent of this object, or ``None``.
+	_parent: Nullable[Base2D[Coordinate]]  #: Parent of this object, or ``None``.
 
-	def __init__(self, *, parent: Nullable[Base[Coordinate]] = None) -> None:
+	def __init__(self, *, parent: Nullable[Base2D[Coordinate]] = None) -> None:
 		"""
 		Initializes the parent relation.
 
@@ -165,7 +165,7 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._parent = parent
 
 	@property
-	def Parent(self) -> Nullable[Base[Coordinate]]:
+	def Parent(self) -> Nullable[Base2D[Coordinate]]:
 		"""
 		Property to access the parent of this object (:attr:`_parent`).
 
@@ -179,9 +179,9 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:returns:                  The parent, or ``None``, if this object has no parent.
 		:raises TypeError:         If an assigned value is not of a type in :attr:`_PARENT_TYPE`.
 		:raises TypeError:         If a parent is assigned to a :class:`Point2D`.
-		:raises TypeError:         If a parent is assigned to a :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
-		:raises TypeError:         If an assigned value is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
-		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas`, while this object is an
+		:raises TypeError:         If a parent is assigned to a :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:raises TypeError:         If an assigned value is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`, while this object is an
 		                           :class:`Element2D`.
 		:raises AlreadyOwnedError: If the element is an edge of a shape.
 		:raises GroupCycleError:   If an assigned group is this element or one of its descendants.
@@ -189,7 +189,7 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return self._parent
 
 	@Parent.setter
-	def Parent(self, parent: Nullable[Base[Coordinate]]) -> None:
+	def Parent(self, parent: Nullable[Base2D[Coordinate]]) -> None:
 		if parent is not None and not isinstance(parent, self._PARENT_TYPE):
 			typeNames = " or ".join(f"'{parentType.__name__}'" for parentType in self._PARENT_TYPE)
 			ex = TypeError(f"Parameter 'parent' is not of type {typeNames}.")
@@ -199,7 +199,7 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._parent = parent
 
 	@readonly
-	def Frame(self) -> Nullable[Base[Coordinate]]:
+	def Frame(self) -> Nullable[Base2D[Coordinate]]:
 		"""
 		Read-only property to return the frame this object's coordinates are relative to.
 
@@ -211,7 +211,7 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return None if self._parent is None else self._parent._ChildFrame
 
 	@readonly
-	def _ChildFrame(self) -> Nullable[Base[Coordinate]]:
+	def _ChildFrame(self) -> Nullable[Base2D[Coordinate]]:
 		"""
 		Read-only property to access the frame the coordinates of this object's children are relative to (:attr:`Frame`).
 
@@ -221,7 +221,7 @@ class Base(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 
 @export
-class Point2D(Base[Coordinate], Generic[Coordinate]):
+class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 	"""An implementation of a 2D cartesian point."""
 
 	_x: Coordinate  #: The x-direction coordinate.
@@ -264,7 +264,7 @@ class Point2D(Base[Coordinate], Generic[Coordinate]):
 		self._x = x
 		self._y = y
 
-	@Base.Parent.setter
+	@Base2D.Parent.setter
 	def Parent(self, parent: Nullable[Element2D[Coordinate]]) -> None:
 		ex = TypeError(f"The parent of a '{getFullyQualifiedName(self)}' is read-only.")
 		ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
@@ -516,27 +516,27 @@ class Origin2D(Point2D[Coordinate], Generic[Coordinate]):
 
 
 @export
-class Element2D(Base[Coordinate], Generic[Coordinate]):
+class Element2D(Base2D[Coordinate], Generic[Coordinate]):
 	"""
-	Abstract base-class of all elements a :class:`~pyTooling.Cartesian2D.Groups.Group` or a
-	:class:`~pyTooling.Cartesian2D.Groups.Canvas` can hold: shapes, segments and groups.
+	Abstract base-class of all elements a :class:`~pyTooling.Cartesian2D.Groups.Group2D` or a
+	:class:`~pyTooling.Cartesian2D.Groups.Canvas2D` can hold: shapes, segments and groups.
 
 	An element belongs to at most one group or canvas, its :attr:`Parent`. Its coordinates are relative to its parent, an
 	element without a parent is relative to the origin.
 
-	A derived class implements :attr:`BoundingBox`, :meth:`Move`, :meth:`_MirrorX` and
+	A derived class implements :attr:`BoundingBox2D`, :meth:`Move`, :meth:`_MirrorX` and
 	:meth:`_MirrorY`. Its initializer takes the keyword-only parameter ``parent`` and assigns it to
 	:attr:`Parent` as its last statement, when the element is fully initialized.
 	"""
 
-	def __init__(self, *, parent: Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None) -> None:
+	def __init__(self, *, parent: Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None) -> None:
 		"""
 		Initializes an element without a parent and checks the group or canvas it will be registered in.
 
 		:param parent:     Optional, the group or canvas the derived class registers the element in. Default: ``None``, no
 		                   parent.
-		:raises TypeError: If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
-		                   :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
+		:raises TypeError: If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                   :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
 		# Imported for its side effect: it assigns '_PARENT_TYPE' of the element classes.
 		from pyTooling.Cartesian2D import Groups
@@ -546,17 +546,17 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		# The derived class registers the element by assigning 'Parent' as its last statement.
 		self._parent = None
 
-	@Base.Parent.setter
-	def Parent(self, parent: Nullable[Union[Group, Canvas]]) -> None:
-		from pyTooling.Cartesian2D.Groups import ContainerMixin
+	@Base2D.Parent.setter
+	def Parent(self, parent: Nullable[Union[Group2D, Canvas2D]]) -> None:
+		from pyTooling.Cartesian2D.Groups import Container2DMixin
 
-		if parent is not None and not isinstance(parent, ContainerMixin):
-			ex = TypeError("Parameter 'parent' is not of type 'Group' or 'Canvas'.")
+		if parent is not None and not isinstance(parent, Container2DMixin):
+			ex = TypeError("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 			raise ex
 		elif parent is self._parent:
 			return
-		elif self._parent is not None and not isinstance(self._parent, ContainerMixin):
+		elif self._parent is not None and not isinstance(self._parent, Container2DMixin):
 			ex = AlreadyOwnedError("Element is owned by another element already.")
 			ex.add_note(f"Got {self!r} owned by {self._parent!r}.")
 			raise ex from ValueError("Parameter 'parent' can't replace the shape of an edge.")
@@ -564,7 +564,7 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		frame = parent
 		while frame is not None:
 			if frame is self:
-				ex = GroupCycleError("Group would contain itself.")
+				ex = GroupCycleError("Group2D would contain itself.")
 				ex.add_note(f"Got {parent!r} as parent of {self!r}.")
 				raise ex from ValueError("Parameter 'parent' is this element or one of its descendants.")
 
@@ -576,11 +576,11 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		if parent is not None:
 			parent._children.append(self)
 
-		Base.Parent.fset(self, parent)
+		Base2D.Parent.fset(self, parent)
 
 	@readonly
 	@abstractmethod
-	def BoundingBox(self) -> BoundingBox[Coordinate]:
+	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing the element.
 
@@ -590,11 +590,11 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		"""
 
 	@readonly
-	def AbsoluteBoundingBox(self) -> BoundingBox[Coordinate]:
+	def AbsoluteBoundingBox(self) -> BoundingBox2D[Coordinate]:
 		"""
 		Read-only property to return the element's bounding box relative to the origin.
 
-		The offsets of all groups up the parent chain are added to :attr:`BoundingBox`.
+		The offsets of all groups up the parent chain are added to :attr:`BoundingBox2D`.
 
 		:returns: A new bounding box.
 		"""
@@ -609,16 +609,16 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		:param offset: The 2D-offset to move by.
 		"""
 
-	def MirrorX(self, axis: Alignment = Alignment.CenterX, offset: Coordinate = 0) -> None:
+	def MirrorX(self, axis: Alignment2D = Alignment2D.CenterX, offset: Coordinate = 0) -> None:
 		r"""
 		Mirror the element vertically, at a vertical axis through its bounding box (inplace).
 
 		The axis runs through the smallest x-coordinate (``MinX``), the center (``CenterX``) or the largest x-coordinate
-		(``MaxX``) of the element's :attr:`BoundingBox`, shifted by ``offset`` in x-direction. For an axis at ``x = a``,
+		(``MaxX``) of the element's :attr:`BoundingBox2D`, shifted by ``offset`` in x-direction. For an axis at ``x = a``,
 		every x-coordinate ``x`` becomes ``2a - x``; the y-coordinates stay. A group mirrors its offset, and its children
 		at the group's origin.
 
-		Mirrored at ``Alignment.MaxX``: the element on the left of the axis is mirrored to the right of it.
+		Mirrored at ``Alignment2D.MaxX``: the element on the left of the axis is mirrored to the right of it.
 
 		.. code-block:: text
 
@@ -632,22 +632,22 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		        before  after
 
 		:param axis:        Optional, the edge or center of the bounding box the axis runs through. Default:
-		                    ``Alignment.CenterX``.
+		                    ``Alignment2D.CenterX``.
 		:param offset:      Optional, the distance of the axis from that edge or center in x-direction. Default: ``0``.
 		:raises ValueError: If parameter 'axis' is None.
-		:raises TypeError:  If parameter 'axis' is not of type :class:`Alignment`.
+		:raises TypeError:  If parameter 'axis' is not of type :class:`Alignment2D`.
 		:raises ValueError: If parameter 'axis' is not ``MinX``, ``CenterX`` or ``MaxX``.
 		:raises ValueError: If parameter 'offset' is None.
 		:raises TypeError:  If parameter 'offset' is not of type :class:`float` or :class:`int`.
 		"""
 		if axis is None:
 			raise ValueError("Parameter 'axis' is None.")
-		elif not isinstance(axis, Alignment):
-			ex = TypeError("Parameter 'axis' is not of type 'Alignment'.")
+		elif not isinstance(axis, Alignment2D):
+			ex = TypeError("Parameter 'axis' is not of type 'Alignment2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(axis)}'.")
 			raise ex
-		elif axis not in (Alignment.MinX, Alignment.CenterX, Alignment.MaxX):
-			ex = ValueError("Parameter 'axis' is not Alignment.MinX, Alignment.CenterX or Alignment.MaxX.")
+		elif axis not in (Alignment2D.MinX, Alignment2D.CenterX, Alignment2D.MaxX):
+			ex = ValueError("Parameter 'axis' is not Alignment2D.MinX, Alignment2D.CenterX or Alignment2D.MaxX.")
 			ex.add_note(f"Got value '{axis}'.")
 			raise ex
 
@@ -659,9 +659,9 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 			raise ex
 
 		box = self.BoundingBox
-		if axis is Alignment.MinX:
+		if axis is Alignment2D.MinX:
 			twiceAxis = 2 * box._minX
-		elif axis is Alignment.CenterX:
+		elif axis is Alignment2D.CenterX:
 			twiceAxis = box._minX + box._maxX
 		else:
 			twiceAxis = 2 * box._maxX
@@ -676,16 +676,16 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		:param twiceAxis: Twice the x-coordinate of the axis.
 		"""
 
-	def MirrorY(self, axis: Alignment = Alignment.CenterY, offset: Coordinate = 0) -> None:
+	def MirrorY(self, axis: Alignment2D = Alignment2D.CenterY, offset: Coordinate = 0) -> None:
 		r"""
 		Mirror the element horizontally, at a horizontal axis through its bounding box (inplace).
 
 		The axis runs through the smallest y-coordinate (``MinY``), the center (``CenterY``) or the largest y-coordinate
-		(``MaxY``) of the element's :attr:`BoundingBox`, shifted by ``offset`` in y-direction. For an axis at ``y = a``,
+		(``MaxY``) of the element's :attr:`BoundingBox2D`, shifted by ``offset`` in y-direction. For an axis at ``y = a``,
 		every y-coordinate ``y`` becomes ``2a - y``; the x-coordinates stay. A group mirrors its offset, and its children
 		at the group's origin.
 
-		Mirrored at ``Alignment.MinY``, with the y-axis pointing up: the element above the axis is mirrored below it.
+		Mirrored at ``Alignment2D.MinY``, with the y-axis pointing up: the element above the axis is mirrored below it.
 
 		.. code-block:: text
 
@@ -698,22 +698,22 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		        +----+
 
 		:param axis:        Optional, the edge or center of the bounding box the axis runs through. Default:
-		                    ``Alignment.CenterY``.
+		                    ``Alignment2D.CenterY``.
 		:param offset:      Optional, the distance of the axis from that edge or center in y-direction. Default: ``0``.
 		:raises ValueError: If parameter 'axis' is None.
-		:raises TypeError:  If parameter 'axis' is not of type :class:`Alignment`.
+		:raises TypeError:  If parameter 'axis' is not of type :class:`Alignment2D`.
 		:raises ValueError: If parameter 'axis' is not ``MinY``, ``CenterY`` or ``MaxY``.
 		:raises ValueError: If parameter 'offset' is None.
 		:raises TypeError:  If parameter 'offset' is not of type :class:`float` or :class:`int`.
 		"""
 		if axis is None:
 			raise ValueError("Parameter 'axis' is None.")
-		elif not isinstance(axis, Alignment):
-			ex = TypeError("Parameter 'axis' is not of type 'Alignment'.")
+		elif not isinstance(axis, Alignment2D):
+			ex = TypeError("Parameter 'axis' is not of type 'Alignment2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(axis)}'.")
 			raise ex
-		elif axis not in (Alignment.MinY, Alignment.CenterY, Alignment.MaxY):
-			ex = ValueError("Parameter 'axis' is not Alignment.MinY, Alignment.CenterY or Alignment.MaxY.")
+		elif axis not in (Alignment2D.MinY, Alignment2D.CenterY, Alignment2D.MaxY):
+			ex = ValueError("Parameter 'axis' is not Alignment2D.MinY, Alignment2D.CenterY or Alignment2D.MaxY.")
 			ex.add_note(f"Got value '{axis}'.")
 			raise ex
 
@@ -725,9 +725,9 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 			raise ex
 
 		box = self.BoundingBox
-		if axis is Alignment.MinY:
+		if axis is Alignment2D.MinY:
 			twiceAxis = 2 * box._minY
-		elif axis is Alignment.CenterY:
+		elif axis is Alignment2D.CenterY:
 			twiceAxis = box._minY + box._maxY
 		else:
 			twiceAxis = 2 * box._maxY
@@ -742,7 +742,7 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		:param twiceAxis: Twice the y-coordinate of the axis.
 		"""
 
-	def MoveTo(self, parent: Nullable[Union[Group, Canvas]], keepPosition: bool = True) -> None:
+	def MoveTo(self, parent: Nullable[Union[Group2D, Canvas2D]], keepPosition: bool = True) -> None:
 		"""
 		Move the element into another group or canvas.
 
@@ -751,8 +751,8 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 
 		:param parent:             The new parent group or canvas, or ``None`` for no parent.
 		:param keepPosition:       Optional, if ``True``, the absolute position is kept. Default: ``True``.
-		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
-		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		:raises GroupCycleError:   If parameter 'parent' is this element or one of its descendants.
 		:raises ValueError:        If parameter 'keepPosition' is None.
 		:raises TypeError:         If parameter 'keepPosition' is not of type :class:`bool`.
@@ -778,7 +778,7 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		else:
 			self.Move(previousOffset - frame.AbsoluteOffset)
 
-	def AlignTo(self, reference: Element2D[Coordinate], alignment: Alignment) -> None:
+	def AlignTo(self, reference: Element2D[Coordinate], alignment: Alignment2D) -> None:
 		"""
 		Move the element, so an edge or the center of its bounding box aligns with the one of another element.
 
@@ -789,7 +789,7 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'reference' is None.
 		:raises TypeError:  If parameter 'reference' is not of type :class:`Element2D`.
 		:raises ValueError: If parameter 'alignment' is None.
-		:raises TypeError:  If parameter 'alignment' is not of type :class:`Alignment`.
+		:raises TypeError:  If parameter 'alignment' is not of type :class:`Alignment2D`.
 		"""
 		if reference is None:
 			raise ValueError("Parameter 'reference' is None.")
@@ -800,22 +800,22 @@ class Element2D(Base[Coordinate], Generic[Coordinate]):
 
 		if alignment is None:
 			raise ValueError("Parameter 'alignment' is None.")
-		elif not isinstance(alignment, Alignment):
-			ex = TypeError("Parameter 'alignment' is not of type 'Alignment'.")
+		elif not isinstance(alignment, Alignment2D):
+			ex = TypeError("Parameter 'alignment' is not of type 'Alignment2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
 			raise ex
 
 		box =          self.AbsoluteBoundingBox
 		referenceBox = reference.AbsoluteBoundingBox
-		if alignment is Alignment.MinX:
+		if alignment is Alignment2D.MinX:
 			offset = Offset2D(referenceBox._minX - box._minX, 0)
-		elif alignment is Alignment.CenterX:
+		elif alignment is Alignment2D.CenterX:
 			offset = Offset2D((referenceBox._minX + referenceBox._maxX - box._minX - box._maxX) / 2, 0)
-		elif alignment is Alignment.MaxX:
+		elif alignment is Alignment2D.MaxX:
 			offset = Offset2D(referenceBox._maxX - box._maxX, 0)
-		elif alignment is Alignment.MinY:
+		elif alignment is Alignment2D.MinY:
 			offset = Offset2D(0, referenceBox._minY - box._minY)
-		elif alignment is Alignment.CenterY:
+		elif alignment is Alignment2D.CenterY:
 			offset = Offset2D(0, (referenceBox._minY + referenceBox._maxY - box._minY - box._maxY) / 2)
 		else:
 			offset = Offset2D(0, referenceBox._maxY - box._maxY)
@@ -1234,7 +1234,7 @@ class Size2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 
 @export
-class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+class BoundingBox2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""
 	An axis-aligned 2D bounding box.
 
@@ -1436,19 +1436,19 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			Point2D(self._maxX, self._minY)
 		)
 
-	def Union(self, other: BoundingBox[Coordinate]) -> BoundingBox[Coordinate]:
+	def Union(self, other: BoundingBox2D[Coordinate]) -> BoundingBox2D[Coordinate]:
 		"""
 		Create the smallest bounding box enclosing this and another bounding box.
 
 		:param other:       The second bounding box.
 		:returns:           A new bounding box enclosing both bounding boxes.
 		:raises ValueError: If parameter 'other' is None.
-		:raises TypeError:  If parameter 'other' is not of type :class:`BoundingBox`.
+		:raises TypeError:  If parameter 'other' is not of type :class:`BoundingBox2D`.
 		"""
 		if other is None:
 			raise ValueError("Parameter 'other' is None.")
-		elif not isinstance(other, BoundingBox):
-			ex = TypeError("Parameter 'other' is not of type 'BoundingBox'.")
+		elif not isinstance(other, BoundingBox2D):
+			ex = TypeError("Parameter 'other' is not of type 'BoundingBox2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -1459,7 +1459,7 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			max(self._maxY, other._maxY)
 		)
 
-	def HasOverlap(self, other: BoundingBox[Coordinate]) -> bool:
+	def HasOverlap(self, other: BoundingBox2D[Coordinate]) -> bool:
 		"""
 		Check if this bounding box and another bounding box overlap.
 
@@ -1469,12 +1469,12 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:param other:       The second bounding box.
 		:returns:           ``True``, if the inner areas of both bounding boxes overlap.
 		:raises ValueError: If parameter 'other' is None.
-		:raises TypeError:  If parameter 'other' is not of type :class:`BoundingBox`.
+		:raises TypeError:  If parameter 'other' is not of type :class:`BoundingBox2D`.
 		"""
 		if other is None:
 			raise ValueError("Parameter 'other' is None.")
-		elif not isinstance(other, BoundingBox):
-			ex = TypeError("Parameter 'other' is not of type 'BoundingBox'.")
+		elif not isinstance(other, BoundingBox2D):
+			ex = TypeError("Parameter 'other' is not of type 'BoundingBox2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -1528,7 +1528,7 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		ex.add_note("Supported types for first operand: Point2D")
 		raise ex
 
-	def __add__(self, other: Any) -> BoundingBox[Coordinate]:
+	def __add__(self, other: Any) -> BoundingBox2D[Coordinate]:
 		"""
 		Adds a 2D-offset to this bounding box and creates a new, shifted bounding box.
 
@@ -1587,12 +1587,12 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      Operand to compare against.
 		:returns:          ``True``, if both bounding boxes have the same coordinates.
-		:raises TypeError: If the second operand is not of type :class:`BoundingBox`.
+		:raises TypeError: If the second operand is not of type :class:`BoundingBox2D`.
 		"""
-		if not isinstance(other, BoundingBox):
+		if not isinstance(other, BoundingBox2D):
 			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: BoundingBox")
+			ex.add_note("Supported types for second operand: BoundingBox2D")
 			raise ex
 
 		return (
@@ -1606,12 +1606,12 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      Operand to compare against.
 		:returns:          ``True``, if the bounding boxes differ in at least one coordinate.
-		:raises TypeError: If the second operand is not of type :class:`BoundingBox`.
+		:raises TypeError: If the second operand is not of type :class:`BoundingBox2D`.
 		"""
-		if not isinstance(other, BoundingBox):
+		if not isinstance(other, BoundingBox2D):
 			ex = TypeError("Second operand is not supported by != operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: BoundingBox")
+			ex.add_note("Supported types for second operand: BoundingBox2D")
 			raise ex
 
 		return (
@@ -1625,7 +1625,7 @@ class BoundingBox(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:returns: The string representation of the bounding box.
 		"""
-		return f"BoundingBox({self._minX}, {self._minY}, {self._maxX}, {self._maxY})"
+		return f"BoundingBox2D({self._minX}, {self._minY}, {self._maxX}, {self._maxY})"
 
 	def __str__(self) -> str:
 		"""
@@ -1654,7 +1654,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		end:        Point2D[Coordinate],
 		*,
 		copyPoints: bool = True,
-		parent:     Nullable[Union[Shape, Group[Coordinate], Canvas[Coordinate]]] = None
+		parent:     Nullable[Union[Shape, Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a 2-dimensional segment.
@@ -1683,12 +1683,12 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		:raises ValueError:          If parameter 'copyPoints' is None.
 		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
 		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape`,
-		                             :class:`~pyTooling.Cartesian2D.Groups.Group` or
-		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
+		                             :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		:raises ValueError:          If parameter 'parent' is a shape, while 'copyPoints' is ``True``. |br|
 		                             An edge references the points of its parent shape: use ``copyPoints=False``.
 		"""
-		from pyTooling.Cartesian2D.Groups import ContainerMixin
+		from pyTooling.Cartesian2D.Groups import Container2DMixin
 
 		super().__init__(parent=parent)
 
@@ -1713,7 +1713,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
 			raise ex
 
-		if parent is None or isinstance(parent, ContainerMixin):
+		if parent is None or isinstance(parent, Container2DMixin):
 			if copyPoints:
 				start = start.Copy()
 				end =   end.Copy()
@@ -1854,7 +1854,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 	end = End
 
 	@readonly
-	def BoundingBox(self) -> BoundingBox[Coordinate]:
+	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing the segment's start and end point.
 
@@ -1862,7 +1862,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		"""
 		start = self._start
 		end =   self._end
-		return BoundingBox(min(start._x, end._x), min(start._y, end._y), max(start._x, end._x), max(start._y, end._y))
+		return BoundingBox2D(min(start._x, end._x), min(start._y, end._y), max(start._x, end._x), max(start._y, end._y))
 
 	def Move(self, offset: Offset2D[Coordinate]) -> None:
 		"""

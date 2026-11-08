@@ -36,11 +36,11 @@ from typing                import TYPE_CHECKING, Generic, Iterable, Optional as 
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox, Element2D, Segment2D, LineSegment2D, \
+from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Segment2D, LineSegment2D, \
                                   AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError
 
 if TYPE_CHECKING:
-	from pyTooling.Cartesian2D.Groups import Group, Canvas
+	from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D
 
 
 @export
@@ -72,7 +72,7 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		points:     Iterable[Point2D[Coordinate]],
 		*,
 		copyPoints: bool = True,
-		parent:     Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
+		parent:     Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a polygon from its corners.
@@ -99,8 +99,8 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		:raises NotEnoughCornersError: If parameter 'points' has fewer than 3 points.
 		:raises ValueError:            If parameter 'copyPoints' is None.
 		:raises TypeError:             If parameter 'copyPoints' is not of type :class:`bool`.
-		:raises TypeError:             If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
-		                               :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
+		:raises TypeError:             If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D`
+		                               or :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
 		super().__init__(parent=parent)
 
@@ -196,13 +196,13 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		return self._segments
 
 	@readonly
-	def BoundingBox(self) -> BoundingBox[Coordinate]:
+	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing the polygon's corners.
 
 		:returns: A new bounding box.
 		"""
-		return BoundingBox.FromPoints(self._points)
+		return BoundingBox2D.FromPoints(self._points)
 
 	def Move(self, offset: Offset2D[Coordinate]) -> None:
 		"""
@@ -278,7 +278,7 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		p11:    Point2D[Coordinate],
 		p10:    Point2D[Coordinate],
 		*,
-		parent: Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
+		parent: Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a trapezium with 4 corners.
@@ -296,8 +296,8 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
-		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
 		super().__init__(parent=parent)
 
@@ -468,13 +468,13 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		self._segments = edges
 
 	@readonly
-	def BoundingBox(self) -> BoundingBox[Coordinate]:
+	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing the trapezium's corners.
 
 		:returns: A new bounding box.
 		"""
-		return BoundingBox.FromPoints(self._points)
+		return BoundingBox2D.FromPoints(self._points)
 
 	def Move(self, offset: Offset2D[Coordinate]) -> None:
 		"""
@@ -551,7 +551,7 @@ class Rectangle(Trapezium[Coordinate]):
 		p11:    Point2D[Coordinate],
 		p10:    Point2D[Coordinate],
 		*,
-		parent: Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
+		parent: Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a rectangle with 4 corners.
@@ -569,8 +569,8 @@ class Rectangle(Trapezium[Coordinate]):
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
-		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		:raises ValueError: If opposite edges have different lengths.
 		:raises ValueError: If two consecutive corners are the same point.
 		:raises ValueError: If an inner angle isn't 90 |degree|.
@@ -616,7 +616,7 @@ class Square(Rectangle[Coordinate]):
 		p11:    Point2D[Coordinate],
 		p10:    Point2D[Coordinate],
 		*,
-		parent: Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
+		parent: Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a square with 4 corners.
@@ -634,8 +634,8 @@ class Square(Rectangle[Coordinate]):
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
-		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		:raises ValueError: If opposite edges have different lengths.
 		:raises ValueError: If two consecutive corners are the same point.
 		:raises ValueError: If an inner angle isn't 90 |degree|.
@@ -667,7 +667,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		radius:     Coordinate,
 		*,
 		copyPoints: bool = True,
-		parent:     Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
+		parent:     Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a circle by its center and radius.
@@ -688,8 +688,8 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		:raises ValueError:        If parameter 'radius' isn't positive.
 		:raises ValueError:        If parameter 'copyPoints' is None.
 		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
-		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
-		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
 		super().__init__(parent=parent)
 
@@ -794,7 +794,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		return pi * self._radius ** 2
 
 	@readonly
-	def BoundingBox(self) -> BoundingBox[Coordinate]:
+	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing the circle.
 
@@ -804,7 +804,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		"""
 		center = self._center
 		radius = self._radius
-		return BoundingBox(center._x - radius, center._y - radius, center._x + radius, center._y + radius)
+		return BoundingBox2D(center._x - radius, center._y - radius, center._x + radius, center._y + radius)
 
 	def Move(self, offset: Offset2D[Coordinate]) -> None:
 		"""
