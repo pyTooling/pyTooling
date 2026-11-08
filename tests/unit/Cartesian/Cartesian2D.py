@@ -2613,7 +2613,7 @@ class ArcCircleParameters(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = ArcSegment2D(Point2D(0, 0), Point2D(4, 0), chordPosition="0.5", height=1)
 
-		self.assertEqual("Parameter 'chordPosition' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertEqual("Parameter 'chordPosition' is not of type 'float'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_ChordPosition_Range(self) -> None:

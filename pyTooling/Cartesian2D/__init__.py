@@ -2157,8 +2157,8 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		center:        Nullable[Point2D[Coordinate]] = None,
 		direction:     Nullable[SweepDirection] = None,
 		arcPoint:      Nullable[Point2D[Coordinate]] = None,
-		chordPosition: Nullable[Union[int, float]] = None,
-		height:        Nullable[Union[int, float]] = None,
+		chordPosition: Nullable[float] = None,
+		height:        Nullable[Coordinate] = None,
 		copyPoints:    bool = True,
 		value:         Any = None,
 		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
@@ -2223,7 +2223,7 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		:raises TypeError:           If parameter 'direction' is not of type :class:`SweepDirection`.
 		:raises TypeError:           If parameter 'arcPoint' is not of type :class:`Point2D`.
 		:raises ValueError:          If parameter 'arcPoint' is on the line through parameter 'start' and parameter 'end'.
-		:raises TypeError:           If parameter 'chordPosition' is not of type :class:`float` or :class:`int`.
+		:raises TypeError:           If parameter 'chordPosition' is not of type :class:`float`.
 		:raises ValueError:          If parameter 'chordPosition' is out of range 0..1.
 		:raises ValueError:          If parameter 'height' is None, while 'chordPosition' is given.
 		:raises TypeError:           If parameter 'height' is not of type :class:`float` or :class:`int`.
@@ -2342,7 +2342,7 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 				if chordPosition is None:
 					chordPosition = 0.5
 				elif not isinstance(chordPosition, (int, float)):
-					ex = TypeError("Parameter 'chordPosition' is not of type 'float' or 'int'.")
+					ex = TypeError("Parameter 'chordPosition' is not of type 'float'.")
 					ex.add_note(f"Got type '{getFullyQualifiedName(chordPosition)}'.")
 					raise ex
 				elif not 0 <= chordPosition <= 1:
@@ -2377,7 +2377,7 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 	def _ChordPoint(
 		start:          Point2D[Coordinate],
 		end:            Point2D[Coordinate],
-		chordPosition:  Union[int, float],
+		chordPosition:  float,
 		relativeHeight: Union[int, float]
 	) -> Point2D[float]:
 		"""

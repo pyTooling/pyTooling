@@ -749,6 +749,193 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 
 		self.Parent = parent
 
+	@classmethod
+	def FromPoints(
+		cls,
+		points:        Iterable[Point2D[Coordinate]],
+		*,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> Self:
+		"""
+		Create the circle through three or more points.
+
+		The first three points define the circle; every further point must be on it, its distance to the center compared
+		with the radius by :func:`math.isclose`. Only the points' coordinates are used: the circle owns a new center point,
+		as for an :class:`~pyTooling.Cartesian2D.ArcSegment2D` given by an arc point.
+
+		:param points:        Points of the circle.
+		:param value:         Optional, value of the circle. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, the group or canvas the circle is added to. Default: ``None``, no parent.
+		:returns:             A new circle through the points.
+		:raises ValueError:   If parameter 'points' is None.
+		:raises TypeError:    If parameter 'points' is not iterable.
+		:raises ValueError:   If an element of parameter 'points' is None.
+		:raises TypeError:    If an element of parameter 'points' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'points' has fewer than 3 points.
+		:raises ValueError:   If two of the first three points of parameter 'points' are at the same position.
+		:raises ValueError:   If the first three points of parameter 'points' are on one line.
+		:raises ValueError:   If further points of parameter 'points' aren't on the circle through the first three points.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		if points is None:
+			raise ValueError("Parameter 'points' is None.")
+		elif not isinstance(points, Iterable):
+			ex = TypeError("Parameter 'points' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(points)}'.")
+			raise ex
+
+		pointList = []
+		for point in points:
+			if point is None:
+				raise ValueError("An element of parameter 'points' is None.")
+			elif not isinstance(point, Point2D):
+				ex = TypeError("An element of parameter 'points' is not of type 'Point2D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+				raise ex
+
+			pointList.append(point)
+
+		if len(pointList) < 3:
+			ex = ValueError("Parameter 'points' has fewer than 3 points.")
+			ex.add_note(f"Got {len(pointList)} points.")
+			raise ex
+
+		for index, otherIndex in (
+			(0, 1),
+			(0, 2),
+			(1, 2)
+		):
+			point = pointList[index]
+			other = pointList[otherIndex]
+			if point._x == other._x and point._y == other._y:
+				ex = ValueError("Two of the first three points of parameter 'points' are at the same position.")
+				ex.add_note(f"Got point {point} at index {index} and {otherIndex}.")
+				raise ex
+
+		first =  pointList[0]
+		second = pointList[1]
+		third =  pointList[2]
+		if (second._x - first._x) * (third._y - first._y) - (second._y - first._y) * (third._x - first._x) == 0:
+			ex = ValueError("The first three points of parameter 'points' are on one line.")
+			ex.add_note(f"Got points {first}, {second} and {third}.")
+			raise ex
+
+		center = ArcSegment2D._Circumcenter(first, second, third)
+		radius = sqrt((first._x - center._x) ** 2 + (first._y - center._y) ** 2)
+		notes =  []
+		for index, point in enumerate(pointList[3:], start=3):
+			distance = sqrt((point._x - center._x) ** 2 + (point._y - center._y) ** 2)
+			if not isclose(distance, radius):
+				notes.append(
+					f"Got point {point} at index {index} with distance {distance} to the center, while the radius is {radius}."
+				)
+
+		if len(notes) > 0:
+			ex = ValueError("Parameter 'points' has points, which aren't on the circle through the first three points.")
+			for note in notes:
+				ex.add_note(note)
+			raise ex
+
+		return cls(center, radius, copyPoints=False, value=value, keyValuePairs=keyValuePairs, parent=parent)
+
+	@classmethod
+	def FromChord(
+		cls,
+		start:         Point2D[Coordinate],
+		end:           Point2D[Coordinate],
+		height:        Coordinate,
+		chordPosition: float = 0.5,
+		*,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> Self:
+		"""
+		Create the circle through the end points of a chord and a point at a height over the chord.
+
+		The height is measured perpendicular to the chord, the line segment from the start point to the end point, at the
+		root point at the fraction ``chordPosition`` of the chord from the start point. A positive height is on the left
+		of the chord, seen from the start point, a negative height on the right, as for an
+		:class:`~pyTooling.Cartesian2D.ArcSegment2D`. At the chord's midpoint, the height is the sagitta of the circle's
+		arc on that side. Only the points' coordinates are used: the circle owns a new center point.
+
+		:param start:         Start point of the chord.
+		:param end:           End point of the chord.
+		:param height:        Signed distance of a point of the circle from the chord at the root point.
+		:param chordPosition: Optional, the root point's position on the chord, as a fraction from 0 (start point) to 1
+		                      (end point). Default: ``0.5``, the chord's midpoint.
+		:param value:         Optional, value of the circle. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, the group or canvas the circle is added to. Default: ``None``, no parent.
+		:returns:             A new circle through both end points of the chord.
+		:raises ValueError:   If parameter 'start' is None.
+		:raises TypeError:    If parameter 'start' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'end' is None.
+		:raises TypeError:    If parameter 'end' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'end' is at the position of parameter 'start'.
+		:raises ValueError:   If parameter 'height' is None.
+		:raises TypeError:    If parameter 'height' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:   If parameter 'height' is 0.
+		:raises ValueError:   If parameter 'chordPosition' is None.
+		:raises TypeError:    If parameter 'chordPosition' is not of type :class:`float`.
+		:raises ValueError:   If parameter 'chordPosition' is out of range 0..1.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		for name, point in (
+			("start", start),
+			("end",   end)
+		):
+			if point is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(point, Point2D):
+				ex = TypeError(f"Parameter '{name}' is not of type 'Point2D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+				raise ex
+
+		if end._x == start._x and end._y == start._y:
+			ex = ValueError("Parameter 'end' is at the position of parameter 'start'.")
+			ex.add_note(f"Got point {end}.")
+			raise ex
+
+		if height is None:
+			raise ValueError("Parameter 'height' is None.")
+		elif not isinstance(height, (int, float)):
+			ex = TypeError("Parameter 'height' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(height)}'.")
+			raise ex
+		elif height == 0:
+			raise ValueError("Parameter 'height' is 0.")
+
+		if chordPosition is None:
+			raise ValueError("Parameter 'chordPosition' is None.")
+		elif not isinstance(chordPosition, (int, float)):
+			ex = TypeError("Parameter 'chordPosition' is not of type 'float'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(chordPosition)}'.")
+			raise ex
+		elif not 0 <= chordPosition <= 1:
+			ex = ValueError("Parameter 'chordPosition' is out of range 0..1.")
+			ex.add_note(f"Got value '{chordPosition}'.")
+			raise ex
+
+		relativeHeight = height / sqrt((end._x - start._x) ** 2 + (end._y - start._y) ** 2)
+		chordPoint =     ArcSegment2D._ChordPoint(start, end, chordPosition, relativeHeight)
+		center =         ArcSegment2D._Circumcenter(start, chordPoint, end)
+		return cls(
+			center,
+			sqrt((start._x - center._x) ** 2 + (start._y - center._y) ** 2),
+			copyPoints=False,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=parent
+		)
+
 	def Copy(self) -> Self:
 		"""
 		Create a new circle as a copy of this circle.

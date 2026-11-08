@@ -57,6 +57,10 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D`: a :class:`~pyTooling.Cartesian2D.QuadraticBezierSegment2D` with one and a
      :class:`~pyTooling.Cartesian2D.CubicBezierSegment2D` with two control points, a point at a curve parameter with
      :meth:`~pyTooling.Cartesian2D.BezierSegment2D.PointAt`, and an exact bounding box.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: :meth:`Circle.FromPoints() <pyTooling.Cartesian2D.Shapes.Circle.FromPoints>`
+     creates the circle through three or more points,
+     :meth:`Circle.FromChord() <pyTooling.Cartesian2D.Shapes.Circle.FromChord>`
+     the circle through a chord's end points and a point at a height over the chord.
    * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Path` chains line segments, arcs and
      Bezier curves, open or closed; consecutive edges share their joint. An open path grows at both ends with
      :meth:`~pyTooling.Cartesian2D.Shapes.Path.AppendSegment` and
