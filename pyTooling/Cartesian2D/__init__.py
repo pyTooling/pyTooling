@@ -1910,7 +1910,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 
 	def Move(self, offset: Offset2D[Coordinate]) -> None:
 		"""
-		Move the segment by moving its start and end point (inplace).
+		Move the segment by moving its start and end point and its other points (inplace).
 
 		An edge of a shape moves the shape's corners it references.
 
@@ -1927,10 +1927,20 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 
 		self._start += offset
 		self._end +=   offset
+		self._MoveInner(offset)
+
+	def _MoveInner(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the segment's points other than its start and end point (inplace).
+
+		A segment has no other points. A curved segment moves the points defining its curve.
+
+		:param offset: The 2D-offset to move by.
+		"""
 
 	def _MirrorY(self, twiceAxis: Coordinate) -> None:
 		"""
-		Mirror the segment at a horizontal axis by mirroring its start and end point (inplace).
+		Mirror the segment at a horizontal axis by mirroring its start and end point and its other points (inplace).
 
 		An edge of a shape mirrors the shape's corners it references.
 
@@ -1938,10 +1948,20 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		"""
 		self._start._y = twiceAxis - self._start._y
 		self._end._y =   twiceAxis - self._end._y
+		self._MirrorInnerY(twiceAxis)
+
+	def _MirrorInnerY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the segment's points other than its start and end point at a horizontal axis (inplace).
+
+		A segment has no other points. A curved segment mirrors the points defining its curve.
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
+		"""
 
 	def _MirrorX(self, twiceAxis: Coordinate) -> None:
 		"""
-		Mirror the segment at a vertical axis by mirroring its start and end point (inplace).
+		Mirror the segment at a vertical axis by mirroring its start and end point and its other points (inplace).
 
 		An edge of a shape mirrors the shape's corners it references.
 
@@ -1949,6 +1969,16 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		"""
 		self._start._x = twiceAxis - self._start._x
 		self._end._x =   twiceAxis - self._end._x
+		self._MirrorInnerX(twiceAxis)
+
+	def _MirrorInnerX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the segment's points other than its start and end point at a vertical axis (inplace).
+
+		A segment has no other points. A curved segment mirrors the points defining its curve.
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
 
 	def Copy(self) -> Self:
 		"""
