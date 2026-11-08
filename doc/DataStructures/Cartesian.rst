@@ -51,9 +51,9 @@ Features
 * **Shapes and segments moved as a whole** - ``Move(offset)`` shifts all their points in place.
 * **Lines in Hesse normal form** - a :class:`~pyTooling.Cartesian2D.Line2D` from two points, a point and a direction,
   or a point and a normal; it measures the signed distance of a point, projects a point onto it and intersects a ray.
-* **Mirroring at a shared line** - a :class:`~pyTooling.Cartesian2D.VerticalLine2D` or
-  :class:`~pyTooling.Cartesian2D.HorizontalLine2D` is in absolute coordinates, so elements of different groups are
-  mirrored at the same line.
+* **Mirroring at a shared line** - a :class:`~pyTooling.Cartesian2D.Line2D`, like a
+  :class:`~pyTooling.Cartesian2D.VerticalLine2D` or a :class:`~pyTooling.Cartesian2D.HorizontalLine2D`, is in absolute
+  coordinates, so elements of different groups are mirrored at the same line, also at an oblique one.
 * **Points owned by one element** - a shape or segment owns its points, so a point can't silently belong to two
   shapes. Coordinates of different frames aren't mixed in a computation.
 * **Groups with relative coordinates** - a :class:`~pyTooling.Cartesian2D.Groups.Group2D` holds shapes, segments and
@@ -76,7 +76,7 @@ Features
 Missing Features
 ================
 
-* Rotation and scaling - an element can be shifted and mirrored at a vertical or horizontal axis, but not rotated or
+* Rotation and scaling - an element can be shifted and mirrored at any line, but not rotated or
   scaled.
 * Rotated ellipses and elliptical arcs.
 * The length of a Bezier curve.
@@ -396,14 +396,24 @@ an integer:
 * :class:`~pyTooling.Cartesian2D.HorizontalLine2D` - the line ``y = c``, normal ``(0, 1)``; all its points have the
   same :attr:`~pyTooling.Cartesian2D.HorizontalLine2D.Y`.
 
+:meth:`VerticalLine2D.FromElement <pyTooling.Cartesian2D.VerticalLine2D.FromElement>` creates the line through an
+edge or the center of an element's absolute bounding box, named by an :class:`~pyTooling.Cartesian2D.Alignment2D`
+(``MinX``, ``CenterX`` or ``MaxX``); :meth:`HorizontalLine2D.FromElement
+<pyTooling.Cartesian2D.HorizontalLine2D.FromElement>` takes ``MinY``, ``CenterY`` or ``MaxY``.
+
 :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt` mirrors an element at a line in the element's frame, so elements of
-different groups are mirrored at the same line. A line parallel to an axis mirrors exactly, also a
-:class:`~pyTooling.Cartesian2D.Line2D` with normal ``(1, 0)`` or ``(0, 1)``; mirroring at an oblique line raises
-:exc:`~pyTooling.Exceptions.InvalidOperationError`. :meth:`VerticalLine2D.FromElement
-<pyTooling.Cartesian2D.VerticalLine2D.FromElement>` creates the line through an edge or the center of an element's
-absolute bounding box, named by an :class:`~pyTooling.Cartesian2D.Alignment2D` (``MinX``, ``CenterX`` or ``MaxX``);
-:meth:`HorizontalLine2D.FromElement <pyTooling.Cartesian2D.HorizontalLine2D.FromElement>` takes ``MinY``, ``CenterY``
-or ``MaxY``.
+different groups are mirrored at the same line:
+
+* A line parallel to an axis, also a :class:`~pyTooling.Cartesian2D.Line2D` with normal ``(1, 0)`` or ``(0, 1)``,
+  flips one coordinate, so integer coordinates stay integers.
+* At an oblique line ``nx * x + ny * y = d``, every absolute point ``(x, y)`` moves by
+  ``-2 * (nx * x + ny * y - d)`` times the normal. Segments mirror their end points and the points defining their
+  curve, an arc reverses its direction. Shapes mirror their corners or their center, so a rectangle stays a rectangle.
+  A group mirrors its offset like a point, and its children at the line through the group's origin with the same
+  normal. A text mirrors its position only.
+* An :ref:`ellipse <STRUCT/Cartesian2D/Ellipse>` is axis-aligned, an oblique line would rotate it: mirroring an
+  ellipse, or a group holding one, at an oblique line raises :exc:`~pyTooling.Exceptions.InvalidOperationError`, before
+  anything is mirrored.
 
 .. code-block:: Python
 
@@ -422,6 +432,21 @@ or ``MaxY``.
    wheel.Center.Absolute              # (29, 1)
 
    HorizontalLine2D.FromElement(wheel, Alignment2D.MinY)   # HorizontalLine2D(0)
+
+Mirroring at the diagonal ``x = y`` swaps the coordinates, up to rounding:
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D, Offset2D, Line2D
+   from pyTooling.Cartesian2D.Shapes import Circle, Ellipse
+   from pyTooling.Cartesian2D.Groups import Group2D
+
+   diagonal = Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1))
+   wheel =    Circle(Point2D(1, 2), 1)
+   axle =     Group2D(Offset2D(10, 20), (wheel, ))
+
+   axle.MirrorAt(diagonal)            # axle.Offset is (20, 10), wheel.Center is (2, 1)
+   Ellipse(Point2D(1, 2), 3, 2).MirrorAt(diagonal)   # raises InvalidOperationError
 
 Like a :ref:`style <STRUCT/Cartesian2D/Drawing>`, a line is a **value**: its properties are read-only, it compares
 with ``==`` and ``!=`` and is hashable. Equality is geometric - two lines are equal, if their normals and distances
@@ -997,7 +1022,8 @@ An :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` is placed by its
 :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Center`, a :class:`~pyTooling.Cartesian2D.Point2D`, and sized by two
 radii, SVG's ``rx`` and ``ry``: :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.RadiusX` in x-direction and
 :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.RadiusY` in y-direction, each a positive :class:`int` or :class:`float`.
-Its axes are parallel to the coordinate axes; an ellipse can't be rotated. The center is copied by default;
+Its axes are parallel to the coordinate axes; an ellipse can't be rotated, nor mirrored at an oblique line. The center
+is copied by default;
 ``copyPoints=False`` keeps the given point instead. The ellipse owns its center.
 
 An ellipse is a closed shape, an :ref:`EllipticalGeometry2D <STRUCT/Cartesian2D/EllipticalGeometry2D>` like a
@@ -1462,7 +1488,8 @@ center. Like every element, it takes a ``value`` and ``keyValuePairs``.
 Top and bottom are those of the :ref:`canvas <STRUCT/Cartesian2D/Canvas2D>` holding the text: with the y-axis pointing
 down, the top of a text has its smallest y-coordinate. Without a canvas, the y-axis points up.
 :meth:`~pyTooling.Cartesian2D.Groups.Canvas2D.Mirror` therefore keeps a text where it is drawn. Mirroring a text with
-``MirrorX`` or ``MirrorY`` moves its position only: the glyphs aren't mirrored, and its alignment and anchor stay.
+``MirrorX``, ``MirrorY`` or ``MirrorAt`` moves its position only: the glyphs aren't mirrored, and its alignment and
+anchor stay.
 
 .. code-block:: Python
 
@@ -1672,10 +1699,11 @@ keep their coordinate as given:
   :attr:`~pyTooling.Cartesian3D.XYPlane3D.Z`.
 
 Like the 2D line, a plane is a value in absolute coordinates, compared geometrically and hashable:
-:meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt` mirrors an element of any group at a plane parallel to a coordinate
-plane (an oblique plane raises :exc:`~pyTooling.Exceptions.InvalidOperationError`), and ``FromElement`` creates the
-plane through a face or the center of an element's absolute bounding box, named by an
-:class:`~pyTooling.Cartesian3D.Alignment3D` of the plane's axis.
+:meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt` mirrors an element of any group at any plane - a plane parallel to a
+coordinate plane flips one coordinate exactly, an oblique plane ``nx * x + ny * y + nz * z = d`` moves every absolute
+point by ``-2 * (nx * x + ny * y + nz * z - d)`` times the normal. ``FromElement`` creates the plane through a face or
+the center of an element's absolute bounding box, named by an :class:`~pyTooling.Cartesian3D.Alignment3D` of the
+plane's axis.
 
 .. code-block:: Python
 

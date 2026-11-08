@@ -366,6 +366,20 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 		"""
 		return self._x, self._y, self._z
 
+	def _MirrorAt(self, normal: Offset3D[float], distance: float) -> None:
+		"""
+		Mirror the point at the plane ``nx * x + ny * y + nz * z = distance`` in the point's frame (inplace).
+
+		The point moves by ``-2 * (nx * x + ny * y + nz * z - distance)`` times the normal.
+
+		:param normal:   The normal of the plane, of length 1.
+		:param distance: The signed distance of the plane from the frame's origin.
+		"""
+		factor = 2 * (normal._xOffset * self._x + normal._yOffset * self._y + normal._zOffset * self._z - distance)
+		self._x -= factor * normal._xOffset
+		self._y -= factor * normal._yOffset
+		self._z -= factor * normal._zOffset
+
 	def __add__(self, other: Any) -> Point3D[Coordinate]:
 		"""
 		Adds a 3D-offset to this 3D-point and creates a new 3D-point.
@@ -521,9 +535,9 @@ class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 	(:class:`~pyTooling.DataModel.KeyValuePairsMixin`). Use the dictionary syntax to get and set key-value-pairs:
 	``in``, :pycode:`len(element)` and iterating an element address the key-value-pairs, not its points or children.
 
-	A derived class implements :attr:`BoundingBox`, :meth:`Move`, :meth:`_MirrorX`, :meth:`_MirrorY` and
-	:meth:`_MirrorZ`. Its initializer takes the keyword-only parameters ``value``, ``keyValuePairs`` and ``parent``, and
-	assigns ``parent`` to :attr:`Parent` as its last statement, when the element is fully initialized.
+	A derived class implements :attr:`BoundingBox`, :meth:`Move`, :meth:`_MirrorX`, :meth:`_MirrorY`, :meth:`_MirrorZ`
+	and :meth:`_MirrorAt`. Its initializer takes the keyword-only parameters ``value``, ``keyValuePairs`` and
+	``parent``, and assigns ``parent`` to :attr:`Parent` as its last statement, when the element is fully initialized.
 	"""
 
 	# WORKAROUND: Python <3.13
@@ -838,14 +852,25 @@ class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		:param twiceAxis: Twice the z-coordinate of the plane.
 		"""
 
+	@abstractmethod
+	def _MirrorAt(self, normal: Offset3D[float], distance: float) -> None:
+		"""
+		Mirror the element at the plane ``nx * x + ny * y + nz * z = distance`` in the element's frame (inplace).
+
+		:param normal:   The normal of the plane, of length 1.
+		:param distance: The signed distance of the plane from the frame's origin.
+		"""
+
 	def MirrorAt(self, plane: Plane3D[Coordinate]) -> None:
 		r"""
 		Mirror the element at a plane (inplace).
 
 		The plane is in absolute coordinates, relative to the origin, so elements of different groups can be mirrored at
 		the same plane. At a plane ``x = a``, every absolute x-coordinate ``x`` becomes ``2a - x``; the planes ``y = a`` and
-		``z = a`` mirror the y- and z-coordinates the same way. A group mirrors its offset, and its children at the group's
-		origin. A :class:`Plane3D` with normal ``(1, 0, 0)``, ``(0, 1, 0)`` or ``(0, 0, 1)`` is such a plane too.
+		``z = a`` mirror the y- and z-coordinates the same way; a :class:`Plane3D` with normal ``(1, 0, 0)``, ``(0, 1, 0)``
+		or ``(0, 0, 1)`` is such a plane too. At an oblique plane ``nx * x + ny * y + nz * z = d``, every absolute point
+		moves by ``-2 * (nx * x + ny * y + nz * z - d)`` times the normal. A group mirrors its offset, and its children at
+		the plane through the group's origin with the same normal.
 
 		Mirrored at a plane ``x = a``, seen along the z-axis: the element on the left of the plane is mirrored to the
 		right of it.
@@ -861,12 +886,9 @@ class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		                       |
 		        before                   after
 
-		:param plane:                  The plane to mirror at, like a :class:`YZPlane3D`, :class:`XZPlane3D` or
-		                               :class:`XYPlane3D`.
-		:raises ValueError:            If parameter 'plane' is None.
-		:raises TypeError:             If parameter 'plane' is not of type :class:`Plane3D`.
-		:raises InvalidOperationError: If parameter 'plane' is oblique. |br|
-		                               Mirror at a plane parallel to a coordinate plane.
+		:param plane:       The plane to mirror at, like a :class:`YZPlane3D`, :class:`XZPlane3D` or :class:`XYPlane3D`.
+		:raises ValueError: If parameter 'plane' is None.
+		:raises TypeError:  If parameter 'plane' is not of type :class:`Plane3D`.
 		"""
 		if plane is None:
 			raise ValueError("Parameter 'plane' is None.")
@@ -2419,30 +2441,24 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		Mirror an element at this plane (inplace).
 
 		A plane with normal ``(1, 0, 0)``, ``(0, 1, 0)`` or ``(0, 0, 1)`` mirrors an element like a :class:`YZPlane3D`,
-		:class:`XZPlane3D` or :class:`XYPlane3D`.
+		:class:`XZPlane3D` or :class:`XYPlane3D`, so integer coordinates stay integers.
 
-		:param element:                The element to mirror.
-		:raises InvalidOperationError: If the plane is oblique. |br|
-		                               Mirror at a plane parallel to a coordinate plane.
+		:param element: The element to mirror.
 		"""
 		normal = self._normal
+		frame =  element.Frame
 		if normal._yOffset == 0 and normal._zOffset == 0:
-			frame = element.Frame
-			x =     self._distance if frame is None else self._distance - frame.AbsoluteOffset._xOffset
+			x = self._distance if frame is None else self._distance - frame.AbsoluteOffset._xOffset
 			element._MirrorX(2 * x)
 		elif normal._xOffset == 0 and normal._zOffset == 0:
-			frame = element.Frame
-			y =     self._distance if frame is None else self._distance - frame.AbsoluteOffset._yOffset
+			y = self._distance if frame is None else self._distance - frame.AbsoluteOffset._yOffset
 			element._MirrorY(2 * y)
 		elif normal._xOffset == 0 and normal._yOffset == 0:
-			frame = element.Frame
-			z =     self._distance if frame is None else self._distance - frame.AbsoluteOffset._zOffset
+			z = self._distance if frame is None else self._distance - frame.AbsoluteOffset._zOffset
 			element._MirrorZ(2 * z)
 		else:
-			ex = InvalidOperationError("Mirroring at an oblique plane isn't supported.")
-			ex.add_note(f"Got plane {self!r}.")
-			ex.add_note("Mirror at a plane parallel to a coordinate plane.")
-			raise ex
+			distance = self._distance if frame is None else self._distance - normal.ScalarProduct(frame.AbsoluteOffset)
+			element._MirrorAt(normal, distance)
 
 	def __eq__(self, other: Any) -> bool:
 		"""
@@ -3257,6 +3273,16 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 		"""
 		self._start._z = twiceAxis - self._start._z
 		self._end._z =   twiceAxis - self._end._z
+
+	def _MirrorAt(self, normal: Offset3D[float], distance: float) -> None:
+		"""
+		Mirror the segment at a plane by mirroring its start and end point (inplace).
+
+		:param normal:   The normal of the plane, of length 1.
+		:param distance: The signed distance of the plane from the frame's origin.
+		"""
+		self._start._MirrorAt(normal, distance)
+		self._end._MirrorAt(normal, distance)
 
 	def Copy(self) -> Self:
 		"""

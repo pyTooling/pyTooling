@@ -127,6 +127,10 @@ Version 10.x (2026)
      :meth:`~pyTooling.Cartesian3D.Plane3D.FromPointAndSpanningVectors` and
      :meth:`~pyTooling.Cartesian3D.Plane3D.FromPointAndNormal`, with the operations of a line and intersections with a
      :class:`~pyTooling.Cartesian3D.Ray3D`.
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: every element mirrors at an oblique line or plane
+     with :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt` (reflection in Hesse normal form; a group mirrors its offset
+     and its children). An :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` stays axis-aligned: an oblique line raises
+     :exc:`~pyTooling.Exceptions.InvalidOperationError`.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

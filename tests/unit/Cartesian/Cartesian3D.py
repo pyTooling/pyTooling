@@ -3754,18 +3754,77 @@ class MirroringAtPlane(Testcase):
 
 		self.assertTupleEqual(((1, 2, 7), (4, 6, 2)), line.ToTuple())
 
-	def test_Plane3D_Oblique(self) -> None:
+	def test_Oblique(self) -> None:
+		"""Mirroring at the plane x = y swaps the x- and y-coordinates."""
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
-		with self.assertRaises(InvalidOperationError) as context:
-			line.MirrorAt(Plane3D(Offset3D(0, 3, 4), 10))
+		line.MirrorAt(Plane3D(Offset3D(1, -1, 0), 0))
 
-		self.assertEqual("Mirroring at an oblique plane isn't supported.", str(context.exception))
-		self.assertListEqual(
-			["Got plane Plane3D((0.0, 0.6, 0.8), 2.0).", "Mirror at a plane parallel to a coordinate plane."],
-			context.exception.__notes__
+		self.assertTupleEqual(
+			((2, 1, 3), (6, 4, 8)),
+			tuple(tuple(round(value, 9) for value in point.ToTuple()) for point in (line.Start, line.End))
 		)
-		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_Oblique_OffsetPlane(self) -> None:
+		"""Mirroring at the plane 2x + 3y + 6z = 49, which doesn't run through the origin."""
+		line = LineSegment3D(Point3D(0, 0, 0), Point3D(2, 3, 6))
+
+		line.MirrorAt(Plane3D(Offset3D(2, 3, 6), 49))
+
+		self.assertTupleEqual((4, 6, 12), tuple(round(value, 9) for value in line.Start.ToTuple()))
+		self.assertTupleEqual((2, 3, 6), tuple(round(value, 9) for value in line.End.ToTuple()))
+
+	def test_Oblique_Twice(self) -> None:
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		plane = Plane3D(Offset3D(1, 2, 3), 4)
+
+		line.MirrorAt(plane)
+		line.MirrorAt(plane)
+
+		self.assertTupleEqual(
+			((1, 2, 3), (4, 6, 8)),
+			tuple(tuple(round(value, 9) for value in point.ToTuple()) for point in (line.Start, line.End))
+		)
+
+	def test_Oblique_SignedDistance(self) -> None:
+		"""A mirrored point has the negated signed distance, and both have the same projection."""
+		plane = Plane3D(Offset3D(1, 2, 3), 4)
+		line =  LineSegment3D(Point3D(4, 1, -2), Point3D(-2, 5, 1))
+		start = line.Start.Copy()
+
+		line.MirrorAt(plane)
+
+		self.assertAlmostEqual(-plane.SignedDistance(start), plane.SignedDistance(line.Start))
+		self.assertTupleEqual(
+			tuple(round(value, 9) for value in plane.Project(start).ToTuple()),
+			tuple(round(value, 9) for value in plane.Project(line.Start).ToTuple())
+		)
+
+	def test_Oblique_TwoPlanes(self) -> None:
+		"""Mirroring at x = y and at x = -y equals mirroring at the yz-plane and the xz-plane."""
+		line1 = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		line2 = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line1.MirrorAt(Plane3D(Offset3D(1, -1, 0), 0))
+		line1.MirrorAt(Plane3D(Offset3D(1, 1, 0), 0))
+		line2.MirrorAt(YZPlane3D(0))
+		line2.MirrorAt(XZPlane3D(0))
+
+		self.assertTupleEqual(((-1, -2, 3), (-4, -6, 8)), line2.ToTuple())
+		self.assertTupleEqual(
+			line2.ToTuple(),
+			tuple(tuple(round(value, 9) for value in point.ToTuple()) for point in (line1.Start, line1.End))
+		)
+
+	def test_Oblique_Group(self) -> None:
+		"""The plane is in absolute coordinates, an element in a group is mirrored in its frame."""
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		Group3D(Offset3D(10, 20, 30), (line, ))
+
+		line.MirrorAt(Plane3D(Offset3D(1, -1, 0), 0))
+
+		self.assertTupleEqual((22, 11, 33), tuple(round(value, 9) for value in line.Start.Absolute.ToTuple()))
+		self.assertTupleEqual((12, -9, 3), tuple(round(value, 9) for value in line.Start.ToTuple()))
 
 	def test_PlaneNone(self) -> None:
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))

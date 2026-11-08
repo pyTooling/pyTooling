@@ -527,6 +527,19 @@ class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 		"""
 		return self._x, self._y
 
+	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+		"""
+		Mirror the point at the line ``nx * x + ny * y = distance`` in the point's frame (inplace).
+
+		The point moves by ``-2 * (nx * x + ny * y - distance)`` times the normal.
+
+		:param normal:   The normal of the line, of length 1.
+		:param distance: The signed distance of the line from the frame's origin.
+		"""
+		factor = 2 * (normal._xOffset * self._x + normal._yOffset * self._y - distance)
+		self._x -= factor * normal._xOffset
+		self._y -= factor * normal._yOffset
+
 	def __add__(self, other: Any) -> Point2D[Coordinate]:
 		"""
 		Adds a 2D-offset to this 2D-point and creates a new 2D-point.
@@ -676,8 +689,8 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 	(:class:`~pyTooling.DataModel.KeyValuePairsMixin`). Use the dictionary syntax to get and set key-value-pairs:
 	``in``, :pycode:`len(element)` and iterating an element address the key-value-pairs, not its points or children.
 
-	A derived class implements :attr:`BoundingBox`, :meth:`Move`, :meth:`_MirrorX` and
-	:meth:`_MirrorY`. Its initializer takes the keyword-only parameters ``value``, ``keyValuePairs`` and ``parent``, and
+	A derived class implements :attr:`BoundingBox`, :meth:`Move`, :meth:`_MirrorX`, :meth:`_MirrorY` and
+	:meth:`_MirrorAt`. Its initializer takes the keyword-only parameters ``value``, ``keyValuePairs`` and ``parent``, and
 	assigns ``parent`` to :attr:`Parent` as its last statement, when the element is fully initialized.
 	"""
 
@@ -928,14 +941,36 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		:param twiceAxis: Twice the y-coordinate of the axis.
 		"""
 
+	@abstractmethod
+	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+		"""
+		Mirror the element at the line ``nx * x + ny * y = distance`` in the element's frame (inplace).
+
+		:param normal:   The normal of the line, of length 1.
+		:param distance: The signed distance of the line from the frame's origin.
+		"""
+
+	@readonly
+	def _CanMirrorAtObliqueLine(self) -> bool:
+		"""
+		Read-only property to return, if the element can be mirrored at an oblique line.
+
+		An axis-aligned shape, like an ellipse, can't: it wouldn't stay axis-aligned.
+
+		:returns: ``True``, if the element can be mirrored at an oblique line.
+		"""
+		return True
+
 	def MirrorAt(self, line: Line2D[Coordinate]) -> None:
 		r"""
 		Mirror the element at a line (inplace).
 
 		The line is in absolute coordinates, relative to the origin, so elements of different groups can be mirrored at
 		the same line. At a vertical line ``x = a``, every absolute x-coordinate ``x`` becomes ``2a - x``; at a horizontal
-		line ``y = a``, every absolute y-coordinate ``y`` becomes ``2a - y``. A group mirrors its offset, and its children
-		at the group's origin. A :class:`Line2D` with normal ``(1, 0)`` or ``(0, 1)`` is a vertical or horizontal line too.
+		line ``y = a``, every absolute y-coordinate ``y`` becomes ``2a - y``. A :class:`Line2D` with normal ``(1, 0)`` or
+		``(0, 1)`` is a vertical or horizontal line too. At an oblique line ``nx * x + ny * y = d``, every absolute point
+		``(x, y)`` moves by ``-2 * (nx * x + ny * y - d)`` times the normal. A group mirrors its offset, and its children at
+		the line through the group's origin with the same normal.
 
 		Mirrored at a vertical line: the element on the left of the line is mirrored to the right of it.
 
@@ -953,8 +988,8 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		:param line:                   The line to mirror at, like a :class:`VerticalLine2D` or a :class:`HorizontalLine2D`.
 		:raises ValueError:            If parameter 'line' is None.
 		:raises TypeError:             If parameter 'line' is not of type :class:`Line2D`.
-		:raises InvalidOperationError: If parameter 'line' is oblique. |br|
-		                               Mirror at a vertical or horizontal line.
+		:raises InvalidOperationError: If parameter 'line' is oblique and the element is or holds an ellipse. |br|
+		                               An ellipse is axis-aligned; mirror it at a vertical or horizontal line.
 		"""
 		if line is None:
 			raise ValueError("Parameter 'line' is None.")
@@ -2324,26 +2359,28 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		Mirror an element at this line (inplace).
 
 		A line with normal ``(1, 0)`` or ``(0, 1)`` mirrors an element like a :class:`VerticalLine2D` or a
-		:class:`HorizontalLine2D`.
+		:class:`HorizontalLine2D`, so integer coordinates stay integers.
 
 		:param element:                The element to mirror.
-		:raises InvalidOperationError: If the line is oblique. |br|
-		                               Mirror at a vertical or horizontal line.
+		:raises InvalidOperationError: If the line is oblique and the element is or holds an ellipse. |br|
+		                               An ellipse is axis-aligned; mirror it at a vertical or horizontal line.
 		"""
 		normal = self._normal
+		frame =  element.Frame
 		if normal._yOffset == 0:
-			frame = element.Frame
-			x =     self._distance if frame is None else self._distance - frame.AbsoluteOffset._xOffset
+			x = self._distance if frame is None else self._distance - frame.AbsoluteOffset._xOffset
 			element._MirrorX(2 * x)
 		elif normal._xOffset == 0:
-			frame = element.Frame
-			y =     self._distance if frame is None else self._distance - frame.AbsoluteOffset._yOffset
+			y = self._distance if frame is None else self._distance - frame.AbsoluteOffset._yOffset
 			element._MirrorY(2 * y)
-		else:
-			ex = InvalidOperationError("Mirroring at an oblique line isn't supported.")
-			ex.add_note(f"Got line {self!r}.")
-			ex.add_note("Mirror at a vertical or horizontal line.")
+		elif not element._CanMirrorAtObliqueLine:
+			ex = InvalidOperationError("Mirroring an axis-aligned shape at an oblique line isn't supported.")
+			ex.add_note(f"Got element {element!r} and line {self!r}.")
+			ex.add_note("An ellipse is axis-aligned; mirror it at a vertical or horizontal line.")
 			raise ex
+		else:
+			distance = self._distance if frame is None else self._distance - normal.ScalarProduct(frame.AbsoluteOffset)
+			element._MirrorAt(normal, distance)
 
 	def __eq__(self, other: Any) -> bool:
 		"""
@@ -3099,6 +3136,29 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		:param twiceAxis: Twice the x-coordinate of the axis.
 		"""
 
+	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+		"""
+		Mirror the segment at a line by mirroring its start and end point and its other points (inplace).
+
+		An edge of a shape mirrors the shape's corners it references.
+
+		:param normal:   The normal of the line, of length 1.
+		:param distance: The signed distance of the line from the frame's origin.
+		"""
+		self._start._MirrorAt(normal, distance)
+		self._end._MirrorAt(normal, distance)
+		self._MirrorInnerAt(normal, distance)
+
+	def _MirrorInnerAt(self, normal: Offset2D[float], distance: float) -> None:
+		"""
+		Mirror the segment's points other than its start and end point at a line (inplace).
+
+		A segment has no other points. A curved segment mirrors the points defining its curve.
+
+		:param normal:   The normal of the line, of length 1.
+		:param distance: The signed distance of the line from the frame's origin.
+		"""
+
 	def Copy(self) -> Self:
 		"""
 		Create a new 2D-segment as a copy of this 2D-segment.
@@ -3729,6 +3789,15 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		self._height = -self._height
 
+	def _MirrorInnerAt(self, normal: Offset2D[float], distance: float) -> None:
+		"""
+		Reverse the arc's direction by negating its height, as its end points are mirrored at a line (inplace).
+
+		:param normal:   The normal of the line, of length 1.
+		:param distance: The signed distance of the line from the frame's origin.
+		"""
+		self._height = -self._height
+
 	def Copy(self) -> Self:
 		"""
 		Create a new 2D arc segment as a copy of this 2D arc segment.
@@ -3971,6 +4040,16 @@ class BezierSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		for controlPoint in self._controlPoints:
 			controlPoint._x = twiceAxis - controlPoint._x
+
+	def _MirrorInnerAt(self, normal: Offset2D[float], distance: float) -> None:
+		"""
+		Mirror the curve's control points at a line (inplace).
+
+		:param normal:   The normal of the line, of length 1.
+		:param distance: The signed distance of the line from the frame's origin.
+		"""
+		for controlPoint in self._controlPoints:
+			controlPoint._MirrorAt(normal, distance)
 
 	def ToTuple(self) -> tuple[tuple[Coordinate, Coordinate], ...]:
 		"""

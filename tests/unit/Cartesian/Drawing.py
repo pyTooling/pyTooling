@@ -35,7 +35,7 @@ from copy                          import copy, deepcopy
 from math                          import isclose
 
 from pyTooling.Cartesian2D         import Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, SweepDirection, \
-                                          Shapes, AlreadyOwnedError, LineSegment2D as GeometricLineSegment2D, \
+                                          Line2D, Shapes, AlreadyOwnedError, LineSegment2D as GeometricLineSegment2D, \
                                           ArcSegment2D as GeometricArcSegment2D, \
                                           QuadraticBezierSegment2D as GeometricQuadraticBezierSegment2D, \
                                           CubicBezierSegment2D as GeometricCubicBezierSegment2D
@@ -2549,6 +2549,18 @@ class TextTransformations(Testcase):
 
 		self.assertTupleEqual((10, 36), text.Position.ToTuple())
 		self.assertIs(VerticalAnchor.Baseline, text.Anchor)
+
+	def test_MirrorAt_Oblique(self) -> None:
+		"""Mirroring at an oblique line moves the position; the glyphs, the alignment and the anchor stay."""
+		text = Text(Point2D(10, 20), "Hello", font=MONOSPACE)
+
+		text.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertAlmostEqual(20, text.Position.X)
+		self.assertAlmostEqual(10, text.Position.Y)
+		self.assertIs(TextAlignment.Left, text.Alignment)
+		self.assertIs(VerticalAnchor.Baseline, text.Anchor)
+		self.assertTupleEqual(("Hello", ), text.Lines)
 
 	def test_AlignTo(self) -> None:
 		box =  Rectangle(Point2D(0, 0), Point2D(40, 0), Point2D(40, 20), Point2D(0, 20))

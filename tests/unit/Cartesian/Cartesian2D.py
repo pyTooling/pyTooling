@@ -3002,19 +3002,6 @@ class MirroringAtLine(Testcase):
 		self.assertTupleEqual((19, 2), circle.Center.ToTuple())
 		self.assertTupleEqual((29, 2), circle.Center.Absolute.ToTuple())
 
-	def test_Line2D_Oblique(self) -> None:
-		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
-
-		with self.assertRaises(InvalidOperationError) as context:
-			line.MirrorAt(Line2D(Offset2D(3, 4), 10))
-
-		self.assertEqual("Mirroring at an oblique line isn't supported.", str(context.exception))
-		self.assertListEqual(
-			["Got line Line2D((0.6, 0.8), 2.0).", "Mirror at a vertical or horizontal line."],
-			context.exception.__notes__
-		)
-		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
-
 	def test_LineNone(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
@@ -3033,6 +3020,132 @@ class MirroringAtLine(Testcase):
 		self.assertEqual("Parameter 'line' is not of type 'Line2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Alignment2D'."], context.exception.__notes__)
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
+
+
+class MirroringAtObliqueLine(Testcase):
+	def test_Diagonal(self) -> None:
+		"""Mirroring at the line x = y swaps the coordinates."""
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		line.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertAlmostEqual(2, line.Start.X)
+		self.assertAlmostEqual(1, line.Start.Y)
+		self.assertAlmostEqual(6, line.End.X)
+		self.assertAlmostEqual(4, line.End.Y)
+
+	def test_OffsetLine(self) -> None:
+		"""Mirroring at the line 3x + 4y = 25, which doesn't run through the origin."""
+		line = LineSegment2D(Point2D(0, 0), Point2D(3, 4))
+
+		line.MirrorAt(Line2D(Offset2D(3, 4), 25))
+
+		self.assertAlmostEqual(6, line.Start.X)
+		self.assertAlmostEqual(8, line.Start.Y)
+		self.assertAlmostEqual(3, line.End.X)
+		self.assertAlmostEqual(4, line.End.Y)
+
+	def test_Twice(self) -> None:
+		line =   LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+		mirror = Line2D(Offset2D(1, 2), 3)
+
+		line.MirrorAt(mirror)
+		line.MirrorAt(mirror)
+
+		self.assertAlmostEqual(1, line.Start.X)
+		self.assertAlmostEqual(2, line.Start.Y)
+		self.assertAlmostEqual(4, line.End.X)
+		self.assertAlmostEqual(6, line.End.Y)
+
+	def test_TwoDiagonals(self) -> None:
+		"""Mirroring at x = y and at x = -y equals mirroring at both axes."""
+		line1 = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+		line2 = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		line1.MirrorAt(Line2D(Offset2D(1, -1), 0))
+		line1.MirrorAt(Line2D(Offset2D(1, 1), 0))
+		line2.MirrorAt(VerticalLine2D(0))
+		line2.MirrorAt(HorizontalLine2D(0))
+
+		self.assertTupleEqual(((-1, -2), (-4, -6)), line2.ToTuple())
+		self.assertAlmostEqual(-1, line1.Start.X)
+		self.assertAlmostEqual(-2, line1.Start.Y)
+		self.assertAlmostEqual(-4, line1.End.X)
+		self.assertAlmostEqual(-6, line1.End.Y)
+
+	def test_SignedDistance(self) -> None:
+		"""A mirrored point has the negated signed distance, and both have the same projection."""
+		mirror = Line2D(Offset2D(1, 2), 3)
+		line =   LineSegment2D(Point2D(4, 1), Point2D(-2, 5))
+		start =  line.Start.Copy()
+
+		line.MirrorAt(mirror)
+
+		self.assertAlmostEqual(-mirror.SignedDistance(start), mirror.SignedDistance(line.Start))
+		self.assertAlmostEqual(mirror.Project(start).X, mirror.Project(line.Start).X)
+		self.assertAlmostEqual(mirror.Project(start).Y, mirror.Project(line.Start).Y)
+
+	def test_Arc(self) -> None:
+		"""Mirroring reverses the direction of an arc and mirrors its center."""
+		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
+
+		arc.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertAlmostEqual(0, arc.Start.X)
+		self.assertAlmostEqual(1, arc.Start.Y)
+		self.assertAlmostEqual(1, arc.End.X)
+		self.assertAlmostEqual(0, arc.End.Y)
+		self.assertAlmostEqual(0, arc.Center.X)
+		self.assertAlmostEqual(0, arc.Center.Y)
+		self.assertIs(SweepDirection.Clockwise, arc.Direction)
+
+	def test_QuadraticBezier(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(1, 0), Point2D(3, 1), Point2D(2, 4))
+
+		curve.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertAlmostEqual(0, curve.Start.X)
+		self.assertAlmostEqual(1, curve.Start.Y)
+		self.assertAlmostEqual(1, curve.ControlPoint.X)
+		self.assertAlmostEqual(3, curve.ControlPoint.Y)
+		self.assertAlmostEqual(4, curve.End.X)
+		self.assertAlmostEqual(2, curve.End.Y)
+
+	def test_CubicBezier(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(1, 0), Point2D(3, 1), Point2D(5, 2), Point2D(2, 4))
+
+		curve.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertAlmostEqual(1, curve.ControlPoint1.X)
+		self.assertAlmostEqual(3, curve.ControlPoint1.Y)
+		self.assertAlmostEqual(2, curve.ControlPoint2.X)
+		self.assertAlmostEqual(5, curve.ControlPoint2.Y)
+
+	def test_Edge(self) -> None:
+		"""An edge mirrors the polygon's corners it references."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+
+		polygon.Segments[0].MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertAlmostEqual(0, polygon.Points[0].X)
+		self.assertAlmostEqual(0, polygon.Points[0].Y)
+		self.assertAlmostEqual(1, polygon.Points[1].X)
+		self.assertAlmostEqual(4, polygon.Points[1].Y)
+		self.assertTupleEqual((2, 3), polygon.Points[2].ToTuple())
+
+	def test_Group(self) -> None:
+		"""The line is in absolute coordinates, an element in a group is mirrored in its frame."""
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+		Group2D(Offset2D(10, 20), (line, ))
+
+		line.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertAlmostEqual(22, line.Start.Absolute.X)
+		self.assertAlmostEqual(11, line.Start.Absolute.Y)
+		self.assertAlmostEqual(26, line.End.Absolute.X)
+		self.assertAlmostEqual(14, line.End.Absolute.Y)
+		self.assertAlmostEqual(12, line.Start.X)
+		self.assertAlmostEqual(-9, line.Start.Y)
 
 
 class Ownership(Testcase):

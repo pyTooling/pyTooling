@@ -476,6 +476,31 @@ class Group2D(Element2D[Coordinate], Container2DMixin, Generic[Coordinate]):
 		for child in self._children:
 			child._MirrorX(0)
 
+	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+		"""
+		Mirror the group at a line by mirroring its :attr:`Offset` like a point (inplace).
+
+		The children are mirrored at the line through the group's origin with the same normal.
+
+		:param normal:   The normal of the line, of length 1.
+		:param distance: The signed distance of the line from the frame's origin.
+		"""
+		offset = self._offset
+		factor = 2 * (normal.ScalarProduct(offset) - distance)
+		offset._xOffset -= factor * normal._xOffset
+		offset._yOffset -= factor * normal._yOffset
+		for child in self._children:
+			child._MirrorAt(normal, 0)
+
+	@readonly
+	def _CanMirrorAtObliqueLine(self) -> bool:
+		"""
+		Read-only property to return, if the group can be mirrored at an oblique line.
+
+		:returns: ``True``, if all its children can be mirrored at an oblique line.
+		"""
+		return all(child._CanMirrorAtObliqueLine for child in self._children)
+
 	def Copy(self) -> Self:
 		"""
 		Create a new group as a copy of this group.
