@@ -1452,6 +1452,23 @@ coordinates. A group can't become its own descendant: that raises :exc:`~pyTooli
 Every segment and group takes a keyword-only parameter ``parent``: a group given there registers the new element, as
 :meth:`~pyTooling.Cartesian3D.Groups.Group3D.AddChild` does.
 
+An element carries an optional :attr:`~pyTooling.Cartesian3D.Element3D.Value` and arbitrary key-value-pairs
+(:class:`~pyTooling.DataModel.KeyValuePairsMixin`), given by the keyword-only parameters ``value`` and
+``keyValuePairs``, as in 2D. ``Copy()`` and :func:`copy.copy` keep the value (the same object) and copy the
+key-value-pairs shallowly; :func:`copy.deepcopy` copies both deeply. Points carry neither.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian3D import Point3D, LineSegment3D
+
+   wire = LineSegment3D(Point3D(0, 0, 0), Point3D(4, 0, 2), value="clock", keyValuePairs={"layer": 1})
+
+   wire["shielded"] = True
+
+   wire.Value                         # 'clock'
+   len(wire)                          # 2
+   wire.Copy()["layer"]               # 1
+
 .. seealso::
 
    :ref:`STRUCT/Cartesian2D/Element2D`
