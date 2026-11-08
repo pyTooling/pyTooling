@@ -1320,7 +1320,9 @@ key-value-pairs deeply.
 
 A drawable shape checks its ``parent`` first and registers in it when its geometry and styles are checked, so a failing
 check leaves nothing in the group or canvas, and points given with ``copyPoints=False`` stay free. A drawable segment
-is no edge of a shape: its ``parent`` is a group or canvas.
+is no edge of a shape: its ``parent`` is a group or canvas. So a path can't be built from drawable segments, a
+:class:`~pyTooling.Cartesian2D.Shapes.Path` raises :exc:`TypeError` for one: build the path from geometric segments
+and draw it as a :class:`~pyTooling.Cartesian2D.Drawing.Path`.
 
 
 .. _STRUCT/Cartesian2D/Text:
