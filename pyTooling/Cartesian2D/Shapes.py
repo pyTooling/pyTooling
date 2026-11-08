@@ -42,7 +42,7 @@ from pyTooling.MetaClasses import abstractclass, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Segment2D, LineSegment2D, \
                                   ArcSegment2D, AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, \
-                                  CrossingEdgesError
+                                  CrossingEdgesError, chordPoint, circumcenter
 
 if TYPE_CHECKING:
 	from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D
@@ -949,7 +949,7 @@ class Circle(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got points {first}, {second} and {third}.")
 			raise ex
 
-		center = ArcSegment2D._Circumcenter(first, second, third)
+		center = circumcenter(first, second, third)
 		radius = sqrt((first._x - center._x) ** 2 + (first._y - center._y) ** 2)
 		notes =  []
 		for index, point in enumerate(pointList[3:], start=3):
@@ -1049,8 +1049,8 @@ class Circle(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 			raise ex
 
 		relativeHeight = height / sqrt((end._x - start._x) ** 2 + (end._y - start._y) ** 2)
-		chordPoint =     ArcSegment2D._ChordPoint(start, end, chordPosition, relativeHeight)
-		center =         ArcSegment2D._Circumcenter(start, chordPoint, end)
+		arcPoint =       chordPoint(start, end, chordPosition, relativeHeight)
+		center =         circumcenter(start, arcPoint, end)
 		return cls(
 			center,
 			sqrt((start._x - center._x) ** 2 + (start._y - center._y) ** 2),

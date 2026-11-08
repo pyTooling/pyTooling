@@ -39,7 +39,7 @@ from pyTooling.Cartesian2D        import Base2D, Element2D, Origin2D, Point2D, O
                                          Segment2D, LineSegment2D, ArcSegment2D, BezierSegment2D, \
                                          QuadraticBezierSegment2D, CubicBezierSegment2D, Alignment2D, Line2D, \
                                          VerticalLine2D, HorizontalLine2D, Ray2D, SweepDirection, AlreadyOwnedError, \
-                                         DuplicatePointError, NoAreaError, NotOwnedError
+                                         DuplicatePointError, NoAreaError, NotOwnedError, chordPoint, circumcenter
 from pyTooling.Cartesian2D.Shapes import Polygon, Rectangle, Circle, Path, Shape
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection
 from pyTooling.Cartesian3D        import Point3D, Offset3D
@@ -500,6 +500,75 @@ class Aliases(Testcase):
 		self.assertIs(end, line.End)
 		self.assertIs(start, line.start)
 		self.assertIs(end, line.end)
+
+
+class GeometryFunctions(Testcase):
+	def test_chordPoint(self) -> None:
+		point = chordPoint(Point2D(0, 0), Point2D(4, 0), 0.5, 0.25)
+
+		self.assertTupleEqual((2.0, 1.0), point.ToTuple())
+		self.assertIsNone(point.Parent)
+
+	def test_chordPoint_Right(self) -> None:
+		"""A negative height is on the right of the chord."""
+		point = chordPoint(Point2D(0, 0), Point2D(0, 4), 0.25, -0.5)
+
+		self.assertTupleEqual((2.0, 1.0), point.ToTuple())
+
+	def test_chordPoint_StartNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			chordPoint(None, Point2D(4, 0), 0.5, 0.25)
+
+		self.assertEqual("Parameter 'start' is None.", str(context.exception))
+
+	def test_chordPoint_EndTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			chordPoint(Point2D(0, 0), (4, 0), 0.5, 0.25)
+
+		self.assertEqual("Parameter 'end' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_chordPoint_ChordPositionNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			chordPoint(Point2D(0, 0), Point2D(4, 0), None, 0.25)
+
+		self.assertEqual("Parameter 'chordPosition' is None.", str(context.exception))
+
+	def test_chordPoint_RelativeHeightStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			chordPoint(Point2D(0, 0), Point2D(4, 0), 0.5, "1")
+
+		self.assertEqual("Parameter 'relativeHeight' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_circumcenter(self) -> None:
+		center = circumcenter(Point2D(0, 0), Point2D(4, 0), Point2D(0, 2))
+
+		self.assertTupleEqual((2.0, 1.0), center.ToTuple())
+		self.assertIsNone(center.Parent)
+
+	def test_circumcenter_FirstNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			circumcenter(None, Point2D(4, 0), Point2D(0, 2))
+
+		self.assertEqual("Parameter 'first' is None.", str(context.exception))
+
+	def test_circumcenter_ThirdTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			circumcenter(Point2D(0, 0), Point2D(4, 0), (0, 2))
+
+		self.assertEqual("Parameter 'third' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_circumcenter_OnOneLine(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			circumcenter(Point2D(0, 0), Point2D(2, 1), Point2D(4, 2))
+
+		self.assertEqual("Parameters 'first', 'second' and 'third' are on one line.", str(context.exception))
+		self.assertListEqual(
+			["Got points (0, 0), (2, 1) and (4, 2).", "Three points on one line have no circle through them."],
+			context.exception.__notes__
+		)
 
 
 class LineSegment(Testcase):

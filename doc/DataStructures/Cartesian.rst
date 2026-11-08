@@ -482,6 +482,9 @@ exactly one group of keyword parameters describing the circle; none or more than
    flat.Radius                        # 2.5
    flat.Direction                     # SweepDirection.Counterclockwise
 
+The geometry behind arcs and circles is public: :func:`~pyTooling.Cartesian2D.chordPoint` computes the point at a
+height over a chord, :func:`~pyTooling.Cartesian2D.circumcenter` the center of the circle through three points.
+
 A ``center`` or an ``arcPoint`` is converted to the sagitta, the height at the chord's midpoint. An arc isn't a circle:
 a start and an end point at the same position have no chord and raise :exc:`ValueError`, whatever the group - also
 when assigned to :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Start` or :attr:`~pyTooling.Cartesian2D.ArcSegment2D.End`.
