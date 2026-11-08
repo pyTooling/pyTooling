@@ -338,9 +338,9 @@ A :class:`~pyTooling.Cartesian2D.Ray2D` is a half-line: it starts at a point and
 built from a start point and a direction, an :class:`~pyTooling.Cartesian2D.Offset2D`; it copies both, so it owns no
 point of an element. The start point is taken in absolute coordinates: a point inside a group is converted. A zero
 direction raises :exc:`ValueError`. :attr:`~pyTooling.Cartesian2D.Ray2D.Start` and
-:attr:`~pyTooling.Cartesian2D.Ray2D.Direction` return copies. :meth:`~pyTooling.Cartesian2D.Ray2D.PointAt` returns the
-point at a distance from the start point, whatever the length of the direction; a negative distance raises
-:exc:`ValueError`.
+:attr:`~pyTooling.Cartesian2D.Ray2D.Direction` return the stored point and offset.
+:meth:`~pyTooling.Cartesian2D.Ray2D.PointAt` returns the point at a distance from the start point, whatever the length
+of the direction; a negative distance raises :exc:`ValueError`.
 
 .. code-block:: Python
 
@@ -351,10 +351,10 @@ point at a distance from the start point, whatever the length of the direction; 
    str(ray)                           # '(1, 2) + t * (3, 4), t >= 0'
    ray.PointAt(5)                     # (4.0, 6.0)
 
-Like a line, a ray is a **value** in absolute coordinates: its properties are read-only, and it is hashable. Two rays
-are equal (``==``), if they start at the same point and their directions point the same way - the cross product of the
-directions is zero and their dot product is positive. The lengths of the directions don't matter, and integer
-coordinates compare exactly:
+Like a line, a ray is in absolute coordinates and compares by value; as its start point and direction can be changed, it
+is unhashable (like an :class:`~pyTooling.Cartesian2D.Offset2D`). Two rays are equal (``==``), if they start at the same
+point and their directions point the same way - the cross product of the directions is zero and their dot product is
+positive. The lengths of the directions don't matter, and integer coordinates compare exactly:
 
 .. code-block:: Python
 

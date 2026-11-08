@@ -2072,8 +2072,8 @@ class Ray2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	A 2D ray: a half-line, which starts at a point and is infinite in one direction.
 
 	The ray is in absolute coordinates, relative to the origin. Its start point is a free copy, so it owns no point of an
-	element. It is a value: it can't be changed after creation and is hashable. Two rays are equal, if they start at the
-	same point and their directions point the same way, whatever their lengths.
+	element. Two rays are equal, if they start at the same point and their directions point the same way, whatever their
+	lengths. A ray is unhashable, as its start point and direction can be changed.
 	"""
 
 	_start:     Point2D[Coordinate]   #: The start point of the ray, in absolute coordinates and without owner.
@@ -2120,20 +2120,20 @@ class Ray2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	@readonly
 	def Start(self) -> Point2D[Coordinate]:
 		"""
-		Read-only property to return the start point of the ray.
+		Read-only property to access the start point of the ray (:attr:`_start`).
 
-		:returns: A new 2D-point without owner.
+		:returns: The start point, in absolute coordinates and without owner.
 		"""
-		return self._start.Copy()
+		return self._start
 
 	@readonly
 	def Direction(self) -> Offset2D[Coordinate]:
 		"""
-		Read-only property to return the direction of the ray.
+		Read-only property to access the direction of the ray (:attr:`_direction`).
 
-		:returns: A new 2D-offset.
+		:returns: The direction.
 		"""
-		return self._direction.Copy()
+		return self._direction
 
 	def PointAt(self, distance: Coordinate) -> Point2D[float]:
 		"""
@@ -2219,15 +2219,6 @@ class Ray2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			or direction._xOffset * otherDirection._yOffset - direction._yOffset * otherDirection._xOffset != 0
 			or direction._xOffset * otherDirection._xOffset + direction._yOffset * otherDirection._yOffset <= 0
 		)
-
-	def __hash__(self) -> int:
-		"""
-		Returns a hash of the ray's start point, so equal rays have the same hash.
-
-		:returns: The hash value.
-		"""
-		start = self._start
-		return hash((start._x, start._y))
 
 	def __repr__(self) -> str:
 		"""

@@ -2860,7 +2860,7 @@ class Rays(Testcase):
 		self.assertTupleEqual((0, 3, 4), ray.Direction.ToTuple())
 
 	def test_Copies(self) -> None:
-		"""The ray copies the given point and offset; its properties return new copies."""
+		"""The ray copies the given point and offset; its properties return the stored objects."""
 		start =     Point3D(1, 2, 3)
 		direction = Offset3D(0, 3, 4)
 		ray =       Ray3D(start, direction)
@@ -2871,13 +2871,8 @@ class Rays(Testcase):
 		self.assertTupleEqual((1, 2, 3), ray.Start.ToTuple())
 		self.assertTupleEqual((0, 3, 4), ray.Direction.ToTuple())
 		self.assertIsNone(ray.Start.Parent)
-		self.assertIsNot(ray.Start, ray.Start)
-		self.assertIsNot(ray.Direction, ray.Direction)
-
-		returned =   ray.Start
-		returned.X = 9
-
-		self.assertEqual(1, ray.Start.X)
+		self.assertIs(ray.Start, ray.Start)
+		self.assertIs(ray.Direction, ray.Direction)
 
 	def test_StartInGroup(self) -> None:
 		"""A start point inside a group is taken in absolute coordinates."""
@@ -3032,15 +3027,13 @@ class Rays(Testcase):
 		)
 
 	def test_Hash(self) -> None:
-		"""Equal rays hash alike; a ray in the opposite direction is another element of a set."""
-		rays = {
-			Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4)),
-			Ray3D(Point3D(1, 2, 3), Offset3D(0, 6, 8)),
-			Ray3D(Point3D(1, 2, 3), Offset3D(0, -3, -4))
-		}
+		"""A ray is unhashable, as its start point and direction can be changed."""
+		ray = Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))
 
-		self.assertEqual(2, len(rays))
-		self.assertEqual(hash(Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))), hash(Ray3D(Point3D(1, 2, 3), Offset3D(0, 6, 8))))
+		with self.assertRaises(TypeError) as context:
+			hash(ray)
+
+		self.assertEqual("unhashable type: 'Ray3D'", str(context.exception))
 
 	def test_repr(self) -> None:
 		self.assertEqual("Ray3D((1, 2, 3), (0, 3, 4))", repr(Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))))
