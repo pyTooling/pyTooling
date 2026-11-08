@@ -131,7 +131,11 @@ class DuplicatePointError(Cartesian2DError, DuplicateElementError):
 
 @export
 class NotEnoughCornersError(Cartesian2DError):
-	"""The exception is raised when a polygon is given fewer than 3 corners."""
+	"""
+	The exception is raised when a shape is given fewer corners than it needs.
+
+	For example, a polygon given fewer than 3 corners, or a polyline given fewer than 2 points.
+	"""
 
 
 @export
