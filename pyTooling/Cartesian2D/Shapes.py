@@ -49,6 +49,7 @@ if TYPE_CHECKING:
 
 
 @export
+@abstractclass
 class Shape(Element2D[Coordinate], Generic[Coordinate]):
 	"""
 	Abstract base-class for all 2D cartesian shapes.
@@ -65,6 +66,7 @@ Segment2D._PARENT_TYPE = (Shape, )
 
 
 @export
+@abstractclass
 class Geometry2D(Shape[Coordinate], Generic[Coordinate]):
 	"""
 	Abstract base-class for all 2D cartesian geometries: closed shapes enclosing an area.

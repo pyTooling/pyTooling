@@ -283,6 +283,9 @@ Segment2D
 A :class:`~pyTooling.Cartesian2D.Segment2D` is a :attr:`~pyTooling.Cartesian2D.Segment2D.Start` and an
 :attr:`~pyTooling.Cartesian2D.Segment2D.End` point.
 
+It is abstract: a straight segment is a :class:`~pyTooling.Cartesian2D.LineSegment2D`, curved segments are described
+below.
+
 Its constructor **copies both points by default**, so a segment doesn't change when the points it was built from
 move later. ``copyPoints=False`` keeps the references instead: the segment takes ownership of both points. A point
 assigned to :attr:`~pyTooling.Cartesian2D.Segment2D.Start` or :attr:`~pyTooling.Cartesian2D.Segment2D.End` is
@@ -1384,6 +1387,7 @@ Segment3D
 :class:`~pyTooling.Cartesian3D.Segment3D` is a :attr:`~pyTooling.Cartesian3D.Segment3D.Start` and an
 :attr:`~pyTooling.Cartesian3D.Segment3D.End` point, copied on construction unless ``copyPoints=False``. Either way,
 the segment owns its points; an assigned start or end point is referenced and owned too.
+It is abstract: a straight segment is a :class:`~pyTooling.Cartesian3D.LineSegment3D`.
 
 :attr:`~pyTooling.Cartesian3D.Segment3D.BoundingBox` encloses both points, and
 :meth:`~pyTooling.Cartesian3D.Segment3D.Move` shifts both by an :class:`~pyTooling.Cartesian3D.Offset3D`, in place.

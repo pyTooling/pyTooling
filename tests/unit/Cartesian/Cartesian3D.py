@@ -1604,7 +1604,13 @@ class Hierarchy(Testcase):
 		self.assertIsNone(origin.Frame)
 
 	def test_Segment(self) -> None:
-		self.assertIsInstance(Segment3D(Point3D(1, 2, 3), Point3D(4, 6, 8)), Element3D)
+		with self.assertRaises(AbstractClassError) as context:
+			_ = Segment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		self.assertEqual("Class 'Segment3D' is abstract and needs to be derived.", str(context.exception))
+
+	def test_LineSegment(self) -> None:
+		self.assertIsInstance(LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8)), Segment3D)
 		self.assertIsInstance(LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8)), Element3D)
 
 	def test_Slots(self) -> None:
@@ -1815,7 +1821,7 @@ class Ownership(Testcase):
 
 	def test_Segment_copyPointsPositional(self) -> None:
 		with self.assertRaises(TypeError):
-			_ = Segment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), False)
+			_ = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), False)
 
 	def test_LineSegment_copyPointsPositional(self) -> None:
 		with self.assertRaises(TypeError):
@@ -2493,21 +2499,21 @@ class ElementData(Testcase):
 	def test_Segment(self) -> None:
 		value =   object()
 		pairs =   {"layer": 1}
-		segment = Segment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), value=value, keyValuePairs=pairs)
+		segment = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), value=value, keyValuePairs=pairs)
 
 		self.assertIs(value, segment.Value)
 		self.assertEqual(1, segment["layer"])
 		self.assertIsNot(pairs, segment._dict)
 
 	def test_Segment_Default(self) -> None:
-		segment = Segment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+		segment = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
 		self.assertIsNone(segment.Value)
 		self.assertEqual(0, len(segment))
 
 	def test_Segment_keyValuePairsInt(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Segment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), keyValuePairs=1)
+			_ = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), keyValuePairs=1)
 
 		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)

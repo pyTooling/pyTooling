@@ -556,6 +556,7 @@ class Origin2D(Point2D[Coordinate], Generic[Coordinate]):
 
 
 @export
+@abstractclass
 class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 	"""
 	Abstract base-class of all elements a :class:`~pyTooling.Cartesian2D.Groups.Group2D` or a
@@ -1715,6 +1716,7 @@ class BoundingBox2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 
 @export
+@abstractclass
 class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 	"""
 	An implementation of a 2D cartesian segment.
@@ -2686,6 +2688,7 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 
 
 @export
+@abstractclass
 class BezierSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 	"""
 	Abstract base-class of 2D cartesian Bezier curve segments.

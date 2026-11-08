@@ -118,6 +118,9 @@ Version 10.x (2026)
      parameter ``points`` (was ``p00`` ... ``p10``).
    * :mod:`pyTooling.Cartesian3D`: parameter ``copyPoints`` of :class:`~pyTooling.Cartesian3D.Segment3D` is
      keyword-only, as in :mod:`pyTooling.Cartesian2D`.
+   * ⚠️ :mod:`pyTooling.Cartesian2D`, :mod:`pyTooling.Cartesian3D`: :class:`~pyTooling.Cartesian2D.Segment2D` and
+     :class:`~pyTooling.Cartesian3D.Segment3D` are abstract; a straight segment is a
+     :class:`~pyTooling.Cartesian2D.LineSegment2D` / :class:`~pyTooling.Cartesian3D.LineSegment3D`.
 
    .. rubric:: Bug Fixes
 
