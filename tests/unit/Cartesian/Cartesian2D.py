@@ -37,8 +37,9 @@ from math                         import isclose, pi, sqrt
 
 from pyTooling.Cartesian2D        import Base2D, Element2D, Origin2D, Point2D, Offset2D, Size2D, BoundingBox2D, \
                                          Segment2D, LineSegment2D, ArcSegment2D, BezierSegment2D, \
-                                         QuadraticBezierSegment2D, CubicBezierSegment2D, Alignment2D, SweepDirection, \
-                                         AlreadyOwnedError, DuplicatePointError, NoAreaError, NotOwnedError
+                                         QuadraticBezierSegment2D, CubicBezierSegment2D, Alignment2D, Axis2D, \
+                                         AxisAlignedLine2D, SweepDirection, AlreadyOwnedError, DuplicatePointError, \
+                                         NoAreaError, NotOwnedError
 from pyTooling.Cartesian2D.Shapes import Polygon, Rectangle, Circle, Path, Shape
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection
 from pyTooling.Exceptions         import DuplicateElementError, InvalidOperationError
@@ -1690,6 +1691,283 @@ class Mirroring(Testcase):
 
 		self.assertEqual("Parameter 'offset' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
+
+
+class AxisAlignedLine(Testcase):
+	def test_Vertical(self) -> None:
+		line = AxisAlignedLine2D(Axis2D.X, 5)
+
+		self.assertIs(Axis2D.X, line.Axis)
+		self.assertEqual(5, line.Position)
+
+	def test_Horizontal(self) -> None:
+		line = AxisAlignedLine2D(Axis2D.Y, -2.5)
+
+		self.assertIs(Axis2D.Y, line.Axis)
+		self.assertEqual(-2.5, line.Position)
+
+	def test_AxisNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			AxisAlignedLine2D(None, 5)
+
+		self.assertEqual("Parameter 'axis' is None.", str(context.exception))
+
+	def test_AxisAlignment(self) -> None:
+		"""An alignment names an edge of a bounding box, not an axis."""
+		with self.assertRaises(TypeError) as context:
+			AxisAlignedLine2D(Alignment2D.MinX, 5)
+
+		self.assertEqual("Parameter 'axis' is not of type 'Axis2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Alignment2D'."], context.exception.__notes__)
+
+	def test_PositionNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			AxisAlignedLine2D(Axis2D.X, None)
+
+		self.assertEqual("Parameter 'position' is None.", str(context.exception))
+
+	def test_PositionStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			AxisAlignedLine2D(Axis2D.X, "5")
+
+		self.assertEqual("Parameter 'position' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Immutable(self) -> None:
+		line = AxisAlignedLine2D(Axis2D.X, 5)
+
+		with self.assertRaises(AttributeError):
+			line.Axis = Axis2D.Y
+
+		with self.assertRaises(AttributeError):
+			line.Position = 6
+
+		self.assertEqual(AxisAlignedLine2D(Axis2D.X, 5), line)
+
+	def test_Equal(self) -> None:
+		self.assertTrue(AxisAlignedLine2D(Axis2D.X, 5) == AxisAlignedLine2D(Axis2D.X, 5.0))
+		self.assertFalse(AxisAlignedLine2D(Axis2D.X, 5) == AxisAlignedLine2D(Axis2D.Y, 5))
+		self.assertFalse(AxisAlignedLine2D(Axis2D.X, 5) == AxisAlignedLine2D(Axis2D.X, 6))
+
+	def test_Unequal(self) -> None:
+		self.assertTrue(AxisAlignedLine2D(Axis2D.X, 5) != AxisAlignedLine2D(Axis2D.Y, 5))
+		self.assertTrue(AxisAlignedLine2D(Axis2D.X, 5) != AxisAlignedLine2D(Axis2D.X, 6))
+		self.assertFalse(AxisAlignedLine2D(Axis2D.X, 5) != AxisAlignedLine2D(Axis2D.X, 5))
+
+	def test_EqualTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = AxisAlignedLine2D(Axis2D.X, 5) == (Axis2D.X, 5)
+
+		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'tuple'.", "Supported types for second operand: AxisAlignedLine2D"],
+			context.exception.__notes__
+		)
+
+	def test_UnequalNone(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = AxisAlignedLine2D(Axis2D.X, 5) != None
+
+		self.assertEqual("Second operand is not supported by != operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'NoneType'.", "Supported types for second operand: AxisAlignedLine2D"],
+			context.exception.__notes__
+		)
+
+	def test_Hash(self) -> None:
+		lines = {AxisAlignedLine2D(Axis2D.X, 5), AxisAlignedLine2D(Axis2D.X, 5.0), AxisAlignedLine2D(Axis2D.Y, 5)}
+
+		self.assertEqual(2, len(lines))
+
+	def test_repr(self) -> None:
+		self.assertEqual("AxisAlignedLine2D(Axis2D.X, 5)", repr(AxisAlignedLine2D(Axis2D.X, 5)))
+
+	def test_str(self) -> None:
+		self.assertEqual("x = 5", str(AxisAlignedLine2D(Axis2D.X, 5)))
+
+	def test_str_Horizontal(self) -> None:
+		self.assertEqual("y = -2.5", str(AxisAlignedLine2D(Axis2D.Y, -2.5)))
+
+	def test_FromElement_MinX(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		self.assertEqual(AxisAlignedLine2D(Axis2D.X, 1), AxisAlignedLine2D.FromElement(line, Alignment2D.MinX))
+
+	def test_FromElement_CenterX(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		self.assertEqual(AxisAlignedLine2D(Axis2D.X, 2.5), AxisAlignedLine2D.FromElement(line, Alignment2D.CenterX))
+
+	def test_FromElement_MaxX(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		self.assertEqual(AxisAlignedLine2D(Axis2D.X, 4), AxisAlignedLine2D.FromElement(line, Alignment2D.MaxX))
+
+	def test_FromElement_MinY(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		self.assertEqual(AxisAlignedLine2D(Axis2D.Y, 2), AxisAlignedLine2D.FromElement(line, Alignment2D.MinY))
+
+	def test_FromElement_CenterY(self) -> None:
+		"""The position of a center is a float, as the center of a bounding box."""
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		center = AxisAlignedLine2D.FromElement(line, Alignment2D.CenterY)
+
+		self.assertEqual(AxisAlignedLine2D(Axis2D.Y, 4), center)
+		self.assertIs(float, type(center.Position))
+
+	def test_FromElement_MaxY(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		self.assertEqual(AxisAlignedLine2D(Axis2D.Y, 6), AxisAlignedLine2D.FromElement(line, Alignment2D.MaxY))
+
+	def test_FromElement_Group(self) -> None:
+		"""The line runs through the absolute bounding box of an element inside a group."""
+		circle = Circle(Point2D(1, 2), 1)
+		_ =      Group2D(Offset2D(10, 20), (circle, ))
+
+		self.assertEqual(AxisAlignedLine2D(Axis2D.X, 12), AxisAlignedLine2D.FromElement(circle, Alignment2D.MaxX))
+		self.assertEqual(AxisAlignedLine2D(Axis2D.Y, 21), AxisAlignedLine2D.FromElement(circle, Alignment2D.MinY))
+
+	def test_FromElement_ElementNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			AxisAlignedLine2D.FromElement(None, Alignment2D.MinX)
+
+		self.assertEqual("Parameter 'element' is None.", str(context.exception))
+
+	def test_FromElement_ElementPoint(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			AxisAlignedLine2D.FromElement(Point2D(1, 2), Alignment2D.MinX)
+
+		self.assertEqual("Parameter 'element' is not of type 'Element2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
+	def test_FromElement_AlignmentNone(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		with self.assertRaises(ValueError) as context:
+			AxisAlignedLine2D.FromElement(line, None)
+
+		self.assertEqual("Parameter 'alignment' is None.", str(context.exception))
+
+	def test_FromElement_AlignmentAxis(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		with self.assertRaises(TypeError) as context:
+			AxisAlignedLine2D.FromElement(line, Axis2D.X)
+
+		self.assertEqual("Parameter 'alignment' is not of type 'Alignment2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Axis2D'."], context.exception.__notes__)
+
+
+class MirroringAtLine(Testcase):
+	def test_Vertical(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		line.MirrorAt(AxisAlignedLine2D(Axis2D.X, 10))
+
+		self.assertTupleEqual(((19, 2), (16, 6)), line.ToTuple())
+
+	def test_Horizontal(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		line.MirrorAt(AxisAlignedLine2D(Axis2D.Y, 0))
+
+		self.assertTupleEqual(((1, -2), (4, -6)), line.ToTuple())
+
+	def test_Float(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		line.MirrorAt(AxisAlignedLine2D(Axis2D.X, 0.5))
+
+		self.assertTupleEqual(((0.0, 2), (-3.0, 6)), line.ToTuple())
+
+	def test_Int(self) -> None:
+		"""A line at an integer coordinate keeps integer coordinates."""
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		line.MirrorAt(AxisAlignedLine2D(Axis2D.Y, 3))
+
+		self.assertTupleEqual(((1, 4), (4, 0)), line.ToTuple())
+		self.assertIs(int, type(line.Start.Y))
+		self.assertIs(int, type(line.End.Y))
+
+	def test_Twice(self) -> None:
+		line =   LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+		mirror = AxisAlignedLine2D(Axis2D.X, -3)
+
+		line.MirrorAt(mirror)
+		line.MirrorAt(mirror)
+
+		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
+
+	def test_MirrorX(self) -> None:
+		"""Mirroring at the line through an edge of the element equals mirroring at that edge."""
+		line1 = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+		line2 = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		line1.MirrorAt(AxisAlignedLine2D.FromElement(line1, Alignment2D.MaxX))
+		line2.MirrorX(Alignment2D.MaxX)
+
+		self.assertTupleEqual(line2.ToTuple(), line1.ToTuple())
+
+	def test_SameLine(self) -> None:
+		"""Several elements mirrored at the same line keep their distances to each other."""
+		left =   LineSegment2D(Point2D(0, 0), Point2D(1, 1))
+		right =  LineSegment2D(Point2D(3, 0), Point2D(4, 1))
+		mirror = AxisAlignedLine2D.FromElement(right, Alignment2D.MaxX)
+
+		left.MirrorAt(mirror)
+		right.MirrorAt(mirror)
+
+		self.assertTupleEqual(((8, 0), (7, 1)), left.ToTuple())
+		self.assertTupleEqual(((5, 0), (4, 1)), right.ToTuple())
+
+	def test_Polygon(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+
+		polygon.MirrorAt(AxisAlignedLine2D(Axis2D.Y, 5))
+
+		self.assertTupleEqual(((0, 10), (4, 9), (2, 7)), tuple(point.ToTuple() for point in polygon.Points))
+		self.assertTupleEqual(((0, 10), (4, 9)), polygon.Segments[0].ToTuple())
+
+	def test_Edge(self) -> None:
+		"""An edge mirrors the polygon's corners it references."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+
+		polygon.Segments[0].MirrorAt(AxisAlignedLine2D(Axis2D.X, 2))
+
+		self.assertTupleEqual(((4, 0), (0, 1), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
+
+	def test_Arc(self) -> None:
+		"""Mirroring reverses the direction of an arc."""
+		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Clockwise)
+
+		arc.MirrorAt(AxisAlignedLine2D(Axis2D.X, 2))
+
+		self.assertTupleEqual((3, 0), arc.Start.ToTuple())
+		self.assertTupleEqual((4, 1), arc.End.ToTuple())
+		self.assertIs(SweepDirection.Counterclockwise, arc.Direction)
+
+	def test_LineNone(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		with self.assertRaises(ValueError) as context:
+			line.MirrorAt(None)
+
+		self.assertEqual("Parameter 'line' is None.", str(context.exception))
+		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
+
+	def test_LineAlignment(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		with self.assertRaises(TypeError) as context:
+			line.MirrorAt(Alignment2D.MaxX)
+
+		self.assertEqual("Parameter 'line' is not of type 'AxisAlignedLine2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Alignment2D'."], context.exception.__notes__)
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
 

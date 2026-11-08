@@ -34,9 +34,10 @@ Unit tests for :mod:`pyTooling.Cartesian2D.Groups` - groups, canvases, frames, a
 from copy                         import deepcopy
 from math                         import isclose, pi
 
-from pyTooling.Cartesian2D        import Base2D, Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, Element2D, \
-                                         Segment2D, LineSegment2D, AlreadyOwnedError, DuplicatePointError, \
-                                         NotEnoughCornersError, NotOwnedError, NotInSameFrameError, GroupCycleError
+from pyTooling.Cartesian2D        import Base2D, Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, Axis2D, \
+                                         AxisAlignedLine2D, Element2D, Segment2D, LineSegment2D, AlreadyOwnedError, \
+                                         DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
+                                         NotInSameFrameError, GroupCycleError
 from pyTooling.Cartesian2D.Shapes import Polygon, PolyLine, Trapezium, Rectangle, Square, Circle, Ellipse
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection, EmptyGroupError
 from pyTooling.Exceptions         import EmptyError
@@ -1558,6 +1559,83 @@ class Mirroring(Testcase):
 
 		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
 		self.assertTupleEqual((1, 2), group.Offset.ToTuple())
+
+	def test_MirrorAt_Group(self) -> None:
+		"""A group mirrors its offset at the line, its children are mirrored at the group's origin."""
+		circle = Circle(Point2D(1, 2), 1)
+		inner =  Group2D(Offset2D(3, 4), (circle, ))
+		outer =  Group2D(Offset2D(10, 20), (inner, ))
+
+		outer.MirrorAt(AxisAlignedLine2D(Axis2D.X, 20))
+
+		self.assertTupleEqual((30, 20), outer.Offset.ToTuple())
+		self.assertTupleEqual((-3, 4), inner.Offset.ToTuple())
+		self.assertTupleEqual((-1, 2), circle.Center.ToTuple())
+		self.assertTupleEqual((26, 26), circle.Center.Absolute.ToTuple())
+
+	def test_MirrorAt_Child(self) -> None:
+		"""The line is in absolute coordinates: a child is mirrored in its group's frame, the groups stay."""
+		circle = Circle(Point2D(1, 2), 1)
+		inner =  Group2D(Offset2D(3, 4), (circle, ))
+		outer =  Group2D(Offset2D(10, 20), (inner, ))
+
+		circle.MirrorAt(AxisAlignedLine2D(Axis2D.Y, 0))
+
+		self.assertTupleEqual((10, 20), outer.Offset.ToTuple())
+		self.assertTupleEqual((3, 4), inner.Offset.ToTuple())
+		self.assertTupleEqual((1, -50), circle.Center.ToTuple())
+		self.assertTupleEqual((14, -26), circle.Center.Absolute.ToTuple())
+
+	def test_MirrorAt_Groups(self) -> None:
+		"""Elements of different groups are mirrored at the same line."""
+		line1 =  LineSegment2D(Point2D(0, 0), Point2D(1, 1))
+		line2 =  LineSegment2D(Point2D(0, 0), Point2D(1, 1))
+		_ =      Group2D(Offset2D(10, 0), (line1, ))
+		_ =      Group2D(Offset2D(0, 5), (line2, ))
+		mirror = AxisAlignedLine2D(Axis2D.X, 0)
+
+		line1.MirrorAt(mirror)
+		line2.MirrorAt(mirror)
+
+		self.assertEqual(BoundingBox2D(-11, 0, -10, 1), line1.AbsoluteBoundingBox)
+		self.assertEqual(BoundingBox2D(-1, 5, 0, 6), line2.AbsoluteBoundingBox)
+
+	def test_MirrorAt_Edge(self) -> None:
+		"""An edge is in the frame of its shape."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+		_ =       Group2D(Offset2D(10, 0), (polygon, ))
+
+		polygon.Segments[0].MirrorAt(AxisAlignedLine2D(Axis2D.X, 12))
+
+		self.assertTupleEqual(((4, 0), (0, 1), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
+
+	def test_MirrorAt_Empty(self) -> None:
+		"""A group without children mirrors its offset: the line needs no bounding box."""
+		group = Group2D(Offset2D(1, 2))
+
+		group.MirrorAt(AxisAlignedLine2D(Axis2D.X, 5))
+
+		self.assertTupleEqual((9, 2), group.Offset.ToTuple())
+
+	def test_MirrorAt_Canvas(self) -> None:
+		"""Mirroring an element on a canvas keeps the canvas' direction."""
+		circle = Circle(Point2D(1, 2), 1)
+		group =  Group2D(Offset2D(10, 20), (circle, ))
+		canvas = Canvas2D(YAxisDirection.Down, Size2D(400, 300), (group, ))
+
+		circle.MirrorAt(AxisAlignedLine2D(Axis2D.Y, 150))
+
+		self.assertIs(YAxisDirection.Down, canvas.Direction)
+		self.assertTupleEqual((10, 20), group.Offset.ToTuple())
+		self.assertTupleEqual((1, 258), circle.Center.ToTuple())
+		self.assertTupleEqual((11, 278), circle.Center.Absolute.ToTuple())
+
+	def test_FromElement_Empty(self) -> None:
+		with self.assertRaises(EmptyGroupError) as context:
+			AxisAlignedLine2D.FromElement(Group2D(Offset2D(1, 2)), Alignment2D.MinX)
+
+		self.assertEqual("Group2D has no children.", str(context.exception))
+		self.assertListEqual(["Got Group2D((1, 2), children=0)."], context.exception.__notes__)
 
 	def test_Canvas_Open(self) -> None:
 		"""Without a size, every level negates its y-coordinates."""

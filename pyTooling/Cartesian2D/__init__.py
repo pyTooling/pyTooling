@@ -79,6 +79,18 @@ class Alignment2D(Enum):
 
 
 @export
+class Axis2D(Enum):
+	"""
+	Coordinate axis of a 2D cartesian coordinate system.
+
+	An :class:`AxisAlignedLine2D` uses it to name the coordinate all its points have in common.
+	"""
+
+	X = 0  #: The x-axis.
+	Y = 1  #: The y-axis.
+
+
+@export
 class SweepDirection(Enum):
 	"""
 	Direction, in which an arc sweeps from its start point to its end point.
@@ -820,6 +832,47 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 
 		:param twiceAxis: Twice the y-coordinate of the axis.
 		"""
+
+	def MirrorAt(self, line: AxisAlignedLine2D[Coordinate]) -> None:
+		r"""
+		Mirror the element at an axis-aligned line (inplace).
+
+		The line is in absolute coordinates, relative to the origin, so elements of different groups can be mirrored at
+		the same line. At a vertical line ``x = a``, every absolute x-coordinate ``x`` becomes ``2a - x``; at a horizontal
+		line ``y = a``, every absolute y-coordinate ``y`` becomes ``2a - y``. A group mirrors its offset, and its children
+		at the group's origin.
+
+		Mirrored at a vertical line: the element on the left of the line is mirrored to the right of it.
+
+		.. code-block:: text
+
+		                     x = a
+		                       |
+		        +----+         |         +----+
+		        | \  |         |         |  / |
+		        |  \ |         |         | /  |
+		        +----+         |         +----+
+		                       |
+		        before                   after
+
+		:param line:        The line to mirror at.
+		:raises ValueError: If parameter 'line' is None.
+		:raises TypeError:  If parameter 'line' is not of type :class:`AxisAlignedLine2D`.
+		"""
+		if line is None:
+			raise ValueError("Parameter 'line' is None.")
+		elif not isinstance(line, AxisAlignedLine2D):
+			ex = TypeError("Parameter 'line' is not of type 'AxisAlignedLine2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(line)}'.")
+			raise ex
+
+		frame = self.Frame
+		if line._axis is Axis2D.X:
+			position = line._position if frame is None else line._position - frame.AbsoluteOffset._xOffset
+			self._MirrorX(2 * position)
+		else:
+			position = line._position if frame is None else line._position - frame.AbsoluteOffset._yOffset
+			self._MirrorY(2 * position)
 
 	def MoveTo(self, parent: Nullable[Union[Group2D, Canvas2D]], keepPosition: bool = True) -> None:
 		"""
@@ -1713,6 +1766,170 @@ class BoundingBox2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:returns: The string equivalent of the bounding box, its corners with the smallest and the largest coordinates.
 		"""
 		return f"(({self._minX}, {self._minY}), ({self._maxX}, {self._maxY}))"
+
+
+@export
+class AxisAlignedLine2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+	"""
+	An axis-aligned 2D line: the vertical line ``x = c`` or the horizontal line ``y = c``.
+
+	The line is in absolute coordinates, relative to the origin. It is a value: it can't be changed after creation,
+	compares by value and is hashable.
+	"""
+
+	_axis:     Axis2D      #: The coordinate axis, whose coordinate is the same for all points of the line.
+	_position: Coordinate  #: The coordinate of all points of the line on that axis.
+
+	def __init__(self, axis: Axis2D, position: Coordinate) -> None:
+		"""
+		Initializes an axis-aligned 2D line from the axis and the coordinate all its points have on that axis.
+
+		:param axis:        The coordinate axis: ``Axis2D.X`` for the vertical line ``x = position``, ``Axis2D.Y`` for the
+		                    horizontal line ``y = position``.
+		:param position:    The coordinate of all points of the line on that axis.
+		:raises ValueError: If parameter 'axis' is None.
+		:raises TypeError:  If parameter 'axis' is not of type :class:`Axis2D`.
+		:raises ValueError: If parameter 'position' is None.
+		:raises TypeError:  If parameter 'position' is not of type :class:`float` or :class:`int`.
+		"""
+		if axis is None:
+			raise ValueError("Parameter 'axis' is None.")
+		elif not isinstance(axis, Axis2D):
+			ex = TypeError("Parameter 'axis' is not of type 'Axis2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(axis)}'.")
+			raise ex
+
+		if position is None:
+			raise ValueError("Parameter 'position' is None.")
+		elif not isinstance(position, (int, float)):
+			ex = TypeError("Parameter 'position' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(position)}'.")
+			raise ex
+
+		self._axis =     axis
+		self._position = position
+
+	@classmethod
+	def FromElement(cls, element: Element2D[Coordinate], alignment: Alignment2D) -> Self:
+		"""
+		Create the line through an edge or the center of an element's absolute bounding box.
+
+		``MinX``, ``CenterX`` and ``MaxX`` create a vertical line, ``MinY``, ``CenterY`` and ``MaxY`` a horizontal line. The
+		position of a center is a :class:`float`, as in :attr:`BoundingBox2D.Center`.
+
+		:param element:     The element, whose :attr:`~Element2D.AbsoluteBoundingBox` the line runs through.
+		:param alignment:   The edge or center of the bounding box.
+		:returns:           A new axis-aligned line.
+		:raises ValueError: If parameter 'element' is None.
+		:raises TypeError:  If parameter 'element' is not of type :class:`Element2D`.
+		:raises ValueError: If parameter 'alignment' is None.
+		:raises TypeError:  If parameter 'alignment' is not of type :class:`Alignment2D`.
+		"""
+		if element is None:
+			raise ValueError("Parameter 'element' is None.")
+		elif not isinstance(element, Element2D):
+			ex = TypeError("Parameter 'element' is not of type 'Element2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(element)}'.")
+			raise ex
+
+		if alignment is None:
+			raise ValueError("Parameter 'alignment' is None.")
+		elif not isinstance(alignment, Alignment2D):
+			ex = TypeError("Parameter 'alignment' is not of type 'Alignment2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
+			raise ex
+
+		box = element.AbsoluteBoundingBox
+		if alignment is Alignment2D.MinX:
+			return cls(Axis2D.X, box._minX)
+		elif alignment is Alignment2D.CenterX:
+			return cls(Axis2D.X, (box._minX + box._maxX) / 2)
+		elif alignment is Alignment2D.MaxX:
+			return cls(Axis2D.X, box._maxX)
+		elif alignment is Alignment2D.MinY:
+			return cls(Axis2D.Y, box._minY)
+		elif alignment is Alignment2D.CenterY:
+			return cls(Axis2D.Y, (box._minY + box._maxY) / 2)
+		else:
+			return cls(Axis2D.Y, box._maxY)
+
+	@readonly
+	def Axis(self) -> Axis2D:
+		"""
+		Read-only property to access the coordinate axis of the line (:attr:`_axis`).
+
+		All points of the line have the same coordinate on this axis.
+
+		:returns: The axis, whose coordinate is the same for all points of the line.
+		"""
+		return self._axis
+
+	@readonly
+	def Position(self) -> Coordinate:
+		"""
+		Read-only property to access the coordinate of all points of the line on its axis (:attr:`_position`).
+
+		:returns: The x-coordinate of a vertical line, the y-coordinate of a horizontal line.
+		"""
+		return self._position
+
+	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two axis-aligned lines for equality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if both lines have the same axis and position.
+		:raises TypeError: If the second operand is not of type :class:`AxisAlignedLine2D`.
+		"""
+		if not isinstance(other, AxisAlignedLine2D):
+			ex = TypeError("Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: AxisAlignedLine2D")
+			raise ex
+
+		return self._axis is other._axis and self._position == other._position
+
+	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two axis-aligned lines for inequality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if the lines differ in axis or position.
+		:raises TypeError: If the second operand is not of type :class:`AxisAlignedLine2D`.
+		"""
+		if not isinstance(other, AxisAlignedLine2D):
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: AxisAlignedLine2D")
+			raise ex
+
+		return self._axis is not other._axis or self._position != other._position
+
+	def __hash__(self) -> int:
+		"""
+		Returns a hash of the line's axis and position, so equal lines have the same hash.
+
+		:returns: The hash value.
+		"""
+		return hash((self._axis, self._position))
+
+	def __repr__(self) -> str:
+		"""
+		Returns the axis-aligned line's string representation.
+
+		:returns: The string representation of the line.
+		"""
+		return f"AxisAlignedLine2D({self._axis}, {self._position})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the axis-aligned line's string equivalent as an equation.
+
+		The vertical line at 5 returns ``x = 5``.
+
+		:returns: The equation of the line.
+		"""
+		return f"{self._axis.name.lower()} = {self._position}"
 
 
 @export
