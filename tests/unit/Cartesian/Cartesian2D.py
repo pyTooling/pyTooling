@@ -2021,6 +2021,12 @@ class Rays(Testcase):
 		self.assertTupleEqual((3, 4), ray.Direction.ToTuple())
 		self.assertIsNone(ray.Start.Parent)
 		self.assertIsNot(ray.Start, ray.Start)
+		self.assertIsNot(ray.Direction, ray.Direction)
+
+		returned =   ray.Start
+		returned.X = 9
+
+		self.assertEqual(1, ray.Start.X)
 
 	def test_StartInGroup(self) -> None:
 		"""A start point inside a group is taken in absolute coordinates."""
@@ -2134,13 +2140,25 @@ class Rays(Testcase):
 
 	def test_Equal(self) -> None:
 		self.assertTrue(Ray2D(Point2D(1, 2), Offset2D(3, 4)) == Ray2D(Point2D(1, 2), Offset2D(3, 4)))
-		self.assertFalse(Ray2D(Point2D(1, 2), Offset2D(3, 4)) == Ray2D(Point2D(1, 2), Offset2D(6, 8)))
 		self.assertFalse(Ray2D(Point2D(1, 2), Offset2D(3, 4)) == Ray2D(Point2D(3, 4), Offset2D(3, 4)))
 
+	def test_Equal_Scaled(self) -> None:
+		"""Directions pointing the same way are equal, whatever their lengths."""
+		self.assertTrue(Ray2D(Point2D(1, 2), Offset2D(3, 4)) == Ray2D(Point2D(1, 2), Offset2D(6, 8)))
+		self.assertTrue(Ray2D(Point2D(1, 2), Offset2D(3, 4)) == Ray2D(Point2D(1, 2), Offset2D(1.5, 2.0)))
+
+	def test_Equal_Opposite(self) -> None:
+		self.assertFalse(Ray2D(Point2D(1, 2), Offset2D(3, 4)) == Ray2D(Point2D(1, 2), Offset2D(-3, -4)))
+
+	def test_Equal_OtherDirection(self) -> None:
+		self.assertFalse(Ray2D(Point2D(1, 2), Offset2D(3, 4)) == Ray2D(Point2D(1, 2), Offset2D(4, 3)))
+
 	def test_Unequal(self) -> None:
-		self.assertTrue(Ray2D(Point2D(1, 2), Offset2D(3, 4)) != Ray2D(Point2D(1, 2), Offset2D(6, 8)))
 		self.assertTrue(Ray2D(Point2D(1, 2), Offset2D(3, 4)) != Ray2D(Point2D(3, 4), Offset2D(3, 4)))
+		self.assertTrue(Ray2D(Point2D(1, 2), Offset2D(3, 4)) != Ray2D(Point2D(1, 2), Offset2D(-3, -4)))
+		self.assertTrue(Ray2D(Point2D(1, 2), Offset2D(3, 4)) != Ray2D(Point2D(1, 2), Offset2D(4, 3)))
 		self.assertFalse(Ray2D(Point2D(1, 2), Offset2D(3, 4)) != Ray2D(Point2D(1, 2), Offset2D(3, 4)))
+		self.assertFalse(Ray2D(Point2D(1, 2), Offset2D(3, 4)) != Ray2D(Point2D(1, 2), Offset2D(6, 8)))
 
 	def test_EqualTuple(self) -> None:
 		with self.assertRaises(TypeError) as context:
@@ -2163,13 +2181,15 @@ class Rays(Testcase):
 		)
 
 	def test_Hash(self) -> None:
+		"""Equal rays hash alike; a ray in the opposite direction is another element of a set."""
 		rays = {
 			Ray2D(Point2D(1, 2), Offset2D(3, 4)),
-			Ray2D(Point2D(1, 2), Offset2D(3, 4)),
-			Ray2D(Point2D(1, 2), Offset2D(6, 8))
+			Ray2D(Point2D(1, 2), Offset2D(6, 8)),
+			Ray2D(Point2D(1, 2), Offset2D(-3, -4))
 		}
 
 		self.assertEqual(2, len(rays))
+		self.assertEqual(hash(Ray2D(Point2D(1, 2), Offset2D(3, 4))), hash(Ray2D(Point2D(1, 2), Offset2D(6, 8))))
 
 	def test_repr(self) -> None:
 		self.assertEqual("Ray2D((1, 2), (3, 4))", repr(Ray2D(Point2D(1, 2), Offset2D(3, 4))))
