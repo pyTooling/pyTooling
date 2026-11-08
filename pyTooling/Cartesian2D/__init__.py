@@ -2822,15 +2822,6 @@ class BezierSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		for controlPoint in self._controlPoints:
 			controlPoint._x = twiceAxis - controlPoint._x
 
-	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
-		"""
-		Returns a copy of this 2D Bezier curve segment for :func:`copy.deepcopy`.
-
-		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
-		:returns:    Copy of this 2D Bezier curve segment.
-		"""
-		return self.Copy()
-
 	def ToTuple(self) -> tuple[tuple[Coordinate, Coordinate], ...]:
 		"""
 		Convert this 2D Bezier curve segment to a simple tuple of 2D-point tuples, in curve order.
@@ -2851,12 +2842,14 @@ class QuadraticBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate])
 
 	def __init__(
 		self,
-		start:        Point2D[Coordinate],
-		controlPoint: Point2D[Coordinate],
-		end:          Point2D[Coordinate],
+		start:         Point2D[Coordinate],
+		controlPoint:  Point2D[Coordinate],
+		end:           Point2D[Coordinate],
 		*,
-		copyPoints:   bool = True,
-		parent:       Nullable[Union[Shape, Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+		copyPoints:    bool = True,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Shape, Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a 2-dimensional quadratic Bezier curve segment from its start point, control point and end point.
@@ -2866,6 +2859,8 @@ class QuadraticBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate])
 		:param end:                  End point of the curve.
 		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
 		                             ``True``.
+		:param value:                Optional, value of the curve. Default: ``None``.
+		:param keyValuePairs:        Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:               Optional, the shape this curve is an edge of, or the group or canvas the curve is
 		                             added to. Default: ``None``.
 		:raises ValueError:          If parameter 'start' is None.
@@ -2894,6 +2889,7 @@ class QuadraticBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate])
 		:raises NotOwnedError:       If parameter 'end' isn't owned by parameter 'parent'.
 		:raises ValueError:          If parameter 'copyPoints' is None.
 		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape`,
 		                             :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
 		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
@@ -2902,7 +2898,14 @@ class QuadraticBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate])
 		"""
 		from pyTooling.Cartesian2D.Groups import Container2DMixin
 
-		super().__init__(start, end, copyPoints=copyPoints, parent=None if isinstance(parent, Container2DMixin) else parent)
+		super().__init__(
+			start,
+			end,
+			copyPoints=copyPoints,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
 
 		try:
 			if controlPoint is None:
@@ -3002,11 +3005,36 @@ class QuadraticBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate])
 		"""
 		Create a new 2D quadratic Bezier curve segment as a copy of this one.
 
-		The copy holds copies of the start point, control point and end point.
+		The copy holds copies of the start point, control point and end point. It references the same :attr:`Value` and
+		holds a shallow copy of the key-value-pairs.
 
 		:returns: Copy of this 2D quadratic Bezier curve segment.
 		"""
-		return self.__class__(self._start, self._controlPoints[0], self._end)
+		return self.__class__(
+			self._start,
+			self._controlPoints[0],
+			self._end,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this 2D quadratic Bezier curve segment for :func:`copy.deepcopy`.
+
+		The copy holds copies of the start point, control point and end point, and deep copies of the :attr:`Value` and
+		the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this 2D quadratic Bezier curve segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._controlPoints[0],
+			self._end,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
 
 	def __repr__(self) -> str:
 		"""
@@ -3042,6 +3070,8 @@ class CubicBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate]):
 		end:           Point2D[Coordinate],
 		*,
 		copyPoints:    bool = True,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
 		parent:        Nullable[Union[Shape, Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
@@ -3053,6 +3083,8 @@ class CubicBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate]):
 		:param end:                  End point of the curve.
 		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
 		                             ``True``.
+		:param value:                Optional, value of the curve. Default: ``None``.
+		:param keyValuePairs:        Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:               Optional, the shape this curve is an edge of, or the group or canvas the curve is
 		                             added to. Default: ``None``.
 		:raises ValueError:          If parameter 'start' is None.
@@ -3091,6 +3123,7 @@ class CubicBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate]):
 		:raises NotOwnedError:       If parameter 'end' isn't owned by parameter 'parent'.
 		:raises ValueError:          If parameter 'copyPoints' is None.
 		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape`,
 		                             :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
 		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
@@ -3099,7 +3132,14 @@ class CubicBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate]):
 		"""
 		from pyTooling.Cartesian2D.Groups import Container2DMixin
 
-		super().__init__(start, end, copyPoints=copyPoints, parent=None if isinstance(parent, Container2DMixin) else parent)
+		super().__init__(
+			start,
+			end,
+			copyPoints=copyPoints,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
 
 		try:
 			for name, controlPoint in (
@@ -3242,11 +3282,38 @@ class CubicBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate]):
 		"""
 		Create a new 2D cubic Bezier curve segment as a copy of this one.
 
-		The copy holds copies of the start point, both control points and the end point.
+		The copy holds copies of the start point, both control points and the end point. It references the same
+		:attr:`Value` and holds a shallow copy of the key-value-pairs.
 
 		:returns: Copy of this 2D cubic Bezier curve segment.
 		"""
-		return self.__class__(self._start, self._controlPoints[0], self._controlPoints[1], self._end)
+		return self.__class__(
+			self._start,
+			self._controlPoints[0],
+			self._controlPoints[1],
+			self._end,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this 2D cubic Bezier curve segment for :func:`copy.deepcopy`.
+
+		The copy holds copies of the start point, both control points and the end point, and deep copies of the
+		:attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this 2D cubic Bezier curve segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._controlPoints[0],
+			self._controlPoints[1],
+			self._end,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
 
 	def __repr__(self) -> str:
 		"""

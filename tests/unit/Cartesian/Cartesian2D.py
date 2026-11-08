@@ -2306,6 +2306,76 @@ class ElementData(Testcase):
 		self.assertIsNone(chord.Value)
 		self.assertEqual(0, len(chord))
 
+	def test_QuadraticBezierSegment(self) -> None:
+		value = object()
+		pairs = {"layer": 1}
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, curve.Value)
+		self.assertEqual(1, curve["layer"])
+		self.assertIsNot(pairs, curve._dict)
+
+	def test_QuadraticBezierSegment_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_QuadraticBezierSegment_Copy(self) -> None:
+		value = [1, 2]
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), value=value, keyValuePairs={"a": 1})
+
+		newCurve =      curve.Copy()
+		newCurve["a"] = 2
+
+		self.assertIs(value, newCurve.Value)
+		self.assertEqual(1, curve["a"])
+		self.assertIs(value, copy(curve).Value)
+
+	def test_QuadraticBezierSegment_deepcopy(self) -> None:
+		value = [1, 2]
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), value=value, keyValuePairs={"a": [1]})
+
+		newCurve = deepcopy(curve)
+
+		self.assertIsNot(value, newCurve.Value)
+		self.assertListEqual([1, 2], newCurve.Value)
+		self.assertIsNot(curve["a"], newCurve["a"])
+		self.assertIs(newCurve, newCurve.ControlPoint.Parent)
+
+	def test_CubicBezierSegment(self) -> None:
+		value = object()
+		curve = CubicBezierSegment2D(
+			Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0), value=value, keyValuePairs={"layer": 1}
+		)
+
+		self.assertIs(value, curve.Value)
+		self.assertEqual(1, curve["layer"])
+
+	def test_CubicBezierSegment_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_CubicBezierSegment_Copy(self) -> None:
+		value = [1, 2]
+		curve = CubicBezierSegment2D(
+			Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0), value=value, keyValuePairs={"a": [1]}
+		)
+
+		newCurve =  curve.Copy()
+		deepCurve = deepcopy(curve)
+
+		self.assertIs(value, newCurve.Value)
+		self.assertIs(curve["a"], newCurve["a"])
+		self.assertIsNot(curve._dict, newCurve._dict)
+		self.assertIsNot(value, deepCurve.Value)
+		self.assertIsNot(curve["a"], deepCurve["a"])
+		self.assertIs(deepCurve, deepCurve.ControlPoint2.Parent)
+
 
 class ArcInstantiation(Testcase):
 	def test_Counterclockwise(self) -> None:
