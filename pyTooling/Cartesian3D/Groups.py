@@ -502,6 +502,30 @@ class Group3D(Element3D[Coordinate], Container3DMixin, Generic[Coordinate]):
 		for child in self._children:
 			child._MirrorZ(0)
 
+	def Copy(self) -> Self:
+		"""
+		Create a new group as a copy of this group.
+
+		The copy holds a copy of the offset and a copy of each child, made by the child's ``Copy()``. It references the
+		same :attr:`Value` and holds a shallow copy of the key-value-pairs. It has no parent.
+
+		:returns: Copy of this group.
+		"""
+		return self.__class__(
+			self._offset,
+			(child.Copy() for child in self._children),
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+	def __copy__(self) -> Self:
+		"""
+		Returns a copy of this group for :func:`copy.copy`.
+
+		:returns: Copy of this group.
+		"""
+		return self.Copy()
+
 	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
 		"""
 		Returns a copy of this group for :func:`copy.deepcopy`.

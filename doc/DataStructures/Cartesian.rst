@@ -1136,7 +1136,8 @@ are equal: either at a given distance after the first child, or evenly between t
 The frame of a point, segment or shape inside a group is that group. Subtracting points of different groups raises
 :exc:`~pyTooling.Cartesian2D.NotInSameFrameError`; subtract their absolute positions instead.
 
-:func:`copy.deepcopy` copies a group or a canvas with deep copies of its children. The copy of a group has no parent.
+``Copy()`` and :func:`copy.copy` copy a group or a canvas with a copy of each child, made by the child's ``Copy()``;
+:func:`copy.deepcopy` uses deep copies of the children. The copy of a group has no parent.
 
 .. seealso::
 
@@ -1753,8 +1754,9 @@ bounding box and raises :exc:`~pyTooling.Cartesian2D.Groups.EmptyGroupError`.
 :meth:`~pyTooling.Cartesian3D.Groups.Group3D.DistributeX`, :meth:`~pyTooling.Cartesian3D.Groups.Group3D.DistributeY`
 and :meth:`~pyTooling.Cartesian3D.Groups.Group3D.DistributeZ` move the children along that axis, so the gaps between
 them are equal. Subtracting points of different groups raises
-:exc:`~pyTooling.Cartesian2D.NotInSameFrameError`; subtract their absolute positions instead. :func:`copy.deepcopy`
-copies a group with deep copies of its children, without its parent.
+:exc:`~pyTooling.Cartesian2D.NotInSameFrameError`; subtract their absolute positions instead. ``Copy()`` and
+:func:`copy.copy` copy a group with a copy of each child, :func:`copy.deepcopy` with deep copies of its children; the
+copy has no parent.
 
 .. seealso::
 
