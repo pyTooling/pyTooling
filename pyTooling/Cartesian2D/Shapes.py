@@ -32,7 +32,7 @@
 from __future__            import annotations
 
 from math                  import degrees, isclose, pi
-from typing                import TYPE_CHECKING, Generic, Iterable, Optional as Nullable, Self
+from typing                import TYPE_CHECKING, Generic, Iterable, Optional as Nullable, Self, Union
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Common      import getFullyQualifiedName
@@ -40,7 +40,7 @@ from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox, El
                                   AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError
 
 if TYPE_CHECKING:
-	from pyTooling.Cartesian2D.Groups import Group
+	from pyTooling.Cartesian2D.Groups import Group, Canvas
 
 
 @export
@@ -51,8 +51,8 @@ class Shape(Element2D[Coordinate], Generic[Coordinate]):
 	A derived class declares its fields as slots, so a class derived from a shape can use slots too. It implements
 	:attr:`~pyTooling.Cartesian2D.Element2D.BoundingBox` and :meth:`~pyTooling.Cartesian2D.Element2D.Move`.
 
-	A shape owns its points. A group can hold it: given as parameter ``parent``, it registers the shape, when the shape is
-	fully initialized.
+	A shape owns its points. A group or canvas can hold it: given as parameter ``parent``, it registers the shape, when
+	the shape is fully initialized.
 	"""
 
 
@@ -72,7 +72,7 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		points:     Iterable[Point2D[Coordinate]],
 		*,
 		copyPoints: bool = True,
-		parent:     Nullable[Group[Coordinate]] = None
+		parent:     Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a polygon from its corners.
@@ -84,7 +84,7 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		:param points:                 Corners of the polygon.
 		:param copyPoints:             Optional, if ``True``, the given points are copied instead of referenced. Default:
 		                               ``True``.
-		:param parent:                 Optional, the group the polygon is added to. Default: ``None``, no group.
+		:param parent:                 Optional, the group or canvas the polygon is added to. Default: ``None``, no parent.
 		:raises ValueError:            If parameter 'points' is None.
 		:raises TypeError:             If parameter 'points' is not iterable.
 		:raises ValueError:            If an element of parameter 'points' is None.
@@ -99,7 +99,8 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		:raises NotEnoughCornersError: If parameter 'points' has fewer than 3 points.
 		:raises ValueError:            If parameter 'copyPoints' is None.
 		:raises TypeError:             If parameter 'copyPoints' is not of type :class:`bool`.
-		:raises TypeError:             If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:             If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                               :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		"""
 		super().__init__(parent=parent)
 
@@ -223,6 +224,28 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		for point in self._points:
 			point += offset
 
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the polygon at a horizontal axis by mirroring all its corners (inplace).
+
+		Its edges share the corners, so they mirror along.
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
+		"""
+		for point in self._points:
+			point._y = twiceAxis - point._y
+
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the polygon at a vertical axis by mirroring all its corners (inplace).
+
+		Its edges share the corners, so they mirror along.
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		for point in self._points:
+			point._x = twiceAxis - point._x
+
 	def __repr__(self) -> str:
 		"""
 		Returns the polygon's string representation.
@@ -255,7 +278,7 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		p11:    Point2D[Coordinate],
 		p10:    Point2D[Coordinate],
 		*,
-		parent: Nullable[Group[Coordinate]] = None
+		parent: Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a trapezium with 4 corners.
@@ -264,7 +287,7 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
-		:param parent:      Optional, the group the trapezium is added to. Default: ``None``, no group.
+		:param parent:      Optional, the group or canvas the trapezium is added to. Default: ``None``, no parent.
 		:raises ValueError: If parameter 'p00' is None.
 		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p01' is None.
@@ -273,7 +296,8 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		"""
 		super().__init__(parent=parent)
 
@@ -472,6 +496,28 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		for point in self._points:
 			point += offset
 
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the trapezium at a horizontal axis by mirroring all its corners (inplace).
+
+		Its edges share the corners, so they mirror along.
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
+		"""
+		for point in self._points:
+			point._y = twiceAxis - point._y
+
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the trapezium at a vertical axis by mirroring all its corners (inplace).
+
+		Its edges share the corners, so they mirror along.
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		for point in self._points:
+			point._x = twiceAxis - point._x
+
 	def Copy(self) -> Self:
 		"""
 		Create a new trapezium as a copy of this trapezium.
@@ -505,7 +551,7 @@ class Rectangle(Trapezium[Coordinate]):
 		p11:    Point2D[Coordinate],
 		p10:    Point2D[Coordinate],
 		*,
-		parent: Nullable[Group[Coordinate]] = None
+		parent: Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a rectangle with 4 corners.
@@ -514,7 +560,7 @@ class Rectangle(Trapezium[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
-		:param parent:      Optional, the group the rectangle is added to. Default: ``None``, no group.
+		:param parent:      Optional, the group or canvas the rectangle is added to. Default: ``None``, no parent.
 		:raises ValueError: If parameter 'p00' is None.
 		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p01' is None.
@@ -523,7 +569,8 @@ class Rectangle(Trapezium[Coordinate]):
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		:raises ValueError: If opposite edges have different lengths.
 		:raises ValueError: If two consecutive corners are the same point.
 		:raises ValueError: If an inner angle isn't 90 |degree|.
@@ -569,7 +616,7 @@ class Square(Rectangle[Coordinate]):
 		p11:    Point2D[Coordinate],
 		p10:    Point2D[Coordinate],
 		*,
-		parent: Nullable[Group[Coordinate]] = None
+		parent: Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a square with 4 corners.
@@ -578,7 +625,7 @@ class Square(Rectangle[Coordinate]):
 		:param p01:         Second corner.
 		:param p11:         Third corner.
 		:param p10:         Fourth corner.
-		:param parent:      Optional, the group the square is added to. Default: ``None``, no group.
+		:param parent:      Optional, the group or canvas the square is added to. Default: ``None``, no parent.
 		:raises ValueError: If parameter 'p00' is None.
 		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p01' is None.
@@ -587,7 +634,8 @@ class Square(Rectangle[Coordinate]):
 		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises ValueError: If parameter 'p10' is None.
 		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		:raises ValueError: If opposite edges have different lengths.
 		:raises ValueError: If two consecutive corners are the same point.
 		:raises ValueError: If an inner angle isn't 90 |degree|.
@@ -619,7 +667,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		radius:     Coordinate,
 		*,
 		copyPoints: bool = True,
-		parent:     Nullable[Group[Coordinate]] = None
+		parent:     Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a circle by its center and radius.
@@ -630,7 +678,7 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		:param radius:             Radius of the circle.
 		:param copyPoints:         Optional, if ``True``, the given center is copied instead of referenced. Default:
 		                           ``True``.
-		:param parent:             Optional, the group the circle is added to. Default: ``None``, no group.
+		:param parent:             Optional, the group or canvas the circle is added to. Default: ``None``, no parent.
 		:raises ValueError:        If parameter 'center' is None.
 		:raises TypeError:         If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises AlreadyOwnedError: If parameter 'center' is owned by another element, while 'copyPoints' is ``False``. |br|
@@ -640,7 +688,8 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		:raises ValueError:        If parameter 'radius' isn't positive.
 		:raises ValueError:        If parameter 'copyPoints' is None.
 		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
-		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group`.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group` or
+		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas`.
 		"""
 		super().__init__(parent=parent)
 
@@ -773,6 +822,22 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 			raise ex
 
 		self._center += offset
+
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the circle at a horizontal axis by mirroring its center (inplace).
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
+		"""
+		self._center._y = twiceAxis - self._center._y
+
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the circle at a vertical axis by mirroring its center (inplace).
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		self._center._x = twiceAxis - self._center._x
 
 	def __repr__(self) -> str:
 		"""
