@@ -524,7 +524,7 @@ class Element2D(Base2D[Coordinate], Generic[Coordinate]):
 	An element belongs to at most one group or canvas, its :attr:`Parent`. Its coordinates are relative to its parent, an
 	element without a parent is relative to the origin.
 
-	A derived class implements :attr:`BoundingBox2D`, :meth:`Move`, :meth:`_MirrorX` and
+	A derived class implements :attr:`BoundingBox`, :meth:`Move`, :meth:`_MirrorX` and
 	:meth:`_MirrorY`. Its initializer takes the keyword-only parameter ``parent`` and assigns it to
 	:attr:`Parent` as its last statement, when the element is fully initialized.
 	"""
@@ -594,7 +594,7 @@ class Element2D(Base2D[Coordinate], Generic[Coordinate]):
 		"""
 		Read-only property to return the element's bounding box relative to the origin.
 
-		The offsets of all groups up the parent chain are added to :attr:`BoundingBox2D`.
+		The offsets of all groups up the parent chain are added to :attr:`BoundingBox`.
 
 		:returns: A new bounding box.
 		"""
@@ -614,7 +614,7 @@ class Element2D(Base2D[Coordinate], Generic[Coordinate]):
 		Mirror the element vertically, at a vertical axis through its bounding box (inplace).
 
 		The axis runs through the smallest x-coordinate (``MinX``), the center (``CenterX``) or the largest x-coordinate
-		(``MaxX``) of the element's :attr:`BoundingBox2D`, shifted by ``offset`` in x-direction. For an axis at ``x = a``,
+		(``MaxX``) of the element's :attr:`BoundingBox`, shifted by ``offset`` in x-direction. For an axis at ``x = a``,
 		every x-coordinate ``x`` becomes ``2a - x``; the y-coordinates stay. A group mirrors its offset, and its children
 		at the group's origin.
 
@@ -681,7 +681,7 @@ class Element2D(Base2D[Coordinate], Generic[Coordinate]):
 		Mirror the element horizontally, at a horizontal axis through its bounding box (inplace).
 
 		The axis runs through the smallest y-coordinate (``MinY``), the center (``CenterY``) or the largest y-coordinate
-		(``MaxY``) of the element's :attr:`BoundingBox2D`, shifted by ``offset`` in y-direction. For an axis at ``y = a``,
+		(``MaxY``) of the element's :attr:`BoundingBox`, shifted by ``offset`` in y-direction. For an axis at ``y = a``,
 		every y-coordinate ``y`` becomes ``2a - y``; the x-coordinates stay. A group mirrors its offset, and its children
 		at the group's origin.
 
