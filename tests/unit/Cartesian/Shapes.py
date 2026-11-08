@@ -39,8 +39,8 @@ from pyTooling.Cartesian2D        import Point2D, Offset2D, Size2D, BoundingBox2
                                          QuadraticBezierSegment2D, CubicBezierSegment2D, Alignment2D, SweepDirection, \
                                          AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
                                          NotInSameFrameError, CrossingEdgesError, Cartesian2DError
-from pyTooling.Cartesian2D.Shapes import Shape, Geometry2D, Polygon, PolyLine, Trapezium, Rectangle, Square, Circle, \
-                                         Ellipse, Path
+from pyTooling.Cartesian2D.Shapes import Shape, Geometry2D, EllipticalGeometry2D, Polygon, PolyLine, Trapezium, \
+                                         Rectangle, Square, Circle, Ellipse, Path
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection
 from pyTooling.Exceptions         import InvalidOperationError
 from pyTooling.MetaClasses        import ExtendedType, AbstractClassError
@@ -74,6 +74,16 @@ class Instantiation(Testcase):
 			str(context.exception)
 		)
 
+	def test_EllipticalGeometry2D(self) -> None:
+		with self.assertRaises(AbstractClassError) as context:
+			_ = EllipticalGeometry2D(Point2D(1, 2))
+
+		self.assertEqual(
+			"Class 'EllipticalGeometry2D' is abstract. The following methods: 'BoundingBox', 'Area', 'Perimeter' need to "
+			"be overridden in a derived class.",
+			str(context.exception)
+		)
+
 	def test_Hierarchy(self) -> None:
 		"""Closed shapes are geometries; a path is a shape only."""
 		self.assertTrue(issubclass(Geometry2D, Shape))
@@ -91,6 +101,21 @@ class Instantiation(Testcase):
 		self.assertIsInstance(Circle(Point2D(1, 2), 3), Geometry2D)
 		self.assertIsInstance(Ellipse(Point2D(1, 2), 3, 2), Geometry2D)
 		self.assertFalse(issubclass(Circle, Ellipse))
+
+	def test_Hierarchy_Elliptical(self) -> None:
+		"""A circle and an ellipse share their base-class, but neither is the other."""
+		self.assertTrue(issubclass(EllipticalGeometry2D, Geometry2D))
+		self.assertTrue(issubclass(Circle, EllipticalGeometry2D))
+		self.assertTrue(issubclass(Ellipse, EllipticalGeometry2D))
+		self.assertIsInstance(Circle(Point2D(1, 2), 3), EllipticalGeometry2D)
+		self.assertIsInstance(Ellipse(Point2D(1, 2), 3, 2), EllipticalGeometry2D)
+		self.assertNotIsInstance(Circle(Point2D(1, 2), 3), Ellipse)
+		self.assertNotIsInstance(Ellipse(Point2D(1, 2), 3, 3), Circle)
+		self.assertFalse(issubclass(Ellipse, Circle))
+		self.assertFalse(issubclass(Polygon, EllipticalGeometry2D))
+		self.assertFalse(hasattr(Circle, "RadiusX"))
+		self.assertFalse(hasattr(Circle, "RadiusY"))
+		self.assertFalse(hasattr(Ellipse, "Radius"))
 
 	def test_Polygon(self) -> None:
 		point0 = Point2D(0, 0)
@@ -1002,9 +1027,15 @@ class Slots(Testcase):
 	"""A class derived from a shape with ``slots=True`` gets its own slots and no instance dictionary."""
 
 	def test_Shapes(self) -> None:
-		for shapeClass in (Shape, Polygon, PolyLine, Trapezium, Rectangle, Square, Circle):
+		for shapeClass in (Shape, Polygon, PolyLine, Trapezium, Rectangle, Square, EllipticalGeometry2D, Circle, Ellipse):
 			self.assertIsInstance(shapeClass, ExtendedType)
 			self.assertNotIn("__dict__", dir(shapeClass))
+
+	def test_EllipticalGeometry2D(self) -> None:
+		"""The center is a slot of the base-class, the radii are slots of the derived classes."""
+		self.assertTupleEqual(("_center", ), EllipticalGeometry2D.__slots__)
+		self.assertTupleEqual(("_radius", ), Circle.__slots__)
+		self.assertTupleEqual(("_radiusX", "_radiusY"), Ellipse.__slots__)
 
 	def test_Polygon(self) -> None:
 		class LabeledPolygon(Polygon, metaclass=ExtendedType, slots=True):
@@ -2383,6 +2414,17 @@ class Ownership(Testcase):
 
 		self.assertIs(circle, center.Parent)
 
+	def test_Circle_Reference_Failing(self) -> None:
+		"""A failing radius check doesn't take ownership of the given center."""
+		center = Point2D(1, 2)
+
+		with self.assertRaises(ValueError) as context:
+			_ = Circle(center, 0, copyPoints=False)
+
+		self.assertEqual("Parameter 'radius' isn't positive.", str(context.exception))
+		self.assertListEqual(["Got value '0'."], context.exception.__notes__)
+		self.assertIsNone(center.Parent)
+
 	def test_Circle_Owned(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 
@@ -2411,6 +2453,17 @@ class Ownership(Testcase):
 		ellipse = Ellipse(center, 3, 2, copyPoints=False)
 
 		self.assertIs(ellipse, center.Parent)
+
+	def test_Ellipse_Reference_Failing(self) -> None:
+		"""A failing radius check doesn't take ownership of the given center."""
+		center = Point2D(1, 2)
+
+		with self.assertRaises(ValueError) as context:
+			_ = Ellipse(center, 3, 0, copyPoints=False)
+
+		self.assertEqual("Parameter 'radiusY' isn't positive.", str(context.exception))
+		self.assertListEqual(["Got value '0'."], context.exception.__notes__)
+		self.assertIsNone(center.Parent)
 
 	def test_Ellipse_Owned(self) -> None:
 		circle = Circle(Point2D(1, 1), 1)

@@ -668,12 +668,121 @@ class Square(Rectangle[Coordinate]):
 
 
 @export
-class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
+class EllipticalGeometry2D(Geometry2D[Coordinate], Generic[Coordinate]):
+	"""
+	Abstract base-class for closed round shapes around a center point, like a circle or an ellipse.
+
+	The shape owns its center. Moving or mirroring the shape moves or mirrors its center.
+
+	A derived class implements :attr:`BoundingBox`, :attr:`Area` and :attr:`Perimeter`. Its initializer checks its own
+	parameters, then takes ownership of the center and assigns ``parent`` to :attr:`Parent` as its last statements.
+	"""
+	_center: Point2D[Coordinate]  #: Center point of the shape.
+
+	def __init__(
+		self,
+		center:        Point2D[Coordinate],
+		*,
+		copyPoints:    bool = True,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a round shape by its center and checks the group or canvas it will be registered in.
+
+		A referenced center (``copyPoints=False``) must not be owned by another element.
+
+		:param center:             Center point of the shape.
+		:param copyPoints:         Optional, if ``True``, the given center is copied instead of referenced. Default:
+		                           ``True``.
+		:param value:              Optional, value of the shape. Default: ``None``.
+		:param keyValuePairs:      Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:             Optional, the group or canvas the derived class registers the shape in. Default:
+		                           ``None``, no parent.
+		:raises ValueError:        If parameter 'center' is None.
+		:raises TypeError:         If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError: If parameter 'center' is owned by another element, while 'copyPoints' is ``False``. |br|
+		                           Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:        If parameter 'copyPoints' is None.
+		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:         If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
+
+		if center is None:
+			raise ValueError("Parameter 'center' is None.")
+		elif not isinstance(center, Point2D):
+			ex = TypeError("Parameter 'center' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(center)}'.")
+			raise ex
+
+		if copyPoints is None:
+			raise ValueError("Parameter 'copyPoints' is None.")
+		elif not isinstance(copyPoints, bool):
+			ex = TypeError("Parameter 'copyPoints' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
+			raise ex
+
+		if not copyPoints and center._parent is not None:
+			ex = AlreadyOwnedError("Point is owned by another element already.")
+			ex.add_note(f"Got point {center} owned by {center._parent!r}.")
+			ex.add_note("Use 'copyPoints=True' to copy the point.")
+			raise ex from ValueError("Parameter 'center' is owned by another element.")
+
+		self._center = center.Copy() if copyPoints else center
+
+	@readonly
+	def Center(self) -> Point2D[Coordinate]:
+		"""
+		Read-only property to access the shape's center point (:attr:`_center`).
+
+		:returns: Center point of the shape.
+		"""
+		return self._center
+
+	def Move(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the shape by moving its center (inplace).
+
+		:param offset:      The 2D-offset to move by.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		"""
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, Offset2D):
+			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		self._center += offset
+
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the shape at a horizontal axis by mirroring its center (inplace).
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
+		"""
+		self._center._y = twiceAxis - self._center._y
+
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the shape at a vertical axis by mirroring its center (inplace).
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		self._center._x = twiceAxis - self._center._x
+
+
+@export
+class Circle(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 	"""
 	A circle is a round shape, where every point of its outline has the same distance (radius) to its center.
 	"""
-	_center: Point2D[Coordinate]  #: Center point of the circle.
-	_radius: Coordinate           #: Radius of the circle.
+	_radius: Coordinate  #: Radius of the circle.
 
 	def __init__(
 		self,
@@ -710,14 +819,7 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
 		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
-		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
-
-		if center is None:
-			raise ValueError("Parameter 'center' is None.")
-		elif not isinstance(center, Point2D):
-			ex = TypeError("Parameter 'center' is not of type 'Point2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(center)}'.")
-			raise ex
+		super().__init__(center, copyPoints=copyPoints, value=value, keyValuePairs=keyValuePairs, parent=parent)
 
 		if radius is None:
 			raise ValueError("Parameter 'radius' is None.")
@@ -730,20 +832,6 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got value '{radius}'.")
 			raise ex
 
-		if copyPoints is None:
-			raise ValueError("Parameter 'copyPoints' is None.")
-		elif not isinstance(copyPoints, bool):
-			ex = TypeError("Parameter 'copyPoints' is not of type 'bool'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
-			raise ex
-
-		if not copyPoints and center._parent is not None:
-			ex = AlreadyOwnedError("Point is owned by another element already.")
-			ex.add_note(f"Got point {center} owned by {center._parent!r}.")
-			ex.add_note("Use 'copyPoints=True' to copy the point.")
-			raise ex from ValueError("Parameter 'center' is owned by another element.")
-
-		self._center =         center.Copy() if copyPoints else center
 		self._radius =         radius
 		self._center._parent = self
 
@@ -956,15 +1044,6 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 		return self.Copy()
 
 	@readonly
-	def Center(self) -> Point2D[Coordinate]:
-		"""
-		Read-only property to access the circle's center point (:attr:`_center`).
-
-		:returns: Center point of the circle.
-		"""
-		return self._center
-
-	@readonly
 	def Radius(self) -> Coordinate:
 		"""
 		Read-only property to access the circle's radius (:attr:`_radius`).
@@ -1013,39 +1092,6 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 		radius = self._radius
 		return BoundingBox2D(center._x - radius, center._y - radius, center._x + radius, center._y + radius)
 
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
-		"""
-		Move the circle by moving its center (inplace).
-
-		:param offset:      The 2D-offset to move by.
-		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
-		"""
-		if offset is None:
-			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset2D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
-			raise ex
-
-		self._center += offset
-
-	def _MirrorY(self, twiceAxis: Coordinate) -> None:
-		"""
-		Mirror the circle at a horizontal axis by mirroring its center (inplace).
-
-		:param twiceAxis: Twice the y-coordinate of the axis.
-		"""
-		self._center._y = twiceAxis - self._center._y
-
-	def _MirrorX(self, twiceAxis: Coordinate) -> None:
-		"""
-		Mirror the circle at a vertical axis by mirroring its center (inplace).
-
-		:param twiceAxis: Twice the x-coordinate of the axis.
-		"""
-		self._center._x = twiceAxis - self._center._x
-
 	def __repr__(self) -> str:
 		"""
 		Returns the circle's string representation.
@@ -1064,15 +1110,14 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 
 
 @export
-class Ellipse(Geometry2D[Coordinate], Generic[Coordinate]):
+class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 	"""
 	An ellipse is a round shape, whose outline is stretched along the x-axis and the y-axis by two radii.
 
 	Its axes are parallel to the coordinate axes. An ellipse with equal radii is a circle.
 	"""
-	_center:  Point2D[Coordinate]  #: Center point of the ellipse.
-	_radiusX: Coordinate           #: Radius of the ellipse in x-direction.
-	_radiusY: Coordinate           #: Radius of the ellipse in y-direction.
+	_radiusX: Coordinate  #: Radius of the ellipse in x-direction.
+	_radiusY: Coordinate  #: Radius of the ellipse in y-direction.
 
 	def __init__(
 		self,
@@ -1114,14 +1159,7 @@ class Ellipse(Geometry2D[Coordinate], Generic[Coordinate]):
 		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
 		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
-		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
-
-		if center is None:
-			raise ValueError("Parameter 'center' is None.")
-		elif not isinstance(center, Point2D):
-			ex = TypeError("Parameter 'center' is not of type 'Point2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(center)}'.")
-			raise ex
+		super().__init__(center, copyPoints=copyPoints, value=value, keyValuePairs=keyValuePairs, parent=parent)
 
 		for name, radius in (
 			("radiusX", radiusX),
@@ -1138,20 +1176,6 @@ class Ellipse(Geometry2D[Coordinate], Generic[Coordinate]):
 				ex.add_note(f"Got value '{radius}'.")
 				raise ex
 
-		if copyPoints is None:
-			raise ValueError("Parameter 'copyPoints' is None.")
-		elif not isinstance(copyPoints, bool):
-			ex = TypeError("Parameter 'copyPoints' is not of type 'bool'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
-			raise ex
-
-		if not copyPoints and center._parent is not None:
-			ex = AlreadyOwnedError("Point is owned by another element already.")
-			ex.add_note(f"Got point {center} owned by {center._parent!r}.")
-			ex.add_note("Use 'copyPoints=True' to copy the point.")
-			raise ex from ValueError("Parameter 'center' is owned by another element.")
-
-		self._center =         center.Copy() if copyPoints else center
 		self._radiusX =        radiusX
 		self._radiusY =        radiusY
 		self._center._parent = self
@@ -1176,15 +1200,6 @@ class Ellipse(Geometry2D[Coordinate], Generic[Coordinate]):
 		:returns: Copy of this ellipse.
 		"""
 		return self.Copy()
-
-	@readonly
-	def Center(self) -> Point2D[Coordinate]:
-		"""
-		Read-only property to access the ellipse's center point (:attr:`_center`).
-
-		:returns: Center point of the ellipse.
-		"""
-		return self._center
 
 	@readonly
 	def RadiusX(self) -> Coordinate:
@@ -1241,39 +1256,6 @@ class Ellipse(Geometry2D[Coordinate], Generic[Coordinate]):
 		radiusX = self._radiusX
 		radiusY = self._radiusY
 		return BoundingBox2D(center._x - radiusX, center._y - radiusY, center._x + radiusX, center._y + radiusY)
-
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
-		"""
-		Move the ellipse by moving its center (inplace).
-
-		:param offset:      The 2D-offset to move by.
-		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
-		"""
-		if offset is None:
-			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset2D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
-			raise ex
-
-		self._center += offset
-
-	def _MirrorY(self, twiceAxis: Coordinate) -> None:
-		"""
-		Mirror the ellipse at a horizontal axis by mirroring its center (inplace).
-
-		:param twiceAxis: Twice the y-coordinate of the axis.
-		"""
-		self._center._y = twiceAxis - self._center._y
-
-	def _MirrorX(self, twiceAxis: Coordinate) -> None:
-		"""
-		Mirror the ellipse at a vertical axis by mirroring its center (inplace).
-
-		:param twiceAxis: Twice the x-coordinate of the axis.
-		"""
-		self._center._x = twiceAxis - self._center._x
 
 	def __repr__(self) -> str:
 		"""

@@ -522,8 +522,10 @@ Shapes
 The shapes live in :mod:`pyTooling.Cartesian2D.Shapes`. The four-cornered shapes form a chain in which **each class
 is the one above it with one more constraint**. The constraint is checked in the constructor, so an object that exists
 is an object of that shape. A polygon, a circle and an ellipse stand beside that chain. The closed shapes derive from
-:ref:`Geometry2D <STRUCT/Cartesian2D/Geometry2D>`; a :ref:`path <STRUCT/Cartesian2D/Path>` and a
-:ref:`polyline <STRUCT/Cartesian2D/PolyLine>`, a path of line segments, are shapes, but no geometries.
+:ref:`Geometry2D <STRUCT/Cartesian2D/Geometry2D>`, a circle and an ellipse through
+:ref:`EllipticalGeometry2D <STRUCT/Cartesian2D/EllipticalGeometry2D>`, which holds their center; a
+:ref:`path <STRUCT/Cartesian2D/Path>` and a :ref:`polyline <STRUCT/Cartesian2D/PolyLine>`, a path of line segments, are
+shapes, but no geometries.
 
 
 .. _STRUCT/Cartesian2D/Shape:
@@ -564,8 +566,9 @@ properties:
 * :attr:`~pyTooling.Cartesian2D.Shapes.Geometry2D.Perimeter` - the length of its outline, a :class:`float`.
 
 A polygon and a trapezium compute both from their corners, which may be given clockwise or counterclockwise; a
-rectangle and a square inherit them. A :ref:`path <STRUCT/Cartesian2D/Path>` is a shape, but no geometry, even
-when it is closed.
+rectangle and a square inherit them. A circle and an ellipse compute them from their radii; they share their center
+through :ref:`EllipticalGeometry2D <STRUCT/Cartesian2D/EllipticalGeometry2D>`. A :ref:`path <STRUCT/Cartesian2D/Path>`
+is a shape, but no geometry, even when it is closed.
 
 .. code-block:: Python
 
@@ -682,6 +685,45 @@ comparison, one more :exc:`ValueError`. A rhombus has four equally long edges, b
       |rarr| Its counterpart, the volume a square corresponds to.
 
 
+.. _STRUCT/Cartesian2D/EllipticalGeometry2D:
+
+EllipticalGeometry2D
+====================
+
+:class:`~pyTooling.Cartesian2D.Shapes.EllipticalGeometry2D` is the abstract base-class of the round
+:ref:`geometries <STRUCT/Cartesian2D/Geometry2D>`, the closed shapes around a center they own: a
+:ref:`circle <STRUCT/Cartesian2D/Circle>` and an :ref:`ellipse <STRUCT/Cartesian2D/Ellipse>` derive from it. It holds
+the :attr:`~pyTooling.Cartesian2D.Shapes.EllipticalGeometry2D.Center`, a :class:`~pyTooling.Cartesian2D.Point2D`. The
+center is copied by default; with ``copyPoints=False``, the given point is kept, and a point owned by another element
+raises :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError`. Moving or mirroring the shape moves or mirrors its center.
+
+The radii are fields of the derived classes, and so are the bounding box, the area and the perimeter computed from
+them: a circle has one radius, an ellipse two, and neither class derives from the other. Instantiating
+:class:`~pyTooling.Cartesian2D.Shapes.EllipticalGeometry2D` raises :exc:`~pyTooling.MetaClasses.AbstractClassError`.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D, Offset2D
+   from pyTooling.Cartesian2D.Shapes import Circle, Ellipse
+
+   bubble = Circle(Point2D(0, 0), 2)
+   egg =    Ellipse(Point2D(5, 0), 3, 2)
+   for shape in (bubble, egg):
+     shape.Move(Offset2D(1, 1))
+
+   bubble.Center                      # (1, 1)
+   egg.Center                         # (6, 1)
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Geometry2D`
+      |rarr| Its base-class, the base-class of the closed 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/Circle`
+      |rarr| The round shape with one radius.
+   :ref:`STRUCT/Cartesian2D/Ellipse`
+      |rarr| The round shape with two radii.
+
+
 .. _STRUCT/Cartesian2D/Circle:
 
 Circle
@@ -730,8 +772,8 @@ circle owns a new center, the given points are only read:
 
 .. seealso::
 
-   :ref:`STRUCT/Cartesian2D/Geometry2D`
-      |rarr| Its base-class, the base-class of the closed 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/EllipticalGeometry2D`
+      |rarr| Its base-class, the base-class of the round 2-dimensional shapes around a center.
    :ref:`STRUCT/Cartesian2D/Ellipse`
       |rarr| The round shape with two radii.
    :ref:`STRUCT/Cartesian2D/ArcSegment2D`
@@ -750,8 +792,8 @@ radii, SVG's ``rx`` and ``ry``: :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Rad
 Its axes are parallel to the coordinate axes; an ellipse can't be rotated. The center is copied by default;
 ``copyPoints=False`` keeps the given point instead. The ellipse owns its center.
 
-An ellipse is a closed shape, a :ref:`Geometry2D <STRUCT/Cartesian2D/Geometry2D>`, measured by two read-only
-properties:
+An ellipse is a closed shape, an :ref:`EllipticalGeometry2D <STRUCT/Cartesian2D/EllipticalGeometry2D>` like a
+circle, measured by two read-only properties:
 
 * :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Area` - the area it encloses, a :class:`float`;
 * :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Perimeter` - the length of its outline (circumference), a
@@ -773,8 +815,8 @@ circle, but not a :class:`~pyTooling.Cartesian2D.Shapes.Circle` object.
 
 .. seealso::
 
-   :ref:`STRUCT/Cartesian2D/Geometry2D`
-      |rarr| Its base-class, the base-class of the closed 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/EllipticalGeometry2D`
+      |rarr| Its base-class, the base-class of the round 2-dimensional shapes around a center.
    :ref:`STRUCT/Cartesian2D/Circle`
       |rarr| The round shape with one radius.
 

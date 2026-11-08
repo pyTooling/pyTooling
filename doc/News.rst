@@ -25,6 +25,9 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D.Shapes`: an axis-aligned :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` by center and
      two radii, a :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` with its area and its perimeter (Ramanujan's
      approximation).
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a circle and an ellipse derive from the abstract
+     :class:`~pyTooling.Cartesian2D.Shapes.EllipticalGeometry2D`, which owns, moves and mirrors their center; neither
+     derives from the other.
    * :mod:`pyTooling.Cartesian2D.Shapes`: conversions without approximation:
      :meth:`Path.ToPolyLine() <pyTooling.Cartesian2D.Shapes.Path.ToPolyLine>` and
      :meth:`Path.ToPolygon() <pyTooling.Cartesian2D.Shapes.Path.ToPolygon>` for a path of line segments (a polyline
