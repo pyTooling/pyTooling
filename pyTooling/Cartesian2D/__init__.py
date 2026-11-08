@@ -1143,9 +1143,9 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return sqrt(self._xOffset ** 2 + self._yOffset ** 2)
 
-	def Dot(self, other: Offset2D[Coordinate]) -> Coordinate:
+	def ScalarProduct(self, other: Offset2D[Coordinate]) -> Coordinate:
 		"""
-		Compute the dot product of this 2D-offset and another 2D-offset.
+		Compute the :term:`dot product <Dot Product>` of this 2D-offset and another 2D-offset.
 
 		The dot product ``x1 * x2 + y1 * y2`` is zero for perpendicular offsets.
 
@@ -1163,9 +1163,9 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		return self._xOffset * other._xOffset + self._yOffset * other._yOffset
 
-	def Cross(self, other: Offset2D[Coordinate]) -> Coordinate:
+	def VectorProduct(self, other: Offset2D[Coordinate]) -> Coordinate:
 		"""
-		Compute the cross product of this 2D-offset and another 2D-offset.
+		Compute the :term:`cross product <Cross Product>` of this 2D-offset and another 2D-offset.
 
 		In 2D, the cross product is the number ``x1 * y2 - y1 * x2``: the z-component of the cross product of both offsets
 		as 3D-offsets. It is zero for parallel offsets, and positive, if the other offset points counterclockwise from this

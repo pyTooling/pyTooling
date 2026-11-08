@@ -1096,9 +1096,9 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return sqrt(self._xOffset ** 2 + self._yOffset ** 2 + self._zOffset ** 2)
 
-	def Dot(self, other: Offset3D[Coordinate]) -> Coordinate:
+	def ScalarProduct(self, other: Offset3D[Coordinate]) -> Coordinate:
 		"""
-		Compute the dot product of this 3D-offset and another 3D-offset.
+		Compute the :term:`dot product <Dot Product>` of this 3D-offset and another 3D-offset.
 
 		The dot product ``x1 * x2 + y1 * y2 + z1 * z2`` is zero for perpendicular offsets.
 
@@ -1116,9 +1116,9 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		return self._xOffset * other._xOffset + self._yOffset * other._yOffset + self._zOffset * other._zOffset
 
-	def Cross(self, other: Offset3D[Coordinate]) -> Offset3D[Coordinate]:
+	def VectorProduct(self, other: Offset3D[Coordinate]) -> Offset3D[Coordinate]:
 		"""
-		Compute the cross product of this 3D-offset and another 3D-offset and create a new 3D-offset.
+		Compute the :term:`cross product <Cross Product>` of this 3D-offset and another 3D-offset as a new 3D-offset.
 
 		The cross product is perpendicular to both offsets, its length is the area of the parallelogram they span, and it
 		is a zero offset for parallel offsets. The offsets and the cross product form a right-handed system: the cross

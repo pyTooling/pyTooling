@@ -1159,50 +1159,50 @@ class OffsetVectors(Testcase):
 		with self.assertRaises(AttributeError):
 			offset.Length = 1
 
-	def test_Dot(self) -> None:
-		dot = Offset2D(1, 2).Dot(Offset2D(3, 4))
+	def test_ScalarProduct(self) -> None:
+		dot = Offset2D(1, 2).ScalarProduct(Offset2D(3, 4))
 
 		self.assertIsInstance(dot, int)
 		self.assertEqual(11, dot)
 
-	def test_Dot_Perpendicular(self) -> None:
-		self.assertEqual(0, Offset2D(1, 2).Dot(Offset2D(-2, 1)))
+	def test_ScalarProduct_Perpendicular(self) -> None:
+		self.assertEqual(0, Offset2D(1, 2).ScalarProduct(Offset2D(-2, 1)))
 
-	def test_Dot_None(self) -> None:
+	def test_ScalarProduct_None(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			Offset2D(1, 2).Dot(None)
+			Offset2D(1, 2).ScalarProduct(None)
 
 		self.assertEqual("Parameter 'other' is None.", str(context.exception))
 
-	def test_Dot_Offset3D(self) -> None:
+	def test_ScalarProduct_Offset3D(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			Offset2D(1, 2).Dot(Offset3D(1, 2, 3))
+			Offset2D(1, 2).ScalarProduct(Offset3D(1, 2, 3))
 
 		self.assertEqual("Parameter 'other' is not of type 'Offset2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian3D.Offset3D'."], context.exception.__notes__)
 
-	def test_Cross(self) -> None:
-		cross = Offset2D(1, 2).Cross(Offset2D(3, 4))
+	def test_VectorProduct(self) -> None:
+		cross = Offset2D(1, 2).VectorProduct(Offset2D(3, 4))
 
 		self.assertIsInstance(cross, int)
 		self.assertEqual(-2, cross)
 
-	def test_Cross_Counterclockwise(self) -> None:
-		self.assertEqual(1, Offset2D(1, 0).Cross(Offset2D(0, 1)))
-		self.assertEqual(-1, Offset2D(0, 1).Cross(Offset2D(1, 0)))
+	def test_VectorProduct_Counterclockwise(self) -> None:
+		self.assertEqual(1, Offset2D(1, 0).VectorProduct(Offset2D(0, 1)))
+		self.assertEqual(-1, Offset2D(0, 1).VectorProduct(Offset2D(1, 0)))
 
-	def test_Cross_Parallel(self) -> None:
-		self.assertEqual(0, Offset2D(1, 2).Cross(Offset2D(-2, -4)))
+	def test_VectorProduct_Parallel(self) -> None:
+		self.assertEqual(0, Offset2D(1, 2).VectorProduct(Offset2D(-2, -4)))
 
-	def test_Cross_None(self) -> None:
+	def test_VectorProduct_None(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			Offset2D(1, 2).Cross(None)
+			Offset2D(1, 2).VectorProduct(None)
 
 		self.assertEqual("Parameter 'other' is None.", str(context.exception))
 
-	def test_Cross_Tuple(self) -> None:
+	def test_VectorProduct_Tuple(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			Offset2D(1, 2).Cross((3, 4))
+			Offset2D(1, 2).VectorProduct((3, 4))
 
 		self.assertEqual("Parameter 'other' is not of type 'Offset2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
