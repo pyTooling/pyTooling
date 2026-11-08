@@ -112,19 +112,19 @@ Version 10.x (2026)
      ``points``, ...) stay as deprecated aliases until v11.0.0.
    * :mod:`pyTooling.Cartesian2D.Shapes`: shapes are created by :class:`~pyTooling.MetaClasses.ExtendedType` and use
      slots, so a derived class can use slots too. :class:`~pyTooling.Cartesian2D.Shapes.Shape` is abstract.
-   * ⚠️ :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` is a
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` is a
      :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with four corners, and so are a rectangle and a square: they
      inherit the polygon's members. A corner that is ``None`` or not a point raises the polygon's error, naming
      parameter ``points`` (was ``p00`` ... ``p10``).
-   * :mod:`pyTooling.Cartesian3D`: parameter ``copyPoints`` of :class:`~pyTooling.Cartesian3D.Segment3D` is
-     keyword-only, as in :mod:`pyTooling.Cartesian2D`.
-   * ⚠️ :mod:`pyTooling.Cartesian2D`, :mod:`pyTooling.Cartesian3D`: :class:`~pyTooling.Cartesian2D.Segment2D` and
+   * ⚠️ :mod:`pyTooling.Cartesian2D`, :mod:`pyTooling.Cartesian3D`: parameter ``copyPoints`` of
+     :class:`~pyTooling.Cartesian2D.Segment2D` and :class:`~pyTooling.Cartesian3D.Segment3D` is keyword-only.
+   * :mod:`pyTooling.Cartesian2D`, :mod:`pyTooling.Cartesian3D`: :class:`~pyTooling.Cartesian2D.Segment2D` and
      :class:`~pyTooling.Cartesian3D.Segment3D` are abstract; a straight segment is a
      :class:`~pyTooling.Cartesian2D.LineSegment2D` / :class:`~pyTooling.Cartesian3D.LineSegment3D`.
 
    .. rubric:: Bug Fixes
 
-   * ⚠️ :mod:`pyTooling.Cartesian2D.Shapes`: a trapezium with crossing edges, or with two consecutive corners at the
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a trapezium with crossing edges, or with two consecutive corners at the
      same point, was accepted. It raises :exc:`~pyTooling.Cartesian2D.CrossingEdgesError` now, also for a rectangle
      or square, which raised a :exc:`ValueError` for these corners before.
    * :mod:`pyTooling.Tracing`: an OTLP timestamp in the hour repeated at the end of daylight saving time was read
