@@ -37,26 +37,33 @@ An implementation of 3D cartesian data structures for Python.
       |rarr| The same data structures in two dimensions.
    :mod:`pyTooling.Cartesian3D.Volumes`
       |rarr| Volumes built from these points and offsets.
+   :mod:`pyTooling.Cartesian3D.Groups`
+      |rarr| Groups of segments and groups, with coordinates relative to the group.
 """
 from __future__            import annotations
 
 from math                  import atan2, sqrt
-from typing                import Any, ClassVar, Generic, Iterable, Optional as Nullable, Self, Union
+from typing                import TYPE_CHECKING, Any, ClassVar, Generic, Iterable, Optional as Nullable, Self, Union
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Exceptions  import InvalidOperationError
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Cartesian2D import Coordinate, AlreadyOwnedError, DuplicatePointError, NotInSameFrameError
+from pyTooling.Cartesian2D import Coordinate, AlreadyOwnedError, DuplicatePointError, GroupCycleError, \
+                                  NotInSameFrameError
+
+if TYPE_CHECKING:
+	from pyTooling.Cartesian3D.Groups import Group3D
 
 
 @export
 @abstractclass
 class Base3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""
-	Abstract base-class of everything having a parent and coordinates relative to a frame: points and segments.
+	Abstract base-class of everything having a parent and coordinates relative to a frame: points, segments and groups.
 
-	A frame is what the coordinates are relative to. Every frame is an instance of this class.
+	A frame is what the coordinates are relative to, and a group is the frame of its children. Every frame is an instance
+	of this class.
 	"""
 
 	_PARENT_TYPE: ClassVar[tuple[type, ...]]  #: Types a parent of this class can have.
@@ -78,16 +85,35 @@ class Base3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		self._parent = parent
 
-	@readonly
+	@property
 	def Parent(self) -> Nullable[Base3D[Coordinate]]:
 		"""
-		Read-only property to access the parent of this object (:attr:`_parent`).
+		Property to access the parent of this object (:attr:`_parent`).
 
-		A point's parent is the segment owning it.
+		A point's parent is the segment owning it. A segment's or group's parent is the group holding it.
 
-		:returns: The parent, or ``None``, if this object has no parent.
+		Only an :class:`Element3D` can be assigned a parent. Assigning a group moves the element into it, assigning
+		``None`` removes it from its parent. The element keeps its local coordinates, so its absolute position changes with
+		the frame.
+
+		:returns:                The parent, or ``None``, if this object has no parent.
+		:raises TypeError:       If an assigned value is not of a type in :attr:`_PARENT_TYPE`.
+		:raises TypeError:       If a parent is assigned to a :class:`Point3D`.
+		:raises TypeError:       If an assigned value is not of type :class:`~pyTooling.Cartesian3D.Groups.Group3D`, while
+		                         this object is an :class:`Element3D`.
+		:raises GroupCycleError: If an assigned group is this element or one of its descendants.
 		"""
 		return self._parent
+
+	@Parent.setter
+	def Parent(self, parent: Nullable[Base3D[Coordinate]]) -> None:
+		if parent is not None and not isinstance(parent, self._PARENT_TYPE):
+			typeNames = " or ".join(f"'{parentType.__name__}'" for parentType in self._PARENT_TYPE)
+			ex =        TypeError(f"Parameter 'parent' is not of type {typeNames}.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+
+		self._parent = parent
 
 	@readonly
 	def Frame(self) -> Nullable[Base3D[Coordinate]]:
@@ -174,6 +200,13 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 		self._y = y
 		self._z = z
 
+	@Base3D.Parent.setter
+	def Parent(self, parent: Nullable[Element3D[Coordinate]]) -> None:
+		ex = TypeError(f"The parent of a '{getFullyQualifiedName(self)}' is read-only.")
+		ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+		ex.add_note("A segment takes ownership of a point, when it's given the point.")
+		raise ex
+
 	@property
 	def X(self) -> Coordinate:
 		"""
@@ -251,6 +284,21 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 		self._z = z
 
 	z = Z
+
+	@readonly
+	def Absolute(self) -> Point3D[Coordinate]:
+		"""
+		Read-only property to return the point's position relative to the origin as a new 3D-point.
+
+		The offsets of all groups up the parent chain are added to the point's coordinates. The new point has no owner.
+
+		:returns: A new 3D-point with absolute coordinates.
+		"""
+		if (frame := self.Frame) is None:
+			return Point3D(self._x, self._y, self._z)
+
+		offset = frame.AbsoluteOffset
+		return Point3D(self._x + offset._xOffset, self._y + offset._yOffset, self._z + offset._zOffset)
 
 	def Copy(self) -> Self:
 		"""
@@ -349,12 +397,14 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 		:param other:                The second 3D-point as :class:`Point3D`.
 		:returns:                    A new 3D-offset representing the distance between these two points.
 		:raises TypeError:           If parameter 'other' is not of type :class:`Point3D`.
-		:raises NotInSameFrameError: If parameter 'other' is in another frame than this point.
+		:raises NotInSameFrameError: If parameter 'other' is in another frame than this point. |br|
+		                             Subtract the points' :attr:`Absolute` positions instead.
 		"""
 		if isinstance(other, Point3D):
 			if self.Frame is not other.Frame:
 				ex = NotInSameFrameError("Points are in different frames.")
 				ex.add_note(f"Got points {self} and {other}.")
+				ex.add_note("Subtract the points' 'Absolute' positions instead.")
 				raise ex from ValueError("Parameter 'other' is in another frame.")
 
 			return Offset3D(
@@ -437,10 +487,57 @@ class Origin3D(Point3D[Coordinate], Generic[Coordinate]):
 @export
 class Element3D(Base3D[Coordinate], Generic[Coordinate]):
 	"""
-	Abstract base-class of all segments.
+	Abstract base-class of all elements a :class:`~pyTooling.Cartesian3D.Groups.Group3D` can hold: segments and groups.
 
-	A derived class implements :attr:`BoundingBox` and :meth:`Move`.
+	An element belongs to at most one group, its :attr:`Parent`. Its coordinates are relative to its parent, an element
+	without a parent is relative to the origin.
+
+	A derived class implements :attr:`BoundingBox` and :meth:`Move`. Its initializer takes the keyword-only parameter
+	``parent`` and assigns it to :attr:`Parent` as its last statement, when the element is fully initialized.
 	"""
+
+	def __init__(self, *, parent: Nullable[Group3D[Coordinate]] = None) -> None:
+		"""
+		Initializes an element without a parent and checks the group it will be registered in.
+
+		:param parent:     Optional, the group the derived class registers the element in. Default: ``None``, no parent.
+		:raises TypeError: If parameter 'parent' is not of type :class:`~pyTooling.Cartesian3D.Groups.Group3D`.
+		"""
+		# Imported for its side effect: it assigns '_PARENT_TYPE' of the element classes.
+		from pyTooling.Cartesian3D import Groups
+
+		super().__init__(parent=parent)
+
+		# The derived class registers the element by assigning 'Parent' as its last statement.
+		self._parent = None
+
+	@Base3D.Parent.setter
+	def Parent(self, parent: Nullable[Group3D]) -> None:
+		from pyTooling.Cartesian3D.Groups import Container3DMixin
+
+		if parent is not None and not isinstance(parent, Container3DMixin):
+			ex = TypeError("Parameter 'parent' is not of type 'Group3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
+			raise ex
+		elif parent is self._parent:
+			return
+
+		frame = parent
+		while frame is not None:
+			if frame is self:
+				ex = GroupCycleError("Group would contain itself.")
+				ex.add_note(f"Got {parent!r} as parent of {self!r}.")
+				raise ex from ValueError("Parameter 'parent' is this element or one of its descendants.")
+
+			frame = frame.Frame
+
+		if self._parent is not None:
+			self._parent._children.remove(self)
+
+		if parent is not None:
+			parent._children.append(self)
+
+		Base3D.Parent.fset(self, parent)
 
 	@readonly
 	@abstractmethod
@@ -448,13 +545,27 @@ class Element3D(Base3D[Coordinate], Generic[Coordinate]):
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing the element.
 
+		The bounding box is in the element's frame.
+
 		:returns: A new bounding box.
 		"""
+
+	@readonly
+	def AbsoluteBoundingBox(self) -> BoundingBox3D[Coordinate]:
+		"""
+		Read-only property to return the element's bounding box relative to the origin.
+
+		The offsets of all groups up the parent chain are added to :attr:`BoundingBox`.
+
+		:returns: A new bounding box.
+		"""
+		frame = self.Frame
+		return self.BoundingBox if frame is None else self.BoundingBox + frame.AbsoluteOffset
 
 	@abstractmethod
 	def Move(self, offset: Offset3D[Coordinate]) -> None:
 		"""
-		Move the element by moving all its points (inplace).
+		Move the element by an offset in its frame (inplace).
 
 		:param offset: The 3D-offset to move by.
 		"""
@@ -1411,13 +1522,20 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 	"""
 	An implementation of a 3D cartesian segment.
 
-	A segment owns its start and end point.
+	A segment owns its start and end point; a group can hold it.
 	"""
 
 	_start: Point3D[Coordinate]  #: Start point of a segment.
 	_end:   Point3D[Coordinate]  #: End point of a segment.
 
-	def __init__(self, start: Point3D[Coordinate], end: Point3D[Coordinate], *, copyPoints: bool = True) -> None:
+	def __init__(
+		self,
+		start:      Point3D[Coordinate],
+		end:        Point3D[Coordinate],
+		*,
+		copyPoints: bool = True,
+		parent:     Nullable[Group3D[Coordinate]] = None
+	) -> None:
 		"""
 		Initializes a 3-dimensional segment.
 
@@ -1425,6 +1543,7 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 		:param end:                  End point of the segment.
 		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
 		                             ``True``.
+		:param parent:               Optional, the group the segment is added to. Default: ``None``.
 		:raises ValueError:          If parameter 'start' is None.
 		:raises TypeError:           If parameter 'start' is not of type :class:`Point3D`.
 		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while 'copyPoints' is
@@ -1440,8 +1559,9 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 		                             Use ``copyPoints=True`` to copy the point.
 		:raises ValueError:          If parameter 'copyPoints' is None.
 		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian3D.Groups.Group3D`.
 		"""
-		super().__init__()
+		super().__init__(parent=parent)
 
 		if start is None:
 			raise ValueError("Parameter 'start' is None.")
@@ -1487,6 +1607,8 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 		end._parent =   self
 		self._start =   start
 		self._end =     end
+
+		self.Parent = parent
 
 	@property
 	def Start(self) -> Point3D[Coordinate]:

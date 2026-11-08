@@ -118,6 +118,8 @@ class NotOwnedError(Cartesian2DError, NotAChildError):
 	The exception is raised when an element replaces or removes an element it doesn't own.
 
 	For example, an edge of a polygon references the polygon's corners, so it can't replace them.
+
+	:mod:`pyTooling.Cartesian3D.Groups` raises it too.
 	"""
 
 
@@ -153,7 +155,11 @@ class CrossingEdgesError(Cartesian2DError):
 
 @export
 class GroupCycleError(Cartesian2DError, CycleError):
-	"""The exception is raised when a group would become its own parent or the parent of one of its ancestors."""
+	"""
+	The exception is raised when a group would become its own parent or the parent of one of its ancestors.
+
+	:mod:`pyTooling.Cartesian3D` raises it too.
+	"""
 
 
 @export

@@ -71,6 +71,8 @@ Version 10.x (2026)
      <pyTooling.Cartesian3D.Base3D.Parent>`). A point owned by another segment raises
      :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError` instead of being shared; points and line segments of different
      frames raise :exc:`~pyTooling.Cartesian2D.NotInSameFrameError` when combined.
+   * :mod:`pyTooling.Cartesian3D.Groups`: a :class:`~pyTooling.Cartesian3D.Groups.Group3D` holds segments and groups at
+     an offset, with coordinates relative to the group. Elements report absolute positions and bounding boxes.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:
