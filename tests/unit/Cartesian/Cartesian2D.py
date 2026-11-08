@@ -2250,6 +2250,56 @@ class ElementData(Testcase):
 		self.assertListEqual([1, 2], newLine.Value)
 		self.assertIsNot(line["nets"], newLine["nets"])
 		self.assertListEqual(["a"], newLine["nets"])
+
+	def test_ArcSegment(self) -> None:
+		value = object()
+		pairs = {"layer": 1}
+		arc =   ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1, value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, arc.Value)
+		self.assertEqual(1, arc["layer"])
+		self.assertIsNot(pairs, arc._dict)
+
+	def test_ArcSegment_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1, keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_ArcSegment_Copy(self) -> None:
+		value = [1, 2]
+		arc =   ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1, value=value, keyValuePairs={"layer": 1})
+
+		newArc =          arc.Copy()
+		newArc["layer"] = 2
+
+		self.assertIs(value, newArc.Value)
+		self.assertEqual(1, arc["layer"])
+		self.assertEqual(2, newArc["layer"])
+		self.assertIs(value, copy(arc).Value)
+
+	def test_ArcSegment_deepcopy(self) -> None:
+		value = [1, 2]
+		arc =   ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1, value=value, keyValuePairs={"nets": ["a"]})
+
+		newArc = deepcopy(arc)
+
+		self.assertIsNot(value, newArc.Value)
+		self.assertListEqual([1, 2], newArc.Value)
+		self.assertIsNot(arc["nets"], newArc["nets"])
+		self.assertIs(newArc, newArc.Center.Parent)
+
+	def test_ArcSegment_ToChord(self) -> None:
+		"""The chord is a new line segment without value or key-value-pairs."""
+		arc = ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1, value=1, keyValuePairs={"layer": 1})
+
+		chord = arc.ToChord()
+
+		self.assertIsNone(chord.Value)
+		self.assertEqual(0, len(chord))
+
+
 class ArcInstantiation(Testcase):
 	def test_Counterclockwise(self) -> None:
 		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)

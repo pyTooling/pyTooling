@@ -40,6 +40,7 @@ An implementation of 2D cartesian data structures for Python.
 """
 from __future__            import annotations
 
+from copy                  import deepcopy
 from enum                  import Enum
 from math                  import atan2, isclose, pi, sqrt
 from typing                import TYPE_CHECKING, Any, ClassVar, Generic, Hashable, Iterable, Mapping, \
@@ -2130,6 +2131,8 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		chordPosition: Nullable[Union[int, float]] = None,
 		height:        Nullable[Union[int, float]] = None,
 		copyPoints:    bool = True,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
 		parent:        Nullable[Union[Shape, Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
@@ -2162,6 +2165,8 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		                             ``None``.
 		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
 		                             ``True``.
+		:param value:                Optional, value of the arc. Default: ``None``.
+		:param keyValuePairs:        Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:               Optional, the shape this arc is an edge of, or the group or canvas the arc is added
 		                             to. Default: ``None``.
 		:raises ValueError:          If parameter 'start' is None.
@@ -2205,6 +2210,7 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		                             An arc with a 'height' needs a chord from the start point to the end point.
 		:raises ValueError:          If parameter 'copyPoints' is None.
 		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Shapes.Shape`,
 		                             :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
 		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
@@ -2219,7 +2225,14 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		from pyTooling.Cartesian2D.Groups import Container2DMixin
 
-		super().__init__(start, end, copyPoints=copyPoints, parent=None if isinstance(parent, Container2DMixin) else parent)
+		super().__init__(
+			start,
+			end,
+			copyPoints=copyPoints,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
 
 		start =  self._start
 		end =    self._end
@@ -2594,17 +2607,25 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		Create a new 2D arc segment as a copy of this 2D arc segment.
 
-		The copy holds copies of the start, end and center point.
+		The copy holds copies of the start, end and center point. It references the same :attr:`Value` and holds a shallow
+		copy of the key-value-pairs.
 
 		:returns: Copy of this 2D arc segment.
 		"""
-		return self.__class__(self._start, self._end, center=self._center, direction=self._direction)
+		return self.__class__(
+			self._start,
+			self._end,
+			center=self._center,
+			direction=self._direction,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
 
 	def ToChord(self) -> LineSegment2D[Coordinate]:
 		"""
 		Create a new line segment from the arc's start point to its end point, the arc's chord.
 
-		The line segment holds copies of the start and end point and has no parent.
+		The line segment holds copies of the start and end point. It has no parent, value or key-value-pairs.
 
 		:returns: A new line segment from the start point to the end point.
 		"""
@@ -2614,10 +2635,20 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		Returns a copy of this 2D arc segment for :func:`copy.deepcopy`.
 
+		The copy holds copies of the start, end and center point, and deep copies of the :attr:`Value` and the
+		key-value-pairs.
+
 		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
 		:returns:    Copy of this 2D arc segment.
 		"""
-		return self.Copy()
+		return self.__class__(
+			self._start,
+			self._end,
+			center=self._center,
+			direction=self._direction,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
 
 	def __repr__(self) -> str:
 		"""
