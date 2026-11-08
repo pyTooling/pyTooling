@@ -94,9 +94,11 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian3D`: every segment and group carries a :attr:`~pyTooling.Cartesian3D.Element3D.Value` and
      key-value-pairs (:class:`~pyTooling.DataModel.KeyValuePairsMixin`), given by the keyword-only parameters ``value``
      and ``keyValuePairs``. ``Copy()`` keeps the value and copies the pairs.
-   * :mod:`pyTooling.Cartesian2D`: an :class:`~pyTooling.Cartesian2D.AxisAlignedLine2D` is the line ``x = c`` or
-     ``y = c`` in absolute coordinates, a value. Every element mirrors at it with
-     :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`, so elements of different groups mirror at the same line.
+   * :mod:`pyTooling.Cartesian2D`: lines (:class:`~pyTooling.Cartesian2D.Line2D`) as values in absolute coordinates,
+     :class:`~pyTooling.Cartesian2D.VerticalLine2D` ``x = c`` and :class:`~pyTooling.Cartesian2D.HorizontalLine2D`
+     ``y = c``. Every element mirrors at a line with :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`, so elements of
+     different groups mirror at the same line. A :class:`~pyTooling.Cartesian2D.Ray2D` is a half-line from a start point
+     in a direction.
    * :mod:`pyTooling.Cartesian3D`: an :class:`~pyTooling.Cartesian3D.AxisAlignedPlane3D` is the plane ``x = c``,
      ``y = c`` or ``z = c`` in absolute coordinates, a value. Every element mirrors at it with
      :meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt`, so elements of different groups mirror at the same plane.
