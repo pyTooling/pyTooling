@@ -85,6 +85,9 @@ Version 10.x (2026)
      ``Trapezium``, ``Rectangle``, ``Square``, ``Circle``, ``LineSegment2D``), drawn with a ``Stroke`` and a ``Fill``.
    * :mod:`pyTooling.Cartesian2D.Drawing`: a :class:`~pyTooling.Cartesian2D.Drawing.Text` of one or more lines, aligned
      horizontally and anchored vertically at its position, with an estimated bounding box.
+   * :mod:`pyTooling.Cartesian3D`: every element mirrors at a plane through an edge or the center of its bounding box
+     with ``MirrorX(plane, offset)``, ``MirrorY(plane, offset)`` and ``MirrorZ(plane, offset)``, named by the
+     coordinate they flip.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

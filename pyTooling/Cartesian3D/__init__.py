@@ -513,8 +513,9 @@ class Element3D(Base3D[Coordinate], Generic[Coordinate]):
 	An element belongs to at most one group, its :attr:`Parent`. Its coordinates are relative to its parent, an element
 	without a parent is relative to the origin.
 
-	A derived class implements :attr:`BoundingBox` and :meth:`Move`. Its initializer takes the keyword-only parameter
-	``parent`` and assigns it to :attr:`Parent` as its last statement, when the element is fully initialized.
+	A derived class implements :attr:`BoundingBox`, :meth:`Move`, :meth:`_MirrorX`, :meth:`_MirrorY` and
+	:meth:`_MirrorZ`. Its initializer takes the keyword-only parameter ``parent`` and assigns it to :attr:`Parent` as its
+	last statement, when the element is fully initialized.
 	"""
 
 	def __init__(self, *, parent: Nullable[Group3D[Coordinate]] = None) -> None:
@@ -589,6 +590,209 @@ class Element3D(Base3D[Coordinate], Generic[Coordinate]):
 		Move the element by an offset in its frame (inplace).
 
 		:param offset: The 3D-offset to move by.
+		"""
+
+	def MirrorX(self, plane: Alignment3D = Alignment3D.CenterX, offset: Coordinate = 0) -> None:
+		r"""
+		Mirror the element at a plane parallel to the yz-plane through its bounding box (inplace).
+
+		The plane runs through the smallest x-coordinate (``MinX``), the center (``CenterX``) or the largest x-coordinate
+		(``MaxX``) of the element's :attr:`BoundingBox`, shifted by ``offset`` in x-direction. For a plane at ``x = a``,
+		every x-coordinate ``x`` becomes ``2a - x``; the y- and z-coordinates stay. A group mirrors its offset, and its
+		children at the group's origin.
+
+		Mirrored at ``Alignment3D.MaxX``, seen along the z-axis: the element on the left of the plane is mirrored to the
+		right of it.
+
+		.. code-block:: text
+
+		             plane at MaxX
+		             |
+		        +----+----+
+		        | \  |  / |
+		        |  \ | /  |
+		        +----+----+
+		             |
+		        before  after
+
+		:param plane:       Optional, the edge or center of the bounding box the plane runs through. Default:
+		                    ``Alignment3D.CenterX``.
+		:param offset:      Optional, the distance of the plane from that edge or center in x-direction. Default: ``0``.
+		:raises ValueError: If parameter 'plane' is None.
+		:raises TypeError:  If parameter 'plane' is not of type :class:`Alignment3D`.
+		:raises ValueError: If parameter 'plane' is not ``MinX``, ``CenterX`` or ``MaxX``.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`float` or :class:`int`.
+		"""
+		if plane is None:
+			raise ValueError("Parameter 'plane' is None.")
+		elif not isinstance(plane, Alignment3D):
+			ex = TypeError("Parameter 'plane' is not of type 'Alignment3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(plane)}'.")
+			raise ex
+		elif plane not in (Alignment3D.MinX, Alignment3D.CenterX, Alignment3D.MaxX):
+			ex = ValueError("Parameter 'plane' is not Alignment3D.MinX, Alignment3D.CenterX or Alignment3D.MaxX.")
+			ex.add_note(f"Got value '{plane}'.")
+			raise ex
+
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, (int, float)):
+			ex = TypeError("Parameter 'offset' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		box = self.BoundingBox
+		if plane is Alignment3D.MinX:
+			twiceAxis = 2 * box._minX
+		elif plane is Alignment3D.CenterX:
+			twiceAxis = box._minX + box._maxX
+		else:
+			twiceAxis = 2 * box._maxX
+
+		self._MirrorX(twiceAxis + 2 * offset)
+
+	@abstractmethod
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the element at a plane parallel to the yz-plane, so ``x`` becomes ``twiceAxis - x`` (inplace).
+
+		:param twiceAxis: Twice the x-coordinate of the plane.
+		"""
+
+	def MirrorY(self, plane: Alignment3D = Alignment3D.CenterY, offset: Coordinate = 0) -> None:
+		r"""
+		Mirror the element at a plane parallel to the xz-plane through its bounding box (inplace).
+
+		The plane runs through the smallest y-coordinate (``MinY``), the center (``CenterY``) or the largest y-coordinate
+		(``MaxY``) of the element's :attr:`BoundingBox`, shifted by ``offset`` in y-direction. For a plane at ``y = a``,
+		every y-coordinate ``y`` becomes ``2a - y``; the x- and z-coordinates stay. A group mirrors its offset, and its
+		children at the group's origin.
+
+		Mirrored at ``Alignment3D.MinY``, seen along the z-axis with the y-axis pointing up: the element above the plane is
+		mirrored below it.
+
+		.. code-block:: text
+
+		        +----+
+		        |  \ |    before
+		        |   \|
+		     ---+----+--- plane at MinY
+		        |   /|
+		        |  / |    after
+		        +----+
+
+		:param plane:       Optional, the edge or center of the bounding box the plane runs through. Default:
+		                    ``Alignment3D.CenterY``.
+		:param offset:      Optional, the distance of the plane from that edge or center in y-direction. Default: ``0``.
+		:raises ValueError: If parameter 'plane' is None.
+		:raises TypeError:  If parameter 'plane' is not of type :class:`Alignment3D`.
+		:raises ValueError: If parameter 'plane' is not ``MinY``, ``CenterY`` or ``MaxY``.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`float` or :class:`int`.
+		"""
+		if plane is None:
+			raise ValueError("Parameter 'plane' is None.")
+		elif not isinstance(plane, Alignment3D):
+			ex = TypeError("Parameter 'plane' is not of type 'Alignment3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(plane)}'.")
+			raise ex
+		elif plane not in (Alignment3D.MinY, Alignment3D.CenterY, Alignment3D.MaxY):
+			ex = ValueError("Parameter 'plane' is not Alignment3D.MinY, Alignment3D.CenterY or Alignment3D.MaxY.")
+			ex.add_note(f"Got value '{plane}'.")
+			raise ex
+
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, (int, float)):
+			ex = TypeError("Parameter 'offset' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		box = self.BoundingBox
+		if plane is Alignment3D.MinY:
+			twiceAxis = 2 * box._minY
+		elif plane is Alignment3D.CenterY:
+			twiceAxis = box._minY + box._maxY
+		else:
+			twiceAxis = 2 * box._maxY
+
+		self._MirrorY(twiceAxis + 2 * offset)
+
+	@abstractmethod
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the element at a plane parallel to the xz-plane, so ``y`` becomes ``twiceAxis - y`` (inplace).
+
+		:param twiceAxis: Twice the y-coordinate of the plane.
+		"""
+
+	def MirrorZ(self, plane: Alignment3D = Alignment3D.CenterZ, offset: Coordinate = 0) -> None:
+		r"""
+		Mirror the element at a plane parallel to the xy-plane through its bounding box (inplace).
+
+		The plane runs through the smallest z-coordinate (``MinZ``), the center (``CenterZ``) or the largest z-coordinate
+		(``MaxZ``) of the element's :attr:`BoundingBox`, shifted by ``offset`` in z-direction. For a plane at ``z = a``,
+		every z-coordinate ``z`` becomes ``2a - z``; the x- and y-coordinates stay. A group mirrors its offset, and its
+		children at the group's origin.
+
+		Mirrored at ``Alignment3D.MaxZ``, seen along the y-axis with the z-axis pointing right: the element on the left of
+		the plane is mirrored to the right of it.
+
+		.. code-block:: text
+
+		             plane at MaxZ
+		             |
+		        +----+----+
+		        | \  |  / |
+		        |  \ | /  |
+		        +----+----+
+		             |
+		        before  after
+
+		:param plane:       Optional, the edge or center of the bounding box the plane runs through. Default:
+		                    ``Alignment3D.CenterZ``.
+		:param offset:      Optional, the distance of the plane from that edge or center in z-direction. Default: ``0``.
+		:raises ValueError: If parameter 'plane' is None.
+		:raises TypeError:  If parameter 'plane' is not of type :class:`Alignment3D`.
+		:raises ValueError: If parameter 'plane' is not ``MinZ``, ``CenterZ`` or ``MaxZ``.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`float` or :class:`int`.
+		"""
+		if plane is None:
+			raise ValueError("Parameter 'plane' is None.")
+		elif not isinstance(plane, Alignment3D):
+			ex = TypeError("Parameter 'plane' is not of type 'Alignment3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(plane)}'.")
+			raise ex
+		elif plane not in (Alignment3D.MinZ, Alignment3D.CenterZ, Alignment3D.MaxZ):
+			ex = ValueError("Parameter 'plane' is not Alignment3D.MinZ, Alignment3D.CenterZ or Alignment3D.MaxZ.")
+			ex.add_note(f"Got value '{plane}'.")
+			raise ex
+
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, (int, float)):
+			ex = TypeError("Parameter 'offset' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		box = self.BoundingBox
+		if plane is Alignment3D.MinZ:
+			twiceAxis = 2 * box._minZ
+		elif plane is Alignment3D.CenterZ:
+			twiceAxis = box._minZ + box._maxZ
+		else:
+			twiceAxis = 2 * box._maxZ
+
+		self._MirrorZ(twiceAxis + 2 * offset)
+
+	@abstractmethod
+	def _MirrorZ(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the element at a plane parallel to the xy-plane, so ``z`` becomes ``twiceAxis - z`` (inplace).
+
+		:param twiceAxis: Twice the z-coordinate of the plane.
 		"""
 
 	def MoveTo(self, parent: Nullable[Group3D], keepPosition: bool = True) -> None:
@@ -1836,6 +2040,33 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 
 		self._start += offset
 		self._end +=   offset
+
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the segment at a plane parallel to the yz-plane by mirroring its start and end point (inplace).
+
+		:param twiceAxis: Twice the x-coordinate of the plane.
+		"""
+		self._start._x = twiceAxis - self._start._x
+		self._end._x =   twiceAxis - self._end._x
+
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the segment at a plane parallel to the xz-plane by mirroring its start and end point (inplace).
+
+		:param twiceAxis: Twice the y-coordinate of the plane.
+		"""
+		self._start._y = twiceAxis - self._start._y
+		self._end._y =   twiceAxis - self._end._y
+
+	def _MirrorZ(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the segment at a plane parallel to the xy-plane by mirroring its start and end point (inplace).
+
+		:param twiceAxis: Twice the z-coordinate of the plane.
+		"""
+		self._start._z = twiceAxis - self._start._z
+		self._end._z =   twiceAxis - self._end._z
 
 	def Copy(self) -> Self:
 		"""

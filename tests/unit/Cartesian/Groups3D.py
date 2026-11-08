@@ -29,11 +29,12 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`pyTooling.Cartesian3D.Groups` - groups, frames and absolute coordinates.
+Unit tests for :mod:`pyTooling.Cartesian3D.Groups` - groups, frames, absolute coordinates and mirroring.
 """
 from math                         import isclose, pi
 
-from pyTooling.Cartesian3D        import Point3D, Offset3D, BoundingBox3D, Element3D, Segment3D, LineSegment3D
+from pyTooling.Cartesian3D        import Point3D, Offset3D, BoundingBox3D, Alignment3D, Element3D, Segment3D, \
+                                         LineSegment3D
 from pyTooling.Cartesian3D.Groups import Group3D
 from pyTooling.Cartesian2D        import AlreadyOwnedError, NotOwnedError, DuplicatePointError, GroupCycleError, \
                                          NotInSameFrameError
@@ -872,3 +873,73 @@ class Distributing(Testcase):
 
 		self.assertEqual("Parameter 'gap' is negative.", str(context.exception))
 		self.assertListEqual(["Got value '-1'."], context.exception.__notes__)
+
+
+class Mirroring(Testcase):
+	def test_MirrorX(self) -> None:
+		"""A group mirrors its offset at the plane, its children are mirrored at the group's origin."""
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(3, 4, 5))
+		inner = Group3D(Offset3D(3, 4, 5), (line, ))
+		outer = Group3D(Offset3D(10, 20, 30), (inner, ))
+
+		outer.MirrorX(Alignment3D.MaxX, 5)
+
+		self.assertTupleEqual((32, 20, 30), outer.Offset.ToTuple())
+		self.assertTupleEqual((-3, 4, 5), inner.Offset.ToTuple())
+		self.assertTupleEqual(((-1, 2, 3), (-3, 4, 5)), line.ToTuple())
+		self.assertTupleEqual((28, 26, 38), line.Start.Absolute.ToTuple())
+		self.assertEqual(BoundingBox3D(26, 26, 38, 28, 28, 40), outer.BoundingBox)
+
+	def test_MirrorX_OffsetNone(self) -> None:
+		group = Group3D(Offset3D(1, 2, 3))
+
+		with self.assertRaises(ValueError) as context:
+			group.MirrorX(Alignment3D.MinX, None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+		self.assertTupleEqual((1, 2, 3), group.Offset.ToTuple())
+
+	def test_MirrorY_Default(self) -> None:
+		"""A group mirrored at its center keeps its bounding box."""
+		line =  LineSegment3D(Point3D(0, 0, 0), Point3D(4, 2, 6))
+		inner = Group3D(Offset3D(1, 1, 1), (line, ))
+		outer = Group3D(Offset3D(10, 20, 30), (inner, ))
+
+		outer.MirrorY()
+
+		self.assertTupleEqual((10, 24, 30), outer.Offset.ToTuple())
+		self.assertTupleEqual((1, -1, 1), inner.Offset.ToTuple())
+		self.assertTupleEqual(((0, 0, 0), (4, -2, 6)), line.ToTuple())
+		self.assertEqual(BoundingBox3D(11, 21, 31, 15, 23, 37), outer.BoundingBox)
+
+	def test_MirrorZ_MinZ(self) -> None:
+		line =  LineSegment3D(Point3D(0, 0, 0), Point3D(4, 2, 6))
+		group = Group3D(Offset3D(10, 20, 30), (line, ))
+
+		group.MirrorZ(Alignment3D.MinZ)
+
+		self.assertTupleEqual((10, 20, 30), group.Offset.ToTuple())
+		self.assertTupleEqual(((0, 0, 0), (4, 2, -6)), line.ToTuple())
+		self.assertEqual(BoundingBox3D(10, 20, 24, 14, 22, 30), group.BoundingBox)
+
+	def test_MirrorZ_PlaneMaxY(self) -> None:
+		group = Group3D(Offset3D(1, 2, 3))
+
+		with self.assertRaises(ValueError) as context:
+			group.MirrorZ(Alignment3D.MaxY)
+
+		self.assertEqual(
+			"Parameter 'plane' is not Alignment3D.MinZ, Alignment3D.CenterZ or Alignment3D.MaxZ.",
+			str(context.exception)
+		)
+		self.assertListEqual(["Got value 'Alignment3D.MaxY'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2, 3), group.Offset.ToTuple())
+
+	def test_MirrorZ_Empty(self) -> None:
+		group = Group3D(Offset3D(1, 2, 3))
+
+		with self.assertRaises(EmptyGroupError) as context:
+			group.MirrorZ()
+
+		self.assertEqual("Group3D has no children.", str(context.exception))
+		self.assertTupleEqual((1, 2, 3), group.Offset.ToTuple())

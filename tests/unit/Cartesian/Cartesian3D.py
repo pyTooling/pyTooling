@@ -2133,3 +2133,356 @@ class Aligning(Testcase):
 
 		self.assertEqual("Parameter 'alignment' is not of type 'Alignment3D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Alignment2D'."], context.exception.__notes__)
+
+
+class Mirroring(Testcase):
+	def test_MirrorX(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorX()
+
+		self.assertTupleEqual(((4, 2, 3), (1, 6, 8)), line.ToTuple())
+
+	def test_MirrorX_MinX(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorX(Alignment3D.MinX)
+
+		self.assertTupleEqual(((1, 2, 3), (-2, 6, 8)), line.ToTuple())
+
+	def test_MirrorX_MaxX(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorX(Alignment3D.MaxX)
+
+		self.assertTupleEqual(((7, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorX_Offset(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorX(Alignment3D.MinX, 1)
+
+		self.assertTupleEqual(((3, 2, 3), (0, 6, 8)), line.ToTuple())
+
+	def test_MirrorX_FloatOffset(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorX(Alignment3D.MaxX, -0.5)
+
+		self.assertTupleEqual(((6.0, 2, 3), (3.0, 6, 8)), line.ToTuple())
+
+	def test_MirrorX_Int(self) -> None:
+		"""A plane between two integer coordinates keeps integer coordinates."""
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(6, 6, 8))
+
+		line.MirrorX(Alignment3D.CenterX)
+
+		self.assertTupleEqual(((6, 2, 3), (1, 6, 8)), line.ToTuple())
+		self.assertIs(int, type(line.Start.X))
+		self.assertIs(int, type(line.End.X))
+
+	def test_MirrorX_PlaneNone(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(ValueError) as context:
+			line.MirrorX(None)
+
+		self.assertEqual("Parameter 'plane' is None.", str(context.exception))
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorX_PlaneStr(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(TypeError) as context:
+			line.MirrorX("MinX")
+
+		self.assertEqual("Parameter 'plane' is not of type 'Alignment3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorX_Plane2D(self) -> None:
+		"""The 2D alignment isn't accepted."""
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(TypeError) as context:
+			line.MirrorX(Alignment2D.MinX)
+
+		self.assertEqual("Parameter 'plane' is not of type 'Alignment3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Alignment2D'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorX_PlaneYZ(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		for plane in (
+			Alignment3D.MinY,
+			Alignment3D.CenterY,
+			Alignment3D.MaxY,
+			Alignment3D.MinZ,
+			Alignment3D.CenterZ,
+			Alignment3D.MaxZ
+		):
+			with self.subTest(plane=plane):
+				with self.assertRaises(ValueError) as context:
+					line.MirrorX(plane)
+
+				self.assertEqual(
+					"Parameter 'plane' is not Alignment3D.MinX, Alignment3D.CenterX or Alignment3D.MaxX.",
+					str(context.exception)
+				)
+				self.assertListEqual([f"Got value 'Alignment3D.{plane.name}'."], context.exception.__notes__)
+
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorX_OffsetNone(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(ValueError) as context:
+			line.MirrorX(Alignment3D.MinX, None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorX_OffsetStr(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(TypeError) as context:
+			line.MirrorX(Alignment3D.MinX, "1")
+
+		self.assertEqual("Parameter 'offset' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorY(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorY()
+
+		self.assertTupleEqual(((1, 6, 3), (4, 2, 8)), line.ToTuple())
+
+	def test_MirrorY_MinY(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorY(Alignment3D.MinY)
+
+		self.assertTupleEqual(((1, 2, 3), (4, -2, 8)), line.ToTuple())
+
+	def test_MirrorY_MaxY(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorY(Alignment3D.MaxY)
+
+		self.assertTupleEqual(((1, 10, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorY_Offset(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorY(Alignment3D.MinY, 1)
+
+		self.assertTupleEqual(((1, 4, 3), (4, 0, 8)), line.ToTuple())
+
+	def test_MirrorY_FloatOffset(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorY(Alignment3D.MaxY, -0.5)
+
+		self.assertTupleEqual(((1, 9.0, 3), (4, 5.0, 8)), line.ToTuple())
+
+	def test_MirrorY_Int(self) -> None:
+		"""A plane between two integer coordinates keeps integer coordinates."""
+		line = LineSegment3D(Point3D(1, 1, 3), Point3D(4, 6, 8))
+
+		line.MirrorY(Alignment3D.CenterY)
+
+		self.assertTupleEqual(((1, 6, 3), (4, 1, 8)), line.ToTuple())
+		self.assertIs(int, type(line.Start.Y))
+		self.assertIs(int, type(line.End.Y))
+
+	def test_MirrorY_PlaneNone(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(ValueError) as context:
+			line.MirrorY(None)
+
+		self.assertEqual("Parameter 'plane' is None.", str(context.exception))
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorY_PlaneStr(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(TypeError) as context:
+			line.MirrorY("MinY")
+
+		self.assertEqual("Parameter 'plane' is not of type 'Alignment3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorY_Plane2D(self) -> None:
+		"""The 2D alignment isn't accepted."""
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(TypeError) as context:
+			line.MirrorY(Alignment2D.MinY)
+
+		self.assertEqual("Parameter 'plane' is not of type 'Alignment3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Alignment2D'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorY_PlaneXZ(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		for plane in (
+			Alignment3D.MinX,
+			Alignment3D.CenterX,
+			Alignment3D.MaxX,
+			Alignment3D.MinZ,
+			Alignment3D.CenterZ,
+			Alignment3D.MaxZ
+		):
+			with self.subTest(plane=plane):
+				with self.assertRaises(ValueError) as context:
+					line.MirrorY(plane)
+
+				self.assertEqual(
+					"Parameter 'plane' is not Alignment3D.MinY, Alignment3D.CenterY or Alignment3D.MaxY.",
+					str(context.exception)
+				)
+				self.assertListEqual([f"Got value 'Alignment3D.{plane.name}'."], context.exception.__notes__)
+
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorY_OffsetNone(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(ValueError) as context:
+			line.MirrorY(Alignment3D.MinY, None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorY_OffsetStr(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(TypeError) as context:
+			line.MirrorY(Alignment3D.MinY, "1")
+
+		self.assertEqual("Parameter 'offset' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorZ(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorZ()
+
+		self.assertTupleEqual(((1, 2, 8), (4, 6, 3)), line.ToTuple())
+
+	def test_MirrorZ_MinZ(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorZ(Alignment3D.MinZ)
+
+		self.assertTupleEqual(((1, 2, 3), (4, 6, -2)), line.ToTuple())
+
+	def test_MirrorZ_MaxZ(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorZ(Alignment3D.MaxZ)
+
+		self.assertTupleEqual(((1, 2, 13), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorZ_Offset(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorZ(Alignment3D.MinZ, 1)
+
+		self.assertTupleEqual(((1, 2, 5), (4, 6, 0)), line.ToTuple())
+
+	def test_MirrorZ_FloatOffset(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.MirrorZ(Alignment3D.MaxZ, -0.5)
+
+		self.assertTupleEqual(((1, 2, 12.0), (4, 6, 7.0)), line.ToTuple())
+
+	def test_MirrorZ_Int(self) -> None:
+		"""A plane between two integer coordinates keeps integer coordinates."""
+		line = LineSegment3D(Point3D(1, 2, 1), Point3D(4, 6, 6))
+
+		line.MirrorZ(Alignment3D.CenterZ)
+
+		self.assertTupleEqual(((1, 2, 6), (4, 6, 1)), line.ToTuple())
+		self.assertIs(int, type(line.Start.Z))
+		self.assertIs(int, type(line.End.Z))
+
+	def test_MirrorZ_PlaneNone(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(ValueError) as context:
+			line.MirrorZ(None)
+
+		self.assertEqual("Parameter 'plane' is None.", str(context.exception))
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorZ_PlaneStr(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(TypeError) as context:
+			line.MirrorZ("MinZ")
+
+		self.assertEqual("Parameter 'plane' is not of type 'Alignment3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorZ_Plane2D(self) -> None:
+		"""The 2D alignment isn't accepted."""
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(TypeError) as context:
+			line.MirrorZ(Alignment2D.MinX)
+
+		self.assertEqual("Parameter 'plane' is not of type 'Alignment3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Alignment2D'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorZ_PlaneXY(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		for plane in (
+			Alignment3D.MinX,
+			Alignment3D.CenterX,
+			Alignment3D.MaxX,
+			Alignment3D.MinY,
+			Alignment3D.CenterY,
+			Alignment3D.MaxY
+		):
+			with self.subTest(plane=plane):
+				with self.assertRaises(ValueError) as context:
+					line.MirrorZ(plane)
+
+				self.assertEqual(
+					"Parameter 'plane' is not Alignment3D.MinZ, Alignment3D.CenterZ or Alignment3D.MaxZ.",
+					str(context.exception)
+				)
+				self.assertListEqual([f"Got value 'Alignment3D.{plane.name}'."], context.exception.__notes__)
+
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorZ_OffsetNone(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(ValueError) as context:
+			line.MirrorZ(Alignment3D.MinZ, None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+	def test_MirrorZ_OffsetStr(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		with self.assertRaises(TypeError) as context:
+			line.MirrorZ(Alignment3D.MinZ, "1")
+
+		self.assertEqual("Parameter 'offset' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
