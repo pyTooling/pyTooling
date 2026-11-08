@@ -29,16 +29,18 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - polygon, trapezium, rectangle, square and circle.
+Unit tests for :mod:`pyTooling.Cartesian2D.Shapes` - polygon, trapezium, rectangle, square, circle and path.
 """
 from copy                         import copy, deepcopy
 from math                         import cos, isclose, pi, radians, sin, sqrt
 
-from pyTooling.Cartesian2D        import Point2D, Offset2D, BoundingBox2D, LineSegment2D, Alignment2D, \
+from pyTooling.Cartesian2D        import Point2D, Offset2D, Size2D, BoundingBox2D, LineSegment2D, ArcSegment2D, \
+                                         QuadraticBezierSegment2D, CubicBezierSegment2D, Alignment2D, SweepDirection, \
                                          AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
                                          NotInSameFrameError
-from pyTooling.Cartesian2D.Shapes import Shape, Polygon, Trapezium, Rectangle, Square, Circle
-from pyTooling.Cartesian2D.Groups import Group2D
+from pyTooling.Cartesian2D.Shapes import Shape, Polygon, Trapezium, Rectangle, Square, Circle, Path
+from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection
+from pyTooling.Exceptions         import InvalidOperationError
 from pyTooling.MetaClasses        import ExtendedType, AbstractClassError
 from pyTooling.Testing            import Testcase
 
@@ -1997,3 +1999,438 @@ class ElementData(Testcase):
 
 		self.assertIs(value, newCircle.Value)
 		self.assertIsNot(circle._dict, newCircle._dict)
+
+	def test_Path(self) -> None:
+		value = object()
+		pairs = {"layer": 1}
+		path =  Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ), value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, path.Value)
+		self.assertEqual(1, path["layer"])
+		self.assertIsNot(pairs, path._dict)
+
+	def test_Path_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Path_Edges(self) -> None:
+		"""An edge references the given segment's value and holds a shallow copy of its key-value-pairs."""
+		value = object()
+		line =  LineSegment2D(Point2D(0, 0), Point2D(4, 0), value=value, keyValuePairs={"net": "a"})
+		arc =   ArcSegment2D(Point2D(4, 0), Point2D(0, 0), height=2, value=2, keyValuePairs={"net": "b"})
+
+		path = Path((line, arc), closed=True)
+		path.Segments[0]["net"] = "c"
+
+		self.assertIs(value, path.Segments[0].Value)
+		self.assertEqual(2, path.Segments[1].Value)
+		self.assertEqual("b", path.Segments[1]["net"])
+		self.assertEqual("a", line["net"])
+		self.assertEqual(0, len(path))
+
+	def test_Path_Copy(self) -> None:
+		value = [1, 2]
+		path =  Path(
+			(QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), value=3, keyValuePairs={"a": 1}), ),
+			value=value,
+			keyValuePairs={"layer": 1}
+		)
+
+		newPath =          path.Copy()
+		newPath["layer"] = 2
+
+		self.assertIs(value, newPath.Value)
+		self.assertEqual(1, path["layer"])
+		self.assertEqual(2, newPath["layer"])
+		self.assertEqual(3, newPath.Segments[0].Value)
+		self.assertEqual(1, newPath.Segments[0]["a"])
+		self.assertIs(value, copy(path).Value)
+
+	def test_Path_deepcopy(self) -> None:
+		value = [1, 2]
+		path =  Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ), value=value, keyValuePairs={"nets": ["a"]})
+
+		newPath = deepcopy(path)
+
+		self.assertIsNot(value, newPath.Value)
+		self.assertListEqual([1, 2], newPath.Value)
+		self.assertIsNot(path["nets"], newPath["nets"])
+		self.assertIs(newPath, newPath.Points[0].Parent)
+
+
+def openPath() -> Path:
+	"""A line, a semicircle bulging to the right and a quadratic curve bulging upwards."""
+	return Path((
+		LineSegment2D(Point2D(0, 0), Point2D(4, 0)),
+		ArcSegment2D(Point2D(4, 0), Point2D(4, 4), center=Point2D(4, 2), direction=SweepDirection.Counterclockwise),
+		QuadraticBezierSegment2D(Point2D(4, 4), Point2D(2, 6), Point2D(0, 4))
+	))
+
+
+def closedPath() -> Path:
+	"""A line and the upper semicircle back to its start."""
+	return Path((
+		LineSegment2D(Point2D(0, 0), Point2D(4, 0)),
+		ArcSegment2D(Point2D(4, 0), Point2D(0, 0), center=Point2D(2, 0), direction=SweepDirection.Counterclockwise)
+	), closed=True)
+
+
+class PathInstantiation(Testcase):
+	def test_Open(self) -> None:
+		path = openPath()
+
+		self.assertIsInstance(path, Shape)
+		self.assertFalse(path.IsClosed)
+		self.assertTupleEqual(((0, 0), (4, 0), (4, 4), (0, 4)), tuple(point.ToTuple() for point in path.Points))
+		self.assertIs(LineSegment2D, type(path.Segments[0]))
+		self.assertIs(ArcSegment2D, type(path.Segments[1]))
+		self.assertIs(QuadraticBezierSegment2D, type(path.Segments[2]))
+
+	def test_Open_Joints(self) -> None:
+		"""Consecutive edges share their joint; the path owns every point."""
+		path = openPath()
+		line, arc, curve = path.Segments
+
+		self.assertIs(path.Points[0], line.Start)
+		self.assertIs(line.End, arc.Start)
+		self.assertIs(arc.End, curve.Start)
+		self.assertIs(path.Points[3], curve.End)
+		for point in path.Points:
+			self.assertIs(path, point.Parent)
+
+		self.assertIs(path, arc.Center.Parent)
+		self.assertIs(path, curve.ControlPoint.Parent)
+
+	def test_Closed(self) -> None:
+		path = closedPath()
+		line, arc = path.Segments
+
+		self.assertTrue(path.IsClosed)
+		self.assertTupleEqual(((0, 0), (4, 0)), tuple(point.ToTuple() for point in path.Points))
+		self.assertIs(line.Start, arc.End)
+		self.assertIs(line.End, arc.Start)
+
+	def test_Closed_FullCircle(self) -> None:
+		"""A single full-circle arc closes a path."""
+		path = Path(
+			(ArcSegment2D(Point2D(1, 0), Point2D(1, 0), center=Point2D(0, 0), direction=SweepDirection.Clockwise), ),
+			closed=True
+		)
+
+		self.assertEqual(1, len(path.Points))
+		self.assertIs(path.Segments[0].Start, path.Segments[0].End)
+		self.assertEqual(BoundingBox2D(-1, -1, 1, 1), path.BoundingBox)
+
+	def test_Segments_Copied(self) -> None:
+		"""The given segments keep their points."""
+		line = LineSegment2D(Point2D(0, 0), Point2D(4, 0))
+		arc =  ArcSegment2D(Point2D(4, 0), Point2D(0, 0), center=Point2D(2, 0), direction=SweepDirection.Counterclockwise)
+
+		path = Path((line, arc), closed=True)
+
+		self.assertIsNot(line, path.Segments[0])
+		self.assertIs(line, line.End.Parent)
+		self.assertIs(arc, arc.Center.Parent)
+		self.assertIsNot(arc.Center, path.Segments[1].Center)
+
+	def test_SegmentsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Path(None)
+
+		self.assertEqual("Parameter 'segments' is None.", str(context.exception))
+
+	def test_SegmentsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Path(1)
+
+		self.assertEqual("Parameter 'segments' is not iterable.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_SegmentNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), None))
+
+		self.assertEqual("An element of parameter 'segments' is None.", str(context.exception))
+
+	def test_SegmentPoint(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Path((Point2D(0, 0), ))
+
+		self.assertEqual("An element of parameter 'segments' is not of type 'Segment2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
+	def test_Gap(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), LineSegment2D(Point2D(4, 1), Point2D(4, 4))))
+
+		self.assertEqual(
+			"An element of parameter 'segments' doesn't start at the end point of the previous element.",
+			str(context.exception)
+		)
+		self.assertListEqual(["Got end point (4, 0) and start point (4, 1)."], context.exception.__notes__)
+
+	def test_Empty(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Path(())
+
+		self.assertEqual("Parameter 'segments' is empty.", str(context.exception))
+
+	def test_ClosedNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ), closed=None)
+
+		self.assertEqual("Parameter 'closed' is None.", str(context.exception))
+
+	def test_ClosedInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ), closed=1)
+
+		self.assertEqual("Parameter 'closed' is not of type 'bool'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Closed_Open(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), LineSegment2D(Point2D(4, 0), Point2D(4, 4))), closed=True)
+
+		self.assertEqual(
+			"Parameter 'closed' is True, while the last segment doesn't end at the first segment's start.",
+			str(context.exception)
+		)
+		self.assertListEqual(["Got start point (0, 0) and end point (4, 4)."], context.exception.__notes__)
+
+	def test_ClosedPositional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ), True)
+
+	def test_Open_EndAtStart(self) -> None:
+		"""An open path ending at its start keeps two joints at that position."""
+		path = Path((
+			LineSegment2D(Point2D(0, 0), Point2D(4, 0)),
+			ArcSegment2D(Point2D(4, 0), Point2D(0, 0), center=Point2D(2, 0), direction=SweepDirection.Counterclockwise)
+		))
+
+		self.assertEqual(3, len(path.Points))
+		self.assertIsNot(path.Segments[0].Start, path.Segments[1].End)
+
+
+class PathGeometry(Testcase):
+	def test_Length(self) -> None:
+		self.assertEqual(4 + 2 * pi, closedPath().Length)
+
+	def test_Length_Bezier(self) -> None:
+		path = openPath()
+
+		with self.assertRaises(InvalidOperationError) as context:
+			_ = path.Length
+
+		self.assertEqual("Path has a segment without a length.", str(context.exception))
+		self.assertListEqual(["Got QuadraticBezierSegment2D((4, 4), (2, 6), (0, 4))."], context.exception.__notes__)
+
+	def test_BoundingBox_Open(self) -> None:
+		"""The arc bulges to x = 6, the curve to y = 5."""
+		self.assertEqual(BoundingBox2D(0, 0, 6, 5), openPath().BoundingBox)
+
+	def test_BoundingBox_Closed(self) -> None:
+		self.assertEqual(BoundingBox2D(0, 0, 4, 2), closedPath().BoundingBox)
+
+	def test_BoundingBox_Cubic(self) -> None:
+		path = Path((
+			CubicBezierSegment2D(Point2D(0, 0), Point2D(6, 0), Point2D(6, 6), Point2D(0, 6)),
+			LineSegment2D(Point2D(0, 6), Point2D(0, 0))
+		), closed=True)
+
+		self.assertEqual(BoundingBox2D(0, 0, 4.5, 6), path.BoundingBox)
+
+	def test_ReadOnly(self) -> None:
+		path = closedPath()
+
+		with self.assertRaises(AttributeError):
+			path.Segments = ()
+
+		with self.assertRaises(AttributeError):
+			path.IsClosed = False
+
+
+class PathOwnership(Testcase):
+	def test_Edge_ToGroup(self) -> None:
+		path = closedPath()
+
+		with self.assertRaises(AlreadyOwnedError):
+			path.Segments[0].Parent = Group2D()
+
+		self.assertIs(path, path.Segments[0].Parent)
+
+	def test_Edge_Start(self) -> None:
+		"""An edge doesn't own its points, so it can't replace them."""
+		path = openPath()
+		line = path.Segments[0]
+
+		with self.assertRaises(NotOwnedError):
+			line.Start = Point2D(-1, 0)
+
+		self.assertIs(path.Points[0], line.Start)
+
+	def test_Edge_Arc_End(self) -> None:
+		path = openPath()
+		arc =  path.Segments[1]
+
+		with self.assertRaises(NotOwnedError):
+			arc.End = Point2D(6, 2)
+
+	def test_Edge_Move(self) -> None:
+		"""Moving an edge moves the joints it shares with its neighbours."""
+		path = openPath()
+
+		path.Segments[0].Move(Offset2D(0, -1))
+
+		self.assertTupleEqual((4, -1), path.Segments[1].Start.ToTuple())
+
+
+class PathMoving(Testcase):
+	def test_Move(self) -> None:
+		"""Each joint moves once, the arc's center and the curve's control point move along."""
+		path = openPath()
+
+		path.Move(Offset2D(10, 20))
+
+		self.assertTupleEqual(((10, 20), (14, 20), (14, 24), (10, 24)), tuple(point.ToTuple() for point in path.Points))
+		self.assertTupleEqual((14, 22), path.Segments[1].Center.ToTuple())
+		self.assertTupleEqual((12, 26), path.Segments[2].ControlPoint.ToTuple())
+		self.assertEqual(BoundingBox2D(10, 20, 16, 25), path.BoundingBox)
+
+	def test_Move_None(self) -> None:
+		path = openPath()
+
+		with self.assertRaises(ValueError) as context:
+			path.Move(None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+
+	def test_Move_Tuple(self) -> None:
+		path = openPath()
+
+		with self.assertRaises(TypeError) as context:
+			path.Move((1, 1))
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+
+class PathMirroring(Testcase):
+	def test_MirrorX(self) -> None:
+		"""Each joint is mirrored once; the arc reverses its direction and bulges to the left."""
+		path = openPath()
+
+		path.MirrorX(Alignment2D.MinX)
+
+		self.assertTupleEqual(((0, 0), (-4, 0), (-4, 4), (0, 4)), tuple(point.ToTuple() for point in path.Points))
+		self.assertTupleEqual((-4, 2), path.Segments[1].Center.ToTuple())
+		self.assertIs(SweepDirection.Clockwise, path.Segments[1].Direction)
+		self.assertTupleEqual((-2, 6), path.Segments[2].ControlPoint.ToTuple())
+		self.assertEqual(BoundingBox2D(-6, 0, 0, 5), path.BoundingBox)
+
+	def test_MirrorY(self) -> None:
+		path = closedPath()
+
+		path.MirrorY(Alignment2D.MinY)
+
+		self.assertTupleEqual(((0, 0), (4, 0)), tuple(point.ToTuple() for point in path.Points))
+		self.assertIs(SweepDirection.Clockwise, path.Segments[1].Direction)
+		self.assertEqual(BoundingBox2D(0, -2, 4, 0), path.BoundingBox)
+
+	def test_Canvas(self) -> None:
+		path =   closedPath()
+		canvas = Canvas2D(YAxisDirection.Up, Size2D(10, 10), (path, ))
+
+		canvas.Mirror()
+
+		self.assertTupleEqual(((0, 10), (4, 10)), tuple(point.ToTuple() for point in path.Points))
+		self.assertEqual(BoundingBox2D(0, 8, 4, 10), path.BoundingBox)
+
+
+class PathCopy(Testcase):
+	def test_Copy(self) -> None:
+		path = closedPath()
+
+		for newPath in (path.Copy(), copy(path), deepcopy(path)):
+			self.assertIs(Path, type(newPath))
+			self.assertTrue(newPath.IsClosed)
+			self.assertIsNot(path.Points[0], newPath.Points[0])
+			self.assertIs(newPath.Segments[0].Start, newPath.Segments[1].End)
+			self.assertIs(newPath, newPath.Segments[1].Center.Parent)
+			self.assertEqual(path.BoundingBox, newPath.BoundingBox)
+
+	def test_Copy_Independent(self) -> None:
+		path =    openPath()
+		newPath = path.Copy()
+
+		newPath.Move(Offset2D(1, 1))
+
+		self.assertEqual(BoundingBox2D(0, 0, 6, 5), path.BoundingBox)
+		self.assertEqual(BoundingBox2D(1, 1, 7, 6), newPath.BoundingBox)
+
+	def test_deepcopy_Group(self) -> None:
+		group = Group2D()
+		path =  Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ), parent=group)
+
+		newPath = deepcopy(path)
+
+		self.assertIsNone(newPath.Parent)
+		self.assertTupleEqual((path, ), group.Children)
+
+
+class PathGroups(Testcase):
+	def test_Parent(self) -> None:
+		group = Group2D(Offset2D(10, 20))
+
+		path = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ), parent=group)
+
+		self.assertIs(group, path.Parent)
+		self.assertTupleEqual((path, ), group.Children)
+		self.assertIs(group, path.Segments[0].Frame)
+		self.assertEqual(BoundingBox2D(10, 20, 14, 20), path.AbsoluteBoundingBox)
+
+	def test_Parent_Failing(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(ValueError):
+			_ = Path((), parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Parent_Int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+
+class PathRepresentation(Testcase):
+	def test_repr(self) -> None:
+		path = closedPath()
+
+		self.assertEqual(
+			"Path(LineSegment2D((0, 0), (4, 0)), ArcSegment2D((4, 0), (0, 0), center=(2, 0), direction=Counterclockwise), "
+			"closed=True)",
+			repr(path)
+		)
+
+	def test_str_Open(self) -> None:
+		path = Path((
+			LineSegment2D(Point2D(0, 0), Point2D(4, 0)),
+			QuadraticBezierSegment2D(Point2D(4, 0), Point2D(6, 2), Point2D(4, 4))
+		))
+
+		self.assertEqual("(((0, 0) → (4, 0)), ((4, 0) .. controls (6, 2) .. (4, 4)))", str(path))
+
+	def test_str_Closed(self) -> None:
+		path = closedPath()
+
+		self.assertEqual(
+			"(((0, 0) → (4, 0)), ((4, 0) → (0, 0) around (2, 0), counterclockwise), closed)",
+			str(path)
+		)

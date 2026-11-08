@@ -33,6 +33,8 @@ Features
 * **Distances measured** - a line segment reports its length and its angle.
 * **Curved segments** - a circular :class:`~pyTooling.Cartesian2D.ArcSegment2D` around a center, reporting its
   radius, angles and length, and quadratic and cubic Bezier curves, with exact bounding boxes.
+* **Paths** - a :class:`~pyTooling.Cartesian2D.Shapes.Path` chains line segments, arcs and Bezier curves, open or
+  closed, like SVG's ``<path>``.
 * **Shapes placed by their corners**, so a shape is positioned by the points it is built from - a circle by its
   center.
 * Shapes validated on construction: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with any number of corners, the
@@ -63,7 +65,7 @@ Missing Features
 
 * Rotation and scaling - an element can be shifted and mirrored at a vertical or horizontal axis, but not rotated or
   scaled.
-* Shapes with curved edges other than a circle, and elliptical arcs.
+* Ellipses and elliptical arcs.
 * The length of a Bezier curve.
 * Exact containment and intersection tests (*is this point inside that rotated rectangle?*). Only bounding boxes are
   compared.
@@ -656,6 +658,56 @@ A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D` or a radius that i
 
    :ref:`STRUCT/Cartesian2D/Shape`
       |rarr| Its base-class, the base-class of the 2-dimensional shapes.
+
+
+.. _STRUCT/Cartesian2D/Path:
+
+Path
+====
+
+A :class:`~pyTooling.Cartesian2D.Shapes.Path` is a chain of connected segments, like SVG's ``<path>``: line segments,
+:ref:`arcs and Bezier curves <STRUCT/Cartesian2D/CurvedSegments>`, in any mix. It is built from a sequence of
+segments, each starting at the end point of the previous one - the coordinates must be equal, else the constructor
+raises :exc:`ValueError`. With ``closed=True``, the last segment must end at the start point of the first one; no
+closing line is added.
+
+The path copies the given segments as its **edges**, the way a :ref:`polygon <STRUCT/Cartesian2D/Polygon>` builds its
+edges from its corners: consecutive edges share their joint, and the path owns every point - the joints in
+:attr:`~pyTooling.Cartesian2D.Shapes.Path.Points` and the points defining the curves, like an arc's center.
+:attr:`~pyTooling.Cartesian2D.Shapes.Path.Segments` holds the edges, :attr:`~pyTooling.Cartesian2D.Shapes.Path.IsClosed`
+tells whether the path is closed. The given segments stay as they are; an edge references its segment's
+:attr:`~pyTooling.Cartesian2D.Element2D.Value` and holds a shallow copy of its key-value-pairs.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D, LineSegment2D, ArcSegment2D, QuadraticBezierSegment2D, \
+                                            SweepDirection
+   from pyTooling.Cartesian2D.Shapes import Path
+
+   drop = Path((
+     LineSegment2D(Point2D(0, 0), Point2D(4, 0)),
+     ArcSegment2D(Point2D(4, 0), Point2D(4, 4), center=Point2D(4, 2), direction=SweepDirection.Counterclockwise),
+     QuadraticBezierSegment2D(Point2D(4, 4), Point2D(2, 6), Point2D(0, 4)),
+     LineSegment2D(Point2D(0, 4), Point2D(0, 0))
+   ), closed=True)
+
+   line, arc, curve, back = drop.Segments
+   len(drop.Points)                   # 4 joints
+   line.End is arc.Start              # True
+   drop.BoundingBox                   # BoundingBox2D(0, 0, 6.0, 5.0)
+
+The :attr:`~pyTooling.Cartesian2D.Shapes.Path.BoundingBox` is the union of the edges' exact bounding boxes.
+:attr:`~pyTooling.Cartesian2D.Shapes.Path.Length` sums the edges' lengths; a Bezier curve has none, so a path with one
+raises :exc:`~pyTooling.Exceptions.InvalidOperationError`. Moving or mirroring a path moves or mirrors each joint once
+and the edges' other points; a mirrored arc reverses its direction. A copy shares its copied joints between its edges,
+like the original.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Shape`
+      |rarr| Its base-class, the base-class of the 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/Polygon`
+      |rarr| The closed shape of straight edges, built from its corners.
 
 
 .. _STRUCT/Cartesian2D/Groups:
