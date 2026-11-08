@@ -1190,8 +1190,10 @@ checked, measured, moved, mirrored and grouped like one. :mod:`~pyTooling.Cartes
 :class:`~pyTooling.Cartesian2D.Drawing.Polygon`, :class:`~pyTooling.Cartesian2D.Drawing.Trapezium`,
 :class:`~pyTooling.Cartesian2D.Drawing.Rectangle`, :class:`~pyTooling.Cartesian2D.Drawing.Square`,
 :class:`~pyTooling.Cartesian2D.Drawing.Circle`, :class:`~pyTooling.Cartesian2D.Drawing.Ellipse`,
-:class:`~pyTooling.Cartesian2D.Drawing.Path`, :class:`~pyTooling.Cartesian2D.Drawing.PolyLine` and
-:class:`~pyTooling.Cartesian2D.Drawing.LineSegment2D`.
+:class:`~pyTooling.Cartesian2D.Drawing.Path` and :class:`~pyTooling.Cartesian2D.Drawing.PolyLine`, and the drawable
+segments :class:`~pyTooling.Cartesian2D.Drawing.LineSegment2D`, :class:`~pyTooling.Cartesian2D.Drawing.ArcSegment2D`,
+:class:`~pyTooling.Cartesian2D.Drawing.QuadraticBezierSegment2D` and
+:class:`~pyTooling.Cartesian2D.Drawing.CubicBezierSegment2D`.
 
 The constructors take the geometry's parameters, the keyword-only parameters ``value`` and ``keyValuePairs`` of every
 :ref:`element <STRUCT/Cartesian2D/Element2D>`, and the keyword-only parameters ``stroke`` and ``fill``:
@@ -1199,8 +1201,8 @@ The constructors take the geometry's parameters, the keyword-only parameters ``v
 * :attr:`~pyTooling.Cartesian2D.Drawing.StrokeMixin.Stroke` - the outline, or ``None`` for no outline;
 * :attr:`~pyTooling.Cartesian2D.Drawing.StyleMixin.Fill` - the area, or ``None`` for a transparent area.
 
-Both are properties with a setter; a value of another type raises :exc:`TypeError`. A line segment has no area, so it
-has a stroke only (:class:`~pyTooling.Cartesian2D.Drawing.StrokeMixin`); the shapes have both
+Both are properties with a setter; a value of another type raises :exc:`TypeError`. A segment has no area, so it has a
+stroke only (:class:`~pyTooling.Cartesian2D.Drawing.StrokeMixin`); the shapes have both
 (:class:`~pyTooling.Cartesian2D.Drawing.StyleMixin`). A path or polyline encloses an area only when it is closed: a
 fill for an open one raises :exc:`ValueError`, given to the constructor or assigned. ``Copy()`` and :func:`copy.copy`
 return a drawable shape of the same class with copied points, the same style objects and value, and a shallow copy of
@@ -1225,8 +1227,8 @@ key-value-pairs deeply.
    wire.IsClosed                      # False
 
 A drawable shape checks its ``parent`` first and registers in it when its geometry and styles are checked, so a failing
-check leaves nothing in the group or canvas, and points given with ``copyPoints=False`` stay free. A drawable line
-segment is no edge of a shape: its ``parent`` is a group or canvas.
+check leaves nothing in the group or canvas, and points given with ``copyPoints=False`` stay free. A drawable segment
+is no edge of a shape: its ``parent`` is a group or canvas.
 
 
 .. _STRUCT/Cartesian2D/Text:
