@@ -2101,7 +2101,7 @@ class PathInstantiation(Testcase):
 		for point in path.Points:
 			self.assertIs(path, point.Parent)
 
-		self.assertIs(path, arc.Center.Parent)
+		self.assertIsNone(arc.Center.Parent)
 		self.assertIs(path, curve.ControlPoint.Parent)
 
 	def test_Closed(self) -> None:
@@ -2113,15 +2113,15 @@ class PathInstantiation(Testcase):
 		self.assertIs(line.Start, arc.End)
 		self.assertIs(line.End, arc.Start)
 
-	def test_Closed_FullCircle(self) -> None:
-		"""A single full-circle arc closes a path."""
-		path = Path(
-			(ArcSegment2D(Point2D(1, 0), Point2D(1, 0), center=Point2D(0, 0), direction=SweepDirection.Clockwise), ),
-			closed=True
-		)
+	def test_Closed_Circle(self) -> None:
+		"""Two semicircles close a path to a full circle."""
+		path = Path((
+			ArcSegment2D(Point2D(1, 0), Point2D(-1, 0), height=1),
+			ArcSegment2D(Point2D(-1, 0), Point2D(1, 0), height=1)
+		), closed=True)
 
-		self.assertEqual(1, len(path.Points))
-		self.assertIs(path.Segments[0].Start, path.Segments[0].End)
+		self.assertEqual(2, len(path.Points))
+		self.assertIs(path.Segments[0].Start, path.Segments[1].End)
 		self.assertEqual(BoundingBox2D(-1, -1, 1, 1), path.BoundingBox)
 
 	def test_Segments_Copied(self) -> None:
@@ -2133,8 +2133,8 @@ class PathInstantiation(Testcase):
 
 		self.assertIsNot(line, path.Segments[0])
 		self.assertIs(line, line.End.Parent)
-		self.assertIs(arc, arc.Center.Parent)
-		self.assertIsNot(arc.Center, path.Segments[1].Center)
+		self.assertIs(arc, arc.End.Parent)
+		self.assertIsNot(arc.End, path.Segments[1].End)
 
 	def test_SegmentsNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -2235,7 +2235,7 @@ class PathAppending(Testcase):
 		self.assertTupleEqual(((0, 0), (4, 0), (4, 4)), tuple(point.ToTuple() for point in path.Points))
 		self.assertIs(edge.End, path.Points[-1])
 		self.assertIs(path, edge.End.Parent)
-		self.assertIs(path, edge.Center.Parent)
+		self.assertIsNone(edge.Center.Parent)
 		self.assertIs(arc, arc.Start.Parent)
 		self.assertEqual(BoundingBox2D(0, 0, 6, 4), path.BoundingBox)
 
@@ -2400,6 +2400,21 @@ class PathGeometry(Testcase):
 
 
 class PathOwnership(Testcase):
+	def test_MoveJoint(self) -> None:
+		"""Moving a joint moves the arc's start point; the arc keeps its relative height, so its circle follows."""
+		path =  closedPath()
+		line, arc = path.Segments
+		joint = line.End
+
+		joint += Offset2D(4, 0)
+
+		self.assertIs(joint, arc.Start)
+		self.assertEqual(-4, arc.Height)
+		self.assertTupleEqual((4.0, 0.0), arc.Center.ToTuple())
+		self.assertEqual(4, arc.Radius)
+		self.assertIs(SweepDirection.Counterclockwise, arc.Direction)
+		self.assertEqual(BoundingBox2D(0, 0, 8, 4), path.BoundingBox)
+
 	def test_Edge_ToGroup(self) -> None:
 		path = closedPath()
 
@@ -2505,7 +2520,7 @@ class PathCopy(Testcase):
 			self.assertTrue(newPath.IsClosed)
 			self.assertIsNot(path.Points[0], newPath.Points[0])
 			self.assertIs(newPath.Segments[0].Start, newPath.Segments[1].End)
-			self.assertIs(newPath, newPath.Segments[1].Center.Parent)
+			self.assertIs(newPath, newPath.Segments[1].Start.Parent)
 			self.assertEqual(path.BoundingBox, newPath.BoundingBox)
 
 	def test_Copy_Independent(self) -> None:
@@ -2559,8 +2574,7 @@ class PathRepresentation(Testcase):
 		path = closedPath()
 
 		self.assertEqual(
-			"Path(LineSegment2D((0, 0), (4, 0)), ArcSegment2D((4, 0), (0, 0), center=(2, 0), direction=Counterclockwise), "
-			"closed=True)",
+			"Path(LineSegment2D((0, 0), (4, 0)), ArcSegment2D((4, 0), (0, 0), chordPosition=0.5, height=-2.0), closed=True)",
 			repr(path)
 		)
 
@@ -2576,6 +2590,6 @@ class PathRepresentation(Testcase):
 		path = closedPath()
 
 		self.assertEqual(
-			"(((0, 0) → (4, 0)), ((4, 0) → (0, 0) around (2, 0), counterclockwise), closed)",
+			"(((0, 0) → (4, 0)), ((4, 0) → (0, 0), height -2.0 at 0.5), closed)",
 			str(path)
 		)

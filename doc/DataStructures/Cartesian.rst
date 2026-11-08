@@ -325,8 +325,9 @@ Curved Segments
 ===============
 
 A curved segment is a :ref:`segment <STRUCT/Cartesian2D/Segment2D>` too: it has a start and an end point, a group
-can hold it, and a shape can use it as an edge. Its other points, which define the curve, are owned like the start
-and end point: copied by default, referenced with ``copyPoints=False``, and moved and mirrored with the segment.
+can hold it, and a shape can use it as an edge. A Bezier curve's control points are owned like the start and end
+point: copied by default, referenced with ``copyPoints=False``, and moved and mirrored with the segment. An arc keeps
+only its end points and describes its curve relative to them.
 
 .. _STRUCT/Cartesian2D/ArcSegment2D:
 
@@ -334,15 +335,18 @@ ArcSegment2D
 ------------
 
 An :class:`~pyTooling.Cartesian2D.ArcSegment2D` is a piece of a circle from a start to an end point. It stores its
-circle as the :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Center`, the
+curve relative to its chord, the line segment from the start to the end point: the
+:attr:`~pyTooling.Cartesian2D.ArcSegment2D.ChordPosition` of a root point on the chord, and the arc's
+:attr:`~pyTooling.Cartesian2D.ArcSegment2D.Height` over the chord at that point, as a fraction of the chord's length.
+The :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Center` (a new point on each access), the
 :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Radius` and the :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Direction` from
 the start to the end point, a :class:`~pyTooling.Cartesian2D.SweepDirection` - ``Counterclockwise`` or ``Clockwise``,
-seen with the y-axis pointing up. Besides the start and end point, the constructor takes exactly one group of keyword
-parameters describing the circle; none or more than one group raises :exc:`ValueError`:
+seen with the y-axis pointing up - are computed from them. Besides the start and end point, the constructor takes
+exactly one group of keyword parameters describing the circle; none or more than one group raises :exc:`ValueError`:
 
 ``center`` and ``direction``
    The center of the circle and the direction. The end point must have the start point's distance to the center,
-   compared with :func:`math.isclose`. A start and an end point at the same position make a full circle.
+   compared with :func:`math.isclose`. Only the center's coordinates are used.
 
 ``arcPoint``
    A third point of the arc: the arc runs from the start point through this point to the end point, so the order of
@@ -354,7 +358,7 @@ parameters describing the circle; none or more than one group raises :exc:`Value
    root point. ``chordPosition`` places the root point on the chord, as a fraction from ``0.0`` at the start point to
    ``1.0`` at the end point; the default ``0.5`` is the chord's midpoint, where the height is the arc's *sagitta*. A
    positive height lies on the left of the chord, seen from the start point, so the arc runs clockwise; a negative
-   height lies on the right.
+   height lies on the right. The height is given as a distance and stored relative to the chord's length.
 
 .. code-block:: text
 
@@ -369,7 +373,7 @@ parameters describing the circle; none or more than one group raises :exc:`Value
 
 .. code-block:: Python
 
-   from pyTooling.Cartesian2D import Point2D, ArcSegment2D, SweepDirection
+   from pyTooling.Cartesian2D import Point2D, Offset2D, ArcSegment2D, SweepDirection
 
    start = Point2D(0, 0)
    end =   Point2D(2, 0)
@@ -384,10 +388,21 @@ parameters describing the circle; none or more than one group raises :exc:`Value
    flat.Radius                        # 2.5
    flat.Direction                     # SweepDirection.Counterclockwise
 
-With ``arcPoint`` or ``height``, a start and an end point at the same position have no chord and raise
-:exc:`ValueError`. A point assigned to :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Start` or
-:attr:`~pyTooling.Cartesian2D.ArcSegment2D.End` must lie on the circle, compared with the radius by
-:func:`math.isclose`.
+A ``center`` or an ``arcPoint`` is converted to the sagitta, the height at the chord's midpoint. An arc isn't a circle:
+a start and an end point at the same position have no chord and raise :exc:`ValueError`, whatever the group.
+
+Moving an end point, or assigning another point to :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Start` or
+:attr:`~pyTooling.Cartesian2D.ArcSegment2D.End`, keeps the arc's shape: its height scales with the chord, and its
+center, radius and direction follow. So an arc stays valid when a joint of a
+:ref:`path <STRUCT/Cartesian2D/Path>` moves.
+
+.. code-block:: Python
+
+   arc = ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)
+   end = arc.End
+   end += Offset2D(2, 0)              # the chord is twice as long
+   arc.Height                         # 2.0
+   arc.Center                         # (2.0, 0.0)
 
 * :attr:`~pyTooling.Cartesian2D.ArcSegment2D.StartAngle` and :attr:`~pyTooling.Cartesian2D.ArcSegment2D.EndAngle` -
   the angles of both points seen from the center, in radians, from -:data:`math.pi` to :data:`math.pi`;
@@ -673,7 +688,8 @@ closing line is added.
 
 The path copies the given segments as its **edges**, the way a :ref:`polygon <STRUCT/Cartesian2D/Polygon>` builds its
 edges from its corners: consecutive edges share their joint, and the path owns every point - the joints in
-:attr:`~pyTooling.Cartesian2D.Shapes.Path.Points` and the points defining the curves, like an arc's center.
+:attr:`~pyTooling.Cartesian2D.Shapes.Path.Points` and the points defining the curves, like a Bezier curve's control
+points.
 :attr:`~pyTooling.Cartesian2D.Shapes.Path.Segments` holds the edges, :attr:`~pyTooling.Cartesian2D.Shapes.Path.IsClosed`
 tells whether the path is closed. The given segments stay as they are; an edge references its segment's
 :attr:`~pyTooling.Cartesian2D.Element2D.Value` and holds a shallow copy of its key-value-pairs.
