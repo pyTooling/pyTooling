@@ -1846,6 +1846,85 @@ class Copies(Testcase):
 		self.assertIs(STROKE, newPolyLine.Stroke)
 
 
+class PathEdges(Testcase):
+	def test_Path_DrawableSegment(self) -> None:
+		"""A drawable segment can't be an edge of a path; the error names it before the path copies anything."""
+		line = LineSegment2D(Point2D(0, 0), Point2D(4, 0), stroke=STROKE)
+
+		with self.assertRaises(TypeError) as context:
+			Shapes.Path((line, ))
+
+		self.assertEqual("An element of parameter 'segments' can't be an edge of a path.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got type 'pyTooling.Cartesian2D.Drawing.LineSegment2D'.",
+				"Build the path from geometric segments and draw it as a Drawing.Path."
+			],
+			context.exception.__notes__
+		)
+		self.assertIs(line, line.Start.Parent)
+		self.assertIsNone(line.Parent)
+
+	def test_DrawingPath_DrawableArc(self) -> None:
+		arc = ArcSegment2D(Point2D(4, 0), Point2D(4, 4), height=1, stroke=STROKE)
+
+		with self.assertRaises(TypeError) as context:
+			Path((GeometricLineSegment2D(Point2D(0, 0), Point2D(4, 0)), arc), stroke=STROKE)
+
+		self.assertEqual("An element of parameter 'segments' can't be an edge of a path.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got type 'pyTooling.Cartesian2D.Drawing.ArcSegment2D'.",
+				"Build the path from geometric segments and draw it as a Drawing.Path."
+			],
+			context.exception.__notes__
+		)
+
+	def test_AppendSegment_Drawable(self) -> None:
+		path = Shapes.Path((GeometricLineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+
+		with self.assertRaises(TypeError) as context:
+			path.AppendSegment(QuadraticBezierSegment2D(Point2D(4, 0), Point2D(6, 2), Point2D(4, 4)))
+
+		self.assertEqual("Parameter 'segment' can't be an edge of a path.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got type 'pyTooling.Cartesian2D.Drawing.QuadraticBezierSegment2D'.",
+				"Build the path from geometric segments and draw it as a Drawing.Path."
+			],
+			context.exception.__notes__
+		)
+		self.assertEqual(1, len(path.Segments))
+
+	def test_PrependSegment_Drawable(self) -> None:
+		path = Shapes.Path((GeometricLineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+
+		with self.assertRaises(TypeError) as context:
+			path.PrependSegment(CubicBezierSegment2D(Point2D(-4, 0), Point2D(-3, 2), Point2D(-1, 2), Point2D(0, 0)))
+
+		self.assertEqual("Parameter 'segment' can't be an edge of a path.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got type 'pyTooling.Cartesian2D.Drawing.CubicBezierSegment2D'.",
+				"Build the path from geometric segments and draw it as a Drawing.Path."
+			],
+			context.exception.__notes__
+		)
+		self.assertEqual(1, len(path.Segments))
+
+	def test_DrawingPath_GeometricSegments(self) -> None:
+		path = Path(
+			(
+				GeometricLineSegment2D(Point2D(0, 0), Point2D(4, 0)),
+				GeometricArcSegment2D(Point2D(4, 0), Point2D(4, 4), height=1)
+			),
+			stroke=STROKE
+		)
+
+		self.assertIs(STROKE, path.Stroke)
+		self.assertIs(GeometricArcSegment2D, type(path.Segments[1]))
+
+
 class ElementData(Testcase):
 	def test_LineSegment(self) -> None:
 		value = object()

@@ -1383,6 +1383,10 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 		:raises ValueError:   If an element of parameter 'segments' is None.
 		:raises TypeError:    If an element of parameter 'segments' is not of type
 		                      :class:`~pyTooling.Cartesian2D.Segment2D`.
+		:raises TypeError:    If an element of parameter 'segments' can't be an edge of a path, like a drawable segment.
+		                      |br|
+		                      Build the path from geometric segments and draw it as a
+		                      :class:`~pyTooling.Cartesian2D.Drawing.Path`.
 		:raises ValueError:   If an element of parameter 'segments' doesn't start at the end point of the previous
 		                      element.
 		:raises ValueError:   If parameter 'segments' is empty.
@@ -1410,6 +1414,11 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 			elif not isinstance(segment, Segment2D):
 				ex = TypeError("An element of parameter 'segments' is not of type 'Segment2D'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(segment)}'.")
+				raise ex
+			elif not issubclass(self.__class__, segment._PARENT_TYPE):
+				ex = TypeError("An element of parameter 'segments' can't be an edge of a path.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(segment)}'.")
+				ex.add_note("Build the path from geometric segments and draw it as a Drawing.Path.")
 				raise ex
 			elif len(segmentList) > 0 and (
 				segment._start._x != (previousEnd := segmentList[-1]._end)._x or segment._start._y != previousEnd._y
@@ -1528,6 +1537,9 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 		:param segment:                The segment to append.
 		:raises ValueError:            If parameter 'segment' is None.
 		:raises TypeError:             If parameter 'segment' is not of type :class:`~pyTooling.Cartesian2D.Segment2D`.
+		:raises TypeError:             If parameter 'segment' can't be an edge of a path, like a drawable segment. |br|
+		                               Build the path from geometric segments and draw it as a
+		                               :class:`~pyTooling.Cartesian2D.Drawing.Path`.
 		:raises ValueError:            If parameter 'segment' doesn't start at the end point of the path.
 		:raises InvalidOperationError: If the path is closed. |br|
 		                               A closed path doesn't get opened by appending a segment.
@@ -1537,6 +1549,11 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 		elif not isinstance(segment, Segment2D):
 			ex = TypeError("Parameter 'segment' is not of type 'Segment2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(segment)}'.")
+			raise ex
+		elif not issubclass(self.__class__, segment._PARENT_TYPE):
+			ex = TypeError("Parameter 'segment' can't be an edge of a path.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(segment)}'.")
+			ex.add_note("Build the path from geometric segments and draw it as a Drawing.Path.")
 			raise ex
 		elif self._closed:
 			ex = InvalidOperationError("Path is closed.")
@@ -1565,6 +1582,9 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 		:param segment:                The segment to prepend.
 		:raises ValueError:            If parameter 'segment' is None.
 		:raises TypeError:             If parameter 'segment' is not of type :class:`~pyTooling.Cartesian2D.Segment2D`.
+		:raises TypeError:             If parameter 'segment' can't be an edge of a path, like a drawable segment. |br|
+		                               Build the path from geometric segments and draw it as a
+		                               :class:`~pyTooling.Cartesian2D.Drawing.Path`.
 		:raises ValueError:            If parameter 'segment' doesn't end at the start point of the path.
 		:raises InvalidOperationError: If the path is closed. |br|
 		                               A closed path doesn't get opened by prepending a segment.
@@ -1574,6 +1594,11 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 		elif not isinstance(segment, Segment2D):
 			ex = TypeError("Parameter 'segment' is not of type 'Segment2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(segment)}'.")
+			raise ex
+		elif not issubclass(self.__class__, segment._PARENT_TYPE):
+			ex = TypeError("Parameter 'segment' can't be an edge of a path.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(segment)}'.")
+			ex.add_note("Build the path from geometric segments and draw it as a Drawing.Path.")
 			raise ex
 		elif self._closed:
 			ex = InvalidOperationError("Path is closed.")
