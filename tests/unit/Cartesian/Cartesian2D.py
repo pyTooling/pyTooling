@@ -36,7 +36,8 @@ from copy                         import copy, deepcopy
 from math                         import isclose, pi, sqrt
 
 from pyTooling.Cartesian2D        import Base2D, Element2D, Origin2D, Point2D, Offset2D, Size2D, BoundingBox2D, \
-                                         Segment2D, LineSegment2D, ArcSegment2D, Alignment2D, SweepDirection, \
+                                         Segment2D, LineSegment2D, ArcSegment2D, BezierSegment2D, \
+                                         QuadraticBezierSegment2D, CubicBezierSegment2D, Alignment2D, SweepDirection, \
                                          AlreadyOwnedError, DuplicatePointError, NoAreaError, NotOwnedError
 from pyTooling.Cartesian2D.Shapes import Polygon, Rectangle, Circle, Shape
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection
@@ -2020,6 +2021,12 @@ class ParentTypes(Testcase):
 	def test_ArcSegment(self) -> None:
 		self.assertTupleEqual((Shape, Group2D, Canvas2D), ArcSegment2D._PARENT_TYPE)
 
+	def test_QuadraticBezierSegment(self) -> None:
+		self.assertTupleEqual((Shape, Group2D, Canvas2D), QuadraticBezierSegment2D._PARENT_TYPE)
+
+	def test_CubicBezierSegment(self) -> None:
+		self.assertTupleEqual((Shape, Group2D, Canvas2D), CubicBezierSegment2D._PARENT_TYPE)
+
 	def test_Shape(self) -> None:
 		self.assertTupleEqual((Group2D, Canvas2D), Shape._PARENT_TYPE)
 
@@ -2298,6 +2305,76 @@ class ElementData(Testcase):
 
 		self.assertIsNone(chord.Value)
 		self.assertEqual(0, len(chord))
+
+	def test_QuadraticBezierSegment(self) -> None:
+		value = object()
+		pairs = {"layer": 1}
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, curve.Value)
+		self.assertEqual(1, curve["layer"])
+		self.assertIsNot(pairs, curve._dict)
+
+	def test_QuadraticBezierSegment_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_QuadraticBezierSegment_Copy(self) -> None:
+		value = [1, 2]
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), value=value, keyValuePairs={"a": 1})
+
+		newCurve =      curve.Copy()
+		newCurve["a"] = 2
+
+		self.assertIs(value, newCurve.Value)
+		self.assertEqual(1, curve["a"])
+		self.assertIs(value, copy(curve).Value)
+
+	def test_QuadraticBezierSegment_deepcopy(self) -> None:
+		value = [1, 2]
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), value=value, keyValuePairs={"a": [1]})
+
+		newCurve = deepcopy(curve)
+
+		self.assertIsNot(value, newCurve.Value)
+		self.assertListEqual([1, 2], newCurve.Value)
+		self.assertIsNot(curve["a"], newCurve["a"])
+		self.assertIs(newCurve, newCurve.ControlPoint.Parent)
+
+	def test_CubicBezierSegment(self) -> None:
+		value = object()
+		curve = CubicBezierSegment2D(
+			Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0), value=value, keyValuePairs={"layer": 1}
+		)
+
+		self.assertIs(value, curve.Value)
+		self.assertEqual(1, curve["layer"])
+
+	def test_CubicBezierSegment_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_CubicBezierSegment_Copy(self) -> None:
+		value = [1, 2]
+		curve = CubicBezierSegment2D(
+			Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0), value=value, keyValuePairs={"a": [1]}
+		)
+
+		newCurve =  curve.Copy()
+		deepCurve = deepcopy(curve)
+
+		self.assertIs(value, newCurve.Value)
+		self.assertIs(curve["a"], newCurve["a"])
+		self.assertIsNot(curve._dict, newCurve._dict)
+		self.assertIsNot(value, deepCurve.Value)
+		self.assertIsNot(curve["a"], deepCurve["a"])
+		self.assertIs(deepCurve, deepCurve.ControlPoint2.Parent)
 
 
 class ArcInstantiation(Testcase):
@@ -3069,3 +3146,448 @@ class ArcRepresentation(Testcase):
 		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Clockwise)
 
 		self.assertEqual("((1, 0) → (0, 1) around (0, 0), clockwise)", str(arc))
+
+
+class BezierInstantiation(Testcase):
+	def test_Abstract(self) -> None:
+		with self.assertRaises(AbstractClassError):
+			_ = BezierSegment2D(Point2D(0, 0), Point2D(4, 0))
+
+	def test_Quadratic(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		self.assertIsInstance(curve, BezierSegment2D)
+		self.assertIsInstance(curve, Segment2D)
+		self.assertTupleEqual((2, 4), curve.ControlPoint.ToTuple())
+		self.assertTupleEqual((curve.ControlPoint, ), curve.ControlPoints)
+		self.assertTupleEqual(((0, 0), (2, 4), (4, 0)), curve.ToTuple())
+
+	def test_Cubic(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4.5), Point2D(4, 0))
+
+		self.assertTupleEqual((0, 4), curve.ControlPoint1.ToTuple())
+		self.assertTupleEqual((4, 4.5), curve.ControlPoint2.ToTuple())
+		self.assertTupleEqual((curve.ControlPoint1, curve.ControlPoint2), curve.ControlPoints)
+		self.assertTupleEqual(((0, 0), (0, 4), (4, 4.5), (4, 0)), curve.ToTuple())
+
+	def test_Quadratic_ControlPointNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = QuadraticBezierSegment2D(Point2D(0, 0), None, Point2D(4, 0))
+
+		self.assertEqual("Parameter 'controlPoint' is None.", str(context.exception))
+
+	def test_Quadratic_ControlPointTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = QuadraticBezierSegment2D(Point2D(0, 0), (2, 4), Point2D(4, 0))
+
+		self.assertEqual("Parameter 'controlPoint' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Quadratic_EndNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), None)
+
+		self.assertEqual("Parameter 'end' is None.", str(context.exception))
+
+	def test_Cubic_ControlPoint1None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = CubicBezierSegment2D(Point2D(0, 0), None, Point2D(4, 4), Point2D(4, 0))
+
+		self.assertEqual("Parameter 'controlPoint1' is None.", str(context.exception))
+
+	def test_Cubic_ControlPoint2Str(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), "4, 4", Point2D(4, 0))
+
+		self.assertEqual("Parameter 'controlPoint2' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Cubic_copyPointsPositional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0), False)
+
+
+class BezierGeometry(Testcase):
+	def test_Quadratic_PointAt(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		self.assertTupleEqual((0, 0), curve.PointAt(0).ToTuple())
+		self.assertTupleEqual((2.0, 2.0), curve.PointAt(0.5).ToTuple())
+		self.assertTupleEqual((4, 0), curve.PointAt(1).ToTuple())
+		self.assertTupleEqual((1.0, 1.5), curve.PointAt(0.25).ToTuple())
+
+	def test_Cubic_PointAt(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+
+		self.assertTupleEqual((0, 0), curve.PointAt(0).ToTuple())
+		self.assertTupleEqual((2.0, 3.0), curve.PointAt(0.5).ToTuple())
+		self.assertTupleEqual((4, 0), curve.PointAt(1).ToTuple())
+
+	def test_PointAt_NoOwner(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		self.assertIsNone(curve.PointAt(0.5).Parent)
+		self.assertIsNot(curve.Start, curve.PointAt(0))
+
+	def test_PointAt_None(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		with self.assertRaises(ValueError) as context:
+			_ = curve.PointAt(None)
+
+		self.assertEqual("Parameter 't' is None.", str(context.exception))
+
+	def test_PointAt_Str(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+
+		with self.assertRaises(TypeError) as context:
+			_ = curve.PointAt("0.5")
+
+		self.assertEqual("Parameter 't' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_PointAt_Range(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+
+		for t in (-0.5, 1.5):
+			with self.subTest(t=t):
+				with self.assertRaises(ValueError) as context:
+					_ = curve.PointAt(t)
+
+				self.assertEqual("Parameter 't' is out of range 0..1.", str(context.exception))
+				self.assertListEqual([f"Got value '{t}'."], context.exception.__notes__)
+
+
+class BezierBounds(Testcase):
+	def test_Quadratic(self) -> None:
+		"""The curve reaches half the height of its control point."""
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		self.assertEqual(BoundingBox2D(0, 0, 4, 2), curve.BoundingBox)
+
+	def test_Quadratic_Bulging(self) -> None:
+		"""The curve bulges past both end points in x-direction."""
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(4, 4), Point2D(0, 8))
+
+		self.assertEqual(BoundingBox2D(0, 0, 2, 8), curve.BoundingBox)
+
+	def test_Quadratic_Straight(self) -> None:
+		"""A control point between the end points adds no extreme point."""
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(1, 1), Point2D(4, 4))
+
+		self.assertEqual(BoundingBox2D(0, 0, 4, 4), curve.BoundingBox)
+
+	def test_Cubic(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+
+		self.assertEqual(BoundingBox2D(0, 0, 4, 3), curve.BoundingBox)
+
+	def test_Cubic_Bulging(self) -> None:
+		"""x(t) = 18 t (1 - t) is largest at t = 0.5; the control points' box would reach 6."""
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(6, 0), Point2D(6, 6), Point2D(0, 6))
+
+		self.assertEqual(BoundingBox2D(0, 0, 4.5, 6), curve.BoundingBox)
+
+	def test_Cubic_SCurve(self) -> None:
+		"""x(t) = 9 t (1 - t) (1 - 2 t) has its extremes at t = (3 -+ sqrt(3)) / 6, with x = +-sqrt(3) / 2."""
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(3, 1), Point2D(-3, 2), Point2D(0, 3))
+
+		box = curve.BoundingBox
+
+		self.assertTrue(isclose(-sqrt(3) / 2, box.MinX))
+		self.assertTrue(isclose(sqrt(3) / 2, box.MaxX))
+		self.assertEqual(0, box.MinY)
+		self.assertEqual(3, box.MaxY)
+
+	def test_Cubic_QuadraticDerivativeZero(self) -> None:
+		"""Evenly spaced control points make a straight line: the derivative has no root."""
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(1, 2), Point2D(2, 4), Point2D(3, 6))
+
+		self.assertEqual(BoundingBox2D(0, 0, 3, 6), curve.BoundingBox)
+
+	def test_ReadOnly(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		with self.assertRaises(AttributeError):
+			curve.BoundingBox = BoundingBox2D(0, 0, 1, 1)
+
+		with self.assertRaises(AttributeError):
+			curve.ControlPoint = Point2D(1, 1)
+
+
+class BezierOwnership(Testcase):
+	def test_Copy(self) -> None:
+		controlPoint = Point2D(2, 4)
+
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), controlPoint, Point2D(4, 0))
+
+		self.assertIsNot(controlPoint, curve.ControlPoint)
+		self.assertIsNone(controlPoint.Parent)
+		self.assertIs(curve, curve.ControlPoint.Parent)
+
+	def test_Reference(self) -> None:
+		start =         Point2D(0, 0)
+		controlPoint1 = Point2D(0, 4)
+		controlPoint2 = Point2D(4, 4)
+		end =           Point2D(4, 0)
+
+		curve = CubicBezierSegment2D(start, controlPoint1, controlPoint2, end, copyPoints=False)
+
+		self.assertIs(controlPoint1, curve.ControlPoint1)
+		self.assertIs(controlPoint2, curve.ControlPoint2)
+		self.assertIs(curve, start.Parent)
+		self.assertIs(curve, controlPoint1.Parent)
+		self.assertIs(curve, controlPoint2.Parent)
+
+	def test_Quadratic_ControlPointIsStart(self) -> None:
+		start = Point2D(0, 0)
+		end =   Point2D(4, 0)
+
+		with self.assertRaises(DuplicatePointError) as context:
+			_ = QuadraticBezierSegment2D(start, start, end, copyPoints=False)
+
+		self.assertEqual("Point is given twice.", str(context.exception))
+		self.assertListEqual(
+			["Got point (0, 0).", "Use 'copyPoints=True' to copy the points."],
+			context.exception.__notes__
+		)
+		self.assertEqual(
+			"Parameter 'controlPoint' is the same point as parameter 'start'.",
+			str(context.exception.__cause__)
+		)
+		self.assertIsNone(start.Parent)
+		self.assertIsNone(end.Parent)
+
+	def test_Quadratic_ControlPointOwned(self) -> None:
+		line =  LineSegment2D(Point2D(2, 4), Point2D(4, 6))
+		start = Point2D(0, 0)
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			_ = QuadraticBezierSegment2D(start, line.Start, Point2D(4, 0), copyPoints=False)
+
+		self.assertEqual("Point is owned by another element already.", str(context.exception))
+		self.assertListEqual(
+			["Got point (2, 4) owned by LineSegment2D((2, 4), (4, 6)).", "Use 'copyPoints=True' to copy the point."],
+			context.exception.__notes__
+		)
+		self.assertEqual("Parameter 'controlPoint' is owned by another element.", str(context.exception.__cause__))
+		self.assertIsNone(start.Parent)
+
+	def test_Cubic_ControlPoint2IsEnd(self) -> None:
+		end = Point2D(4, 0)
+
+		with self.assertRaises(DuplicatePointError) as context:
+			_ = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), end, end, copyPoints=False)
+
+		self.assertEqual(
+			"Parameter 'controlPoint2' is the same point as parameter 'end'.",
+			str(context.exception.__cause__)
+		)
+		self.assertIsNone(end.Parent)
+
+	def test_Cubic_SameControlPoints(self) -> None:
+		controlPoint = Point2D(2, 4)
+
+		with self.assertRaises(DuplicatePointError) as context:
+			_ = CubicBezierSegment2D(Point2D(0, 0), controlPoint, controlPoint, Point2D(4, 0), copyPoints=False)
+
+		self.assertListEqual(
+			["Got point (2, 4).", "Use 'copyPoints=True' to copy the points."],
+			context.exception.__notes__
+		)
+		self.assertEqual(
+			"Parameter 'controlPoint2' is the same point as parameter 'controlPoint1'.",
+			str(context.exception.__cause__)
+		)
+		self.assertIsNone(controlPoint.Parent)
+
+	def test_Cubic_SameControlPoints_Copy(self) -> None:
+		controlPoint = Point2D(2, 4)
+
+		curve = CubicBezierSegment2D(Point2D(0, 0), controlPoint, controlPoint, Point2D(4, 0))
+
+		self.assertIsNot(curve.ControlPoint1, curve.ControlPoint2)
+
+	def test_Edge(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(2, 4), Point2D(4, 0)))
+		start, controlPoint, end = polygon.Points
+
+		edge = QuadraticBezierSegment2D(start, controlPoint, end, copyPoints=False, parent=polygon)
+
+		self.assertIs(polygon, edge.Parent)
+		self.assertIs(polygon, edge.ControlPoint.Parent)
+
+	def test_Edge_ControlPointNotOwned(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(2, 4), Point2D(4, 0)))
+		start, controlPoint, end = polygon.Points
+
+		with self.assertRaises(NotOwnedError) as context:
+			_ = CubicBezierSegment2D(start, controlPoint, Point2D(3, 3), end, copyPoints=False, parent=polygon)
+
+		self.assertEqual("Point isn't owned by the parent shape.", str(context.exception))
+		self.assertListEqual(["Got point (3, 3) owned by None."], context.exception.__notes__)
+		self.assertEqual("Parameter 'controlPoint2' isn't owned by parameter 'parent'.", str(context.exception.__cause__))
+
+	def test_Start(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+		point = Point2D(-1, -1)
+
+		curve.Start = point
+
+		self.assertIs(point, curve.Start)
+		self.assertIs(curve, point.Parent)
+
+	def test_Start_ControlPoint(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+		start = curve.Start
+
+		with self.assertRaises(DuplicatePointError) as context:
+			curve.Start = curve.ControlPoint
+
+		self.assertEqual("Point is given twice.", str(context.exception))
+		self.assertListEqual(["Got point (2, 4)."], context.exception.__notes__)
+		self.assertEqual("Parameter 'start' is a control point of the curve.", str(context.exception.__cause__))
+		self.assertIs(start, curve.Start)
+
+	def test_End_ControlPoint(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+
+		with self.assertRaises(DuplicatePointError) as context:
+			curve.end = curve.ControlPoint2
+
+		self.assertEqual("Parameter 'end' is a control point of the curve.", str(context.exception.__cause__))
+
+	def test_End_None(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+
+		with self.assertRaises(ValueError) as context:
+			curve.End = None
+
+		self.assertEqual("Parameter 'end' is None.", str(context.exception))
+
+
+class BezierCopy(Testcase):
+	def test_Quadratic(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		for newCurve in (curve.Copy(), copy(curve), deepcopy(curve)):
+			self.assertIs(QuadraticBezierSegment2D, type(newCurve))
+			self.assertIsNot(curve.ControlPoint, newCurve.ControlPoint)
+			self.assertIs(newCurve, newCurve.ControlPoint.Parent)
+			self.assertTupleEqual(((0, 0), (2, 4), (4, 0)), newCurve.ToTuple())
+
+	def test_Cubic(self) -> None:
+		group = Group2D()
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0), parent=group)
+
+		for newCurve in (curve.Copy(), copy(curve), deepcopy(curve)):
+			self.assertIs(CubicBezierSegment2D, type(newCurve))
+			self.assertIsNone(newCurve.Parent)
+			self.assertIsNot(curve.ControlPoint2, newCurve.ControlPoint2)
+			self.assertIs(newCurve, newCurve.ControlPoint2.Parent)
+			self.assertTupleEqual(((0, 0), (0, 4), (4, 4), (4, 0)), newCurve.ToTuple())
+
+		self.assertTupleEqual((curve, ), group.Children)
+
+
+class BezierMoving(Testcase):
+	def test_Quadratic(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		curve.Move(Offset2D(1, -1))
+
+		self.assertTupleEqual(((1, -1), (3, 3), (5, -1)), curve.ToTuple())
+		self.assertEqual(BoundingBox2D(1, -1, 5, 1), curve.BoundingBox)
+
+	def test_Cubic(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+
+		curve.Move(Offset2D(10, 0))
+
+		self.assertTupleEqual(((10, 0), (10, 4), (14, 4), (14, 0)), curve.ToTuple())
+
+	def test_Tuple(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+
+		with self.assertRaises(TypeError) as context:
+			curve.Move((1, 1))
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertTupleEqual(((0, 0), (0, 4), (4, 4), (4, 0)), curve.ToTuple())
+
+
+class BezierMirroring(Testcase):
+	def test_Quadratic_MirrorY(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		curve.MirrorY(Alignment2D.MinY)
+
+		self.assertTupleEqual(((0, 0), (2, -4), (4, 0)), curve.ToTuple())
+		self.assertEqual(BoundingBox2D(0, -2, 4, 0), curve.BoundingBox)
+
+	def test_Cubic_MirrorX(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(6, 0), Point2D(6, 6), Point2D(0, 6))
+
+		curve.MirrorX(Alignment2D.MinX)
+
+		self.assertTupleEqual(((0, 0), (-6, 0), (-6, 6), (0, 6)), curve.ToTuple())
+		self.assertEqual(BoundingBox2D(-4.5, 0, 0, 6), curve.BoundingBox)
+
+	def test_Group(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+		group = Group2D(Offset2D(10, 20), (curve, ))
+
+		group.MirrorY()
+
+		self.assertTupleEqual(((0, 0), (2, -4), (4, 0)), curve.ToTuple())
+		self.assertEqual(BoundingBox2D(10, 20, 14, 22), group.BoundingBox)
+
+
+class BezierGroups(Testcase):
+	def test_Parent(self) -> None:
+		group = Group2D(Offset2D(10, 20))
+
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), parent=group)
+
+		self.assertIs(group, curve.Parent)
+		self.assertTupleEqual((curve, ), group.Children)
+		self.assertIs(group, curve.ControlPoint.Frame)
+		self.assertEqual(BoundingBox2D(10, 20, 14, 22), curve.AbsoluteBoundingBox)
+
+	def test_Parent_Failing(self) -> None:
+		group = Group2D()
+		point = Point2D(2, 4)
+
+		with self.assertRaises(DuplicatePointError):
+			_ = CubicBezierSegment2D(Point2D(0, 0), point, point, Point2D(4, 0), copyPoints=False, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Parent_Int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Shape' or 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+
+class BezierRepresentation(Testcase):
+	def test_Quadratic_repr(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		self.assertEqual("QuadraticBezierSegment2D((0, 0), (2, 4), (4, 0))", repr(curve))
+
+	def test_Quadratic_str(self) -> None:
+		curve = QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0))
+
+		self.assertEqual("((0, 0) .. controls (2, 4) .. (4, 0))", str(curve))
+
+	def test_Cubic_repr(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+
+		self.assertEqual("CubicBezierSegment2D((0, 0), (0, 4), (4, 4), (4, 0))", repr(curve))
+
+	def test_Cubic_str(self) -> None:
+		curve = CubicBezierSegment2D(Point2D(0, 0), Point2D(0, 4), Point2D(4, 4), Point2D(4, 0))
+
+		self.assertEqual("((0, 0) .. controls (0, 4) and (4, 4) .. (4, 0))", str(curve))
