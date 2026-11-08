@@ -94,6 +94,15 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian3D`: every segment and group carries a :attr:`~pyTooling.Cartesian3D.Element3D.Value` and
      key-value-pairs (:class:`~pyTooling.DataModel.KeyValuePairsMixin`), given by the keyword-only parameters ``value``
      and ``keyValuePairs``. ``Copy()`` keeps the value and copies the pairs.
+   * :mod:`pyTooling.Cartesian2D`: lines (:class:`~pyTooling.Cartesian2D.Line2D`) as values in absolute coordinates,
+     :class:`~pyTooling.Cartesian2D.VerticalLine2D` ``x = c`` and :class:`~pyTooling.Cartesian2D.HorizontalLine2D`
+     ``y = c``. Every element mirrors at a line with :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`, so elements of
+     different groups mirror at the same line. A :class:`~pyTooling.Cartesian2D.Ray2D` is a half-line from a start point
+     in a direction.
+   * :mod:`pyTooling.Cartesian3D`: planes (:class:`~pyTooling.Cartesian3D.Plane3D`) as values in absolute
+     coordinates, :class:`~pyTooling.Cartesian3D.YZPlane3D` ``x = c``, :class:`~pyTooling.Cartesian3D.XZPlane3D`
+     ``y = c`` and :class:`~pyTooling.Cartesian3D.XYPlane3D` ``z = c``. Every element mirrors at a plane with
+     :meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt`. A :class:`~pyTooling.Cartesian3D.Ray3D` is a half-line.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

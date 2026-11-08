@@ -838,6 +838,42 @@ class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		:param twiceAxis: Twice the z-coordinate of the plane.
 		"""
 
+	def MirrorAt(self, plane: Plane3D[Coordinate]) -> None:
+		r"""
+		Mirror the element at a plane (inplace).
+
+		The plane is in absolute coordinates, relative to the origin, so elements of different groups can be mirrored at
+		the same plane. At a plane ``x = a``, every absolute x-coordinate ``x`` becomes ``2a - x``; the planes ``y = a`` and
+		``z = a`` mirror the y- and z-coordinates the same way. A group mirrors its offset, and its children at the group's
+		origin.
+
+		Mirrored at a plane ``x = a``, seen along the z-axis: the element on the left of the plane is mirrored to the
+		right of it.
+
+		.. code-block:: text
+
+		                     x = a
+		                       |
+		        +----+         |         +----+
+		        | \  |         |         |  / |
+		        |  \ |         |         | /  |
+		        +----+         |         +----+
+		                       |
+		        before                   after
+
+		:param plane:       The plane to mirror at, like a :class:`YZPlane3D`, :class:`XZPlane3D` or :class:`XYPlane3D`.
+		:raises ValueError: If parameter 'plane' is None.
+		:raises TypeError:  If parameter 'plane' is not of type :class:`Plane3D`.
+		"""
+		if plane is None:
+			raise ValueError("Parameter 'plane' is None.")
+		elif not isinstance(plane, Plane3D):
+			ex = TypeError("Parameter 'plane' is not of type 'Plane3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(plane)}'.")
+			raise ex
+
+		plane._MirrorElement(self)
+
 	def MoveTo(self, parent: Nullable[Group3D], keepPosition: bool = True) -> None:
 		"""
 		Move the element into another group.
@@ -1867,6 +1903,657 @@ class BoundingBox3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:returns: The string equivalent of the bounding box, its corners with the smallest and the largest coordinates.
 		"""
 		return f"(({self._minX}, {self._minY}, {self._minZ}), ({self._maxX}, {self._maxY}, {self._maxZ}))"
+
+
+@export
+@abstractclass
+class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+	"""
+	Abstract base-class of 3D planes, which are infinite in all directions within the plane.
+
+	A plane is in absolute coordinates, relative to the origin, so elements of different groups can be mirrored at the
+	same plane with :meth:`Element3D.MirrorAt`. A plane is a value: it can't be changed after creation, compares by value
+	and is hashable.
+	"""
+
+	@abstractmethod
+	def _MirrorElement(self, element: Element3D[Coordinate]) -> None:
+		"""
+		Mirror an element at this plane (inplace).
+
+		:param element: The element to mirror.
+		"""
+
+
+@export
+class YZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
+	"""
+	A 3D plane parallel to the yz-plane: all its points have the same x-coordinate, the plane ``x = c``.
+	"""
+
+	_x: Coordinate  #: The x-coordinate of all points of the plane.
+
+	def __init__(self, x: Coordinate) -> None:
+		"""
+		Initializes a 3D plane parallel to the yz-plane from the x-coordinate all its points have.
+
+		:param x:           The x-coordinate of all points of the plane.
+		:raises ValueError: If parameter 'x' is None.
+		:raises TypeError:  If parameter 'x' is not of type :class:`float` or :class:`int`.
+		"""
+		if x is None:
+			raise ValueError("Parameter 'x' is None.")
+		elif not isinstance(x, (int, float)):
+			ex = TypeError("Parameter 'x' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(x)}'.")
+			raise ex
+
+		self._x = x
+
+	@classmethod
+	def FromElement(cls, element: Element3D[Coordinate], alignment: Alignment3D) -> Self:
+		"""
+		Create the plane parallel to the yz-plane through a face or the center of an element's absolute bounding box.
+
+		The x-coordinate of a center is a :class:`float`, as in :attr:`BoundingBox3D.Center`.
+
+		:param element:     The element, whose :attr:`~Element3D.AbsoluteBoundingBox` the plane runs through.
+		:param alignment:   The face or center of the bounding box: ``MinX``, ``CenterX`` or ``MaxX``.
+		:returns:           A new plane parallel to the yz-plane.
+		:raises ValueError: If parameter 'element' is None.
+		:raises TypeError:  If parameter 'element' is not of type :class:`Element3D`.
+		:raises ValueError: If parameter 'alignment' is None.
+		:raises TypeError:  If parameter 'alignment' is not of type :class:`Alignment3D`.
+		:raises ValueError: If parameter 'alignment' is not ``Alignment3D.MinX``, ``Alignment3D.CenterX`` or
+		                    ``Alignment3D.MaxX``. |br|
+		                    Use :meth:`XZPlane3D.FromElement` or :meth:`XYPlane3D.FromElement` for the other alignments.
+		"""
+		if element is None:
+			raise ValueError("Parameter 'element' is None.")
+		elif not isinstance(element, Element3D):
+			ex = TypeError("Parameter 'element' is not of type 'Element3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(element)}'.")
+			raise ex
+
+		if alignment is None:
+			raise ValueError("Parameter 'alignment' is None.")
+		elif not isinstance(alignment, Alignment3D):
+			ex = TypeError("Parameter 'alignment' is not of type 'Alignment3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
+			raise ex
+		elif alignment not in (Alignment3D.MinX, Alignment3D.CenterX, Alignment3D.MaxX):
+			ex = ValueError("Parameter 'alignment' is not Alignment3D.MinX, Alignment3D.CenterX or Alignment3D.MaxX.")
+			ex.add_note(f"Got value '{alignment}'.")
+			ex.add_note("Use 'XZPlane3D.FromElement' or 'XYPlane3D.FromElement' for the other alignments.")
+			raise ex
+
+		box = element.AbsoluteBoundingBox
+		if alignment is Alignment3D.MinX:
+			return cls(box._minX)
+		elif alignment is Alignment3D.CenterX:
+			return cls((box._minX + box._maxX) / 2)
+		else:
+			return cls(box._maxX)
+
+	@readonly
+	def X(self) -> Coordinate:
+		"""
+		Read-only property to access the x-coordinate of all points of the plane (:attr:`_x`).
+
+		:returns: The x-coordinate of the plane.
+		"""
+		return self._x
+
+	def _MirrorElement(self, element: Element3D[Coordinate]) -> None:
+		"""
+		Mirror an element at this plane (inplace), so every absolute x-coordinate ``x`` becomes ``2c - x``.
+
+		:param element: The element to mirror.
+		"""
+		frame = element.Frame
+		x =     self._x if frame is None else self._x - frame.AbsoluteOffset._xOffset
+		element._MirrorX(2 * x)
+
+	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two planes for equality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if both planes are parallel to the yz-plane and have the same x-coordinate.
+		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
+		"""
+		if not isinstance(other, Plane3D):
+			ex = TypeError("Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Plane3D")
+			raise ex
+
+		return isinstance(other, YZPlane3D) and self._x == other._x
+
+	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two planes for inequality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if the other plane isn't parallel to the yz-plane or has another x-coordinate.
+		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
+		"""
+		if not isinstance(other, Plane3D):
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Plane3D")
+			raise ex
+
+		return not isinstance(other, YZPlane3D) or self._x != other._x
+
+	def __hash__(self) -> int:
+		"""
+		Returns a hash of the plane's x-coordinate, so equal planes have the same hash.
+
+		:returns: The hash value.
+		"""
+		return hash(self._x)
+
+	def __repr__(self) -> str:
+		"""
+		Returns the plane's string representation.
+
+		:returns: The string representation of the plane.
+		"""
+		return f"YZPlane3D({self._x})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the plane's string equivalent as an equation.
+
+		The plane at 5 returns ``x = 5``.
+
+		:returns: The equation of the plane.
+		"""
+		return f"x = {self._x}"
+
+
+@export
+class XZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
+	"""
+	A 3D plane parallel to the xz-plane: all its points have the same y-coordinate, the plane ``y = c``.
+	"""
+
+	_y: Coordinate  #: The y-coordinate of all points of the plane.
+
+	def __init__(self, y: Coordinate) -> None:
+		"""
+		Initializes a 3D plane parallel to the xz-plane from the y-coordinate all its points have.
+
+		:param y:           The y-coordinate of all points of the plane.
+		:raises ValueError: If parameter 'y' is None.
+		:raises TypeError:  If parameter 'y' is not of type :class:`float` or :class:`int`.
+		"""
+		if y is None:
+			raise ValueError("Parameter 'y' is None.")
+		elif not isinstance(y, (int, float)):
+			ex = TypeError("Parameter 'y' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
+			raise ex
+
+		self._y = y
+
+	@classmethod
+	def FromElement(cls, element: Element3D[Coordinate], alignment: Alignment3D) -> Self:
+		"""
+		Create the plane parallel to the xz-plane through a face or the center of an element's absolute bounding box.
+
+		The y-coordinate of a center is a :class:`float`, as in :attr:`BoundingBox3D.Center`.
+
+		:param element:     The element, whose :attr:`~Element3D.AbsoluteBoundingBox` the plane runs through.
+		:param alignment:   The face or center of the bounding box: ``MinY``, ``CenterY`` or ``MaxY``.
+		:returns:           A new plane parallel to the xz-plane.
+		:raises ValueError: If parameter 'element' is None.
+		:raises TypeError:  If parameter 'element' is not of type :class:`Element3D`.
+		:raises ValueError: If parameter 'alignment' is None.
+		:raises TypeError:  If parameter 'alignment' is not of type :class:`Alignment3D`.
+		:raises ValueError: If parameter 'alignment' is not ``Alignment3D.MinY``, ``Alignment3D.CenterY`` or
+		                    ``Alignment3D.MaxY``. |br|
+		                    Use :meth:`YZPlane3D.FromElement` or :meth:`XYPlane3D.FromElement` for the other alignments.
+		"""
+		if element is None:
+			raise ValueError("Parameter 'element' is None.")
+		elif not isinstance(element, Element3D):
+			ex = TypeError("Parameter 'element' is not of type 'Element3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(element)}'.")
+			raise ex
+
+		if alignment is None:
+			raise ValueError("Parameter 'alignment' is None.")
+		elif not isinstance(alignment, Alignment3D):
+			ex = TypeError("Parameter 'alignment' is not of type 'Alignment3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
+			raise ex
+		elif alignment not in (Alignment3D.MinY, Alignment3D.CenterY, Alignment3D.MaxY):
+			ex = ValueError("Parameter 'alignment' is not Alignment3D.MinY, Alignment3D.CenterY or Alignment3D.MaxY.")
+			ex.add_note(f"Got value '{alignment}'.")
+			ex.add_note("Use 'YZPlane3D.FromElement' or 'XYPlane3D.FromElement' for the other alignments.")
+			raise ex
+
+		box = element.AbsoluteBoundingBox
+		if alignment is Alignment3D.MinY:
+			return cls(box._minY)
+		elif alignment is Alignment3D.CenterY:
+			return cls((box._minY + box._maxY) / 2)
+		else:
+			return cls(box._maxY)
+
+	@readonly
+	def Y(self) -> Coordinate:
+		"""
+		Read-only property to access the y-coordinate of all points of the plane (:attr:`_y`).
+
+		:returns: The y-coordinate of the plane.
+		"""
+		return self._y
+
+	def _MirrorElement(self, element: Element3D[Coordinate]) -> None:
+		"""
+		Mirror an element at this plane (inplace), so every absolute y-coordinate ``y`` becomes ``2c - y``.
+
+		:param element: The element to mirror.
+		"""
+		frame = element.Frame
+		y =     self._y if frame is None else self._y - frame.AbsoluteOffset._yOffset
+		element._MirrorY(2 * y)
+
+	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two planes for equality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if both planes are parallel to the xz-plane and have the same y-coordinate.
+		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
+		"""
+		if not isinstance(other, Plane3D):
+			ex = TypeError("Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Plane3D")
+			raise ex
+
+		return isinstance(other, XZPlane3D) and self._y == other._y
+
+	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two planes for inequality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if the other plane isn't parallel to the xz-plane or has another y-coordinate.
+		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
+		"""
+		if not isinstance(other, Plane3D):
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Plane3D")
+			raise ex
+
+		return not isinstance(other, XZPlane3D) or self._y != other._y
+
+	def __hash__(self) -> int:
+		"""
+		Returns a hash of the plane's y-coordinate, so equal planes have the same hash.
+
+		:returns: The hash value.
+		"""
+		return hash(self._y)
+
+	def __repr__(self) -> str:
+		"""
+		Returns the plane's string representation.
+
+		:returns: The string representation of the plane.
+		"""
+		return f"XZPlane3D({self._y})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the plane's string equivalent as an equation.
+
+		The plane at 5 returns ``y = 5``.
+
+		:returns: The equation of the plane.
+		"""
+		return f"y = {self._y}"
+
+
+@export
+class XYPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
+	"""
+	A 3D plane parallel to the xy-plane: all its points have the same z-coordinate, the plane ``z = c``.
+	"""
+
+	_z: Coordinate  #: The z-coordinate of all points of the plane.
+
+	def __init__(self, z: Coordinate) -> None:
+		"""
+		Initializes a 3D plane parallel to the xy-plane from the z-coordinate all its points have.
+
+		:param z:           The z-coordinate of all points of the plane.
+		:raises ValueError: If parameter 'z' is None.
+		:raises TypeError:  If parameter 'z' is not of type :class:`float` or :class:`int`.
+		"""
+		if z is None:
+			raise ValueError("Parameter 'z' is None.")
+		elif not isinstance(z, (int, float)):
+			ex = TypeError("Parameter 'z' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(z)}'.")
+			raise ex
+
+		self._z = z
+
+	@classmethod
+	def FromElement(cls, element: Element3D[Coordinate], alignment: Alignment3D) -> Self:
+		"""
+		Create the plane parallel to the xy-plane through a face or the center of an element's absolute bounding box.
+
+		The z-coordinate of a center is a :class:`float`, as in :attr:`BoundingBox3D.Center`.
+
+		:param element:     The element, whose :attr:`~Element3D.AbsoluteBoundingBox` the plane runs through.
+		:param alignment:   The face or center of the bounding box: ``MinZ``, ``CenterZ`` or ``MaxZ``.
+		:returns:           A new plane parallel to the xy-plane.
+		:raises ValueError: If parameter 'element' is None.
+		:raises TypeError:  If parameter 'element' is not of type :class:`Element3D`.
+		:raises ValueError: If parameter 'alignment' is None.
+		:raises TypeError:  If parameter 'alignment' is not of type :class:`Alignment3D`.
+		:raises ValueError: If parameter 'alignment' is not ``Alignment3D.MinZ``, ``Alignment3D.CenterZ`` or
+		                    ``Alignment3D.MaxZ``. |br|
+		                    Use :meth:`YZPlane3D.FromElement` or :meth:`XZPlane3D.FromElement` for the other alignments.
+		"""
+		if element is None:
+			raise ValueError("Parameter 'element' is None.")
+		elif not isinstance(element, Element3D):
+			ex = TypeError("Parameter 'element' is not of type 'Element3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(element)}'.")
+			raise ex
+
+		if alignment is None:
+			raise ValueError("Parameter 'alignment' is None.")
+		elif not isinstance(alignment, Alignment3D):
+			ex = TypeError("Parameter 'alignment' is not of type 'Alignment3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
+			raise ex
+		elif alignment not in (Alignment3D.MinZ, Alignment3D.CenterZ, Alignment3D.MaxZ):
+			ex = ValueError("Parameter 'alignment' is not Alignment3D.MinZ, Alignment3D.CenterZ or Alignment3D.MaxZ.")
+			ex.add_note(f"Got value '{alignment}'.")
+			ex.add_note("Use 'YZPlane3D.FromElement' or 'XZPlane3D.FromElement' for the other alignments.")
+			raise ex
+
+		box = element.AbsoluteBoundingBox
+		if alignment is Alignment3D.MinZ:
+			return cls(box._minZ)
+		elif alignment is Alignment3D.CenterZ:
+			return cls((box._minZ + box._maxZ) / 2)
+		else:
+			return cls(box._maxZ)
+
+	@readonly
+	def Z(self) -> Coordinate:
+		"""
+		Read-only property to access the z-coordinate of all points of the plane (:attr:`_z`).
+
+		:returns: The z-coordinate of the plane.
+		"""
+		return self._z
+
+	def _MirrorElement(self, element: Element3D[Coordinate]) -> None:
+		"""
+		Mirror an element at this plane (inplace), so every absolute z-coordinate ``z`` becomes ``2c - z``.
+
+		:param element: The element to mirror.
+		"""
+		frame = element.Frame
+		z =     self._z if frame is None else self._z - frame.AbsoluteOffset._zOffset
+		element._MirrorZ(2 * z)
+
+	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two planes for equality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if both planes are parallel to the xy-plane and have the same z-coordinate.
+		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
+		"""
+		if not isinstance(other, Plane3D):
+			ex = TypeError("Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Plane3D")
+			raise ex
+
+		return isinstance(other, XYPlane3D) and self._z == other._z
+
+	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two planes for inequality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if the other plane isn't parallel to the xy-plane or has another z-coordinate.
+		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
+		"""
+		if not isinstance(other, Plane3D):
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Plane3D")
+			raise ex
+
+		return not isinstance(other, XYPlane3D) or self._z != other._z
+
+	def __hash__(self) -> int:
+		"""
+		Returns a hash of the plane's z-coordinate, so equal planes have the same hash.
+
+		:returns: The hash value.
+		"""
+		return hash(self._z)
+
+	def __repr__(self) -> str:
+		"""
+		Returns the plane's string representation.
+
+		:returns: The string representation of the plane.
+		"""
+		return f"XYPlane3D({self._z})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the plane's string equivalent as an equation.
+
+		The plane at 5 returns ``z = 5``.
+
+		:returns: The equation of the plane.
+		"""
+		return f"z = {self._z}"
+
+
+@export
+class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+	"""
+	A 3D ray: a half-line, which starts at a point and is infinite in one direction.
+
+	The ray is in absolute coordinates, relative to the origin. Its start point is a free copy, so it owns no point of an
+	element. Two rays are equal, if they start at the same point and their directions point the same way, whatever their
+	lengths. A ray is unhashable, as its start point and direction can be changed.
+	"""
+
+	_start:     Point3D[Coordinate]   #: The start point of the ray, in absolute coordinates and without owner.
+	_direction: Offset3D[Coordinate]  #: The direction of the ray.
+
+	def __init__(self, start: Point3D[Coordinate], direction: Offset3D[Coordinate]) -> None:
+		"""
+		Initializes a 3D ray from its start point and its direction.
+
+		The start point is taken in absolute coordinates (a point inside a group is converted), and the direction is
+		copied.
+
+		:param start:       The start point of the ray.
+		:param direction:   The direction of the ray.
+		:raises ValueError: If parameter 'start' is None.
+		:raises TypeError:  If parameter 'start' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'direction' is None.
+		:raises TypeError:  If parameter 'direction' is not of type :class:`Offset3D`.
+		:raises ValueError: If parameter 'direction' is a zero offset. |br|
+		                    A ray needs a direction.
+		"""
+		if start is None:
+			raise ValueError("Parameter 'start' is None.")
+		elif not isinstance(start, Point3D):
+			ex = TypeError("Parameter 'start' is not of type 'Point3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
+			raise ex
+
+		if direction is None:
+			raise ValueError("Parameter 'direction' is None.")
+		elif not isinstance(direction, Offset3D):
+			ex = TypeError("Parameter 'direction' is not of type 'Offset3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
+			raise ex
+		elif direction._xOffset == 0 and direction._yOffset == 0 and direction._zOffset == 0:
+			ex = ValueError("Parameter 'direction' is a zero offset.")
+			ex.add_note(f"Got offset {direction}.")
+			ex.add_note("A ray needs a direction.")
+			raise ex
+
+		self._start =     start.Absolute
+		self._direction = direction.Copy()
+
+	@readonly
+	def Start(self) -> Point3D[Coordinate]:
+		"""
+		Read-only property to access the start point of the ray (:attr:`_start`).
+
+		:returns: The start point, in absolute coordinates and without owner.
+		"""
+		return self._start
+
+	@readonly
+	def Direction(self) -> Offset3D[Coordinate]:
+		"""
+		Read-only property to access the direction of the ray (:attr:`_direction`).
+
+		:returns: The direction.
+		"""
+		return self._direction
+
+	def PointAt(self, distance: Coordinate) -> Point3D[float]:
+		"""
+		Compute the point of the ray at a distance from its start point.
+
+		:param distance:    The distance from the start point along the direction.
+		:returns:           A new 3D-point without owner.
+		:raises ValueError: If parameter 'distance' is None.
+		:raises TypeError:  If parameter 'distance' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'distance' is negative. |br|
+		                    A point before the start point isn't on the ray.
+		"""
+		if distance is None:
+			raise ValueError("Parameter 'distance' is None.")
+		elif not isinstance(distance, (int, float)):
+			ex = TypeError("Parameter 'distance' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(distance)}'.")
+			raise ex
+		elif distance < 0:
+			ex = ValueError("Parameter 'distance' is negative.")
+			ex.add_note(f"Got value '{distance}'.")
+			ex.add_note("A point before the start point isn't on the ray.")
+			raise ex
+
+		start =     self._start
+		direction = self._direction
+		factor =    distance / sqrt(direction._xOffset ** 2 + direction._yOffset ** 2 + direction._zOffset ** 2)
+		return Point3D(
+			start._x + direction._xOffset * factor,
+			start._y + direction._yOffset * factor,
+			start._z + direction._zOffset * factor
+		)
+
+	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two rays for equality.
+
+		The directions point the same way, if all components of their cross product are zero and their dot product is
+		positive. The lengths of the directions don't matter.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if both rays have the same start point and their directions point the same way.
+		:raises TypeError: If the second operand is not of type :class:`Ray3D`.
+		"""
+		if not isinstance(other, Ray3D):
+			ex = TypeError("Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Ray3D")
+			raise ex
+
+		start =          self._start
+		otherStart =     other._start
+		direction =      self._direction
+		otherDirection = other._direction
+		return (
+			start._x == otherStart._x
+			and start._y == otherStart._y
+			and start._z == otherStart._z
+			and direction._yOffset * otherDirection._zOffset - direction._zOffset * otherDirection._yOffset == 0
+			and direction._zOffset * otherDirection._xOffset - direction._xOffset * otherDirection._zOffset == 0
+			and direction._xOffset * otherDirection._yOffset - direction._yOffset * otherDirection._xOffset == 0
+			and (
+				direction._xOffset * otherDirection._xOffset
+				+ direction._yOffset * otherDirection._yOffset
+				+ direction._zOffset * otherDirection._zOffset
+			) > 0
+		)
+
+	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two rays for inequality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if the rays differ in start point or their directions point different ways.
+		:raises TypeError: If the second operand is not of type :class:`Ray3D`.
+		"""
+		if not isinstance(other, Ray3D):
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Ray3D")
+			raise ex
+
+		start =          self._start
+		otherStart =     other._start
+		direction =      self._direction
+		otherDirection = other._direction
+		return (
+			start._x != otherStart._x
+			or start._y != otherStart._y
+			or start._z != otherStart._z
+			or direction._yOffset * otherDirection._zOffset - direction._zOffset * otherDirection._yOffset != 0
+			or direction._zOffset * otherDirection._xOffset - direction._xOffset * otherDirection._zOffset != 0
+			or direction._xOffset * otherDirection._yOffset - direction._yOffset * otherDirection._xOffset != 0
+			or (
+				direction._xOffset * otherDirection._xOffset
+				+ direction._yOffset * otherDirection._yOffset
+				+ direction._zOffset * otherDirection._zOffset
+			) <= 0
+		)
+
+	def __repr__(self) -> str:
+		"""
+		Returns the ray's string representation.
+
+		:returns: The string representation of the ray, its start point and direction.
+		"""
+		return f"Ray3D({self._start}, {self._direction})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the ray's string equivalent as a parametric equation.
+
+		The ray from ``(1, 2)`` in direction ``(3, 4)`` returns ``(1, 2) + t * (3, 4), t >= 0``.
+
+		:returns: The equation of the ray.
+		"""
+		return f"{self._start} + t * {self._direction}, t >= 0"
 
 
 @export

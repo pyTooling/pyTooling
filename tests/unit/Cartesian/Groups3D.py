@@ -34,8 +34,8 @@ Unit tests for :mod:`pyTooling.Cartesian3D.Groups` - groups, frames, absolute co
 from copy                         import deepcopy
 from math                         import isclose, pi
 
-from pyTooling.Cartesian3D        import Point3D, Offset3D, BoundingBox3D, Alignment3D, Element3D, Segment3D, \
-                                         LineSegment3D
+from pyTooling.Cartesian3D        import Point3D, Offset3D, BoundingBox3D, Alignment3D, YZPlane3D, XZPlane3D, \
+                                         XYPlane3D, Element3D, Segment3D, LineSegment3D
 from pyTooling.Cartesian3D.Groups import Group3D
 from pyTooling.Cartesian2D        import AlreadyOwnedError, NotOwnedError, DuplicatePointError, GroupCycleError, \
                                          NotInSameFrameError
@@ -944,6 +944,61 @@ class Mirroring(Testcase):
 
 		self.assertEqual("Group3D has no children.", str(context.exception))
 		self.assertTupleEqual((1, 2, 3), group.Offset.ToTuple())
+
+	def test_MirrorAt_Group(self) -> None:
+		"""A group mirrors its offset at the plane, its children are mirrored at the group's origin."""
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(3, 4, 5))
+		inner = Group3D(Offset3D(3, 4, 5), (line, ))
+		outer = Group3D(Offset3D(10, 20, 30), (inner, ))
+
+		outer.MirrorAt(XYPlane3D(40))
+
+		self.assertTupleEqual((10, 20, 50), outer.Offset.ToTuple())
+		self.assertTupleEqual((3, 4, -5), inner.Offset.ToTuple())
+		self.assertTupleEqual(((1, 2, -3), (3, 4, -5)), line.ToTuple())
+		self.assertTupleEqual((14, 26, 42), line.Start.Absolute.ToTuple())
+
+	def test_MirrorAt_Child(self) -> None:
+		"""The plane is in absolute coordinates: a child is mirrored in its group's frame, the groups stay."""
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(3, 4, 5))
+		inner = Group3D(Offset3D(3, 4, 5), (line, ))
+		outer = Group3D(Offset3D(10, 20, 30), (inner, ))
+
+		line.MirrorAt(XZPlane3D(0))
+
+		self.assertTupleEqual((10, 20, 30), outer.Offset.ToTuple())
+		self.assertTupleEqual((3, 4, 5), inner.Offset.ToTuple())
+		self.assertTupleEqual(((1, -50, 3), (3, -52, 5)), line.ToTuple())
+		self.assertTupleEqual((14, -26, 38), line.Start.Absolute.ToTuple())
+
+	def test_MirrorAt_Groups(self) -> None:
+		"""Elements of different groups are mirrored at the same plane."""
+		line1 =  LineSegment3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
+		line2 =  LineSegment3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
+		_ =      Group3D(Offset3D(10, 0, 0), (line1, ))
+		_ =      Group3D(Offset3D(0, 5, 0), (line2, ))
+		mirror = YZPlane3D(0)
+
+		line1.MirrorAt(mirror)
+		line2.MirrorAt(mirror)
+
+		self.assertEqual(BoundingBox3D(-11, 0, 0, -10, 1, 1), line1.AbsoluteBoundingBox)
+		self.assertEqual(BoundingBox3D(-1, 5, 0, 0, 6, 1), line2.AbsoluteBoundingBox)
+
+	def test_MirrorAt_Empty(self) -> None:
+		"""A group without children mirrors its offset: the plane needs no bounding box."""
+		group = Group3D(Offset3D(1, 2, 3))
+
+		group.MirrorAt(XYPlane3D(5))
+
+		self.assertTupleEqual((1, 2, 7), group.Offset.ToTuple())
+
+	def test_FromElement_Empty(self) -> None:
+		with self.assertRaises(EmptyGroupError) as context:
+			XYPlane3D.FromElement(Group3D(Offset3D(1, 2, 3)), Alignment3D.MinZ)
+
+		self.assertEqual("Group3D has no children.", str(context.exception))
+		self.assertListEqual(["Got Group3D((1, 2, 3), children=0)."], context.exception.__notes__)
 
 
 class Copy(Testcase):

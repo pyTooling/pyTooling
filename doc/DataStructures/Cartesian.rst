@@ -47,6 +47,9 @@ Features
 * **Bounding boxes** - every shape and segment reports the smallest axis-aligned
   :class:`~pyTooling.Cartesian2D.BoundingBox2D` enclosing it, and bounding boxes unite, intersect and contain points.
 * **Shapes and segments moved as a whole** - ``Move(offset)`` shifts all their points in place.
+* **Mirroring at a shared line** - a :class:`~pyTooling.Cartesian2D.VerticalLine2D` or
+  :class:`~pyTooling.Cartesian2D.HorizontalLine2D` is in absolute coordinates, so elements of different groups are
+  mirrored at the same line.
 * **Points owned by one element** - a shape or segment owns its points, so a point can't silently belong to two
   shapes. Coordinates of different frames aren't mixed in a computation.
 * **Groups with relative coordinates** - a :class:`~pyTooling.Cartesian2D.Groups.Group2D` holds shapes, segments and
@@ -274,6 +277,89 @@ number of points, and ``box + offset`` returns a shifted bounding box.
 
 Like an offset, a bounding box compares with ``==`` and ``!=``, and ``Copy()``, :func:`copy.copy` and
 :func:`copy.deepcopy` return an independent one.
+
+
+.. _STRUCT/Cartesian2D/Line2D:
+
+Line2D
+======
+
+A :class:`~pyTooling.Cartesian2D.Line2D` is a line in the geometric sense: infinite in both directions, unlike a
+:class:`~pyTooling.Cartesian2D.LineSegment2D`, which ends at its start and end point. It is the abstract base-class of
+the lines an element can be mirrored at:
+
+* :class:`~pyTooling.Cartesian2D.VerticalLine2D` - the line ``x = c``, all its points have the same
+  :attr:`~pyTooling.Cartesian2D.VerticalLine2D.X`;
+* :class:`~pyTooling.Cartesian2D.HorizontalLine2D` - the line ``y = c``, all its points have the same
+  :attr:`~pyTooling.Cartesian2D.HorizontalLine2D.Y`.
+
+:func:`str` returns the line's equation.
+
+A line is in **absolute coordinates**, relative to the origin. :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`
+mirrors an element at it in the element's frame, so elements of different groups are mirrored at the same line.
+:meth:`VerticalLine2D.FromElement <pyTooling.Cartesian2D.VerticalLine2D.FromElement>` creates the line through an edge
+or the center of an element's absolute bounding box, named by an :class:`~pyTooling.Cartesian2D.Alignment2D` (``MinX``,
+``CenterX`` or ``MaxX``); :meth:`HorizontalLine2D.FromElement <pyTooling.Cartesian2D.HorizontalLine2D.FromElement>`
+takes ``MinY``, ``CenterY`` or ``MaxY``.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D, Offset2D, Alignment2D, VerticalLine2D, HorizontalLine2D
+   from pyTooling.Cartesian2D.Shapes import Circle, Square
+   from pyTooling.Cartesian2D.Groups import Group2D
+
+   pad =    Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
+   wheel =  Circle(Point2D(1, 1), 1)
+   axle =   Group2D(Offset2D(10, 0), (wheel, ))
+   mirror = VerticalLine2D(20)
+
+   str(mirror)                        # 'x = 20'
+   pad.MirrorAt(mirror)               # pad.BoundingBox is BoundingBox2D(38, 0, 40, 2)
+   wheel.MirrorAt(mirror)             # wheel.Center is (19, 1), relative to axle
+   wheel.Center.Absolute              # (29, 1)
+
+   HorizontalLine2D.FromElement(wheel, Alignment2D.MinY)   # HorizontalLine2D(0)
+
+Like a :ref:`style <STRUCT/Cartesian2D/Drawing>`, a line is a **value**: its properties are read-only, it compares
+with ``==`` and ``!=`` by value and is hashable. A vertical and a horizontal line are never equal.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D/Plane3D`
+      |rarr| Its counterpart, the plane parallel to a coordinate plane.
+
+
+.. _STRUCT/Cartesian2D/Ray2D:
+
+Ray2D
+=====
+
+A :class:`~pyTooling.Cartesian2D.Ray2D` is a half-line: it starts at a point and is infinite in one direction. It is
+built from a start point and a direction, an :class:`~pyTooling.Cartesian2D.Offset2D`; it copies both, so it owns no
+point of an element. The start point is taken in absolute coordinates: a point inside a group is converted. A zero
+direction raises :exc:`ValueError`. :attr:`~pyTooling.Cartesian2D.Ray2D.Start` and
+:attr:`~pyTooling.Cartesian2D.Ray2D.Direction` return the stored point and offset.
+:meth:`~pyTooling.Cartesian2D.Ray2D.PointAt` returns the point at a distance from the start point, whatever the length
+of the direction; a negative distance raises :exc:`ValueError`.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D import Point2D, Offset2D, Ray2D
+
+   ray = Ray2D(Point2D(1, 2), Offset2D(3, 4))
+
+   str(ray)                           # '(1, 2) + t * (3, 4), t >= 0'
+   ray.PointAt(5)                     # (4.0, 6.0)
+
+Like a line, a ray is in absolute coordinates and compares by value; as its start point and direction can be changed, it
+is unhashable (like an :class:`~pyTooling.Cartesian2D.Offset2D`). Two rays are equal (``==``), if they start at the same
+point and their directions point the same way - the cross product of the directions is zero and their dot product is
+positive. The lengths of the directions don't matter, and integer coordinates compare exactly:
+
+.. code-block:: Python
+
+   Ray2D(Point2D(1, 2), Offset2D(3, 4)) == Ray2D(Point2D(1, 2), Offset2D(6, 8))     # True
+   Ray2D(Point2D(1, 2), Offset2D(3, 4)) == Ray2D(Point2D(1, 2), Offset2D(-3, -4))   # False, opposite direction
 
 
 .. _STRUCT/Cartesian2D/Segment2D:
@@ -973,6 +1059,8 @@ segments and groups. An element belongs to at most one group or canvas, its
   it vertically at a vertical axis (the x-coordinates flip) or horizontally at a horizontal axis (the y-coordinates
   flip), through an edge or the center of its bounding box, named by an :class:`~pyTooling.Cartesian2D.Alignment2D` and
   optionally shifted by an offset;
+* :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`, mirroring it at a :ref:`line <STRUCT/Cartesian2D/Line2D>` in
+  absolute coordinates, which several elements can share;
 * :meth:`~pyTooling.Cartesian2D.Element2D.MoveTo`, moving it into another group - by default keeping its absolute
   position, so its local coordinates change;
 * :meth:`~pyTooling.Cartesian2D.Element2D.AlignTo`, moving it so an edge or the center of its bounding box aligns
@@ -1387,6 +1475,66 @@ touching at a face, an edge or a corner don't overlap. There is no conversion to
       |rarr| Its counterpart, the 2-dimensional bounding box.
 
 
+.. _STRUCT/Cartesian3D/Plane3D:
+
+Plane3D
+=======
+
+A :class:`~pyTooling.Cartesian3D.Plane3D` is a plane, infinite in all directions within it. It is the abstract
+base-class of the planes an element can be mirrored at, each named after the coordinate plane it is parallel to:
+
+* :class:`~pyTooling.Cartesian3D.YZPlane3D` - the plane ``x = c``, all its points have the same
+  :attr:`~pyTooling.Cartesian3D.YZPlane3D.X`;
+* :class:`~pyTooling.Cartesian3D.XZPlane3D` - the plane ``y = c``, with :attr:`~pyTooling.Cartesian3D.XZPlane3D.Y`;
+* :class:`~pyTooling.Cartesian3D.XYPlane3D` - the plane ``z = c``, with :attr:`~pyTooling.Cartesian3D.XYPlane3D.Z`.
+
+Like the 2D line, a plane is a value in absolute coordinates: :meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt` mirrors
+an element of any group at it, and ``FromElement`` creates the plane through a face or the center of an element's
+absolute bounding box, named by an :class:`~pyTooling.Cartesian3D.Alignment3D` of the plane's axis.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian3D        import Point3D, Offset3D, Alignment3D, XYPlane3D, LineSegment3D
+   from pyTooling.Cartesian3D.Groups import Group3D
+
+   rod =   LineSegment3D(Point3D(0, 0, 0), Point3D(0, 0, 2))
+   part =  Group3D(Offset3D(10, 0, 1), (rod, ))
+   floor = XYPlane3D(0)
+
+   str(floor)                         # 'z = 0'
+   rod.MirrorAt(floor)                # rod.End is (0, 0, -4), relative to part
+   rod.End.Absolute                   # (10, 0, -3)
+
+   XYPlane3D.FromElement(rod, Alignment3D.MinZ)   # XYPlane3D(-3)
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Line2D`
+      |rarr| Its counterpart, the line parallel to a coordinate axis.
+
+
+.. _STRUCT/Cartesian3D/Ray3D:
+
+Ray3D
+=====
+
+A :class:`~pyTooling.Cartesian3D.Ray3D` is the 3D counterpart of a :ref:`Ray2D <STRUCT/Cartesian2D/Ray2D>`: a
+half-line from a start point (:attr:`~pyTooling.Cartesian3D.Ray3D.Start`) in a direction
+(:attr:`~pyTooling.Cartesian3D.Ray3D.Direction`, an :class:`~pyTooling.Cartesian3D.Offset3D`), a value in absolute
+coordinates. :meth:`~pyTooling.Cartesian3D.Ray3D.PointAt` returns the point at a distance from the start point. Two
+rays are equal, if they start at the same point and their directions point the same way: all three components of the
+cross product are zero and the dot product is positive.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian3D import Point3D, Offset3D, Ray3D
+
+   ray = Ray3D(Point3D(1, 2, 3), Offset3D(0, 3, 4))
+
+   str(ray)                           # '(1, 2, 3) + t * (0, 3, 4), t >= 0'
+   ray.PointAt(5)                     # (1.0, 5.0, 7.0)
+
+
 .. _STRUCT/Cartesian3D/Segment3D:
 
 Segment3D
@@ -1532,6 +1680,8 @@ groups. An element belongs to at most one group, its :attr:`~pyTooling.Cartesian
   :meth:`~pyTooling.Cartesian3D.Element3D.MirrorZ`, mirroring it at a plane parallel to the yz-, xz- or xy-plane (the
   x-, y- or z-coordinates flip), through an edge or the center of its bounding box, named by an
   :class:`~pyTooling.Cartesian3D.Alignment3D` and optionally shifted by an offset;
+* :meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt`, mirroring it at an
+  :ref:`plane <STRUCT/Cartesian3D/Plane3D>` in absolute coordinates, which several elements can share;
 * :meth:`~pyTooling.Cartesian3D.Element3D.MoveTo`, moving it into another group - by default keeping its absolute
   position, so its local coordinates change;
 * :meth:`~pyTooling.Cartesian3D.Element3D.AlignTo`, moving it so an edge or the center of its bounding box aligns
