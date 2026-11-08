@@ -59,6 +59,15 @@ class LineStyle(Enum):
 
 
 @export
+class FontStyle(Enum):
+	"""Posture of the letters of a font."""
+
+	Upright = 0  #: Upright letters.
+	Italic =  1  #: Letters of the font's italic design.
+	Slanted = 2  #: Upright letters, slanted to the right (oblique).
+
+
+@export
 class Color(metaclass=ExtendedType, slots=True):
 	"""
 	Abstract base-class of all colors.
@@ -510,21 +519,33 @@ class Font(metaclass=ExtendedType, slots=True):
 
 	The family is a font name or a generic family, as in CSS: for example ``"DejaVu Sans Mono"`` or ``"monospace"``. A
 	renderer maps it to its format.
+
+	Bold, small caps and the posture of the letters (:class:`FontStyle`) are independent of each other, as in CSS.
 	"""
 
-	_family: str    #: Font name or generic font family.
-	_size:   float  #: Font size in points.
-	_bold:   bool   #: If ``True``, the font is bold.
-	_italic: bool   #: If ``True``, the font is italic.
+	_family:    str        #: Font name or generic font family.
+	_size:      float      #: Font size in points.
+	_bold:      bool       #: If ``True``, the font is bold.
+	_smallCaps: bool       #: If ``True``, the lower-case letters are small capitals.
+	_fontStyle: FontStyle  #: Posture of the letters.
 
-	def __init__(self, family: str, size: float, *, bold: bool = False, italic: bool = False) -> None:
+	def __init__(
+		self,
+		family:    str,
+		size:      float,
+		*,
+		bold:      bool = False,
+		smallCaps: bool = False,
+		fontStyle: FontStyle = FontStyle.Upright
+	) -> None:
 		"""
 		Initializes a font from its family, size and style.
 
 		:param family:      Font name or generic font family.
 		:param size:        Font size in points.
 		:param bold:        Optional, if ``True``, the font is bold. Default: ``False``.
-		:param italic:      Optional, if ``True``, the font is italic. Default: ``False``.
+		:param smallCaps:   Optional, if ``True``, the lower-case letters are small capitals. Default: ``False``.
+		:param fontStyle:   Optional, posture of the letters. Default: ``FontStyle.Upright``.
 		:raises ValueError: If parameter 'family' is None.
 		:raises TypeError:  If parameter 'family' is not of type :class:`str`.
 		:raises ValueError: If parameter 'family' is empty.
@@ -533,8 +554,10 @@ class Font(metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'size' isn't positive.
 		:raises ValueError: If parameter 'bold' is None.
 		:raises TypeError:  If parameter 'bold' is not of type :class:`bool`.
-		:raises ValueError: If parameter 'italic' is None.
-		:raises TypeError:  If parameter 'italic' is not of type :class:`bool`.
+		:raises ValueError: If parameter 'smallCaps' is None.
+		:raises TypeError:  If parameter 'smallCaps' is not of type :class:`bool`.
+		:raises ValueError: If parameter 'fontStyle' is None.
+		:raises TypeError:  If parameter 'fontStyle' is not of type :class:`FontStyle`.
 		"""
 		if family is None:
 			raise ValueError("Parameter 'family' is None.")
@@ -557,8 +580,8 @@ class Font(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		for name, flag in (
-			("bold",   bold),
-			("italic", italic)
+			("bold",      bold),
+			("smallCaps", smallCaps)
 		):
 			if flag is None:
 				raise ValueError(f"Parameter '{name}' is None.")
@@ -567,10 +590,18 @@ class Font(metaclass=ExtendedType, slots=True):
 				ex.add_note(f"Got type '{getFullyQualifiedName(flag)}'.")
 				raise ex
 
-		self._family = family
-		self._size =   size
-		self._bold =   bold
-		self._italic = italic
+		if fontStyle is None:
+			raise ValueError("Parameter 'fontStyle' is None.")
+		elif not isinstance(fontStyle, FontStyle):
+			ex = TypeError("Parameter 'fontStyle' is not of type 'FontStyle'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(fontStyle)}'.")
+			raise ex
+
+		self._family =    family
+		self._size =      size
+		self._bold =      bold
+		self._smallCaps = smallCaps
+		self._fontStyle = fontStyle
 
 	@readonly
 	def Family(self) -> str:
@@ -600,13 +631,22 @@ class Font(metaclass=ExtendedType, slots=True):
 		return self._bold
 
 	@readonly
-	def Italic(self) -> bool:
+	def SmallCaps(self) -> bool:
 		"""
-		Read-only property to access, if the font is italic (:attr:`_italic`).
+		Read-only property to access, if the lower-case letters are small capitals (:attr:`_smallCaps`).
 
-		:returns: ``True``, if the font is italic.
+		:returns: ``True``, if the lower-case letters are small capitals.
 		"""
-		return self._italic
+		return self._smallCaps
+
+	@readonly
+	def FontStyle(self) -> FontStyle:
+		"""
+		Read-only property to access the posture of the letters (:attr:`_fontStyle`).
+
+		:returns: The font's posture.
+		"""
+		return self._fontStyle
 
 	def __eq__(self, other: Any) -> bool:
 		"""
@@ -623,8 +663,8 @@ class Font(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		return (
-			self._family == other._family and self._size == other._size and
-			self._bold is other._bold and self._italic is other._italic
+			self._family == other._family and self._size == other._size and self._bold is other._bold and
+			self._smallCaps is other._smallCaps and self._fontStyle is other._fontStyle
 		)
 
 	def __ne__(self, other: Any) -> bool:
@@ -642,8 +682,8 @@ class Font(metaclass=ExtendedType, slots=True):
 			raise ex
 
 		return (
-			self._family != other._family or self._size != other._size or
-			self._bold is not other._bold or self._italic is not other._italic
+			self._family != other._family or self._size != other._size or self._bold is not other._bold or
+			self._smallCaps is not other._smallCaps or self._fontStyle is not other._fontStyle
 		)
 
 	def __hash__(self) -> int:
@@ -652,7 +692,7 @@ class Font(metaclass=ExtendedType, slots=True):
 
 		:returns: The hash value.
 		"""
-		return hash((self._family, self._size, self._bold, self._italic))
+		return hash((self._family, self._size, self._bold, self._smallCaps, self._fontStyle))
 
 	def __repr__(self) -> str:
 		"""
@@ -660,4 +700,7 @@ class Font(metaclass=ExtendedType, slots=True):
 
 		:returns: The string representation of the font.
 		"""
-		return f"Font({self._family!r}, {self._size}, bold={self._bold}, italic={self._italic})"
+		return (
+			f"Font({self._family!r}, {self._size}, bold={self._bold}, smallCaps={self._smallCaps}, "
+			f"fontStyle={self._fontStyle})"
+		)

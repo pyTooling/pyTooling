@@ -31,7 +31,7 @@
 """
 Unit tests for :mod:`pyTooling.Cartesian2D.Drawing` - colors, strokes, fills and fonts.
 """
-from pyTooling.Cartesian2D.Drawing import LineStyle, Color, RGBAColor, Stroke, Fill, Font
+from pyTooling.Cartesian2D.Drawing import LineStyle, Color, RGBAColor, Stroke, Fill, FontStyle, Font
 from pyTooling.MetaClasses         import AbstractClassError
 from pyTooling.Testing             import Testcase
 
@@ -310,14 +310,21 @@ class Fonts(Testcase):
 		self.assertEqual("monospace", font.Family)
 		self.assertEqual(10, font.Size)
 		self.assertFalse(font.Bold)
-		self.assertFalse(font.Italic)
+		self.assertFalse(font.SmallCaps)
+		self.assertIs(FontStyle.Upright, font.FontStyle)
 
 	def test_Font_Style(self) -> None:
-		font = Font("DejaVu Sans", 8.5, bold=True, italic=True)
+		font = Font("DejaVu Sans", 8.5, bold=True, smallCaps=True, fontStyle=FontStyle.Italic)
 
 		self.assertEqual(8.5, font.Size)
 		self.assertTrue(font.Bold)
-		self.assertTrue(font.Italic)
+		self.assertTrue(font.SmallCaps)
+		self.assertIs(FontStyle.Italic, font.FontStyle)
+
+	def test_Font_Slanted(self) -> None:
+		font = Font("serif", 10, fontStyle=FontStyle.Slanted)
+
+		self.assertIs(FontStyle.Slanted, font.FontStyle)
 
 	def test_Font_FamilyNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -364,12 +371,31 @@ class Fonts(Testcase):
 
 		self.assertEqual("Parameter 'bold' is None.", str(context.exception))
 
-	def test_Font_ItalicInt(self) -> None:
-		with self.assertRaises(TypeError) as context:
-			_ = Font("serif", 10, italic=1)
+	def test_Font_SmallCapsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Font("serif", 10, smallCaps=None)
 
-		self.assertEqual("Parameter 'italic' is not of type 'bool'.", str(context.exception))
+		self.assertEqual("Parameter 'smallCaps' is None.", str(context.exception))
+
+	def test_Font_SmallCapsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Font("serif", 10, smallCaps=1)
+
+		self.assertEqual("Parameter 'smallCaps' is not of type 'bool'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Font_FontStyleNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Font("serif", 10, fontStyle=None)
+
+		self.assertEqual("Parameter 'fontStyle' is None.", str(context.exception))
+
+	def test_Font_FontStyleBool(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Font("serif", 10, fontStyle=True)
+
+		self.assertEqual("Parameter 'fontStyle' is not of type 'FontStyle'.", str(context.exception))
+		self.assertListEqual(["Got type 'bool'."], context.exception.__notes__)
 
 
 class Comparison(Testcase):
@@ -474,7 +500,10 @@ class Comparison(Testcase):
 
 	def test_Font(self) -> None:
 		self.assertTrue(Font("serif", 10) == Font("serif", 10.0, bold=False))
-		self.assertFalse(Font("serif", 10) == Font("serif", 10, italic=True))
+		self.assertFalse(Font("serif", 10) == Font("serif", 10, fontStyle=FontStyle.Italic))
+		self.assertFalse(Font("serif", 10) == Font("serif", 10, smallCaps=True))
+		self.assertTrue(Font("serif", 10, fontStyle=FontStyle.Italic) != Font("serif", 10, fontStyle=FontStyle.Slanted))
+		self.assertTrue(Font("serif", 10) != Font("serif", 10, smallCaps=True))
 		self.assertTrue(Font("serif", 10) != Font("sans-serif", 10))
 		self.assertTrue(Font("serif", 10) != Font("serif", 10, bold=True))
 		self.assertFalse(Font("serif", 10) != Font("serif", 10))
@@ -546,4 +575,7 @@ class Representation(Testcase):
 		self.assertEqual("Fill(RGBAColor(0, 0, 255, 0.5))", repr(Fill(RGBAColor(0, 0, 255, 0.5))))
 
 	def test_Font_repr(self) -> None:
-		self.assertEqual("Font('monospace', 10, bold=True, italic=False)", repr(Font("monospace", 10, bold=True)))
+		self.assertEqual(
+			"Font('monospace', 10, bold=True, smallCaps=False, fontStyle=FontStyle.Upright)",
+			repr(Font("monospace", 10, bold=True))
+		)

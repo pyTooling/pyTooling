@@ -77,7 +77,8 @@ Version 10.x (2026)
      :class:`~pyTooling.Cartesian2D.Drawing.Color`, converting to RGBA by ``ToRGBA()``, as
      :class:`~pyTooling.Cartesian2D.Drawing.RGBAColor` (RGB and opacity, parsed from ``#rrggbb``/``#rrggbbaa``),
      :class:`~pyTooling.Cartesian2D.Drawing.Stroke`, :class:`~pyTooling.Cartesian2D.Drawing.Fill` and
-     :class:`~pyTooling.Cartesian2D.Drawing.Font`.
+     :class:`~pyTooling.Cartesian2D.Drawing.Font` (bold, small caps and a
+     :class:`~pyTooling.Cartesian2D.Drawing.FontStyle`: upright, italic or slanted).
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

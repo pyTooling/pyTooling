@@ -1081,10 +1081,14 @@ A :class:`~pyTooling.Cartesian2D.Drawing.Stroke` is the style of a line or an ou
 Font
 ====
 
-A :class:`~pyTooling.Cartesian2D.Drawing.Font` has a :attr:`~pyTooling.Cartesian2D.Drawing.Font.Family`, a
-:attr:`~pyTooling.Cartesian2D.Drawing.Font.Size` in points, and is :attr:`~pyTooling.Cartesian2D.Drawing.Font.Bold`
-and :attr:`~pyTooling.Cartesian2D.Drawing.Font.Italic` or not. The family is a font name or a generic family, as in
-CSS - ``"DejaVu Sans Mono"`` or ``"monospace"``; a renderer maps it to its format.
+A :class:`~pyTooling.Cartesian2D.Drawing.Font` has a :attr:`~pyTooling.Cartesian2D.Drawing.Font.Family` and a
+:attr:`~pyTooling.Cartesian2D.Drawing.Font.Size` in points. The family is a font name or a generic family, as in CSS -
+``"DejaVu Sans Mono"`` or ``"monospace"``; a renderer maps it to its format.
+
+Its style has three independent parts, as in CSS: the font is :attr:`~pyTooling.Cartesian2D.Drawing.Font.Bold` or not,
+has :attr:`~pyTooling.Cartesian2D.Drawing.Font.SmallCaps` or not, and its letters have a posture, the
+:attr:`~pyTooling.Cartesian2D.Drawing.Font.FontStyle`: a :class:`~pyTooling.Cartesian2D.Drawing.FontStyle` of
+``Upright`` (the default), ``Italic`` or ``Slanted``.
 
 
 .. _STRUCT/Cartesian3D:
