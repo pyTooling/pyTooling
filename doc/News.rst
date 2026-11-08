@@ -88,6 +88,9 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian3D`: every element mirrors at a plane through an edge or the center of its bounding box
      with ``MirrorX(plane, offset)``, ``MirrorY(plane, offset)`` and ``MirrorZ(plane, offset)``, named by the
      coordinate they flip.
+   * :mod:`pyTooling.Cartesian3D`: every segment and group carries a :attr:`~pyTooling.Cartesian3D.Element3D.Value` and
+     key-value-pairs (:class:`~pyTooling.DataModel.KeyValuePairsMixin`), given by the keyword-only parameters ``value``
+     and ``keyValuePairs``. ``Copy()`` keeps the value and copies the pairs.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

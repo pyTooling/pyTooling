@@ -943,3 +943,57 @@ class Mirroring(Testcase):
 
 		self.assertEqual("Group3D has no children.", str(context.exception))
 		self.assertTupleEqual((1, 2, 3), group.Offset.ToTuple())
+
+
+class ElementData(Testcase):
+	def test_Group(self) -> None:
+		value = object()
+		pairs = {"layer": 1}
+		group = Group3D(Offset3D(1, 2, 3), value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, group.Value)
+		self.assertEqual(1, group["layer"])
+		self.assertIsNot(pairs, group._dict)
+
+	def test_Group_Default(self) -> None:
+		group = Group3D()
+
+		self.assertIsNone(group.Value)
+		self.assertEqual(0, len(group))
+
+	def test_Group_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Group3D(keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Group_Value(self) -> None:
+		group = Group3D(value=1)
+
+		group.Value = "layer"
+
+		self.assertEqual("layer", group.Value)
+
+	def test_Group_Pairs(self) -> None:
+		"""The dictionary syntax addresses the key-value-pairs, not the children."""
+		group = Group3D(children=(LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8)), ))
+
+		group["layer"] = 1
+
+		self.assertEqual(1, len(group))
+		self.assertIn("layer", group)
+		self.assertListEqual(["layer"], list(group))
+		self.assertEqual(1, len(group.Children))
+
+		del group["layer"]
+
+		self.assertEqual(0, len(group))
+
+	def test_Group_Parent(self) -> None:
+		"""A child with a value and key-value-pairs registers in its parent like any other."""
+		parent = Group3D()
+		group =  Group3D(value=1, keyValuePairs={"layer": 1}, parent=parent)
+
+		self.assertIs(parent, group.Parent)
+		self.assertTupleEqual((group, ), parent.Children)

@@ -42,7 +42,7 @@ The coordinates of everything inside a group are relative to the group, so movin
 """
 from __future__                   import annotations
 
-from typing                       import Generic, Iterable, Optional as Nullable
+from typing                       import Any, Generic, Hashable, Iterable, Mapping, Optional as Nullable
 
 from pyTooling.Decorators         import export, readonly
 from pyTooling.MetaClasses        import ExtendedType
@@ -337,10 +337,12 @@ class Group3D(Element3D[Coordinate], Container3DMixin, Generic[Coordinate]):
 
 	def __init__(
 		self,
-		offset:   Nullable[Offset3D[Coordinate]] = None,
-		children: Nullable[Iterable[Element3D[Coordinate]]] = None,
+		offset:        Nullable[Offset3D[Coordinate]] = None,
+		children:      Nullable[Iterable[Element3D[Coordinate]]] = None,
 		*,
-		parent:   Nullable[Group3D[Coordinate]] = None
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Group3D[Coordinate]] = None
 	) -> None:
 		"""
 		Initializes a group at an offset, holding the given children.
@@ -351,6 +353,8 @@ class Group3D(Element3D[Coordinate], Container3DMixin, Generic[Coordinate]):
 		:param offset:             Optional, offset of the group's origin. Default: ``None``, which places it at
 		                           ``(0, 0, 0)``.
 		:param children:           Optional, segments and groups held by the group. Default: ``None``.
+		:param value:              Optional, value of the group. Default: ``None``.
+		:param keyValuePairs:      Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:             Optional, the group this group is added to. Default: ``None``, no parent.
 		:raises TypeError:         If parameter 'offset' is not of type :class:`~pyTooling.Cartesian3D.Offset3D`.
 		:raises TypeError:         If parameter 'children' is not iterable.
@@ -359,10 +363,11 @@ class Group3D(Element3D[Coordinate], Container3DMixin, Generic[Coordinate]):
 		                           :class:`~pyTooling.Cartesian3D.Element3D`.
 		:raises AlreadyOwnedError: If an element of parameter 'children' belongs to another element.
 		:raises ValueError:        If an element of parameter 'children' is given twice.
+		:raises TypeError:         If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:         If parameter 'parent' is not of type :class:`Group3D`.
 		:raises GroupCycleError:   If parameter 'parent' is inside an element of parameter 'children'.
 		"""
-		super().__init__(parent=parent)
+		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
 		Container3DMixin.__init__(self, children)
 
 		if offset is not None and not isinstance(offset, Offset3D):

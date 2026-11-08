@@ -44,12 +44,14 @@ from __future__            import annotations
 
 from enum                  import Enum
 from math                  import atan2, sqrt
-from typing                import TYPE_CHECKING, Any, ClassVar, Generic, Iterable, Optional as Nullable, Self, Union
+from typing                import TYPE_CHECKING, Any, ClassVar, Generic, Hashable, Iterable, Mapping, \
+                                  Optional as Nullable, Self, Union
 
 from pyTooling.Decorators  import readonly, export
 from pyTooling.MetaClasses import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Exceptions  import InvalidOperationError
 from pyTooling.Common      import getFullyQualifiedName
+from pyTooling.DataModel   import KeyValuePairsMixin
 from pyTooling.Cartesian2D import Coordinate, AlreadyOwnedError, DuplicatePointError, GroupCycleError, \
                                   NotInSameFrameError
 
@@ -506,32 +508,55 @@ class Origin3D(Point3D[Coordinate], Generic[Coordinate]):
 
 
 @export
-class Element3D(Base3D[Coordinate], Generic[Coordinate]):
+class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 	"""
 	Abstract base-class of all elements a :class:`~pyTooling.Cartesian3D.Groups.Group3D` can hold: segments and groups.
 
 	An element belongs to at most one group, its :attr:`Parent`. Its coordinates are relative to its parent, an element
 	without a parent is relative to the origin.
 
+	An element carries an optional :attr:`Value` and arbitrary key-value-pairs
+	(:class:`~pyTooling.DataModel.KeyValuePairsMixin`). Use the dictionary syntax to get and set key-value-pairs:
+	``in``, :pycode:`len(element)` and iterating an element address the key-value-pairs, not its points or children.
+
 	A derived class implements :attr:`BoundingBox`, :meth:`Move`, :meth:`_MirrorX`, :meth:`_MirrorY` and
-	:meth:`_MirrorZ`. Its initializer takes the keyword-only parameter ``parent`` and assigns it to :attr:`Parent` as its
-	last statement, when the element is fully initialized.
+	:meth:`_MirrorZ`. Its initializer takes the keyword-only parameters ``value``, ``keyValuePairs`` and ``parent``, and
+	assigns ``parent`` to :attr:`Parent` as its last statement, when the element is fully initialized.
 	"""
 
-	def __init__(self, *, parent: Nullable[Group3D[Coordinate]] = None) -> None:
+	# WORKAROUND: Python <3.13
+	# A type variable with a default (PEP 696) isn't supported by Python 3.11 and 3.12. Use it when their support gets
+	# dropped:
+	# ValueType = TypeVar("ValueType", default=Any)
+	# class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate, ValueType]): ... _value: ValueType
+	_value: Any  #: Value of the element.
+
+	def __init__(
+		self,
+		*,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Group3D[Coordinate]] = None
+	) -> None:
 		"""
 		Initializes an element without a parent and checks the group it will be registered in.
 
-		:param parent:     Optional, the group the derived class registers the element in. Default: ``None``, no parent.
-		:raises TypeError: If parameter 'parent' is not of type :class:`~pyTooling.Cartesian3D.Groups.Group3D`.
+		:param value:         Optional, value of the element. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, the group the derived class registers the element in. Default: ``None``, no
+		                      parent.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian3D.Groups.Group3D`.
 		"""
 		# Imported for its side effect: it assigns '_PARENT_TYPE' of the element classes.
 		from pyTooling.Cartesian3D import Groups
 
 		super().__init__(parent=parent)
+		KeyValuePairsMixin.__init__(self, keyValuePairs)
 
 		# The derived class registers the element by assigning 'Parent' as its last statement.
 		self._parent = None
+		self._value =  value
 
 	@Base3D.Parent.setter
 	def Parent(self, parent: Nullable[Group3D]) -> None:
@@ -560,6 +585,22 @@ class Element3D(Base3D[Coordinate], Generic[Coordinate]):
 			parent._children.append(self)
 
 		Base3D.Parent.fset(self, parent)
+
+	@property
+	def Value(self) -> Any:
+		"""
+		Property to access the element's value (:attr:`_value`).
+
+		The value is any object attached to the element, for example the model object a segment draws. It is neither
+		checked nor copied.
+
+		:returns: The element's value, or ``None``, if it has no value.
+		"""
+		return self._value
+
+	@Value.setter
+	def Value(self, value: Any) -> None:
+		self._value = value
 
 	@readonly
 	@abstractmethod
@@ -1839,11 +1880,13 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 
 	def __init__(
 		self,
-		start:      Point3D[Coordinate],
-		end:        Point3D[Coordinate],
+		start:         Point3D[Coordinate],
+		end:           Point3D[Coordinate],
 		*,
-		copyPoints: bool = True,
-		parent:     Nullable[Group3D[Coordinate]] = None
+		copyPoints:    bool = True,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Group3D[Coordinate]] = None
 	) -> None:
 		"""
 		Initializes a 3-dimensional segment.
@@ -1852,6 +1895,8 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 		:param end:                  End point of the segment.
 		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
 		                             ``True``.
+		:param value:                Optional, value of the segment. Default: ``None``.
+		:param keyValuePairs:        Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:               Optional, the group the segment is added to. Default: ``None``.
 		:raises ValueError:          If parameter 'start' is None.
 		:raises TypeError:           If parameter 'start' is not of type :class:`Point3D`.
@@ -1868,9 +1913,10 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 		                             Use ``copyPoints=True`` to copy the point.
 		:raises ValueError:          If parameter 'copyPoints' is None.
 		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian3D.Groups.Group3D`.
 		"""
-		super().__init__(parent=parent)
+		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
 
 		if start is None:
 			raise ValueError("Parameter 'start' is None.")
@@ -2072,11 +2118,12 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 		"""
 		Create a new 3D-segment as a copy of this 3D-segment.
 
-		The copy holds copies of the start and end point.
+		The copy holds copies of the start and end point. It references the same :attr:`Value` and holds a shallow copy of
+		the key-value-pairs.
 
 		:returns: Copy of this 3D-segment.
 		"""
-		return self.__class__(self._start, self._end)
+		return self.__class__(self._start, self._end, value=self._value, keyValuePairs=self._dict)
 
 	def __copy__(self) -> Self:
 		"""
