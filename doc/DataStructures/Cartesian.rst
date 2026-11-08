@@ -31,6 +31,8 @@ Features
 * **Points and offsets as separate types**, with the arithmetic relating them: a point plus an offset is a point, a
   point minus a point is an offset - in both the copying and the in-place form.
 * **Distances measured** - a line segment reports its length and its angle.
+* **Curved segments** - a circular :class:`~pyTooling.Cartesian2D.ArcSegment2D` around a center, reporting its
+  radius, angles and length.
 * **Shapes placed by their corners**, so a shape is positioned by the points it is built from - a circle by its
   center.
 * Shapes validated on construction: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with any number of corners, the
@@ -61,7 +63,7 @@ Missing Features
 
 * Rotation and scaling - an element can be shifted and mirrored at a vertical or horizontal axis, but not rotated or
   scaled.
-* Shapes with curved edges other than a circle (ellipses, arcs).
+* Shapes with curved edges other than a circle, and elliptical arcs.
 * Exact containment and intersection tests (*is this point inside that rotated rectangle?*). Only bounding boxes are
   compared.
 * Area and perimeter of a polygon.
@@ -312,6 +314,57 @@ measurements:
       |rarr| Its base-class, the 2-dimensional segment.
    :ref:`STRUCT/Cartesian3D/LineSegment3D`
       |rarr| Its counterpart, the line segment in 3D.
+
+
+.. _STRUCT/Cartesian2D/CurvedSegments:
+
+Curved Segments
+===============
+
+A curved segment is a :ref:`segment <STRUCT/Cartesian2D/Segment2D>` too: it has a start and an end point, a group
+can hold it, and a shape can use it as an edge. Its other points, which define the curve, are owned like the start
+and end point: copied by default, referenced with ``copyPoints=False``, and moved and mirrored with the segment.
+
+.. _STRUCT/Cartesian2D/ArcSegment2D:
+
+ArcSegment2D
+------------
+
+An :class:`~pyTooling.Cartesian2D.ArcSegment2D` is a piece of a circle: a start and an end point, the
+:attr:`~pyTooling.Cartesian2D.ArcSegment2D.Center` of the circle, and the
+:attr:`~pyTooling.Cartesian2D.ArcSegment2D.Direction` from the start to the end point, a
+:class:`~pyTooling.Cartesian2D.SweepDirection` - ``Counterclockwise`` or ``Clockwise``, seen with the y-axis pointing
+up. The :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Radius` is the start point's distance to the center; the end point
+must have the same distance, compared with :func:`math.isclose`, else the constructor raises :exc:`ValueError`. A
+point assigned to :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Start` or :attr:`~pyTooling.Cartesian2D.ArcSegment2D.End`
+is checked the same way. A start and an end point at the same position make a full circle.
+
+* :attr:`~pyTooling.Cartesian2D.ArcSegment2D.StartAngle` and :attr:`~pyTooling.Cartesian2D.ArcSegment2D.EndAngle` -
+  the angles of both points seen from the center, in radians, from -:data:`math.pi` to :data:`math.pi`;
+* :attr:`~pyTooling.Cartesian2D.ArcSegment2D.SweepAngle` - the angle from the start to the end point, positive
+  counterclockwise and negative clockwise;
+* :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Length` - the radius times the absolute sweep angle;
+* :attr:`~pyTooling.Cartesian2D.ArcSegment2D.BoundingBox` - exact: where the arc passes the leftmost, rightmost,
+  lowest or highest point of its circle, it bulges past its start and end point.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D import Point2D, ArcSegment2D, SweepDirection
+
+   arc = ArcSegment2D(Point2D(2, 0), Point2D(-2, 0), Point2D(0, 0), SweepDirection.Counterclockwise)
+   arc.SweepAngle                     # 3.14159... (math.pi)
+   arc.Length                         # 6.28318...
+   arc.BoundingBox                    # BoundingBox2D(-2, 0, 2, 2.0)
+   arc.MirrorY()                      # arc.Direction is SweepDirection.Clockwise
+
+Mirroring an arc reverses its direction, so the mirrored arc bulges to the other side.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Segment2D`
+      |rarr| Its base-class, the 2-dimensional segment.
+   :ref:`STRUCT/Cartesian2D/Circle`
+      |rarr| The full circle as a shape.
 
 
 .. _STRUCT/Cartesian2D/Ownership:
