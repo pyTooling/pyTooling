@@ -841,15 +841,32 @@ class Parents(Testcase):
 		self.assertIs(group, line.Parent)
 		self.assertTupleEqual((line, ), group.Children)
 
+	def test_LineSegment_Int(self) -> None:
+		"""A wrong parent leaves the given points free."""
+		start = Point2D(1, 2)
+		end =   Point2D(4, 6)
+
+		with self.assertRaises(TypeError) as context:
+			_ = LineSegment2D(start, end, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(start.Parent)
+		self.assertIsNone(end.Parent)
+
 	def test_LineSegment_Shape(self) -> None:
 		"""A drawable line segment is no edge of a shape."""
 		triangle = Shapes.Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		start =    Point2D(1, 2)
+		end =      Point2D(4, 6)
 
 		with self.assertRaises(TypeError) as context:
-			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), parent=triangle)
+			_ = LineSegment2D(start, end, copyPoints=False, parent=triangle)
 
 		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Shapes.Polygon'."], context.exception.__notes__)
+		self.assertIsNone(start.Parent)
+		self.assertIsNone(end.Parent)
 
 	def test_Polygon(self) -> None:
 		canvas =  Canvas2D()
@@ -858,11 +875,33 @@ class Parents(Testcase):
 		self.assertIs(canvas, polygon.Parent)
 		self.assertTupleEqual((polygon, ), canvas.Children)
 
+	def test_Polygon_Int(self) -> None:
+		"""A wrong parent leaves the given corners free."""
+		points = (Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))
+
+		with self.assertRaises(TypeError) as context:
+			_ = Polygon(points, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		for point in points:
+			self.assertIsNone(point.Parent)
+
 	def test_Trapezium(self) -> None:
 		group =     Group2D()
 		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), parent=group)
 
 		self.assertTupleEqual((trapezium, ), group.Children)
+
+	def test_Trapezium_Int(self) -> None:
+		corner = Point2D(1, 1)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Trapezium(corner, Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(corner.Parent)
 
 	def test_Rectangle(self) -> None:
 		group =     Group2D()
@@ -870,11 +909,31 @@ class Parents(Testcase):
 
 		self.assertTupleEqual((rectangle, ), group.Children)
 
+	def test_Rectangle_Int(self) -> None:
+		corner = Point2D(0, 0)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Rectangle(corner, Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(corner.Parent)
+
 	def test_Square(self) -> None:
 		group =  Group2D()
 		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), parent=group)
 
 		self.assertTupleEqual((square, ), group.Children)
+
+	def test_Square_Int(self) -> None:
+		corner = Point2D(0, 0)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Square(corner, Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(corner.Parent)
 
 	def test_Circle(self) -> None:
 		group =  Group2D()
@@ -883,21 +942,75 @@ class Parents(Testcase):
 		self.assertTupleEqual((circle, ), group.Children)
 
 	def test_Circle_Int(self) -> None:
+		"""A wrong parent leaves the given center free."""
+		center = Point2D(1, 2)
+
 		with self.assertRaises(TypeError) as context:
-			_ = Circle(Point2D(1, 2), 3, parent=1)
+			_ = Circle(center, 3, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(center.Parent)
+
+	def test_Circle_IntRadius(self) -> None:
+		"""The parent is checked before the geometry."""
+		with self.assertRaises(TypeError) as context:
+			_ = Circle(Point2D(1, 2), -3, parent=1)
 
 		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 	def test_FailingStyle(self) -> None:
-		"""A failing style check leaves nothing registered."""
+		"""A failing style check leaves nothing registered and the given center free."""
 		group =  Group2D()
 		center = Point2D(1, 2)
 
-		with self.assertRaises(TypeError):
+		with self.assertRaises(TypeError) as context:
 			_ = Circle(center, 3, copyPoints=False, fill=1, parent=group)
 
+		self.assertEqual("Parameter 'fill' is not of type 'Fill'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 		self.assertTupleEqual((), group.Children)
+		self.assertIsNone(center.Parent)
+
+	def test_FailingStyle_LineSegment(self) -> None:
+		group = Group2D()
+		start = Point2D(1, 2)
+		end =   Point2D(4, 6)
+
+		with self.assertRaises(TypeError) as context:
+			_ = LineSegment2D(start, end, copyPoints=False, stroke=FILL, parent=group)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.Fill'."], context.exception.__notes__)
+		self.assertTupleEqual((), group.Children)
+		self.assertIsNone(start.Parent)
+		self.assertIsNone(end.Parent)
+
+	def test_FailingStyle_Polygon(self) -> None:
+		group =  Group2D()
+		points = (Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))
+
+		with self.assertRaises(TypeError) as context:
+			_ = Polygon(points, copyPoints=False, stroke=STROKE, fill=STROKE, parent=group)
+
+		self.assertEqual("Parameter 'fill' is not of type 'Fill'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.Stroke'."], context.exception.__notes__)
+		self.assertTupleEqual((), group.Children)
+		for point in points:
+			self.assertIsNone(point.Parent)
+
+	def test_FailingStyle_Text(self) -> None:
+		group =    Group2D()
+		position = Point2D(0, 0)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Text(position, "Hello", copyPoints=False, stroke=1, parent=group)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertTupleEqual((), group.Children)
+		self.assertIsNone(position.Parent)
 
 	def test_FailingGeometry(self) -> None:
 		group = Group2D()
@@ -1380,11 +1493,15 @@ class Texts(Testcase):
 		self.assertTupleEqual((text, ), group.Children)
 
 	def test_Text_ParentInt(self) -> None:
+		"""A wrong parent leaves the given position free."""
+		position = Point2D(0, 0)
+
 		with self.assertRaises(TypeError) as context:
-			_ = Text(Point2D(0, 0), "Hello", parent=1)
+			_ = Text(position, "Hello", copyPoints=False, parent=1)
 
 		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(position.Parent)
 
 	def test_Text_FailingCheck(self) -> None:
 		"""A failing check leaves nothing registered."""
