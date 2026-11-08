@@ -46,6 +46,7 @@ of elements.
 """
 from __future__                   import annotations
 
+from copy                         import deepcopy
 from enum                         import Enum
 from typing                       import Any, ClassVar, Generic, Hashable, Iterable, Mapping, \
                                          Optional as Nullable, Self, Union
@@ -930,6 +931,24 @@ class LineSegment2D(Cartesian2D.LineSegment2D[Coordinate], StrokeMixin, Generic[
 		"""
 		return self.__class__(self._start, self._end, stroke=self._stroke, value=self._value, keyValuePairs=self._dict)
 
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this line segment for :func:`copy.deepcopy`.
+
+		The copy holds copies of the start and end point, and the same stroke. It holds deep copies of the :attr:`Value`
+		and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this line segment.
+		"""
+		return self.__class__(
+			self._start,
+			self._end,
+			stroke=self._stroke,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
 
 @export
 class Polygon(Shapes.Polygon[Coordinate], StyleMixin, Generic[Coordinate]):
@@ -1002,6 +1021,24 @@ class Polygon(Shapes.Polygon[Coordinate], StyleMixin, Generic[Coordinate]):
 			keyValuePairs=self._dict
 		)
 
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this polygon for :func:`copy.deepcopy`.
+
+		The copy holds copies of the corners, shared by its edges, and the same stroke and fill. It holds deep copies of
+		the :attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this polygon.
+		"""
+		return self.__class__(
+			self._points,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
 
 @export
 class Trapezium(Shapes.Trapezium[Coordinate], StyleMixin, Generic[Coordinate]):
@@ -1068,6 +1105,24 @@ class Trapezium(Shapes.Trapezium[Coordinate], StyleMixin, Generic[Coordinate]):
 			fill=self._fill,
 			value=self._value,
 			keyValuePairs=self._dict
+		)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this trapezium for :func:`copy.deepcopy`.
+
+		The copy holds copies of the corners, shared by its edges, and the same stroke and fill. It holds deep copies of
+		the :attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this trapezium.
+		"""
+		return self.__class__(
+			*self._points,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
 		)
 
 
@@ -1139,6 +1194,24 @@ class Rectangle(Shapes.Rectangle[Coordinate], StyleMixin, Generic[Coordinate]):
 			fill=self._fill,
 			value=self._value,
 			keyValuePairs=self._dict
+		)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this rectangle for :func:`copy.deepcopy`.
+
+		The copy holds copies of the corners, shared by its edges, and the same stroke and fill. Its corners are checked
+		again. It holds deep copies of the :attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this rectangle.
+		"""
+		return self.__class__(
+			*self._points,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
 		)
 
 
@@ -1213,6 +1286,24 @@ class Square(Shapes.Square[Coordinate], StyleMixin, Generic[Coordinate]):
 			keyValuePairs=self._dict
 		)
 
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this square for :func:`copy.deepcopy`.
+
+		The copy holds copies of the corners, shared by its edges, and the same stroke and fill. Its corners are checked
+		again. It holds deep copies of the :attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this square.
+		"""
+		return self.__class__(
+			*self._points,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
 
 @export
 class Circle(Shapes.Circle[Coordinate], StyleMixin, Generic[Coordinate]):
@@ -1280,6 +1371,25 @@ class Circle(Shapes.Circle[Coordinate], StyleMixin, Generic[Coordinate]):
 			fill=self._fill,
 			value=self._value,
 			keyValuePairs=self._dict
+		)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this circle for :func:`copy.deepcopy`.
+
+		The copy holds a copy of the center point, and the same stroke and fill. It holds deep copies of the
+		:attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this circle.
+		"""
+		return self.__class__(
+			self._center,
+			self._radius,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
 		)
 
 
@@ -1622,6 +1732,29 @@ class Text(Element2D[Coordinate], StyleMixin, Generic[Coordinate]):
 		:returns: Copy of this text.
 		"""
 		return self.Copy()
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this text for :func:`copy.deepcopy`.
+
+		The copy holds a copy of the position, and the same font and styles. It holds deep copies of the :attr:`Value`
+		and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this text.
+		"""
+		return self.__class__(
+			self._position,
+			self._content,
+			font=self._font,
+			alignment=self._alignment,
+			anchor=self._anchor,
+			lineHeight=self._lineHeight,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
 
 	def __repr__(self) -> str:
 		"""
