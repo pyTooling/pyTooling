@@ -1030,15 +1030,15 @@ style of another type in a comparison raises :exc:`TypeError`.
 
 .. code-block:: Python
 
-   from pyTooling.Cartesian2D.Drawing import Color, Fill, Font, LineStyle, Stroke
+   from pyTooling.Cartesian2D.Drawing import Fill, Font, LineStyle, RGBAColor, Stroke
 
-   black =   Color(0, 0, 0)
+   black =   RGBAColor(0, 0, 0)
    outline = Stroke(1.5, black, LineStyle.Dashed)
-   shade =   Fill(Color.Parse("#ff800080"))
+   shade =   Fill(RGBAColor.Parse("#ff800080"))
    label =   Font("monospace", 10, bold=True)
 
    shade.Color.Alpha                  # 0.50196...
-   str(shade.Color)                   # '#ff800080'
+   shade.Color.ToHex()                # '#ff800080'
    outline == Stroke(1.5, black, LineStyle.Dashed)   # True
 
 
@@ -1047,14 +1047,21 @@ style of another type in a comparison raises :exc:`TypeError`.
 Color
 =====
 
-A :class:`~pyTooling.Cartesian2D.Drawing.Color` has a :attr:`~pyTooling.Cartesian2D.Drawing.Color.Red`,
-:attr:`~pyTooling.Cartesian2D.Drawing.Color.Green` and :attr:`~pyTooling.Cartesian2D.Drawing.Color.Blue` component,
-integers from 0 to 255, and an opacity :attr:`~pyTooling.Cartesian2D.Drawing.Color.Alpha` from ``0.0`` (transparent)
-to ``1.0`` (opaque, the default). A component out of range raises :exc:`ValueError`.
+:class:`~pyTooling.Cartesian2D.Drawing.Color` is the abstract base-class of all colors. A color is given in a color
+system, and every color converts to red, green and blue components and an opacity with
+:meth:`~pyTooling.Cartesian2D.Drawing.Color.ToRGBA`, so a renderer handles any color. A stroke or fill takes a color of
+any color system. A further color system, like HSL or CMYK, is a class derived from
+:class:`~pyTooling.Cartesian2D.Drawing.Color` implementing :meth:`~pyTooling.Cartesian2D.Drawing.Color.ToRGBA`.
 
-:meth:`~pyTooling.Cartesian2D.Drawing.Color.Parse` reads the hexadecimal form of CSS and SVG, ``#rrggbb`` or
-``#rrggbbaa``, and :func:`str` returns it. The opacity is stored as given, but written with two hexadecimal digits, so
-``str()`` rounds it to a multiple of 1/255.
+An :class:`~pyTooling.Cartesian2D.Drawing.RGBAColor` has a :attr:`~pyTooling.Cartesian2D.Drawing.RGBAColor.Red`,
+:attr:`~pyTooling.Cartesian2D.Drawing.RGBAColor.Green` and :attr:`~pyTooling.Cartesian2D.Drawing.RGBAColor.Blue`
+component, integers from 0 to 255, and an opacity :attr:`~pyTooling.Cartesian2D.Drawing.RGBAColor.Alpha` from ``0.0``
+(transparent) to ``1.0`` (opaque, the default). A component out of range raises :exc:`ValueError`. Its
+:meth:`~pyTooling.Cartesian2D.Drawing.RGBAColor.ToRGBA` returns the color itself.
+
+:meth:`~pyTooling.Cartesian2D.Drawing.RGBAColor.Parse` reads the hexadecimal form of CSS and SVG, ``#rrggbb`` or
+``#rrggbbaa``, and :meth:`~pyTooling.Cartesian2D.Drawing.RGBAColor.ToHex` and :func:`str` return it. The opacity is
+stored as given, but written with two hexadecimal digits, so ``ToHex()`` rounds it to a multiple of 1/255.
 
 
 .. _STRUCT/Cartesian2D/Stroke:

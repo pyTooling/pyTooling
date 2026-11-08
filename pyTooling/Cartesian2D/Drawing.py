@@ -45,7 +45,7 @@ from enum                  import Enum
 from typing                import Any, Self
 
 from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType
+from pyTooling.MetaClasses import ExtendedType, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName
 
 
@@ -61,6 +61,26 @@ class LineStyle(Enum):
 @export
 class Color(metaclass=ExtendedType, slots=True):
 	"""
+	Abstract base-class of all colors.
+
+	A color is given in a color system, like red, green and blue components (:class:`RGBAColor`). A renderer converts any
+	color to red, green, blue and opacity by :meth:`ToRGBA`.
+
+	A derived class implements :meth:`ToRGBA`.
+	"""
+
+	@abstractmethod
+	def ToRGBA(self) -> RGBAColor:
+		"""
+		Convert the color to red, green and blue components and an opacity.
+
+		:returns: The color as an RGBA color.
+		"""
+
+
+@export
+class RGBAColor(Color):
+	"""
 	A color as red, green and blue component and an opacity (alpha).
 
 	The components are integers from 0 to 255, the opacity is a number from ``0.0`` (transparent) to ``1.0`` (opaque).
@@ -73,7 +93,7 @@ class Color(metaclass=ExtendedType, slots=True):
 
 	def __init__(self, red: int, green: int, blue: int, alpha: float = 1.0) -> None:
 		"""
-		Initializes a color from its components.
+		Initializes an RGBA color from its components.
 
 		:param red:         Red component, 0 to 255.
 		:param green:       Green component, 0 to 255.
@@ -92,6 +112,8 @@ class Color(metaclass=ExtendedType, slots=True):
 		:raises TypeError:  If parameter 'alpha' is not of type :class:`float` or :class:`int`.
 		:raises ValueError: If parameter 'alpha' is out of range 0.0..1.0.
 		"""
+		super().__init__()
+
 		for name, component in (
 			("red",   red),
 			("green", green),
@@ -127,13 +149,13 @@ class Color(metaclass=ExtendedType, slots=True):
 	@classmethod
 	def Parse(cls, value: str) -> Self:
 		"""
-		Create a color from a hexadecimal color string.
+		Create an RGBA color from a hexadecimal color string.
 
 		The string is ``#rrggbb`` or ``#rrggbbaa``, with two hexadecimal digits per component, as in CSS and SVG. The
 		opacity ``aa`` is scaled from 0..255 to 0.0..1.0; without it, the color is opaque.
 
 		:param value:       The color string.
-		:returns:           A new color.
+		:returns:           A new RGBA color.
 		:raises ValueError: If parameter 'value' is None.
 		:raises TypeError:  If parameter 'value' is not of type :class:`str`.
 		:raises ValueError: If parameter 'value' is not of the form ``#rrggbb`` or ``#rrggbbaa``.
@@ -188,18 +210,39 @@ class Color(metaclass=ExtendedType, slots=True):
 		"""
 		return self._alpha
 
+	def ToRGBA(self) -> RGBAColor:
+		"""
+		Convert the color to red, green and blue components and an opacity.
+
+		:returns: The color itself.
+		"""
+		return self
+
+	def ToHex(self) -> str:
+		"""
+		Convert the color to a hexadecimal color string.
+
+		The opacity is written with two hexadecimal digits, so it's rounded to a multiple of 1/255.
+
+		:returns: ``#rrggbb`` for an opaque color, else ``#rrggbbaa`` with the opacity scaled to 0..255.
+		"""
+		if self._alpha == 1.0:
+			return f"#{self._red:02x}{self._green:02x}{self._blue:02x}"
+
+		return f"#{self._red:02x}{self._green:02x}{self._blue:02x}{round(self._alpha * 255):02x}"
+
 	def __eq__(self, other: Any) -> bool:
 		"""
-		Compare two colors for equality.
+		Compare two RGBA colors for equality.
 
 		:param other:      Operand to compare against.
 		:returns:          ``True``, if both colors have the same components and opacity.
-		:raises TypeError: If the second operand is not of type :class:`Color`.
+		:raises TypeError: If the second operand is not of type :class:`RGBAColor`.
 		"""
-		if not isinstance(other, Color):
+		if not isinstance(other, RGBAColor):
 			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: Color")
+			ex.add_note("Supported types for second operand: RGBAColor")
 			raise ex
 
 		return (
@@ -209,16 +252,16 @@ class Color(metaclass=ExtendedType, slots=True):
 
 	def __ne__(self, other: Any) -> bool:
 		"""
-		Compare two colors for inequality.
+		Compare two RGBA colors for inequality.
 
 		:param other:      Operand to compare against.
 		:returns:          ``True``, if the colors differ in a component or the opacity.
-		:raises TypeError: If the second operand is not of type :class:`Color`.
+		:raises TypeError: If the second operand is not of type :class:`RGBAColor`.
 		"""
-		if not isinstance(other, Color):
+		if not isinstance(other, RGBAColor):
 			ex = TypeError("Second operand is not supported by != operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: Color")
+			ex.add_note("Supported types for second operand: RGBAColor")
 			raise ex
 
 		return (
@@ -240,18 +283,15 @@ class Color(metaclass=ExtendedType, slots=True):
 
 		:returns: The string representation of the color.
 		"""
-		return f"Color({self._red}, {self._green}, {self._blue}, {self._alpha})"
+		return f"RGBAColor({self._red}, {self._green}, {self._blue}, {self._alpha})"
 
 	def __str__(self) -> str:
 		"""
 		Returns the color's string equivalent as a hexadecimal color string.
 
-		:returns: ``#rrggbb`` for an opaque color, else ``#rrggbbaa`` with the opacity scaled to 0..255.
+		:returns: The color as a hexadecimal color string (:meth:`ToHex`).
 		"""
-		if self._alpha == 1.0:
-			return f"#{self._red:02x}{self._green:02x}{self._blue:02x}"
-
-		return f"#{self._red:02x}{self._green:02x}{self._blue:02x}{round(self._alpha * 255):02x}"
+		return self.ToHex()
 
 
 @export
@@ -267,7 +307,7 @@ class Stroke(metaclass=ExtendedType, slots=True):
 		Initializes a stroke from its width, color and pattern.
 
 		:param width:       Width of the line, in the unit of the coordinates.
-		:param color:       Color of the line.
+		:param color:       Color of the line, in any color system.
 		:param lineStyle:   Optional, pattern of the line. Default: ``LineStyle.Solid``.
 		:raises ValueError: If parameter 'width' is None.
 		:raises TypeError:  If parameter 'width' is not of type :class:`float` or :class:`int`.
@@ -392,7 +432,7 @@ class Fill(metaclass=ExtendedType, slots=True):
 		"""
 		Initializes a fill from its color.
 
-		:param color:       Color of the area.
+		:param color:       Color of the area, in any color system.
 		:raises ValueError: If parameter 'color' is None.
 		:raises TypeError:  If parameter 'color' is not of type :class:`Color`.
 		"""

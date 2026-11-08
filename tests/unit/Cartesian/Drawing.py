@@ -31,7 +31,8 @@
 """
 Unit tests for :mod:`pyTooling.Cartesian2D.Drawing` - colors, strokes, fills and fonts.
 """
-from pyTooling.Cartesian2D.Drawing import LineStyle, Color, Stroke, Fill, Font
+from pyTooling.Cartesian2D.Drawing import LineStyle, Color, RGBAColor, Stroke, Fill, Font
+from pyTooling.MetaClasses         import AbstractClassError
 from pyTooling.Testing             import Testcase
 
 
@@ -41,68 +42,103 @@ if __name__ == "__main__":  # pragma: no cover
 	exit(1)
 
 
+class GrayColor(Color):
+	"""A color of another color system: a gray level from 0 to 255."""
+
+	_level: int  #: Gray level, 0 to 255.
+
+	def __init__(self, level: int) -> None:
+		super().__init__()
+
+		self._level = level
+
+	def ToRGBA(self) -> RGBAColor:
+		return RGBAColor(self._level, self._level, self._level)
+
+
 class Colors(Testcase):
 	def test_Color(self) -> None:
-		color = Color(255, 128, 0)
+		with self.assertRaises(AbstractClassError) as context:
+			_ = Color()
+
+		self.assertEqual(
+			"Class 'Color' is abstract. The following methods: 'ToRGBA' need to be overridden in a derived class.",
+			str(context.exception)
+		)
+
+	def test_Color_Derived(self) -> None:
+		color = GrayColor(128)
+
+		self.assertIsInstance(color, Color)
+		self.assertEqual(RGBAColor(128, 128, 128), color.ToRGBA())
+
+	def test_RGBAColor(self) -> None:
+		color = RGBAColor(255, 128, 0)
 
 		self.assertEqual(255, color.Red)
 		self.assertEqual(128, color.Green)
 		self.assertEqual(0, color.Blue)
 		self.assertEqual(1.0, color.Alpha)
+		self.assertIsInstance(color, Color)
 
-	def test_Color_Alpha(self) -> None:
-		color = Color(0, 0, 0, 0.25)
+	def test_RGBAColor_ToRGBA(self) -> None:
+		color = RGBAColor(255, 128, 0)
+
+		self.assertIs(color, color.ToRGBA())
+
+	def test_RGBAColor_Alpha(self) -> None:
+		color = RGBAColor(0, 0, 0, 0.25)
 
 		self.assertEqual(0.25, color.Alpha)
 
-	def test_Color_Transparent(self) -> None:
-		color = Color(0, 0, 0, 0)
+	def test_RGBAColor_Transparent(self) -> None:
+		color = RGBAColor(0, 0, 0, 0)
 
 		self.assertEqual(0, color.Alpha)
 
-	def test_Color_RedNone(self) -> None:
+	def test_RGBAColor_RedNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Color(None, 0, 0)
+			_ = RGBAColor(None, 0, 0)
 
 		self.assertEqual("Parameter 'red' is None.", str(context.exception))
 
-	def test_Color_GreenFloat(self) -> None:
+	def test_RGBAColor_GreenFloat(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Color(0, 0.5, 0)
+			_ = RGBAColor(0, 0.5, 0)
 
 		self.assertEqual("Parameter 'green' is not of type 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'float'."], context.exception.__notes__)
 
-	def test_Color_BlueRange(self) -> None:
+	def test_RGBAColor_BlueRange(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Color(0, 0, 256)
+			_ = RGBAColor(0, 0, 256)
 
 		self.assertEqual("Parameter 'blue' is out of range 0..255.", str(context.exception))
 		self.assertListEqual(["Got value '256'."], context.exception.__notes__)
 
-	def test_Color_RedNegative(self) -> None:
+	def test_RGBAColor_RedNegative(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Color(-1, 0, 0)
+			_ = RGBAColor(-1, 0, 0)
 
 		self.assertEqual("Parameter 'red' is out of range 0..255.", str(context.exception))
 		self.assertListEqual(["Got value '-1'."], context.exception.__notes__)
 
-	def test_Color_AlphaNone(self) -> None:
+	def test_RGBAColor_AlphaNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Color(0, 0, 0, None)
+			_ = RGBAColor(0, 0, 0, None)
 
 		self.assertEqual("Parameter 'alpha' is None.", str(context.exception))
 
-	def test_Color_AlphaStr(self) -> None:
+	def test_RGBAColor_AlphaStr(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Color(0, 0, 0, "0.5")
+			_ = RGBAColor(0, 0, 0, "0.5")
 
 		self.assertEqual("Parameter 'alpha' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
-	def test_Color_AlphaRange(self) -> None:
+	def test_RGBAColor_AlphaRange(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Color(0, 0, 0, 1.5)
+			_ = RGBAColor(0, 0, 0, 1.5)
 
 		self.assertEqual("Parameter 'alpha' is out of range 0.0..1.0.", str(context.exception))
 		self.assertListEqual(["Got value '1.5'."], context.exception.__notes__)
@@ -110,41 +146,41 @@ class Colors(Testcase):
 
 class ColorParsing(Testcase):
 	def test_RGB(self) -> None:
-		color = Color.Parse("#ff8000")
+		color = RGBAColor.Parse("#ff8000")
 
-		self.assertEqual(Color(255, 128, 0), color)
+		self.assertEqual(RGBAColor(255, 128, 0), color)
 
 	def test_RGB_UpperCase(self) -> None:
-		color = Color.Parse("#FF8000")
+		color = RGBAColor.Parse("#FF8000")
 
-		self.assertEqual(Color(255, 128, 0), color)
+		self.assertEqual(RGBAColor(255, 128, 0), color)
 
 	def test_RGBA(self) -> None:
-		color = Color.Parse("#ff800000")
+		color = RGBAColor.Parse("#ff800000")
 
-		self.assertEqual(Color(255, 128, 0, 0.0), color)
+		self.assertEqual(RGBAColor(255, 128, 0, 0.0), color)
 
 	def test_RGBA_Opaque(self) -> None:
-		color = Color.Parse("#ff8000ff")
+		color = RGBAColor.Parse("#ff8000ff")
 
 		self.assertEqual(1.0, color.Alpha)
 
 	def test_None(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Color.Parse(None)
+			_ = RGBAColor.Parse(None)
 
 		self.assertEqual("Parameter 'value' is None.", str(context.exception))
 
 	def test_int(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Color.Parse(0xff8000)
+			_ = RGBAColor.Parse(0xff8000)
 
 		self.assertEqual("Parameter 'value' is not of type 'str'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 	def test_NoHash(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Color.Parse("ff8000a")
+			_ = RGBAColor.Parse("ff8000a")
 
 		self.assertEqual("Parameter 'value' is not of the form '#rrggbb' or '#rrggbbaa'.", str(context.exception))
 		self.assertListEqual(["Got value 'ff8000a'."], context.exception.__notes__)
@@ -152,14 +188,14 @@ class ColorParsing(Testcase):
 	def test_Short(self) -> None:
 		"""The 3-digit form of CSS isn't supported."""
 		with self.assertRaises(ValueError) as context:
-			_ = Color.Parse("#f80")
+			_ = RGBAColor.Parse("#f80")
 
 		self.assertEqual("Parameter 'value' is not of the form '#rrggbb' or '#rrggbbaa'.", str(context.exception))
 		self.assertListEqual(["Got value '#f80'."], context.exception.__notes__)
 
 	def test_NotHexadecimal(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Color.Parse("#ff800g")
+			_ = RGBAColor.Parse("#ff800g")
 
 		self.assertEqual("Parameter 'value' is not of the form '#rrggbb' or '#rrggbbaa'.", str(context.exception))
 		self.assertListEqual(["Got value '#ff800g'."], context.exception.__notes__)
@@ -167,17 +203,17 @@ class ColorParsing(Testcase):
 	def test_Underscore(self) -> None:
 		"""Digit separators, which :func:`int` accepts, aren't hexadecimal digits."""
 		with self.assertRaises(ValueError):
-			_ = Color.Parse("#f_8000")
+			_ = RGBAColor.Parse("#f_8000")
 
 	def test_RoundTrip(self) -> None:
 		for value in ("#000000", "#ffffff", "#1a2b3c", "#1a2b3c80", "#1a2b3c00"):
 			with self.subTest(value=value):
-				self.assertEqual(value, str(Color.Parse(value)))
+				self.assertEqual(value, str(RGBAColor.Parse(value)))
 
 
 class Strokes(Testcase):
 	def test_Stroke(self) -> None:
-		color =  Color(0, 0, 0)
+		color =  RGBAColor(0, 0, 0)
 		stroke = Stroke(1.5, color)
 
 		self.assertEqual(1.5, stroke.Width)
@@ -185,26 +221,32 @@ class Strokes(Testcase):
 		self.assertIs(LineStyle.Solid, stroke.LineStyle)
 
 	def test_Stroke_Dashed(self) -> None:
-		stroke = Stroke(1, Color(0, 0, 0), LineStyle.Dashed)
+		stroke = Stroke(1, RGBAColor(0, 0, 0), LineStyle.Dashed)
 
 		self.assertIs(LineStyle.Dashed, stroke.LineStyle)
 
+	def test_Stroke_GrayColor(self) -> None:
+		color =  GrayColor(64)
+		stroke = Stroke(1, color)
+
+		self.assertIs(color, stroke.Color)
+
 	def test_Stroke_WidthNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Stroke(None, Color(0, 0, 0))
+			_ = Stroke(None, RGBAColor(0, 0, 0))
 
 		self.assertEqual("Parameter 'width' is None.", str(context.exception))
 
 	def test_Stroke_WidthStr(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Stroke("1", Color(0, 0, 0))
+			_ = Stroke("1", RGBAColor(0, 0, 0))
 
 		self.assertEqual("Parameter 'width' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_Stroke_WidthZero(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Stroke(0, Color(0, 0, 0))
+			_ = Stroke(0, RGBAColor(0, 0, 0))
 
 		self.assertEqual("Parameter 'width' isn't positive.", str(context.exception))
 		self.assertListEqual(["Got value '0'."], context.exception.__notes__)
@@ -224,19 +266,25 @@ class Strokes(Testcase):
 
 	def test_Stroke_LineStyleNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Stroke(1, Color(0, 0, 0), None)
+			_ = Stroke(1, RGBAColor(0, 0, 0), None)
 
 		self.assertEqual("Parameter 'lineStyle' is None.", str(context.exception))
 
 	def test_Stroke_LineStyleInt(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Stroke(1, Color(0, 0, 0), 1)
+			_ = Stroke(1, RGBAColor(0, 0, 0), 1)
 
 		self.assertEqual("Parameter 'lineStyle' is not of type 'LineStyle'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 	def test_Fill(self) -> None:
-		color = Color(0, 0, 255)
+		color = RGBAColor(0, 0, 255)
+		fill =  Fill(color)
+
+		self.assertIs(color, fill.Color)
+
+	def test_Fill_GrayColor(self) -> None:
+		color = GrayColor(64)
 		fill =  Fill(color)
 
 		self.assertIs(color, fill.Color)
@@ -325,48 +373,59 @@ class Fonts(Testcase):
 
 
 class Comparison(Testcase):
-	def test_Color(self) -> None:
-		self.assertTrue(Color(1, 2, 3) == Color(1, 2, 3, 1.0))
-		self.assertFalse(Color(1, 2, 3) == Color(1, 2, 3, 0.5))
-		self.assertTrue(Color(1, 2, 3) != Color(1, 2, 4))
-		self.assertFalse(Color(1, 2, 3) != Color(1, 2, 3))
+	def test_RGBAColor(self) -> None:
+		self.assertTrue(RGBAColor(1, 2, 3) == RGBAColor(1, 2, 3, 1.0))
+		self.assertFalse(RGBAColor(1, 2, 3) == RGBAColor(1, 2, 3, 0.5))
+		self.assertTrue(RGBAColor(1, 2, 3) != RGBAColor(1, 2, 4))
+		self.assertFalse(RGBAColor(1, 2, 3) != RGBAColor(1, 2, 3))
 
-	def test_Color_Hash(self) -> None:
-		self.assertEqual(1, len({Color(1, 2, 3), Color(1, 2, 3), Color.Parse("#010203")}))
+	def test_RGBAColor_Hash(self) -> None:
+		self.assertEqual(1, len({RGBAColor(1, 2, 3), RGBAColor(1, 2, 3), RGBAColor.Parse("#010203")}))
 
-	def test_Color_EqualStr(self) -> None:
+	def test_RGBAColor_EqualStr(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Color(0, 0, 0) == "#000000"
+			_ = RGBAColor(0, 0, 0) == "#000000"
 
 		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
 		self.assertListEqual(
-			["Got type 'str'.", "Supported types for second operand: Color"],
+			["Got type 'str'.", "Supported types for second operand: RGBAColor"],
 			context.exception.__notes__
 		)
 
-	def test_Color_UnequalStr(self) -> None:
+	def test_RGBAColor_UnequalStr(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Color(0, 0, 0) != "#000000"
+			_ = RGBAColor(0, 0, 0) != "#000000"
 
 		self.assertEqual("Second operand is not supported by != operator.", str(context.exception))
 		self.assertListEqual(
-			["Got type 'str'.", "Supported types for second operand: Color"],
+			["Got type 'str'.", "Supported types for second operand: RGBAColor"],
+			context.exception.__notes__
+		)
+
+	def test_RGBAColor_EqualGrayColor(self) -> None:
+		"""Colors of different color systems aren't compared."""
+		with self.assertRaises(TypeError) as context:
+			_ = RGBAColor(64, 64, 64) == GrayColor(64)
+
+		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
+		self.assertListEqual(
+			[f"Got type '{GrayColor.__module__}.GrayColor'.", "Supported types for second operand: RGBAColor"],
 			context.exception.__notes__
 		)
 
 	def test_Stroke(self) -> None:
-		self.assertTrue(Stroke(1, Color(0, 0, 0)) == Stroke(1.0, Color(0, 0, 0), LineStyle.Solid))
-		self.assertFalse(Stroke(1, Color(0, 0, 0)) == Stroke(1, Color(0, 0, 0), LineStyle.Dotted))
-		self.assertTrue(Stroke(1, Color(0, 0, 0)) != Stroke(2, Color(0, 0, 0)))
-		self.assertTrue(Stroke(1, Color(0, 0, 0)) != Stroke(1, Color(0, 0, 1)))
-		self.assertFalse(Stroke(1, Color(0, 0, 0)) != Stroke(1, Color(0, 0, 0)))
+		self.assertTrue(Stroke(1, RGBAColor(0, 0, 0)) == Stroke(1.0, RGBAColor(0, 0, 0), LineStyle.Solid))
+		self.assertFalse(Stroke(1, RGBAColor(0, 0, 0)) == Stroke(1, RGBAColor(0, 0, 0), LineStyle.Dotted))
+		self.assertTrue(Stroke(1, RGBAColor(0, 0, 0)) != Stroke(2, RGBAColor(0, 0, 0)))
+		self.assertTrue(Stroke(1, RGBAColor(0, 0, 0)) != Stroke(1, RGBAColor(0, 0, 1)))
+		self.assertFalse(Stroke(1, RGBAColor(0, 0, 0)) != Stroke(1, RGBAColor(0, 0, 0)))
 
 	def test_Stroke_Hash(self) -> None:
-		self.assertEqual(1, len({Stroke(1, Color(0, 0, 0)), Stroke(1, Color(0, 0, 0))}))
+		self.assertEqual(1, len({Stroke(1, RGBAColor(0, 0, 0)), Stroke(1, RGBAColor(0, 0, 0))}))
 
 	def test_Stroke_EqualFill(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Stroke(1, Color(0, 0, 0)) == Fill(Color(0, 0, 0))
+			_ = Stroke(1, RGBAColor(0, 0, 0)) == Fill(RGBAColor(0, 0, 0))
 
 		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
 		self.assertListEqual(
@@ -376,7 +435,7 @@ class Comparison(Testcase):
 
 	def test_Stroke_UnequalNone(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Stroke(1, Color(0, 0, 0)) != None
+			_ = Stroke(1, RGBAColor(0, 0, 0)) != None
 
 		self.assertEqual("Second operand is not supported by != operator.", str(context.exception))
 		self.assertListEqual(
@@ -385,31 +444,31 @@ class Comparison(Testcase):
 		)
 
 	def test_Fill(self) -> None:
-		self.assertTrue(Fill(Color(0, 0, 255)) == Fill(Color(0, 0, 255)))
-		self.assertFalse(Fill(Color(0, 0, 255)) == Fill(Color(0, 0, 254)))
-		self.assertTrue(Fill(Color(0, 0, 255)) != Fill(Color(0, 0, 255, 0.5)))
-		self.assertFalse(Fill(Color(0, 0, 255)) != Fill(Color(0, 0, 255)))
+		self.assertTrue(Fill(RGBAColor(0, 0, 255)) == Fill(RGBAColor(0, 0, 255)))
+		self.assertFalse(Fill(RGBAColor(0, 0, 255)) == Fill(RGBAColor(0, 0, 254)))
+		self.assertTrue(Fill(RGBAColor(0, 0, 255)) != Fill(RGBAColor(0, 0, 255, 0.5)))
+		self.assertFalse(Fill(RGBAColor(0, 0, 255)) != Fill(RGBAColor(0, 0, 255)))
 
 	def test_Fill_Hash(self) -> None:
-		self.assertEqual(1, len({Fill(Color(0, 0, 255)), Fill(Color(0, 0, 255))}))
+		self.assertEqual(1, len({Fill(RGBAColor(0, 0, 255)), Fill(RGBAColor(0, 0, 255))}))
 
-	def test_Fill_EqualColor(self) -> None:
+	def test_Fill_EqualRGBAColor(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Fill(Color(0, 0, 255)) == Color(0, 0, 255)
+			_ = Fill(RGBAColor(0, 0, 255)) == RGBAColor(0, 0, 255)
 
 		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
 		self.assertListEqual(
-			["Got type 'pyTooling.Cartesian2D.Drawing.Color'.", "Supported types for second operand: Fill"],
+			["Got type 'pyTooling.Cartesian2D.Drawing.RGBAColor'.", "Supported types for second operand: Fill"],
 			context.exception.__notes__
 		)
 
-	def test_Fill_UnequalColor(self) -> None:
+	def test_Fill_UnequalRGBAColor(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Fill(Color(0, 0, 255)) != Color(0, 0, 255)
+			_ = Fill(RGBAColor(0, 0, 255)) != RGBAColor(0, 0, 255)
 
 		self.assertEqual("Second operand is not supported by != operator.", str(context.exception))
 		self.assertListEqual(
-			["Got type 'pyTooling.Cartesian2D.Drawing.Color'.", "Supported types for second operand: Fill"],
+			["Got type 'pyTooling.Cartesian2D.Drawing.RGBAColor'.", "Supported types for second operand: Fill"],
 			context.exception.__notes__
 		)
 
@@ -445,17 +504,17 @@ class Comparison(Testcase):
 
 
 class Immutability(Testcase):
-	def test_Color(self) -> None:
+	def test_RGBAColor(self) -> None:
 		with self.assertRaises(AttributeError):
-			Color(0, 0, 0).Red = 1
+			RGBAColor(0, 0, 0).Red = 1
 
 	def test_Stroke(self) -> None:
 		with self.assertRaises(AttributeError):
-			Stroke(1, Color(0, 0, 0)).Width = 2
+			Stroke(1, RGBAColor(0, 0, 0)).Width = 2
 
 	def test_Fill(self) -> None:
 		with self.assertRaises(AttributeError):
-			Fill(Color(0, 0, 0)).Color = Color(1, 1, 1)
+			Fill(RGBAColor(0, 0, 0)).Color = RGBAColor(1, 1, 1)
 
 	def test_Font(self) -> None:
 		with self.assertRaises(AttributeError):
@@ -463,22 +522,28 @@ class Immutability(Testcase):
 
 
 class Representation(Testcase):
-	def test_Color_repr(self) -> None:
-		self.assertEqual("Color(255, 128, 0, 1.0)", repr(Color(255, 128, 0)))
+	def test_RGBAColor_repr(self) -> None:
+		self.assertEqual("RGBAColor(255, 128, 0, 1.0)", repr(RGBAColor(255, 128, 0)))
 
-	def test_Color_str(self) -> None:
-		self.assertEqual("#ff8000", str(Color(255, 128, 0)))
+	def test_RGBAColor_str(self) -> None:
+		self.assertEqual("#ff8000", str(RGBAColor(255, 128, 0)))
 
-	def test_Color_str_Alpha(self) -> None:
-		self.assertEqual("#ff800080", str(Color(255, 128, 0, 0.5)))
+	def test_RGBAColor_str_Alpha(self) -> None:
+		self.assertEqual("#ff800080", str(RGBAColor(255, 128, 0, 0.5)))
+
+	def test_RGBAColor_ToHex(self) -> None:
+		self.assertEqual("#ff8000", RGBAColor(255, 128, 0).ToHex())
+
+	def test_RGBAColor_ToHex_Alpha(self) -> None:
+		self.assertEqual("#ff800080", RGBAColor(255, 128, 0, 0.5).ToHex())
 
 	def test_Stroke_repr(self) -> None:
-		stroke = Stroke(2, Color(0, 0, 0), LineStyle.Dashed)
+		stroke = Stroke(2, RGBAColor(0, 0, 0), LineStyle.Dashed)
 
-		self.assertEqual("Stroke(2, Color(0, 0, 0, 1.0), LineStyle.Dashed)", repr(stroke))
+		self.assertEqual("Stroke(2, RGBAColor(0, 0, 0, 1.0), LineStyle.Dashed)", repr(stroke))
 
 	def test_Fill_repr(self) -> None:
-		self.assertEqual("Fill(Color(0, 0, 255, 0.5))", repr(Fill(Color(0, 0, 255, 0.5))))
+		self.assertEqual("Fill(RGBAColor(0, 0, 255, 0.5))", repr(Fill(RGBAColor(0, 0, 255, 0.5))))
 
 	def test_Font_repr(self) -> None:
 		self.assertEqual("Font('monospace', 10, bold=True, italic=False)", repr(Font("monospace", 10, bold=True)))
