@@ -38,7 +38,7 @@ from math                         import isclose, pi, sqrt
 from pyTooling.Cartesian3D        import Base3D, Element3D, Origin3D, Point3D, Offset3D, Size3D, BoundingBox3D, \
                                          Segment3D, LineSegment3D, Alignment3D, Axis3D, AxisAlignedPlane3D
 from pyTooling.Cartesian3D.Groups import Group3D
-from pyTooling.Cartesian2D        import Alignment2D, Axis2D, AxisAlignedLine2D, AlreadyOwnedError, DuplicatePointError
+from pyTooling.Cartesian2D        import Alignment2D, VerticalLine2D, AlreadyOwnedError, DuplicatePointError
 from pyTooling.Exceptions         import AlreadyInHierarchyError, DuplicateElementError, InvalidOperationError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
@@ -2571,11 +2571,11 @@ class AxisAlignedPlane(Testcase):
 	def test_EqualLine(self) -> None:
 		"""A 2D line isn't a 3D plane."""
 		with self.assertRaises(TypeError) as context:
-			_ = AxisAlignedPlane3D(Axis3D.X, 5) == AxisAlignedLine2D(Axis2D.X, 5)
+			_ = AxisAlignedPlane3D(Axis3D.X, 5) == VerticalLine2D(5)
 
 		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
 		self.assertListEqual(
-			["Got type 'pyTooling.Cartesian2D.AxisAlignedLine2D'.", "Supported types for second operand: AxisAlignedPlane3D"],
+			["Got type 'pyTooling.Cartesian2D.VerticalLine2D'.", "Supported types for second operand: AxisAlignedPlane3D"],
 			context.exception.__notes__
 		)
 
@@ -2759,10 +2759,10 @@ class MirroringAtPlane(Testcase):
 		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
 
 		with self.assertRaises(TypeError) as context:
-			line.MirrorAt(AxisAlignedLine2D(Axis2D.X, 5))
+			line.MirrorAt(VerticalLine2D(5))
 
 		self.assertEqual("Parameter 'plane' is not of type 'AxisAlignedPlane3D'.", str(context.exception))
-		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.AxisAlignedLine2D'."], context.exception.__notes__)
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.VerticalLine2D'."], context.exception.__notes__)
 		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
 
 

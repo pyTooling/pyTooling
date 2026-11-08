@@ -79,18 +79,6 @@ class Alignment2D(Enum):
 
 
 @export
-class Axis2D(Enum):
-	"""
-	Coordinate axis of a 2D cartesian coordinate system.
-
-	An :class:`AxisAlignedLine2D` uses it to name the coordinate all its points have in common.
-	"""
-
-	X = 0  #: The x-axis.
-	Y = 1  #: The y-axis.
-
-
-@export
 class SweepDirection(Enum):
 	"""
 	Direction, in which an arc sweeps from its start point to its end point.
@@ -833,9 +821,9 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		:param twiceAxis: Twice the y-coordinate of the axis.
 		"""
 
-	def MirrorAt(self, line: AxisAlignedLine2D[Coordinate]) -> None:
+	def MirrorAt(self, line: Line2D[Coordinate]) -> None:
 		r"""
-		Mirror the element at an axis-aligned line (inplace).
+		Mirror the element at a line (inplace).
 
 		The line is in absolute coordinates, relative to the origin, so elements of different groups can be mirrored at
 		the same line. At a vertical line ``x = a``, every absolute x-coordinate ``x`` becomes ``2a - x``; at a horizontal
@@ -855,24 +843,18 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		                       |
 		        before                   after
 
-		:param line:        The line to mirror at.
+		:param line:        The line to mirror at, like a :class:`VerticalLine2D` or a :class:`HorizontalLine2D`.
 		:raises ValueError: If parameter 'line' is None.
-		:raises TypeError:  If parameter 'line' is not of type :class:`AxisAlignedLine2D`.
+		:raises TypeError:  If parameter 'line' is not of type :class:`Line2D`.
 		"""
 		if line is None:
 			raise ValueError("Parameter 'line' is None.")
-		elif not isinstance(line, AxisAlignedLine2D):
-			ex = TypeError("Parameter 'line' is not of type 'AxisAlignedLine2D'.")
+		elif not isinstance(line, Line2D):
+			ex = TypeError("Parameter 'line' is not of type 'Line2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(line)}'.")
 			raise ex
 
-		frame = self.Frame
-		if line._axis is Axis2D.X:
-			position = line._position if frame is None else line._position - frame.AbsoluteOffset._xOffset
-			self._MirrorX(2 * position)
-		else:
-			position = line._position if frame is None else line._position - frame.AbsoluteOffset._yOffset
-			self._MirrorY(2 * position)
+		line._MirrorElement(self)
 
 	def MoveTo(self, parent: Nullable[Union[Group2D, Canvas2D]], keepPosition: bool = True) -> None:
 		"""
@@ -1769,61 +1751,67 @@ class BoundingBox2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 
 @export
-class AxisAlignedLine2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+@abstractclass
+class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""
-	An axis-aligned 2D line: the vertical line ``x = c`` or the horizontal line ``y = c``.
+	Abstract base-class of 2D lines, which are infinite in both directions, unlike a :class:`LineSegment2D`.
 
-	The line is in absolute coordinates, relative to the origin. It is a value: it can't be changed after creation,
-	compares by value and is hashable.
+	A line is in absolute coordinates, relative to the origin, so elements of different groups can be mirrored at the
+	same line with :meth:`Element2D.MirrorAt`. A line is a value: it can't be changed after creation, compares by value
+	and is hashable.
 	"""
 
-	_axis:     Axis2D      #: The coordinate axis, whose coordinate is the same for all points of the line.
-	_position: Coordinate  #: The coordinate of all points of the line on that axis.
-
-	def __init__(self, axis: Axis2D, position: Coordinate) -> None:
+	@abstractmethod
+	def _MirrorElement(self, element: Element2D[Coordinate]) -> None:
 		"""
-		Initializes an axis-aligned 2D line from the axis and the coordinate all its points have on that axis.
+		Mirror an element at this line (inplace).
 
-		:param axis:        The coordinate axis: ``Axis2D.X`` for the vertical line ``x = position``, ``Axis2D.Y`` for the
-		                    horizontal line ``y = position``.
-		:param position:    The coordinate of all points of the line on that axis.
-		:raises ValueError: If parameter 'axis' is None.
-		:raises TypeError:  If parameter 'axis' is not of type :class:`Axis2D`.
-		:raises ValueError: If parameter 'position' is None.
-		:raises TypeError:  If parameter 'position' is not of type :class:`float` or :class:`int`.
+		:param element: The element to mirror.
 		"""
-		if axis is None:
-			raise ValueError("Parameter 'axis' is None.")
-		elif not isinstance(axis, Axis2D):
-			ex = TypeError("Parameter 'axis' is not of type 'Axis2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(axis)}'.")
+
+
+@export
+class VerticalLine2D(Line2D[Coordinate], Generic[Coordinate]):
+	"""
+	A vertical 2D line: all its points have the same x-coordinate, the line ``x = c``.
+	"""
+
+	_x: Coordinate  #: The x-coordinate of all points of the line.
+
+	def __init__(self, x: Coordinate) -> None:
+		"""
+		Initializes a vertical 2D line from the x-coordinate all its points have.
+
+		:param x:           The x-coordinate of all points of the line.
+		:raises ValueError: If parameter 'x' is None.
+		:raises TypeError:  If parameter 'x' is not of type :class:`float` or :class:`int`.
+		"""
+		if x is None:
+			raise ValueError("Parameter 'x' is None.")
+		elif not isinstance(x, (int, float)):
+			ex = TypeError("Parameter 'x' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(x)}'.")
 			raise ex
 
-		if position is None:
-			raise ValueError("Parameter 'position' is None.")
-		elif not isinstance(position, (int, float)):
-			ex = TypeError("Parameter 'position' is not of type 'float' or 'int'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(position)}'.")
-			raise ex
-
-		self._axis =     axis
-		self._position = position
+		self._x = x
 
 	@classmethod
 	def FromElement(cls, element: Element2D[Coordinate], alignment: Alignment2D) -> Self:
 		"""
-		Create the line through an edge or the center of an element's absolute bounding box.
+		Create the vertical line through an edge or the center of an element's absolute bounding box.
 
-		``MinX``, ``CenterX`` and ``MaxX`` create a vertical line, ``MinY``, ``CenterY`` and ``MaxY`` a horizontal line. The
-		position of a center is a :class:`float`, as in :attr:`BoundingBox2D.Center`.
+		The x-coordinate of a center is a :class:`float`, as in :attr:`BoundingBox2D.Center`.
 
 		:param element:     The element, whose :attr:`~Element2D.AbsoluteBoundingBox` the line runs through.
-		:param alignment:   The edge or center of the bounding box.
-		:returns:           A new axis-aligned line.
+		:param alignment:   The edge or center of the bounding box: ``MinX``, ``CenterX`` or ``MaxX``.
+		:returns:           A new vertical line.
 		:raises ValueError: If parameter 'element' is None.
 		:raises TypeError:  If parameter 'element' is not of type :class:`Element2D`.
 		:raises ValueError: If parameter 'alignment' is None.
 		:raises TypeError:  If parameter 'alignment' is not of type :class:`Alignment2D`.
+		:raises ValueError: If parameter 'alignment' is not ``Alignment2D.MinX``, ``Alignment2D.CenterX`` or
+		                    ``Alignment2D.MaxX``. |br|
+		                    Use :meth:`HorizontalLine2D.FromElement` for the other alignments.
 		"""
 		if element is None:
 			raise ValueError("Parameter 'element' is None.")
@@ -1838,98 +1826,415 @@ class AxisAlignedLine2D(Generic[Coordinate], metaclass=ExtendedType, slots=True)
 			ex = TypeError("Parameter 'alignment' is not of type 'Alignment2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
 			raise ex
+		elif alignment not in (Alignment2D.MinX, Alignment2D.CenterX, Alignment2D.MaxX):
+			ex = ValueError("Parameter 'alignment' is not Alignment2D.MinX, Alignment2D.CenterX or Alignment2D.MaxX.")
+			ex.add_note(f"Got value '{alignment}'.")
+			ex.add_note("Use 'HorizontalLine2D.FromElement' for the other alignments.")
+			raise ex
 
 		box = element.AbsoluteBoundingBox
 		if alignment is Alignment2D.MinX:
-			return cls(Axis2D.X, box._minX)
+			return cls(box._minX)
 		elif alignment is Alignment2D.CenterX:
-			return cls(Axis2D.X, (box._minX + box._maxX) / 2)
-		elif alignment is Alignment2D.MaxX:
-			return cls(Axis2D.X, box._maxX)
-		elif alignment is Alignment2D.MinY:
-			return cls(Axis2D.Y, box._minY)
-		elif alignment is Alignment2D.CenterY:
-			return cls(Axis2D.Y, (box._minY + box._maxY) / 2)
+			return cls((box._minX + box._maxX) / 2)
 		else:
-			return cls(Axis2D.Y, box._maxY)
+			return cls(box._maxX)
 
 	@readonly
-	def Axis(self) -> Axis2D:
+	def X(self) -> Coordinate:
 		"""
-		Read-only property to access the coordinate axis of the line (:attr:`_axis`).
+		Read-only property to access the x-coordinate of all points of the line (:attr:`_x`).
 
-		All points of the line have the same coordinate on this axis.
-
-		:returns: The axis, whose coordinate is the same for all points of the line.
+		:returns: The x-coordinate of the line.
 		"""
-		return self._axis
+		return self._x
 
-	@readonly
-	def Position(self) -> Coordinate:
+	def _MirrorElement(self, element: Element2D[Coordinate]) -> None:
 		"""
-		Read-only property to access the coordinate of all points of the line on its axis (:attr:`_position`).
+		Mirror an element at this line (inplace), so every absolute x-coordinate ``x`` becomes ``2c - x``.
 
-		:returns: The x-coordinate of a vertical line, the y-coordinate of a horizontal line.
+		:param element: The element to mirror.
 		"""
-		return self._position
+		frame = element.Frame
+		x =     self._x if frame is None else self._x - frame.AbsoluteOffset._xOffset
+		element._MirrorX(2 * x)
 
 	def __eq__(self, other: Any) -> bool:
 		"""
-		Compare two axis-aligned lines for equality.
+		Compare two lines for equality.
 
 		:param other:      Operand to compare against.
-		:returns:          ``True``, if both lines have the same axis and position.
-		:raises TypeError: If the second operand is not of type :class:`AxisAlignedLine2D`.
+		:returns:          ``True``, if both lines are vertical lines with the same x-coordinate.
+		:raises TypeError: If the second operand is not of type :class:`Line2D`.
 		"""
-		if not isinstance(other, AxisAlignedLine2D):
+		if not isinstance(other, Line2D):
 			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: AxisAlignedLine2D")
+			ex.add_note("Supported types for second operand: Line2D")
 			raise ex
 
-		return self._axis is other._axis and self._position == other._position
+		return isinstance(other, VerticalLine2D) and self._x == other._x
 
 	def __ne__(self, other: Any) -> bool:
 		"""
-		Compare two axis-aligned lines for inequality.
+		Compare two lines for inequality.
 
 		:param other:      Operand to compare against.
-		:returns:          ``True``, if the lines differ in axis or position.
-		:raises TypeError: If the second operand is not of type :class:`AxisAlignedLine2D`.
+		:returns:          ``True``, if the other line isn't a vertical line or has another x-coordinate.
+		:raises TypeError: If the second operand is not of type :class:`Line2D`.
 		"""
-		if not isinstance(other, AxisAlignedLine2D):
+		if not isinstance(other, Line2D):
 			ex = TypeError("Second operand is not supported by != operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: AxisAlignedLine2D")
+			ex.add_note("Supported types for second operand: Line2D")
 			raise ex
 
-		return self._axis is not other._axis or self._position != other._position
+		return not isinstance(other, VerticalLine2D) or self._x != other._x
 
 	def __hash__(self) -> int:
 		"""
-		Returns a hash of the line's axis and position, so equal lines have the same hash.
+		Returns a hash of the line's x-coordinate, so equal lines have the same hash.
 
 		:returns: The hash value.
 		"""
-		return hash((self._axis, self._position))
+		return hash(self._x)
 
 	def __repr__(self) -> str:
 		"""
-		Returns the axis-aligned line's string representation.
+		Returns the vertical line's string representation.
 
 		:returns: The string representation of the line.
 		"""
-		return f"AxisAlignedLine2D({self._axis}, {self._position})"
+		return f"VerticalLine2D({self._x})"
 
 	def __str__(self) -> str:
 		"""
-		Returns the axis-aligned line's string equivalent as an equation.
+		Returns the vertical line's string equivalent as an equation.
 
-		The vertical line at 5 returns ``x = 5``.
+		The line at 5 returns ``x = 5``.
 
 		:returns: The equation of the line.
 		"""
-		return f"{self._axis.name.lower()} = {self._position}"
+		return f"x = {self._x}"
+
+
+@export
+class HorizontalLine2D(Line2D[Coordinate], Generic[Coordinate]):
+	"""
+	A horizontal 2D line: all its points have the same y-coordinate, the line ``y = c``.
+	"""
+
+	_y: Coordinate  #: The y-coordinate of all points of the line.
+
+	def __init__(self, y: Coordinate) -> None:
+		"""
+		Initializes a horizontal 2D line from the y-coordinate all its points have.
+
+		:param y:           The y-coordinate of all points of the line.
+		:raises ValueError: If parameter 'y' is None.
+		:raises TypeError:  If parameter 'y' is not of type :class:`float` or :class:`int`.
+		"""
+		if y is None:
+			raise ValueError("Parameter 'y' is None.")
+		elif not isinstance(y, (int, float)):
+			ex = TypeError("Parameter 'y' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
+			raise ex
+
+		self._y = y
+
+	@classmethod
+	def FromElement(cls, element: Element2D[Coordinate], alignment: Alignment2D) -> Self:
+		"""
+		Create the horizontal line through an edge or the center of an element's absolute bounding box.
+
+		The y-coordinate of a center is a :class:`float`, as in :attr:`BoundingBox2D.Center`.
+
+		:param element:     The element, whose :attr:`~Element2D.AbsoluteBoundingBox` the line runs through.
+		:param alignment:   The edge or center of the bounding box: ``MinY``, ``CenterY`` or ``MaxY``.
+		:returns:           A new horizontal line.
+		:raises ValueError: If parameter 'element' is None.
+		:raises TypeError:  If parameter 'element' is not of type :class:`Element2D`.
+		:raises ValueError: If parameter 'alignment' is None.
+		:raises TypeError:  If parameter 'alignment' is not of type :class:`Alignment2D`.
+		:raises ValueError: If parameter 'alignment' is not ``Alignment2D.MinY``, ``Alignment2D.CenterY`` or
+		                    ``Alignment2D.MaxY``. |br|
+		                    Use :meth:`VerticalLine2D.FromElement` for the other alignments.
+		"""
+		if element is None:
+			raise ValueError("Parameter 'element' is None.")
+		elif not isinstance(element, Element2D):
+			ex = TypeError("Parameter 'element' is not of type 'Element2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(element)}'.")
+			raise ex
+
+		if alignment is None:
+			raise ValueError("Parameter 'alignment' is None.")
+		elif not isinstance(alignment, Alignment2D):
+			ex = TypeError("Parameter 'alignment' is not of type 'Alignment2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
+			raise ex
+		elif alignment not in (Alignment2D.MinY, Alignment2D.CenterY, Alignment2D.MaxY):
+			ex = ValueError("Parameter 'alignment' is not Alignment2D.MinY, Alignment2D.CenterY or Alignment2D.MaxY.")
+			ex.add_note(f"Got value '{alignment}'.")
+			ex.add_note("Use 'VerticalLine2D.FromElement' for the other alignments.")
+			raise ex
+
+		box = element.AbsoluteBoundingBox
+		if alignment is Alignment2D.MinY:
+			return cls(box._minY)
+		elif alignment is Alignment2D.CenterY:
+			return cls((box._minY + box._maxY) / 2)
+		else:
+			return cls(box._maxY)
+
+	@readonly
+	def Y(self) -> Coordinate:
+		"""
+		Read-only property to access the y-coordinate of all points of the line (:attr:`_y`).
+
+		:returns: The y-coordinate of the line.
+		"""
+		return self._y
+
+	def _MirrorElement(self, element: Element2D[Coordinate]) -> None:
+		"""
+		Mirror an element at this line (inplace), so every absolute y-coordinate ``y`` becomes ``2c - y``.
+
+		:param element: The element to mirror.
+		"""
+		frame = element.Frame
+		y =     self._y if frame is None else self._y - frame.AbsoluteOffset._yOffset
+		element._MirrorY(2 * y)
+
+	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two lines for equality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if both lines are horizontal lines with the same y-coordinate.
+		:raises TypeError: If the second operand is not of type :class:`Line2D`.
+		"""
+		if not isinstance(other, Line2D):
+			ex = TypeError("Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Line2D")
+			raise ex
+
+		return isinstance(other, HorizontalLine2D) and self._y == other._y
+
+	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two lines for inequality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if the other line isn't a horizontal line or has another y-coordinate.
+		:raises TypeError: If the second operand is not of type :class:`Line2D`.
+		"""
+		if not isinstance(other, Line2D):
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Line2D")
+			raise ex
+
+		return not isinstance(other, HorizontalLine2D) or self._y != other._y
+
+	def __hash__(self) -> int:
+		"""
+		Returns a hash of the line's y-coordinate, so equal lines have the same hash.
+
+		:returns: The hash value.
+		"""
+		return hash(self._y)
+
+	def __repr__(self) -> str:
+		"""
+		Returns the horizontal line's string representation.
+
+		:returns: The string representation of the line.
+		"""
+		return f"HorizontalLine2D({self._y})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the horizontal line's string equivalent as an equation.
+
+		The line at 5 returns ``y = 5``.
+
+		:returns: The equation of the line.
+		"""
+		return f"y = {self._y}"
+
+
+@export
+class Ray2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+	"""
+	A 2D ray: a half-line, which starts at a point and is infinite in one direction.
+
+	The ray is in absolute coordinates, relative to the origin. It stores plain coordinates, so it owns no point of an
+	element. It is a value: it can't be changed after creation, compares by value and is hashable.
+	"""
+
+	_startX:     Coordinate  #: The x-coordinate of the start point.
+	_startY:     Coordinate  #: The y-coordinate of the start point.
+	_directionX: Coordinate  #: The x-component of the direction.
+	_directionY: Coordinate  #: The y-component of the direction.
+
+	def __init__(self, start: Point2D[Coordinate], direction: Offset2D[Coordinate]) -> None:
+		"""
+		Initializes a 2D ray from its start point and its direction.
+
+		The start point is taken in absolute coordinates (a point inside a group is converted), and the direction is
+		copied.
+
+		:param start:       The start point of the ray.
+		:param direction:   The direction of the ray.
+		:raises ValueError: If parameter 'start' is None.
+		:raises TypeError:  If parameter 'start' is not of type :class:`Point2D`.
+		:raises ValueError: If parameter 'direction' is None.
+		:raises TypeError:  If parameter 'direction' is not of type :class:`Offset2D`.
+		:raises ValueError: If parameter 'direction' is a zero offset. |br|
+		                    A ray needs a direction.
+		"""
+		if start is None:
+			raise ValueError("Parameter 'start' is None.")
+		elif not isinstance(start, Point2D):
+			ex = TypeError("Parameter 'start' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
+			raise ex
+
+		if direction is None:
+			raise ValueError("Parameter 'direction' is None.")
+		elif not isinstance(direction, Offset2D):
+			ex = TypeError("Parameter 'direction' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
+			raise ex
+		elif direction._xOffset == 0 and direction._yOffset == 0:
+			ex = ValueError("Parameter 'direction' is a zero offset.")
+			ex.add_note(f"Got offset {direction}.")
+			ex.add_note("A ray needs a direction.")
+			raise ex
+
+		absolute =         start.Absolute
+		self._startX =     absolute._x
+		self._startY =     absolute._y
+		self._directionX = direction._xOffset
+		self._directionY = direction._yOffset
+
+	@readonly
+	def Start(self) -> Point2D[Coordinate]:
+		"""
+		Read-only property to return the start point of the ray.
+
+		:returns: A new 2D-point without owner.
+		"""
+		return Point2D(self._startX, self._startY)
+
+	@readonly
+	def Direction(self) -> Offset2D[Coordinate]:
+		"""
+		Read-only property to return the direction of the ray.
+
+		:returns: A new 2D-offset.
+		"""
+		return Offset2D(self._directionX, self._directionY)
+
+	def PointAt(self, distance: Coordinate) -> Point2D[float]:
+		"""
+		Compute the point of the ray at a distance from its start point.
+
+		:param distance:    The distance from the start point along the direction.
+		:returns:           A new 2D-point without owner.
+		:raises ValueError: If parameter 'distance' is None.
+		:raises TypeError:  If parameter 'distance' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'distance' is negative. |br|
+		                    A point before the start point isn't on the ray.
+		"""
+		if distance is None:
+			raise ValueError("Parameter 'distance' is None.")
+		elif not isinstance(distance, (int, float)):
+			ex = TypeError("Parameter 'distance' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(distance)}'.")
+			raise ex
+		elif distance < 0:
+			ex = ValueError("Parameter 'distance' is negative.")
+			ex.add_note(f"Got value '{distance}'.")
+			ex.add_note("A point before the start point isn't on the ray.")
+			raise ex
+
+		factor = distance / sqrt(self._directionX ** 2 + self._directionY ** 2)
+		return Point2D(
+			self._startX + self._directionX * factor,
+			self._startY + self._directionY * factor
+		)
+
+	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two rays for equality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if both rays have the same start point and the same direction.
+		:raises TypeError: If the second operand is not of type :class:`Ray2D`.
+		"""
+		if not isinstance(other, Ray2D):
+			ex = TypeError("Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Ray2D")
+			raise ex
+
+		return (
+			self._startX == other._startX
+			and self._startY == other._startY
+			and self._directionX == other._directionX
+			and self._directionY == other._directionY
+		)
+
+	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two rays for inequality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if the rays differ in start point or direction.
+		:raises TypeError: If the second operand is not of type :class:`Ray2D`.
+		"""
+		if not isinstance(other, Ray2D):
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Ray2D")
+			raise ex
+
+		return (
+			self._startX != other._startX
+			or self._startY != other._startY
+			or self._directionX != other._directionX
+			or self._directionY != other._directionY
+		)
+
+	def __hash__(self) -> int:
+		"""
+		Returns a hash of the ray's start point and direction, so equal rays have the same hash.
+
+		:returns: The hash value.
+		"""
+		return hash((self._startX, self._startY, self._directionX, self._directionY))
+
+	def __repr__(self) -> str:
+		"""
+		Returns the ray's string representation.
+
+		:returns: The string representation of the ray, its start point and direction.
+		"""
+		return f"Ray2D({self.Start}, {self.Direction})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the ray's string equivalent as a parametric equation.
+
+		The ray from ``(1, 2)`` in direction ``(3, 4)`` returns ``(1, 2) + t * (3, 4), t >= 0``.
+
+		:returns: The equation of the ray.
+		"""
+		return f"{self.Start} + t * {self.Direction}, t >= 0"
 
 
 @export

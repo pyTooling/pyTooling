@@ -34,9 +34,9 @@ Unit tests for :mod:`pyTooling.Cartesian2D.Groups` - groups, canvases, frames, a
 from copy                         import deepcopy
 from math                         import isclose, pi
 
-from pyTooling.Cartesian2D        import Base2D, Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, Axis2D, \
-                                         AxisAlignedLine2D, Element2D, Segment2D, LineSegment2D, AlreadyOwnedError, \
-                                         DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
+from pyTooling.Cartesian2D        import Base2D, Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, Element2D, \
+                                         VerticalLine2D, HorizontalLine2D, Segment2D, LineSegment2D, \
+                                         AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
                                          NotInSameFrameError, GroupCycleError
 from pyTooling.Cartesian2D.Shapes import Polygon, PolyLine, Trapezium, Rectangle, Square, Circle, Ellipse
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection, EmptyGroupError
@@ -1566,7 +1566,7 @@ class Mirroring(Testcase):
 		inner =  Group2D(Offset2D(3, 4), (circle, ))
 		outer =  Group2D(Offset2D(10, 20), (inner, ))
 
-		outer.MirrorAt(AxisAlignedLine2D(Axis2D.X, 20))
+		outer.MirrorAt(VerticalLine2D(20))
 
 		self.assertTupleEqual((30, 20), outer.Offset.ToTuple())
 		self.assertTupleEqual((-3, 4), inner.Offset.ToTuple())
@@ -1579,7 +1579,7 @@ class Mirroring(Testcase):
 		inner =  Group2D(Offset2D(3, 4), (circle, ))
 		outer =  Group2D(Offset2D(10, 20), (inner, ))
 
-		circle.MirrorAt(AxisAlignedLine2D(Axis2D.Y, 0))
+		circle.MirrorAt(HorizontalLine2D(0))
 
 		self.assertTupleEqual((10, 20), outer.Offset.ToTuple())
 		self.assertTupleEqual((3, 4), inner.Offset.ToTuple())
@@ -1592,7 +1592,7 @@ class Mirroring(Testcase):
 		line2 =  LineSegment2D(Point2D(0, 0), Point2D(1, 1))
 		_ =      Group2D(Offset2D(10, 0), (line1, ))
 		_ =      Group2D(Offset2D(0, 5), (line2, ))
-		mirror = AxisAlignedLine2D(Axis2D.X, 0)
+		mirror = VerticalLine2D(0)
 
 		line1.MirrorAt(mirror)
 		line2.MirrorAt(mirror)
@@ -1605,7 +1605,7 @@ class Mirroring(Testcase):
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 		_ =       Group2D(Offset2D(10, 0), (polygon, ))
 
-		polygon.Segments[0].MirrorAt(AxisAlignedLine2D(Axis2D.X, 12))
+		polygon.Segments[0].MirrorAt(VerticalLine2D(12))
 
 		self.assertTupleEqual(((4, 0), (0, 1), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
 
@@ -1613,7 +1613,7 @@ class Mirroring(Testcase):
 		"""A group without children mirrors its offset: the line needs no bounding box."""
 		group = Group2D(Offset2D(1, 2))
 
-		group.MirrorAt(AxisAlignedLine2D(Axis2D.X, 5))
+		group.MirrorAt(VerticalLine2D(5))
 
 		self.assertTupleEqual((9, 2), group.Offset.ToTuple())
 
@@ -1623,7 +1623,7 @@ class Mirroring(Testcase):
 		group =  Group2D(Offset2D(10, 20), (circle, ))
 		canvas = Canvas2D(YAxisDirection.Down, Size2D(400, 300), (group, ))
 
-		circle.MirrorAt(AxisAlignedLine2D(Axis2D.Y, 150))
+		circle.MirrorAt(HorizontalLine2D(150))
 
 		self.assertIs(YAxisDirection.Down, canvas.Direction)
 		self.assertTupleEqual((10, 20), group.Offset.ToTuple())
@@ -1632,7 +1632,7 @@ class Mirroring(Testcase):
 
 	def test_FromElement_Empty(self) -> None:
 		with self.assertRaises(EmptyGroupError) as context:
-			AxisAlignedLine2D.FromElement(Group2D(Offset2D(1, 2)), Alignment2D.MinX)
+			VerticalLine2D.FromElement(Group2D(Offset2D(1, 2)), Alignment2D.MinX)
 
 		self.assertEqual("Group2D has no children.", str(context.exception))
 		self.assertListEqual(["Got Group2D((1, 2), children=0)."], context.exception.__notes__)
