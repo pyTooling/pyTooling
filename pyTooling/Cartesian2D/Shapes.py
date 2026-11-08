@@ -279,6 +279,22 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		return self.Copy()
 
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this polygon for :func:`copy.deepcopy`.
+
+		The copy holds copies of the corners, shared by its edges, and deep copies of the :attr:`Value` and the
+		key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this polygon.
+		"""
+		return self.__class__(
+			self._points,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
 	@readonly
 	def Points(self) -> tuple[Point2D[Coordinate], ...]:
 		"""
@@ -548,6 +564,23 @@ class Trapezium(Polygon[Coordinate], Generic[Coordinate]):
 		:returns: Copy of this trapezium.
 		"""
 		return self.__class__(*self._points, value=self._value, keyValuePairs=self._dict)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this trapezium for :func:`copy.deepcopy`.
+
+		The copy holds copies of the corners, shared by its edges, and deep copies of the :attr:`Value` and the
+		key-value-pairs. A copy of a derived shape, like a :class:`Rectangle`, is of the same class, and its corners are
+		checked again.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this trapezium.
+		"""
+		return self.__class__(
+			*self._points,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
 
 
 @export
@@ -1046,6 +1079,22 @@ class Circle(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		return self.Copy()
 
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this circle for :func:`copy.deepcopy`.
+
+		The copy holds a copy of the center point, and deep copies of the :attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this circle.
+		"""
+		return self.__class__(
+			self._center,
+			self._radius,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
 	@readonly
 	def Radius(self) -> Coordinate:
 		"""
@@ -1203,6 +1252,23 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		:returns: Copy of this ellipse.
 		"""
 		return self.Copy()
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this ellipse for :func:`copy.deepcopy`.
+
+		The copy holds a copy of the center point, and deep copies of the :attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this ellipse.
+		"""
+		return self.__class__(
+			self._center,
+			self._radiusX,
+			self._radiusY,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
 
 	@readonly
 	def RadiusX(self) -> Coordinate:
