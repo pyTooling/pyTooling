@@ -64,6 +64,8 @@ Version 10.x (2026)
      creates the circle through three or more points,
      :meth:`Circle.FromChord() <pyTooling.Cartesian2D.Shapes.Circle.FromChord>`
      the circle through a chord's end points and a point at a height over the chord.
+   * :mod:`pyTooling.Cartesian2D`: :func:`~pyTooling.Cartesian2D.chordPoint` computes the point at a height over a
+     chord, :func:`~pyTooling.Cartesian2D.circumcenter` the center of the circle through three points.
    * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Path` chains line segments, arcs and
      Bezier curves, open or closed; consecutive edges share their joint. An open path grows at both ends with
      :meth:`~pyTooling.Cartesian2D.Shapes.Path.AppendSegment` and
