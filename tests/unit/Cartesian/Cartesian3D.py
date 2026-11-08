@@ -1608,11 +1608,12 @@ class Hierarchy(Testcase):
 		self.assertIsInstance(LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8)), Element3D)
 
 	def test_Slots(self) -> None:
-		"""The parent is a slot of the base-class only."""
+		"""The parent is a slot of the base-class only, value and key-value-pairs are slots of elements only."""
 		self.assertTupleEqual(("_parent", ), Base3D.__slots__)
-		self.assertTupleEqual((), Element3D.__slots__)
-		self.assertNotIn("_parent", Point3D.__slots__)
+		self.assertTupleEqual(("_value", "_dict"), Element3D.__slots__)
+		self.assertTupleEqual(("_x", "_y", "_z"), Point3D.__slots__)
 		self.assertNotIn("_parent", Segment3D.__slots__)
+		self.assertNotIn("_value", Segment3D.__slots__)
 
 
 class Ownership(Testcase):
@@ -2486,3 +2487,94 @@ class Mirroring(Testcase):
 		self.assertEqual("Parameter 'offset' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
+
+
+class ElementData(Testcase):
+	def test_Segment(self) -> None:
+		value =   object()
+		pairs =   {"layer": 1}
+		segment = Segment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, segment.Value)
+		self.assertEqual(1, segment["layer"])
+		self.assertIsNot(pairs, segment._dict)
+
+	def test_Segment_Default(self) -> None:
+		segment = Segment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		self.assertIsNone(segment.Value)
+		self.assertEqual(0, len(segment))
+
+	def test_Segment_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Segment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_LineSegment(self) -> None:
+		value = object()
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), value=value, keyValuePairs={"layer": 1})
+
+		self.assertIs(value, line.Value)
+		self.assertEqual(1, line["layer"])
+
+	def test_LineSegment_Value(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), value=1)
+
+		line.Value = "wire"
+
+		self.assertEqual("wire", line.Value)
+
+	def test_LineSegment_Pairs(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line["layer"] = 1
+		line["net"] =   "clock"
+
+		self.assertEqual(2, len(line))
+		self.assertIn("layer", line)
+		self.assertEqual("clock", line["net"])
+		self.assertEqual("clock", line.get("net"))
+		self.assertIsNone(line.get("width"))
+		self.assertEqual(1.0, line.get("width", 1.0))
+		self.assertListEqual(["layer", "net"], list(line))
+
+		del line["layer"]
+
+		self.assertNotIn("layer", line)
+		self.assertEqual(1, len(line))
+
+	def test_LineSegment_Copy(self) -> None:
+		value = [1, 2]
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), value=value, keyValuePairs={"layer": 1, "nets": ["a"]})
+
+		newLine =          line.Copy()
+		newLine["layer"] = 2
+
+		self.assertIs(value, newLine.Value)
+		self.assertEqual(1, line["layer"])
+		self.assertEqual(2, newLine["layer"])
+		self.assertIs(line["nets"], newLine["nets"])
+
+	def test_LineSegment_copy(self) -> None:
+		value = [1, 2]
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), value=value, keyValuePairs={"layer": 1})
+
+		newLine = copy(line)
+
+		self.assertIs(value, newLine.Value)
+		self.assertEqual(1, newLine["layer"])
+		self.assertIsNot(line._dict, newLine._dict)
+
+	def test_LineSegment_deepcopy(self) -> None:
+		"""A deep copy copies the value and the values of the key-value-pairs too."""
+		value = [1, 2]
+		line =  LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), value=value, keyValuePairs={"nets": ["a"]})
+
+		newLine = deepcopy(line)
+
+		self.assertIsNot(value, newLine.Value)
+		self.assertListEqual([1, 2], newLine.Value)
+		self.assertIsNot(line["nets"], newLine["nets"])
+		self.assertListEqual(["a"], newLine["nets"])
