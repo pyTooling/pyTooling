@@ -29,7 +29,7 @@
 # ==================================================================================================================== #
 #
 """
-Drawable 2D cartesian shapes and their styles: colors, strokes, fills and fonts.
+Drawable 2D cartesian shapes, texts and their styles: colors, strokes, fills and fonts.
 
 A drawable shape is its geometry class from :mod:`pyTooling.Cartesian2D.Shapes` with a style, and has the same name:
 :class:`Rectangle` is a :class:`pyTooling.Cartesian2D.Shapes.Rectangle` with a :class:`Stroke` and a :class:`Fill`.
@@ -47,17 +47,35 @@ of elements.
 from __future__                   import annotations
 
 from enum                         import Enum
-from typing                       import TYPE_CHECKING, Any, Generic, Hashable, Iterable, Mapping, \
+from typing                       import Any, ClassVar, Generic, Hashable, Iterable, Mapping, \
                                          Optional as Nullable, Self, Union
 
 from pyTooling                    import Cartesian2D
 from pyTooling.Decorators         import export, readonly
 from pyTooling.MetaClasses        import ExtendedType, abstractmethod
 from pyTooling.Common             import getFullyQualifiedName
-from pyTooling.Cartesian2D        import Coordinate, Point2D, Shapes
+from pyTooling.Cartesian2D        import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Shapes, \
+                                         AlreadyOwnedError
+from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection
 
-if TYPE_CHECKING:
-	from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D
+
+@export
+class TextAlignment(Enum):
+	"""Horizontal alignment of the lines of a text at the text's position."""
+
+	Left =   0  #: Every line starts at the position.
+	Center = 1  #: Every line is centered on the position.
+	Right =  2  #: Every line ends at the position.
+
+
+@export
+class VerticalAnchor(Enum):
+	"""Vertical point of a text, which is placed at the text's position."""
+
+	Top =      0  #: The top of the text, the top of its first line.
+	Middle =   1  #: The middle of the text, halfway between its top and bottom.
+	Baseline = 2  #: The baseline of the first line.
+	Bottom =   3  #: The bottom of the text, the bottom of its last line.
 
 
 @export
@@ -1262,3 +1280,360 @@ class Circle(Shapes.Circle[Coordinate], StyleMixin, Generic[Coordinate]):
 			value=self._value,
 			keyValuePairs=self._dict
 		)
+
+
+@export
+class Text(Element2D[Coordinate], StyleMixin, Generic[Coordinate]):
+	"""
+	A text of one or more lines, placed at a position.
+
+	The lines are separated by newlines in :attr:`Content`. Each line is aligned at the position's x-coordinate by
+	:attr:`Alignment`, and :attr:`Anchor` names the vertical point of the text at the position's y-coordinate.
+	Consecutive baselines are :attr:`LineHeight` times the font size apart. The glyphs are drawn with :attr:`Fill`, an
+	outline around them with :attr:`Stroke`.
+
+	Top and bottom are those of the canvas holding the text: with the y-axis pointing down, the top of a text has its
+	smallest y-coordinate. Without a canvas, the y-axis points up. Mirroring moves the position only: the glyphs aren't
+	mirrored, and the alignment and the anchor stay.
+
+	The text owns its position point, like a circle owns its center.
+	"""
+
+	_ASCENT: ClassVar[float] = 0.8  #: Height of a line above its baseline, as a factor of the font size.
+
+	_position:   Point2D[Coordinate]  #: Position of the text.
+	_content:    str                  #: The text, lines separated by newlines.
+	_font:       Font                 #: Font of the text.
+	_alignment:  TextAlignment        #: Horizontal alignment of the lines at the position.
+	_anchor:     VerticalAnchor       #: Vertical point of the text at the position.
+	_lineHeight: float                #: Distance of two baselines, as a factor of the font size.
+
+	def __init__(
+		self,
+		position:      Point2D[Coordinate],
+		content:       str,
+		*,
+		copyPoints:    bool = True,
+		font:          Font = Font("sans-serif", 10),
+		alignment:     TextAlignment = TextAlignment.Left,
+		anchor:        VerticalAnchor = VerticalAnchor.Baseline,
+		lineHeight:    float = 1.2,
+		stroke:        Nullable[Stroke] = None,
+		fill:          Nullable[Fill] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a text at a position.
+
+		:param position:           Position of the text.
+		:param content:            The text, lines separated by newlines.
+		:param copyPoints:         Optional, if ``True``, the given position is copied instead of referenced. Default:
+		                           ``True``.
+		:param font:               Optional, font of the text. Default: ``Font("sans-serif", 10)``.
+		:param alignment:          Optional, horizontal alignment of the lines at the position. Default:
+		                           ``TextAlignment.Left``.
+		:param anchor:             Optional, vertical point of the text at the position. Default:
+		                           ``VerticalAnchor.Baseline``.
+		:param lineHeight:         Optional, distance of two baselines, as a factor of the font size. Default: ``1.2``.
+		:param stroke:             Optional, style of the glyphs' outline. Default: ``None``, no outline.
+		:param fill:               Optional, style of the glyphs. Default: ``None``, transparent.
+		:param value:              Optional, value of the text. Default: ``None``.
+		:param keyValuePairs:      Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:             Optional, the group or canvas the text is added to. Default: ``None``, no parent.
+		:raises ValueError:        If parameter 'position' is None.
+		:raises TypeError:         If parameter 'position' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError: If parameter 'position' is owned by another element, while 'copyPoints' is ``False``.
+		                           |br|
+		                           Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:        If parameter 'content' is None.
+		:raises TypeError:         If parameter 'content' is not of type :class:`str`.
+		:raises ValueError:        If parameter 'copyPoints' is None.
+		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises ValueError:        If parameter 'font' is None.
+		:raises TypeError:         If parameter 'font' is not of type :class:`Font`.
+		:raises ValueError:        If parameter 'alignment' is None.
+		:raises TypeError:         If parameter 'alignment' is not of type :class:`TextAlignment`.
+		:raises ValueError:        If parameter 'anchor' is None.
+		:raises TypeError:         If parameter 'anchor' is not of type :class:`VerticalAnchor`.
+		:raises ValueError:        If parameter 'lineHeight' is None.
+		:raises TypeError:         If parameter 'lineHeight' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:        If parameter 'lineHeight' isn't positive.
+		:raises TypeError:         If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:         If parameter 'fill' is not of type :class:`Fill`.
+		:raises TypeError:         If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
+		StyleMixin.__init__(self, stroke=stroke, fill=fill)
+
+		if position is None:
+			raise ValueError("Parameter 'position' is None.")
+		elif not isinstance(position, Point2D):
+			ex = TypeError("Parameter 'position' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(position)}'.")
+			raise ex
+
+		if content is None:
+			raise ValueError("Parameter 'content' is None.")
+		elif not isinstance(content, str):
+			ex = TypeError("Parameter 'content' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(content)}'.")
+			raise ex
+
+		if copyPoints is None:
+			raise ValueError("Parameter 'copyPoints' is None.")
+		elif not isinstance(copyPoints, bool):
+			ex = TypeError("Parameter 'copyPoints' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(copyPoints)}'.")
+			raise ex
+
+		if font is None:
+			raise ValueError("Parameter 'font' is None.")
+		elif not isinstance(font, Font):
+			ex = TypeError("Parameter 'font' is not of type 'Font'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(font)}'.")
+			raise ex
+
+		if alignment is None:
+			raise ValueError("Parameter 'alignment' is None.")
+		elif not isinstance(alignment, TextAlignment):
+			ex = TypeError("Parameter 'alignment' is not of type 'TextAlignment'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
+			raise ex
+
+		if anchor is None:
+			raise ValueError("Parameter 'anchor' is None.")
+		elif not isinstance(anchor, VerticalAnchor):
+			ex = TypeError("Parameter 'anchor' is not of type 'VerticalAnchor'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(anchor)}'.")
+			raise ex
+
+		if lineHeight is None:
+			raise ValueError("Parameter 'lineHeight' is None.")
+		elif not isinstance(lineHeight, (int, float)):
+			ex = TypeError("Parameter 'lineHeight' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(lineHeight)}'.")
+			raise ex
+		elif lineHeight <= 0:
+			ex = ValueError("Parameter 'lineHeight' isn't positive.")
+			ex.add_note(f"Got value '{lineHeight}'.")
+			raise ex
+
+		if not copyPoints and position._parent is not None:
+			ex = AlreadyOwnedError("Point is owned by another element already.")
+			ex.add_note(f"Got point {position} owned by {position._parent!r}.")
+			ex.add_note("Use 'copyPoints=True' to copy the point.")
+			raise ex from ValueError("Parameter 'position' is owned by another element.")
+
+		self._position =         position.Copy() if copyPoints else position
+		self._content =          content
+		self._font =             font
+		self._alignment =        alignment
+		self._anchor =           anchor
+		self._lineHeight =       lineHeight
+		self._position._parent = self
+
+		self.Parent = parent
+
+	@readonly
+	def Position(self) -> Point2D[Coordinate]:
+		"""
+		Read-only property to access the text's position (:attr:`_position`).
+
+		:returns: Position of the text.
+		"""
+		return self._position
+
+	@readonly
+	def Content(self) -> str:
+		"""
+		Read-only property to access the text (:attr:`_content`).
+
+		:returns: The text, lines separated by newlines.
+		"""
+		return self._content
+
+	@readonly
+	def Lines(self) -> tuple[str, ...]:
+		"""
+		Read-only property to return the lines of the text.
+
+		A text without a newline has one line.
+
+		:returns: Tuple of lines, without the newlines.
+		"""
+		return tuple(self._content.split("\n"))
+
+	@readonly
+	def LineCount(self) -> int:
+		"""
+		Read-only property to return the number of lines of the text.
+
+		:returns: Number of lines, at least 1.
+		"""
+		return self._content.count("\n") + 1
+
+	@readonly
+	def Font(self) -> Font:
+		"""
+		Read-only property to access the font of the text (:attr:`_font`).
+
+		:returns: The text's font.
+		"""
+		return self._font
+
+	@readonly
+	def Alignment(self) -> TextAlignment:
+		"""
+		Read-only property to access the horizontal alignment of the lines at the position (:attr:`_alignment`).
+
+		:returns: The lines' alignment.
+		"""
+		return self._alignment
+
+	@readonly
+	def Anchor(self) -> VerticalAnchor:
+		"""
+		Read-only property to access the vertical point of the text at the position (:attr:`_anchor`).
+
+		:returns: The text's vertical anchor.
+		"""
+		return self._anchor
+
+	@readonly
+	def LineHeight(self) -> float:
+		"""
+		Read-only property to access the distance of two baselines (:attr:`_lineHeight`).
+
+		:returns: The distance of two baselines, as a factor of the font size.
+		"""
+		return self._lineHeight
+
+	@readonly
+	def BoundingBox(self) -> BoundingBox2D[float]:
+		"""
+		Read-only property to return an estimate of the smallest axis-aligned bounding box enclosing the text.
+
+		The width is the number of characters of the longest line times the font's
+		:attr:`~Font.CharacterWidth` and size. A line is one font size high, 0.8 of it above the baseline; the height of
+		the text adds :attr:`LineHeight` times the font size for each further line. A renderer measuring the glyphs gets
+		other values, for a proportional font especially.
+
+		:returns: A new bounding box.
+		"""
+		size =   self._font._size
+		width =  max(len(line) for line in self._content.split("\n")) * self._font._characterWidth * size
+		height = size + self._content.count("\n") * self._lineHeight * size
+
+		x = self._position._x
+		if self._alignment is TextAlignment.Left:
+			minX = x
+		elif self._alignment is TextAlignment.Center:
+			minX = x - width / 2
+		else:
+			minX = x - width
+
+		if self._anchor is VerticalAnchor.Top:
+			above = 0
+		elif self._anchor is VerticalAnchor.Middle:
+			above = height / 2
+		elif self._anchor is VerticalAnchor.Baseline:
+			above = self._ASCENT * size
+		else:
+			above = height
+
+		frame = self.Frame
+		while frame is not None and not isinstance(frame, Canvas2D):
+			frame = frame.Frame
+
+		y = self._position._y
+		if frame is None or frame._direction is YAxisDirection.Up:
+			return BoundingBox2D(minX, y + above - height, minX + width, y + above)
+
+		return BoundingBox2D(minX, y - above, minX + width, y - above + height)
+
+	def Move(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the text by moving its position (inplace).
+
+		:param offset:      The 2D-offset to move by.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		"""
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, Offset2D):
+			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		self._position += offset
+
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the text at a horizontal axis by mirroring its position (inplace).
+
+		The glyphs aren't mirrored.
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
+		"""
+		self._position._y = twiceAxis - self._position._y
+
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the text at a vertical axis by mirroring its position (inplace).
+
+		The glyphs aren't mirrored.
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		self._position._x = twiceAxis - self._position._x
+
+	def Copy(self) -> Self:
+		"""
+		Create a new text as a copy of this text.
+
+		The copy holds a copy of the position, and the same font and styles. It references the same :attr:`Value` and holds
+		a shallow copy of the key-value-pairs.
+
+		:returns: Copy of this text.
+		"""
+		return self.__class__(
+			self._position,
+			self._content,
+			font=self._font,
+			alignment=self._alignment,
+			anchor=self._anchor,
+			lineHeight=self._lineHeight,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+	def __copy__(self) -> Self:
+		"""
+		Returns a copy of this text for :func:`copy.copy`.
+
+		:returns: Copy of this text.
+		"""
+		return self.Copy()
+
+	def __repr__(self) -> str:
+		"""
+		Returns the text's string representation.
+
+		:returns: The string representation of the text.
+		"""
+		return f"Text({self._position}, {self._content!r})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the text's string equivalent.
+
+		:returns: The text.
+		"""
+		return self._content
