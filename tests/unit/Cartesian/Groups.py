@@ -31,6 +31,7 @@
 """
 Unit tests for :mod:`pyTooling.Cartesian2D.Groups` - groups, canvases, frames, absolute coordinates and mirroring.
 """
+from copy                         import deepcopy
 from math                         import isclose, pi
 
 from pyTooling.Cartesian2D        import Base2D, Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, Element2D, \
@@ -1678,6 +1679,60 @@ class CanvasEdges(Testcase):
 		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
 
 
+class Copy(Testcase):
+	def test_Group_deepcopy(self) -> None:
+		"""A deep copy holds copies of the children and isn't in the canvas of the original."""
+		circle = Circle(Point2D(1, 2), 1)
+		line =   LineSegment2D(Point2D(0, 0), Point2D(4, 0))
+		canvas = Canvas2D()
+		group =  Group2D(Offset2D(1, 2), (circle, line), parent=canvas)
+
+		newGroup = deepcopy(group)
+
+		self.assertIs(Group2D, type(newGroup))
+		self.assertIsNone(newGroup.Parent)
+		self.assertIsNot(group.Offset, newGroup.Offset)
+		self.assertTupleEqual((1, 2), newGroup.Offset.ToTuple())
+		self.assertEqual(2, len(newGroup.Children))
+		for child, newChild in zip(group.Children, newGroup.Children):
+			self.assertIs(type(child), type(newChild))
+			self.assertIsNot(child, newChild)
+			self.assertIs(newGroup, newChild.Parent)
+			self.assertIs(group, child.Parent)
+
+		self.assertIs(newGroup.Children[0], newGroup.Children[0].Center.Parent)
+		self.assertTupleEqual((group, ), canvas.Children)
+
+	def test_Group_deepcopy_Nested(self) -> None:
+		inner = Group2D(Offset2D(1, 1), (Circle(Point2D(1, 2), 1), ))
+		outer = Group2D(Offset2D(10, 0), (inner, ))
+
+		newOuter = deepcopy(outer)
+		newInner = newOuter.Children[0]
+
+		self.assertIs(Group2D, type(newInner))
+		self.assertIsNot(inner, newInner)
+		self.assertIs(newOuter, newInner.Parent)
+		self.assertIs(newInner, newInner.Children[0].Parent)
+		self.assertEqual(BoundingBox2D(11, 2, 13, 4), newOuter.BoundingBox)
+
+	def test_Canvas_deepcopy(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		canvas = Canvas2D(YAxisDirection.Down, Size2D(400, 300), (Group2D(Offset2D(10, 10), (circle, )), ))
+
+		newCanvas = deepcopy(canvas)
+		newGroup =  newCanvas.Children[0]
+
+		self.assertIs(Canvas2D, type(newCanvas))
+		self.assertIs(YAxisDirection.Down, newCanvas.Direction)
+		self.assertIsNot(canvas.Size, newCanvas.Size)
+		self.assertTupleEqual((400, 300), newCanvas.Size.ToTuple())
+		self.assertIsNot(canvas.Children[0], newGroup)
+		self.assertIs(newCanvas, newGroup.Parent)
+		self.assertIs(newGroup, newGroup.Children[0].Parent)
+		self.assertEqual(11, newCanvas.Top(newGroup.Children[0]))
+
+
 class ElementData(Testcase):
 	def test_Group(self) -> None:
 		value = object()
@@ -1722,6 +1777,17 @@ class ElementData(Testcase):
 		del group["layer"]
 
 		self.assertEqual(0, len(group))
+
+	def test_Group_deepcopy(self) -> None:
+		value = [1, 2]
+		group = Group2D(value=value, keyValuePairs={"nets": ["a"]})
+
+		newGroup = deepcopy(group)
+
+		self.assertIsNot(value, newGroup.Value)
+		self.assertListEqual([1, 2], newGroup.Value)
+		self.assertIsNot(group["nets"], newGroup["nets"])
+		self.assertListEqual(["a"], newGroup["nets"])
 
 	def test_Group_Parent(self) -> None:
 		"""A child with a value and key-value-pairs registers in its parent like any other."""

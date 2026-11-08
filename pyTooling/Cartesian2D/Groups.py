@@ -43,8 +43,10 @@ canvas is the root of such a tree and knows the direction of its y-axis.
 """
 from __future__                   import annotations
 
+from copy                         import deepcopy
 from enum                         import Enum
-from typing                       import Any, Generic, Hashable, Iterable, Mapping, Optional as Nullable, Union
+from typing                       import Any, Generic, Hashable, Iterable, Mapping, Optional as Nullable, Self, \
+                                         Union
 
 from pyTooling.Decorators         import export, readonly
 from pyTooling.Exceptions         import EmptyError
@@ -474,6 +476,23 @@ class Group2D(Element2D[Coordinate], Container2DMixin, Generic[Coordinate]):
 		for child in self._children:
 			child._MirrorX(0)
 
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this group for :func:`copy.deepcopy`.
+
+		The copy holds a copy of the offset, deep copies of the children, and deep copies of the :attr:`Value` and the
+		key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this group.
+		"""
+		return self.__class__(
+			self._offset,
+			(deepcopy(child, memo) for child in self._children),
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
 	def __repr__(self) -> str:
 		"""
 		Returns the group's string representation.
@@ -681,6 +700,17 @@ class Canvas2D(Base2D[Coordinate], Container2DMixin, Generic[Coordinate]):
 			child._MirrorY(height)
 
 		self._direction = YAxisDirection.Down if self._direction is YAxisDirection.Up else YAxisDirection.Up
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this canvas for :func:`copy.deepcopy`.
+
+		The copy has the same y-axis direction, a copy of the size, and deep copies of the children.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this canvas.
+		"""
+		return self.__class__(self._direction, self._size, (deepcopy(child, memo) for child in self._children))
 
 	def __repr__(self) -> str:
 		"""
