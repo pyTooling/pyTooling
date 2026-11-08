@@ -43,6 +43,8 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D`: a :class:`~pyTooling.Cartesian2D.QuadraticBezierSegment2D` with one and a
      :class:`~pyTooling.Cartesian2D.CubicBezierSegment2D` with two control points, a point at a curve parameter with
      :meth:`~pyTooling.Cartesian2D.BezierSegment2D.PointAt`, and an exact bounding box.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Path` chains line segments, arcs and
+     Bezier curves, open or closed; consecutive edges share their joint.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

@@ -36,9 +36,10 @@ from typing                import TYPE_CHECKING, Any, Generic, Hashable, Iterabl
                                   Self, Union
 
 from pyTooling.Decorators  import export, readonly
+from pyTooling.Exceptions  import InvalidOperationError
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Segment2D, LineSegment2D, \
-                                  AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError
+                                  ArcSegment2D, AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError
 
 if TYPE_CHECKING:
 	from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D
@@ -883,3 +884,265 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		:returns: The string equivalent of the circle.
 		"""
 		return f"({self._center}, r={self._radius})"
+
+
+@export
+class Path(Shape[Coordinate], Generic[Coordinate]):
+	"""
+	A path is a chain of connected segments: line segments, arcs and Bezier curves.
+
+	Each segment starts at the end point of the previous segment, and both share that point (joint). A closed path ends at
+	the start point of its first segment.
+	"""
+
+	_points:   tuple[Point2D[Coordinate], ...]    #: A tuple of 2D-points describing the joints of the path's segments.
+	_segments: tuple[Segment2D[Coordinate], ...]  #: A tuple of 2D segments describing the path's edges.
+	_closed:   bool                               #: ``True``, if the path ends at the start point of its first segment.
+
+	def __init__(
+		self,
+		segments: Iterable[Segment2D[Coordinate]],
+		*,
+		closed:   bool = False,
+		parent:   Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a path from its segments.
+
+		The path copies the segments as its edges: consecutive edges share a joint, and the path owns all their points.
+		The given segments stay as they are.
+
+		:param segments:    Segments of the path, in drawing order.
+		:param closed:      Optional, if ``True``, the last segment ends at the start point of the first segment. Default:
+		                    ``False``.
+		:param parent:      Optional, the group or canvas the path is added to. Default: ``None``, no parent.
+		:raises ValueError: If parameter 'segments' is None.
+		:raises TypeError:  If parameter 'segments' is not iterable.
+		:raises ValueError: If an element of parameter 'segments' is None.
+		:raises TypeError:  If an element of parameter 'segments' is not of type :class:`~pyTooling.Cartesian2D.Segment2D`.
+		:raises ValueError: If an element of parameter 'segments' doesn't start at the end point of the previous element.
+		:raises ValueError: If parameter 'segments' is empty.
+		:raises ValueError: If parameter 'closed' is None.
+		:raises TypeError:  If parameter 'closed' is not of type :class:`bool`.
+		:raises ValueError: If parameter 'closed' is ``True``, while the last segment doesn't end at the start point of the
+		                    first segment.
+		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(parent=parent)
+
+		if segments is None:
+			raise ValueError("Parameter 'segments' is None.")
+		elif not isinstance(segments, Iterable):
+			ex = TypeError("Parameter 'segments' is not iterable.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(segments)}'.")
+			raise ex
+
+		segmentList = []
+		for segment in segments:
+			if segment is None:
+				raise ValueError("An element of parameter 'segments' is None.")
+			elif not isinstance(segment, Segment2D):
+				ex = TypeError("An element of parameter 'segments' is not of type 'Segment2D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(segment)}'.")
+				raise ex
+			elif len(segmentList) > 0 and (
+				segment._start._x != (previousEnd := segmentList[-1]._end)._x or segment._start._y != previousEnd._y
+			):
+				ex = ValueError("An element of parameter 'segments' doesn't start at the end point of the previous element.")
+				ex.add_note(f"Got end point {previousEnd} and start point {segment._start}.")
+				raise ex
+
+			segmentList.append(segment)
+
+		if len(segmentList) == 0:
+			raise ValueError("Parameter 'segments' is empty.")
+
+		if closed is None:
+			raise ValueError("Parameter 'closed' is None.")
+		elif not isinstance(closed, bool):
+			ex = TypeError("Parameter 'closed' is not of type 'bool'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(closed)}'.")
+			raise ex
+		elif closed and (
+			(firstStart := segmentList[0]._start)._x != (lastEnd := segmentList[-1]._end)._x or firstStart._y != lastEnd._y
+		):
+			ex = ValueError("Parameter 'closed' is True, while the last segment doesn't end at the first segment's start.")
+			ex.add_note(f"Got start point {firstStart} and end point {lastEnd}.")
+			raise ex
+
+		pointList = [segmentList[0]._start.Copy()]
+		for segment in segmentList[:-1]:
+			pointList.append(segment._end.Copy())
+
+		if not closed:
+			pointList.append(segmentList[-1]._end.Copy())
+
+		self._points = joints = tuple(pointList)
+		for joint in joints:
+			joint._parent = self
+
+		self._closed =   closed
+		self._segments = tuple(
+			segment._CopyAsEdge(start, end, self)
+			for segment, start, end in zip(segmentList, joints, (*joints[1:], joints[0]))
+		)
+
+		self.Parent = parent
+
+	@readonly
+	def Points(self) -> tuple[Point2D[Coordinate], ...]:
+		"""
+		Read-only property to access the joints of the path's segments (:attr:`_points`).
+
+		:returns: Tuple of joints, from the start point of the first segment to the end point of the last one. A closed
+		          path lists its start point once.
+		"""
+		return self._points
+
+	@readonly
+	def Segments(self) -> tuple[Segment2D[Coordinate], ...]:
+		"""
+		Read-only property to access the path's edges (:attr:`_segments`).
+
+		:returns: Tuple of edges, in drawing order.
+		"""
+		return self._segments
+
+	@readonly
+	def IsClosed(self) -> bool:
+		"""
+		Read-only property to access, if the path ends at the start point of its first segment (:attr:`_closed`).
+
+		:returns: ``True``, if the path is closed.
+		"""
+		return self._closed
+
+	@readonly
+	def Length(self) -> float:
+		"""
+		Read-only property to return the length of the path, the sum of its segments' lengths.
+
+		:returns:                      Length of the path.
+		:raises InvalidOperationError: If a segment has no length, like a Bezier curve.
+		"""
+		length = 0.0
+		for segment in self._segments:
+			if not isinstance(segment, (LineSegment2D, ArcSegment2D)):
+				ex = InvalidOperationError("Path has a segment without a length.")
+				ex.add_note(f"Got {segment!r}.")
+				raise ex
+
+			length += segment.Length
+
+		return length
+
+	@readonly
+	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
+		"""
+		Read-only property to return the smallest axis-aligned bounding box enclosing the path.
+
+		The box is the union of the segments' bounding boxes, so it encloses curves bulging past their end points.
+
+		:returns: A new bounding box.
+		"""
+		box = self._segments[0].BoundingBox
+		for segment in self._segments[1:]:
+			box = box.Union(segment.BoundingBox)
+
+		return box
+
+	def Move(self, offset: Offset2D[Coordinate]) -> None:
+		"""
+		Move the path by moving all its points (inplace).
+
+		Each joint moves once, and each edge moves its other points, like an arc's center.
+
+		:param offset:      The 2D-offset to move by.
+		:raises ValueError: If parameter 'offset' is None.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		"""
+		if offset is None:
+			raise ValueError("Parameter 'offset' is None.")
+		elif not isinstance(offset, Offset2D):
+			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
+			raise ex
+
+		for point in self._points:
+			point += offset
+
+		for segment in self._segments:
+			segment._MoveInner(offset)
+
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the path at a horizontal axis by mirroring all its points (inplace).
+
+		Each joint is mirrored once, and each edge mirrors its other points; an arc reverses its direction.
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
+		"""
+		for point in self._points:
+			point._y = twiceAxis - point._y
+
+		for segment in self._segments:
+			segment._MirrorInnerY(twiceAxis)
+
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the path at a vertical axis by mirroring all its points (inplace).
+
+		Each joint is mirrored once, and each edge mirrors its other points; an arc reverses its direction.
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		for point in self._points:
+			point._x = twiceAxis - point._x
+
+		for segment in self._segments:
+			segment._MirrorInnerX(twiceAxis)
+
+	def Copy(self) -> Self:
+		"""
+		Create a new path as a copy of this path.
+
+		The copy holds copies of all points, and its edges share the copied joints.
+
+		:returns: Copy of this path.
+		"""
+		return self.__class__(self._segments, closed=self._closed)
+
+	def __copy__(self) -> Self:
+		"""
+		Returns a copy of this path for :func:`copy.copy`.
+
+		:returns: Copy of this path.
+		"""
+		return self.Copy()
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this path for :func:`copy.deepcopy`.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this path.
+		"""
+		return self.Copy()
+
+	def __repr__(self) -> str:
+		"""
+		Returns the path's string representation.
+
+		:returns: The string representation of the path, its segments and whether it is closed.
+		"""
+		return f"Path({', '.join(repr(segment) for segment in self._segments)}, closed={self._closed})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the path's string equivalent.
+
+		:returns: The string equivalent of the path, its segments in drawing order.
+		"""
+		segments = ", ".join(str(segment) for segment in self._segments)
+		return f"({segments}, closed)" if self._closed else f"({segments})"

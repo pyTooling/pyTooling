@@ -2013,6 +2013,19 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		"""
 		return self.Copy()
 
+	def _CopyAsEdge(self, start: Point2D[Coordinate], end: Point2D[Coordinate], shape: Shape) -> Self:
+		"""
+		Create a copy of this segment as an edge of a shape, between two of the shape's points.
+
+		The copy's other points are copies owned by the shape.
+
+		:param start: The shape's point the edge starts at.
+		:param end:   The shape's point the edge ends at.
+		:param shape: The shape the edge belongs to.
+		:returns:     A new edge of the shape.
+		"""
+		return self.__class__(start, end, copyPoints=False, parent=shape)
+
 
 @export
 class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
@@ -2631,6 +2644,26 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		return LineSegment2D(self._start, self._end)
 
+	def _CopyAsEdge(self, start: Point2D[Coordinate], end: Point2D[Coordinate], shape: Shape) -> Self:
+		"""
+		Create a copy of this arc as an edge of a shape, between two of the shape's points.
+
+		The copy's center is a copy owned by the shape.
+
+		:param start: The shape's point the edge starts at.
+		:param end:   The shape's point the edge ends at.
+		:param shape: The shape the edge belongs to.
+		:returns:     A new edge of the shape.
+		"""
+		return self.__class__(
+			start,
+			end,
+			Point2D(self._center._x, self._center._y, parent=shape),
+			self._direction,
+			copyPoints=False,
+			parent=shape
+		)
+
 	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
 		"""
 		Returns a copy of this 2D arc segment for :func:`copy.deepcopy`.
@@ -3036,6 +3069,26 @@ class QuadraticBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate])
 			keyValuePairs=deepcopy(self._dict, memo)
 		)
 
+	def _CopyAsEdge(self, start: Point2D[Coordinate], end: Point2D[Coordinate], shape: Shape) -> Self:
+		"""
+		Create a copy of this curve as an edge of a shape, between two of the shape's points.
+
+		The copy's control point is a copy owned by the shape.
+
+		:param start: The shape's point the edge starts at.
+		:param end:   The shape's point the edge ends at.
+		:param shape: The shape the edge belongs to.
+		:returns:     A new edge of the shape.
+		"""
+		controlPoint = self._controlPoints[0]
+		return self.__class__(
+			start,
+			Point2D(controlPoint._x, controlPoint._y, parent=shape),
+			end,
+			copyPoints=False,
+			parent=shape
+		)
+
 	def __repr__(self) -> str:
 		"""
 		Returns the 2D quadratic Bezier curve segment's string representation.
@@ -3313,6 +3366,28 @@ class CubicBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate]):
 			self._end,
 			value=deepcopy(self._value, memo),
 			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
+	def _CopyAsEdge(self, start: Point2D[Coordinate], end: Point2D[Coordinate], shape: Shape) -> Self:
+		"""
+		Create a copy of this curve as an edge of a shape, between two of the shape's points.
+
+		The copy's control points are copies owned by the shape.
+
+		:param start: The shape's point the edge starts at.
+		:param end:   The shape's point the edge ends at.
+		:param shape: The shape the edge belongs to.
+		:returns:     A new edge of the shape.
+		"""
+		controlPoint1 = self._controlPoints[0]
+		controlPoint2 = self._controlPoints[1]
+		return self.__class__(
+			start,
+			Point2D(controlPoint1._x, controlPoint1._y, parent=shape),
+			Point2D(controlPoint2._x, controlPoint2._y, parent=shape),
+			end,
+			copyPoints=False,
+			parent=shape
 		)
 
 	def __repr__(self) -> str:
