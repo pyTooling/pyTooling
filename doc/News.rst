@@ -65,6 +65,8 @@ Version 10.x (2026)
      Bezier curves, open or closed; consecutive edges share their joint. An open path grows at both ends with
      :meth:`~pyTooling.Cartesian2D.Shapes.Path.AppendSegment` and
      :meth:`~pyTooling.Cartesian2D.Shapes.Path.PrependSegment`.
+   * :mod:`pyTooling.Cartesian3D`: a :class:`~pyTooling.Cartesian3D.BoundingBox3D` value (union, overlap, point
+     containment). Every segment returns its ``BoundingBox`` and moves in place with ``Move(offset)``.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

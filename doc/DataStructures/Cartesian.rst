@@ -1097,6 +1097,37 @@ Size3D
       |rarr| Its counterpart, the 2-dimensional size.
 
 
+.. _STRUCT/Cartesian3D/BoundingBox3D:
+
+BoundingBox3D
+=============
+
+A :class:`~pyTooling.Cartesian3D.BoundingBox3D` is the smallest **axis-aligned cuboid** enclosing something: the
+read-only properties :attr:`~pyTooling.Cartesian3D.BoundingBox3D.MinX` to
+:attr:`~pyTooling.Cartesian3D.BoundingBox3D.MaxZ`, and from them :attr:`~pyTooling.Cartesian3D.BoundingBox3D.Width`,
+:attr:`~pyTooling.Cartesian3D.BoundingBox3D.Height`, :attr:`~pyTooling.Cartesian3D.BoundingBox3D.Depth` and
+:attr:`~pyTooling.Cartesian3D.BoundingBox3D.Center`. Its constructor takes the smallest coordinates first, then the
+largest: ``BoundingBox3D(minX, minY, minZ, maxX, maxY, maxZ)``.
+
+It unites, overlaps, contains points, shifts by an :class:`~pyTooling.Cartesian3D.Offset3D`, compares and copies as
+its 2D counterpart does. :meth:`~pyTooling.Cartesian3D.BoundingBox3D.HasOverlap` compares the inner volumes, so boxes
+touching at a face, an edge or a corner don't overlap. There is no conversion to a volume yet.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian3D import Point3D, LineSegment3D
+
+   line = LineSegment3D(Point3D(4, 1, -2), Point3D(-1, 3, 5))
+
+   line.BoundingBox                      # BoundingBox3D(-1, 1, -2, 4, 3, 5)
+   Point3D(0, 2, 0) in line.BoundingBox  # True
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/BoundingBox2D`
+      |rarr| Its counterpart, the 2-dimensional bounding box.
+
+
 .. _STRUCT/Cartesian3D/Segment3D:
 
 Segment3D
@@ -1105,6 +1136,9 @@ Segment3D
 :class:`~pyTooling.Cartesian3D.Segment3D` is a :attr:`~pyTooling.Cartesian3D.Segment3D.Start` and an
 :attr:`~pyTooling.Cartesian3D.Segment3D.End` point, copied on construction unless
 ``copyPoints=False``.
+
+:attr:`~pyTooling.Cartesian3D.Segment3D.BoundingBox` encloses both points, and
+:meth:`~pyTooling.Cartesian3D.Segment3D.Move` shifts both by an :class:`~pyTooling.Cartesian3D.Offset3D`, in place.
 
 .. seealso::
 
