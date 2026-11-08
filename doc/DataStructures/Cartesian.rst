@@ -707,53 +707,37 @@ Three read-only properties measure it:
 A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D` or a radius that isn't a number raises
 :exc:`TypeError`; a radius of 0 or below raises :exc:`ValueError`.
 
+Two class methods create a circle from the parameter groups of an :ref:`arc <STRUCT/Cartesian2D/ArcSegment2D>`; the
+circle owns a new center, the given points are only read:
+
+* :meth:`~pyTooling.Cartesian2D.Shapes.Circle.FromPoints` - the circle through three points, which must be distinct
+  and not on one line;
+* :meth:`~pyTooling.Cartesian2D.Shapes.Circle.FromChord` - the circle through the end points of a chord and a point
+  at a signed ``height`` over the chord, measured at ``chordPosition`` (default ``0.5``, the midpoint). A positive
+  height is on the left of the chord, seen from its start point.
+
+.. code-block:: Python
+
+   ring = Circle.FromPoints(Point2D(0, 0), Point2D(4, 0), Point2D(0, 3))
+   ring.Center                        # (2.0, 1.5)
+   ring.Radius                        # 2.5
+
+   dome = Circle.FromChord(Point2D(0, 0), Point2D(4, 0), 1)
+   dome.Center                        # (2.0, -1.5)
+
 .. seealso::
 
    :ref:`STRUCT/Cartesian2D/Geometry2D`
       |rarr| Its base-class, the base-class of the closed 2-dimensional shapes.
    :ref:`STRUCT/Cartesian2D/Ellipse`
       |rarr| The round shape with two radii.
+   :ref:`STRUCT/Cartesian2D/ArcSegment2D`
+      |rarr| A piece of a circle, given by the same parameter groups.
 
 
 .. _STRUCT/Cartesian2D/Ellipse:
 
 Ellipse
-=======
-
-An :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` is placed by its
-:attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Center`, a :class:`~pyTooling.Cartesian2D.Point2D`, and sized by two
-radii, SVG's ``rx`` and ``ry``: :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.RadiusX` in x-direction and
-:attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.RadiusY` in y-direction, each a positive :class:`int` or :class:`float`.
-Its axes are parallel to the coordinate axes; an ellipse can't be rotated. The center is copied by default;
-``copyPoints=False`` keeps the given point instead. The ellipse owns its center.
-
-An ellipse is a closed shape, a :ref:`Geometry2D <STRUCT/Cartesian2D/Geometry2D>`, measured by two read-only
-properties:
-
-* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Area` - the area it encloses, a :class:`float`;
-* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Perimeter` - the length of its outline (circumference), a
-  :class:`float`. It is Ramanujan's second approximation: exact for equal radii, otherwise less than 0.04 % too small.
-
-.. code-block:: Python
-
-   from pyTooling.Cartesian2D        import Point2D
-   from pyTooling.Cartesian2D.Shapes import Ellipse
-
-   egg = Ellipse(Point2D(10, 5), 3, 2)
-   egg.BoundingBox                    # BoundingBox2D(7, 3, 13, 7)
-   egg.Area                           # 18.849...
-   egg.Perimeter                      # 15.865...
-
-A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D` or a radius that isn't a number raises
-:exc:`TypeError`; a radius of 0 or below raises :exc:`ValueError`. Equal radii are accepted: such an ellipse is a
-circle, but not a :class:`~pyTooling.Cartesian2D.Shapes.Circle` object.
-
-.. seealso::
-
-   :ref:`STRUCT/Cartesian2D/Geometry2D`
-      |rarr| Its base-class, the base-class of the closed 2-dimensional shapes.
-   :ref:`STRUCT/Cartesian2D/Circle`
-      |rarr| The round shape with one radius.
 
 
 .. _STRUCT/Cartesian2D/Path:
