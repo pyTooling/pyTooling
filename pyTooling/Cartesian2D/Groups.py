@@ -66,7 +66,11 @@ class YAxisDirection(Enum):
 
 @export
 class EmptyGroupError(Cartesian2DError, EmptyError):
-	"""The exception is raised when the bounding box of a group or canvas without children is requested."""
+	"""
+	The exception is raised when the bounding box of a group or canvas without children is requested.
+
+	:mod:`pyTooling.Cartesian3D.Groups` raises it too.
+	"""
 
 
 @export

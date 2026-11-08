@@ -32,15 +32,16 @@
 Unit tests for :mod:`pyTooling.Cartesian3D`: points, offsets and sizes, their copies, comparisons and
 arithmetic.
 """
-from copy                  import copy, deepcopy
-from math                  import isclose, pi, sqrt
+from copy                         import copy, deepcopy
+from math                         import isclose, pi, sqrt
 
-from pyTooling.Cartesian3D import Base3D, Element3D, Origin3D, Point3D, Offset3D, Size3D, BoundingBox3D, Segment3D, \
-                                  LineSegment3D
-from pyTooling.Cartesian2D import AlreadyOwnedError, DuplicatePointError
-from pyTooling.Exceptions  import AlreadyInHierarchyError, DuplicateElementError, InvalidOperationError
-from pyTooling.MetaClasses import AbstractClassError
-from pyTooling.Testing     import Testcase
+from pyTooling.Cartesian3D        import Base3D, Element3D, Origin3D, Point3D, Offset3D, Size3D, BoundingBox3D, \
+                                         Segment3D, LineSegment3D
+from pyTooling.Cartesian3D.Groups import Group3D
+from pyTooling.Cartesian2D        import AlreadyOwnedError, DuplicatePointError
+from pyTooling.Exceptions         import AlreadyInHierarchyError, DuplicateElementError, InvalidOperationError
+from pyTooling.MetaClasses        import AbstractClassError
+from pyTooling.Testing            import Testcase
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -1701,9 +1702,17 @@ class Ownership(Testcase):
 	def test_Point_ReadOnly(self) -> None:
 		point = Point3D(1, 2, 3)
 
-		with self.assertRaises(AttributeError):
+		with self.assertRaises(TypeError) as context:
 			point.Parent = LineSegment3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
 
+		self.assertEqual("The parent of a 'pyTooling.Cartesian3D.Point3D' is read-only.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got type 'pyTooling.Cartesian3D.LineSegment3D'.",
+				"A segment takes ownership of a point, when it's given the point."
+			],
+			context.exception.__notes__
+		)
 		self.assertIsNone(point.Parent)
 
 	def test_Point_Copy(self) -> None:
@@ -1919,12 +1928,54 @@ class Ownership(Testcase):
 		self.assertIs(end, line1.End)
 
 
+class Node(Base3D):
+	"""A class with a parent, using the setter of :class:`Base3D`."""
+
+	_PARENT_TYPE = (Point3D, )
+
+
+class ParentSetter(Testcase):
+	def test_Assign(self) -> None:
+		point = Point3D(1, 2, 3)
+		node =  Node()
+
+		node.Parent = point
+
+		self.assertIs(point, node.Parent)
+
+	def test_AssignNone(self) -> None:
+		node = Node(parent=Point3D(1, 2, 3))
+
+		node.Parent = None
+
+		self.assertIsNone(node.Parent)
+
+	def test_AssignInt(self) -> None:
+		node = Node()
+
+		with self.assertRaises(TypeError) as context:
+			node.Parent = 1
+
+		self.assertEqual("Parameter 'parent' is not of type 'Point3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(node.Parent)
+
+
 class ParentTypes(Testcase):
 	def test_Point(self) -> None:
 		self.assertTupleEqual((Element3D, ), Point3D._PARENT_TYPE)
 
 	def test_Origin(self) -> None:
 		self.assertTupleEqual((Element3D, ), Origin3D._PARENT_TYPE)
+
+	def test_Segment(self) -> None:
+		self.assertTupleEqual((Group3D, ), Segment3D._PARENT_TYPE)
+
+	def test_LineSegment(self) -> None:
+		self.assertTupleEqual((Group3D, ), LineSegment3D._PARENT_TYPE)
+
+	def test_Group(self) -> None:
+		self.assertTupleEqual((Group3D, ), Group3D._PARENT_TYPE)
 
 
 class Frames(Testcase):
@@ -1942,3 +1993,4 @@ class Frames(Testcase):
 		line2 = LineSegment3D(Point3D(5, 5, 5), Point3D(5, 5, 7))
 
 		self.assertTrue(isclose(pi / 2, line1.AngleTo(line2)))
+
