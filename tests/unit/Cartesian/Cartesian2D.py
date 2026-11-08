@@ -39,7 +39,7 @@ from pyTooling.Cartesian2D        import Base2D, Element2D, Origin2D, Point2D, O
                                          Segment2D, LineSegment2D, ArcSegment2D, BezierSegment2D, \
                                          QuadraticBezierSegment2D, CubicBezierSegment2D, Alignment2D, SweepDirection, \
                                          AlreadyOwnedError, DuplicatePointError, NoAreaError, NotOwnedError
-from pyTooling.Cartesian2D.Shapes import Polygon, Rectangle, Circle, Shape
+from pyTooling.Cartesian2D.Shapes import Polygon, Rectangle, Circle, Path, Shape
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection
 from pyTooling.Exceptions         import DuplicateElementError, InvalidOperationError
 from pyTooling.MetaClasses        import AbstractClassError
@@ -2828,7 +2828,7 @@ class ArcBounds(Testcase):
 
 class ArcEndPoints(Testcase):
 	def test_Start(self) -> None:
-		"""An assigned start point needs no check: the arc keeps its relative height over the new chord."""
+		"""An assigned start point keeps the arc's relative height over the new chord."""
 		arc =      ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)
 		previous = arc.Start
 		point =    Point2D(-2, 0)
@@ -2868,6 +2868,25 @@ class ArcEndPoints(Testcase):
 
 		self.assertEqual("Point is given twice.", str(context.exception))
 
+	def test_Start_AtEnd(self) -> None:
+		"""A start point at the position of the end point leaves no chord."""
+		arc =      ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)
+		previous = arc.Start
+		point =    Point2D(2, 0)
+
+		with self.assertRaises(ValueError) as context:
+			arc.Start = point
+
+		self.assertEqual("Parameter 'start' is at the position of the arc's end point.", str(context.exception))
+		self.assertListEqual(
+			["Got point (2, 0).", "An arc needs a chord from the start point to the end point."],
+			context.exception.__notes__
+		)
+		self.assertIs(previous, arc.Start)
+		self.assertIs(arc, previous.Parent)
+		self.assertIsNone(point.Parent)
+		self.assertTupleEqual((1.0, 0.0), arc.Center.ToTuple())
+
 	def test_Start_Alias(self) -> None:
 		arc =   ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)
 		point = Point2D(-2, 0)
@@ -2888,6 +2907,43 @@ class ArcEndPoints(Testcase):
 		self.assertAlmostEqual(0, arc.Center.X)
 		self.assertAlmostEqual(1, arc.Center.Y)
 		self.assertEqual(BoundingBox2D(-1, 0, 0, 2), arc.BoundingBox)
+
+	def test_End_AtStart(self) -> None:
+		"""An end point at the position of the start point leaves no chord."""
+		arc =      ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)
+		previous = arc.End
+		point =    Point2D(0, 0)
+
+		with self.assertRaises(ValueError) as context:
+			arc.End = point
+
+		self.assertEqual("Parameter 'end' is at the position of the arc's start point.", str(context.exception))
+		self.assertListEqual(
+			["Got point (0, 0).", "An arc needs a chord from the start point to the end point."],
+			context.exception.__notes__
+		)
+		self.assertIs(previous, arc.End)
+		self.assertIs(arc, previous.Parent)
+		self.assertIsNone(point.Parent)
+		self.assertTupleEqual((1.0, 0.0), arc.Center.ToTuple())
+
+	def test_End_Start(self) -> None:
+		"""The arc's start point is on the circle, but can't become its end point."""
+		arc = ArcSegment2D(Point2D(1, 0), Point2D(0, 1), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
+
+		with self.assertRaises(DuplicatePointError) as context:
+			arc.End = arc.Start
+
+		self.assertEqual("Point is given twice.", str(context.exception))
+
+	def test_End_AtStart_Edge(self) -> None:
+		"""An edge of a path checks the position before its ownership."""
+		path = Path((ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1), ))
+
+		with self.assertRaises(ValueError) as context:
+			path.Segments[0].End = Point2D(0, 0)
+
+		self.assertEqual("Parameter 'end' is at the position of the arc's start point.", str(context.exception))
 
 	def test_End_Alias(self) -> None:
 		arc =   ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1)

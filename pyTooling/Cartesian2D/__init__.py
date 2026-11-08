@@ -2174,6 +2174,9 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 	fraction of the chord (:attr:`ChordPosition`), and the arc's signed distance from the chord at the root point
 	(:attr:`Height`), stored as a fraction of the chord's length. So moving an end point keeps the arc's shape, scaled
 	to the new chord. The :attr:`Center`, :attr:`Radius` and :attr:`Direction` are computed on each access.
+
+	An end point moved in place, like ``point += offset``, isn't checked: moved onto the other end point, the arc has no
+	chord and no :attr:`Center`.
 	"""
 
 	_chordPosition: float  #: Position of the root point on the chord, as a fraction from the start point.
@@ -2452,6 +2455,86 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 			first._x + (thirdY * secondSquare - secondY * thirdSquare) / (2 * cross),
 			first._y + (secondX * thirdSquare - thirdX * secondSquare) / (2 * cross)
 		)
+
+	@property
+	def Start(self) -> Point2D[Coordinate]:
+		"""
+		Property to access the arc's start point (:attr:`_start`).
+
+		An assigned point is referenced, not copied: the arc takes ownership of it and releases the previous start point.
+		A point at the position of the end point is rejected, because the arc would have no chord. An edge of a shape
+		doesn't own its points, so it can't replace them.
+
+		``start`` is a deprecated alias of this property; it is removed in v11.0.0.
+
+		:returns:                    Start point of the arc.
+		:raises ValueError:          If ``None`` is assigned.
+		:raises TypeError:           If an assigned value is not of type :class:`Point2D`.
+		:raises ValueError:          If an assigned point is at the position of the arc's end point. |br|
+		                             An arc needs a chord from the start point to the end point.
+		:raises NotOwnedError:       If the arc is an edge of a shape.
+		:raises DuplicatePointError: If an assigned point is the arc's end point.
+		:raises AlreadyOwnedError:   If an assigned point is owned by another element.
+		"""
+		return self._start
+
+	@Start.setter
+	def Start(self, start: Point2D[Coordinate]) -> None:
+		if start is None:
+			raise ValueError("Parameter 'start' is None.")
+		elif not isinstance(start, Point2D):
+			ex = TypeError("Parameter 'start' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(start)}'.")
+			raise ex
+		elif start is not self._end and start._x == self._end._x and start._y == self._end._y:
+			ex = ValueError("Parameter 'start' is at the position of the arc's end point.")
+			ex.add_note(f"Got point {start}.")
+			ex.add_note("An arc needs a chord from the start point to the end point.")
+			raise ex
+
+		Segment2D.Start.fset(self, start)
+
+	start = Start
+
+	@property
+	def End(self) -> Point2D[Coordinate]:
+		"""
+		Property to access the arc's end point (:attr:`_end`).
+
+		An assigned point is referenced, not copied: the arc takes ownership of it and releases the previous end point. A
+		point at the position of the start point is rejected, because the arc would have no chord. An edge of a shape
+		doesn't own its points, so it can't replace them.
+
+		``end`` is a deprecated alias of this property; it is removed in v11.0.0.
+
+		:returns:                    End point of the arc.
+		:raises ValueError:          If ``None`` is assigned.
+		:raises TypeError:           If an assigned value is not of type :class:`Point2D`.
+		:raises ValueError:          If an assigned point is at the position of the arc's start point. |br|
+		                             An arc needs a chord from the start point to the end point.
+		:raises NotOwnedError:       If the arc is an edge of a shape.
+		:raises DuplicatePointError: If an assigned point is the arc's start point.
+		:raises AlreadyOwnedError:   If an assigned point is owned by another element.
+		"""
+		return self._end
+
+	@End.setter
+	def End(self, end: Point2D[Coordinate]) -> None:
+		if end is None:
+			raise ValueError("Parameter 'end' is None.")
+		elif not isinstance(end, Point2D):
+			ex = TypeError("Parameter 'end' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(end)}'.")
+			raise ex
+		elif end is not self._start and end._x == self._start._x and end._y == self._start._y:
+			ex = ValueError("Parameter 'end' is at the position of the arc's start point.")
+			ex.add_note(f"Got point {end}.")
+			ex.add_note("An arc needs a chord from the start point to the end point.")
+			raise ex
+
+		Segment2D.End.fset(self, end)
+
+	end = End
 
 	@readonly
 	def ChordPosition(self) -> float:
