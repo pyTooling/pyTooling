@@ -1134,8 +1134,8 @@ Segment3D
 =========
 
 :class:`~pyTooling.Cartesian3D.Segment3D` is a :attr:`~pyTooling.Cartesian3D.Segment3D.Start` and an
-:attr:`~pyTooling.Cartesian3D.Segment3D.End` point, copied on construction unless
-``copyPoints=False``.
+:attr:`~pyTooling.Cartesian3D.Segment3D.End` point, copied on construction unless ``copyPoints=False``. Either way,
+the segment owns its points; an assigned start or end point is referenced and owned too.
 
 :attr:`~pyTooling.Cartesian3D.Segment3D.BoundingBox` encloses both points, and
 :meth:`~pyTooling.Cartesian3D.Segment3D.Move` shifts both by an :class:`~pyTooling.Cartesian3D.Offset3D`, in place.
@@ -1160,6 +1160,27 @@ another line segment, and conversion to an offset.
       |rarr| Its base-class, the segment between two 3D points.
    :ref:`STRUCT/Cartesian2D/LineSegment2D`
       |rarr| Its counterpart, the 2-dimensional line segment.
+
+
+.. _STRUCT/Cartesian3D/Ownership:
+
+Ownership and Frames
+====================
+
+Points belong to segments as in 2D: a segment owns its two points, a point owned by another segment raises
+:exc:`~pyTooling.Cartesian2D.AlreadyOwnedError`, and the same point object given twice raises
+:exc:`~pyTooling.Cartesian2D.DuplicatePointError`. ``Point3D(x, y, z, parent=segment)`` sets the owner without
+registering the point.
+
+Points and segments derive from the abstract :class:`~pyTooling.Cartesian3D.Base3D`, which holds the parent and
+returns the :attr:`~pyTooling.Cartesian3D.Base3D.Frame`; segments also from :class:`~pyTooling.Cartesian3D.Element3D`.
+Subtracting points or measuring the angle between line segments of different frames raises
+:exc:`~pyTooling.Cartesian2D.NotInSameFrameError`. The errors are the classes of :mod:`pyTooling.Cartesian2D`.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Ownership`
+      |rarr| Its counterpart, where ownership and frames are explained.
 
 
 .. _STRUCT/Cartesian3D/Volumes:

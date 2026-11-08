@@ -93,7 +93,7 @@ class SweepDirection(Enum):
 
 @export
 class Cartesian2DError(ToolingException):
-	"""Base-exception of all exceptions raised by :mod:`pyTooling.Cartesian2D`."""
+	"""Base-exception of all exceptions raised by :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`."""
 
 
 @export
@@ -107,6 +107,8 @@ class AlreadyOwnedError(Cartesian2DError, AlreadyInHierarchyError):
 	The exception is raised when an element is given to an element, but another element owns it already.
 
 	For example, a point given to a shape with ``copyPoints=False`` while another shape owns it.
+
+	:mod:`pyTooling.Cartesian3D` raises it too.
 	"""
 
 
@@ -126,6 +128,8 @@ class DuplicatePointError(Cartesian2DError, DuplicateElementError):
 
 	For example, the same point as start and end point of a segment with ``copyPoints=False``. Two different point objects
 	with equal coordinates aren't a duplicate.
+
+	:mod:`pyTooling.Cartesian3D` raises it too.
 	"""
 
 
@@ -159,6 +163,8 @@ class NotInSameFrameError(Cartesian2DError, NotInSameHierarchyError):
 
 	A frame is what the coordinates of an element are relative to. Combining coordinates of different frames would mix
 	unrelated values silently.
+
+	:mod:`pyTooling.Cartesian3D` raises it too.
 	"""
 
 
