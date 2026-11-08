@@ -202,20 +202,6 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 			"""
 			return (second._x - first._x) * (third._y - first._y) - (second._y - first._y) * (third._x - first._x)
 
-		def isBetween(start: Point2D[Coordinate], end: Point2D[Coordinate], point: Point2D[Coordinate]) -> bool:
-			"""
-			Nested function checking if a point on the line through two points is between them.
-
-			:param start: Start of the line segment.
-			:param end:   End of the line segment.
-			:param point: A point on the line through start and end.
-			:returns:     ``True``, if the point is on the line segment, its ends included.
-			"""
-			return (
-				min(start._x, end._x) <= point._x <= max(start._x, end._x) and
-				min(start._y, end._y) <= point._y <= max(start._y, end._y)
-			)
-
 		count = len(pointList)
 		for index in range(count):
 			start =   pointList[index]
@@ -235,18 +221,25 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 				endSide =        orientation(start, end, otherEnd)
 				otherStartSide = orientation(otherStart, otherEnd, start)
 				otherEndSide =   orientation(otherStart, otherEnd, end)
-				if (
-					((startSide > 0 and endSide < 0) or (startSide < 0 and endSide > 0)) and
-					((otherStartSide > 0 and otherEndSide < 0) or (otherStartSide < 0 and otherEndSide > 0))
-				) or (
-					(startSide == 0 and isBetween(start, end, otherStart)) or
-					(endSide == 0 and isBetween(start, end, otherEnd)) or
-					(otherStartSide == 0 and isBetween(otherStart, otherEnd, start)) or
-					(otherEndSide == 0 and isBetween(otherStart, otherEnd, end))
-				):
+				if startSide * endSide < 0 and otherStartSide * otherEndSide < 0:
 					ex = CrossingEdgesError("Polygon has crossing edges.")
 					ex.add_note(f"Got edges ({start} → {end}) and ({otherStart} → {otherEnd}).")
 					raise ex from ValueError("Parameter 'points' describes edges crossing or touching each other.")
+
+				for side, lineStart, lineEnd, point in (
+					(startSide,      start,      end,      otherStart),
+					(endSide,        start,      end,      otherEnd),
+					(otherStartSide, otherStart, otherEnd, start),
+					(otherEndSide,   otherStart, otherEnd, end)
+				):
+					if (
+						side == 0 and
+						min(lineStart._x, lineEnd._x) <= point._x <= max(lineStart._x, lineEnd._x) and
+						min(lineStart._y, lineEnd._y) <= point._y <= max(lineStart._y, lineEnd._y)
+					):
+						ex = CrossingEdgesError("Polygon has crossing edges.")
+						ex.add_note(f"Got edges ({start} → {end}) and ({otherStart} → {otherEnd}).")
+						raise ex from ValueError("Parameter 'points' describes edges crossing or touching each other.")
 
 		self._points = corners = tuple(pointList)
 		for corner in corners:
