@@ -73,6 +73,9 @@ Version 10.x (2026)
      frames raise :exc:`~pyTooling.Cartesian2D.NotInSameFrameError` when combined.
    * :mod:`pyTooling.Cartesian3D.Groups`: a :class:`~pyTooling.Cartesian3D.Groups.Group3D` holds segments and groups at
      an offset, with coordinates relative to the group. Elements report absolute positions and bounding boxes.
+   * :mod:`pyTooling.Cartesian2D.Drawing`: drawing styles as values - :class:`~pyTooling.Cartesian2D.Drawing.Color`
+     (RGB and opacity, parsed from ``#rrggbb``/``#rrggbbaa``), :class:`~pyTooling.Cartesian2D.Drawing.Stroke`,
+     :class:`~pyTooling.Cartesian2D.Drawing.Fill` and :class:`~pyTooling.Cartesian2D.Drawing.Font`.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:
