@@ -2457,7 +2457,7 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			z = self._distance if frame is None else self._distance - frame.AbsoluteOffset._zOffset
 			element._MirrorZ(2 * z)
 		else:
-			distance = self._distance if frame is None else self._distance - normal.Dot(frame.AbsoluteOffset)
+			distance = self._distance if frame is None else self._distance - normal.ScalarProduct(frame.AbsoluteOffset)
 			element._MirrorAt(normal, distance)
 
 	def __eq__(self, other: Any) -> bool:

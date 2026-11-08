@@ -486,7 +486,7 @@ class Group2D(Element2D[Coordinate], Container2DMixin, Generic[Coordinate]):
 		:param distance: The signed distance of the line from the frame's origin.
 		"""
 		offset = self._offset
-		factor = 2 * (normal.Dot(offset) - distance)
+		factor = 2 * (normal.ScalarProduct(offset) - distance)
 		offset._xOffset -= factor * normal._xOffset
 		offset._yOffset -= factor * normal._yOffset
 		for child in self._children:

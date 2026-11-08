@@ -2379,7 +2379,7 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note("An ellipse is axis-aligned; mirror it at a vertical or horizontal line.")
 			raise ex
 		else:
-			distance = self._distance if frame is None else self._distance - normal.Dot(frame.AbsoluteOffset)
+			distance = self._distance if frame is None else self._distance - normal.ScalarProduct(frame.AbsoluteOffset)
 			element._MirrorAt(normal, distance)
 
 	def __eq__(self, other: Any) -> bool:
