@@ -224,9 +224,9 @@ An offset is also a **vector**, with the vector operations:
      - Result
    * - ``offset.Length``
      - The Euclidean length, a :class:`float`.
-   * - ``offset.Dot(other)``
+   * - ``offset.ScalarProduct(other)``
      - The dot product ``x1 * x2 + y1 * y2``, zero for perpendicular offsets.
-   * - ``offset.Cross(other)``
+   * - ``offset.VectorProduct(other)``
      - The cross product ``x1 * y2 - y1 * x2``, a number in 2D: zero for parallel offsets, positive if ``other`` points
        counterclockwise from ``offset``.
    * - ``offset.Normalized()``
@@ -242,15 +242,17 @@ An offset is also a **vector**, with the vector operations:
 
    direction = Offset2D(3, 4)
 
-   direction.Length                   # 5.0
-   direction.Dot(Offset2D(-4, 3))     # 0, perpendicular
-   direction.Cross(Offset2D(6, 8))    # 0, parallel
-   direction.Normalized()             # Offset2D(0.6, 0.8)
-   2 * direction                      # Offset2D(6, 8)
+   direction.Length                           # 5.0
+   direction.ScalarProduct(Offset2D(-4, 3))   # 0, perpendicular
+   direction.VectorProduct(Offset2D(6, 8))    # 0, parallel
+   direction.Normalized()                     # Offset2D(0.6, 0.8)
+   2 * direction                              # Offset2D(6, 8)
 
-``Dot()`` and ``Cross()`` take an :class:`~pyTooling.Cartesian2D.Offset2D` only; ``None`` raises :exc:`ValueError`,
-another type :exc:`TypeError`. A factor other than an :class:`int` or :class:`float` raises :exc:`TypeError`, and
-normalizing a zero offset raises :exc:`~pyTooling.Exceptions.InvalidOperationError`, as it has no direction.
+``ScalarProduct()`` (the :term:`dot product <Dot Product>`) and ``VectorProduct()`` (the
+:term:`cross product <Cross Product>`) take an :class:`~pyTooling.Cartesian2D.Offset2D` only; ``None`` raises
+:exc:`ValueError`, another type :exc:`TypeError`. A factor other than an :class:`int` or :class:`float` raises
+:exc:`TypeError`, and normalizing a zero offset raises :exc:`~pyTooling.Exceptions.InvalidOperationError`, as it has no
+direction.
 
 .. seealso::
 
@@ -1476,10 +1478,10 @@ Offset3D
 :attr:`~pyTooling.Cartesian3D.Offset3D.YOffset` and :attr:`~pyTooling.Cartesian3D.Offset3D.ZOffset`, and negates, adds,
 subtracts and compares as its 2D counterpart does.
 
-The vector operations are the same too, except for the cross product:
-:meth:`~pyTooling.Cartesian3D.Offset3D.Cross` returns a new :class:`~pyTooling.Cartesian3D.Offset3D`, perpendicular to
-both offsets. The offsets and their cross product form a right-handed system, and the cross product of parallel offsets
-is a zero offset.
+The vector operations are the same too, except for the :term:`cross product <Cross Product>`:
+:meth:`~pyTooling.Cartesian3D.Offset3D.VectorProduct` returns a new :class:`~pyTooling.Cartesian3D.Offset3D`,
+perpendicular to both offsets. The offsets and their cross product form a right-handed system, and the cross product of
+parallel offsets is a zero offset.
 
 .. code-block:: Python
 
@@ -1488,10 +1490,10 @@ is a zero offset.
    xAxis = Offset3D(1, 0, 0)
    yAxis = Offset3D(0, 1, 0)
 
-   xAxis.Cross(yAxis)                 # Offset3D(0, 0, 1)
-   yAxis.Cross(xAxis)                 # Offset3D(0, 0, -1)
-   Offset3D(2, 3, 6).Length           # 7.0
-   Offset3D(2, 3, 6).Dot(xAxis)       # 2
+   xAxis.VectorProduct(yAxis)                 # Offset3D(0, 0, 1)
+   yAxis.VectorProduct(xAxis)                 # Offset3D(0, 0, -1)
+   Offset3D(2, 3, 6).Length                   # 7.0
+   Offset3D(2, 3, 6).ScalarProduct(xAxis)     # 2
 
 .. seealso::
 
