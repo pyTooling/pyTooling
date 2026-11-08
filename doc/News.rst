@@ -116,6 +116,17 @@ Version 10.x (2026)
      product), :meth:`~pyTooling.Cartesian2D.Offset2D.VectorProduct` (cross product; a number in 2D, a new
      :class:`~pyTooling.Cartesian3D.Offset3D` in 3D), :meth:`~pyTooling.Cartesian2D.Offset2D.Normalized` and
      multiplication by a number (``offset * 2``, ``2 * offset``, ``offset *= 2``).
+   * :mod:`pyTooling.Cartesian2D`: a general :class:`~pyTooling.Cartesian2D.Line2D` in Hesse normal form (unit normal
+     and signed distance from the origin), created from a normal and a distance or by
+     :meth:`~pyTooling.Cartesian2D.Line2D.FromPoints`, :meth:`~pyTooling.Cartesian2D.Line2D.FromPointAndDirection` and
+     :meth:`~pyTooling.Cartesian2D.Line2D.FromPointAndNormal`. It computes the signed distance of a point, projects a
+     point onto the line and intersects a :class:`~pyTooling.Cartesian2D.Ray2D`. Lines compare geometrically:
+     ``VerticalLine2D(5) == Line2D(Offset2D(1, 0), 5)``.
+   * :mod:`pyTooling.Cartesian3D`: a general :class:`~pyTooling.Cartesian3D.Plane3D` in Hesse normal form, created from
+     a normal and a distance or by :meth:`~pyTooling.Cartesian3D.Plane3D.FromPoints`,
+     :meth:`~pyTooling.Cartesian3D.Plane3D.FromPointAndSpanningVectors` and
+     :meth:`~pyTooling.Cartesian3D.Plane3D.FromPointAndNormal`, with the operations of a line and intersections with a
+     :class:`~pyTooling.Cartesian3D.Ray3D`.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:
