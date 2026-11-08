@@ -35,10 +35,11 @@ arithmetic.
 from copy                         import copy, deepcopy
 from math                         import isclose, pi, sqrt
 
-from pyTooling.Cartesian2D        import Base, Element2D, Origin2D, Point2D, Offset2D, Size2D, BoundingBox, Segment2D, \
-                                         LineSegment2D, Alignment, AlreadyOwnedError, DuplicatePointError, NoAreaError
+from pyTooling.Cartesian2D        import Base2D, Element2D, Origin2D, Point2D, Offset2D, Size2D, BoundingBox2D, \
+                                         Segment2D, LineSegment2D, Alignment2D, AlreadyOwnedError, \
+                                         DuplicatePointError, NoAreaError
 from pyTooling.Cartesian2D.Shapes import Rectangle, Circle, Shape
-from pyTooling.Cartesian2D.Groups import Group, Canvas
+from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D
 from pyTooling.Exceptions         import DuplicateElementError, InvalidOperationError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
@@ -1047,7 +1048,7 @@ class OffsetArithmetic(Testcase):
 
 class Bounds(Testcase):
 	def test_BoundingBox_int(self) -> None:
-		box = BoundingBox(1, 2, 4, 6)
+		box = BoundingBox2D(1, 2, 4, 6)
 
 		self.assertEqual(1, box.MinX)
 		self.assertEqual(2, box.MinY)
@@ -1059,7 +1060,7 @@ class Bounds(Testcase):
 		self.assertTupleEqual((1, 2, 4, 6), box.ToTuple())
 
 	def test_BoundingBox_float(self) -> None:
-		box = BoundingBox(-1.5, -2.5, 0.5, 0.5)
+		box = BoundingBox2D(-1.5, -2.5, 0.5, 0.5)
 
 		self.assertEqual(2.0, box.Width)
 		self.assertEqual(3.0, box.Height)
@@ -1067,65 +1068,65 @@ class Bounds(Testcase):
 
 	def test_BoundingBox_Point(self) -> None:
 		"""A bounding box may have no extent."""
-		box = BoundingBox(1, 2, 1, 2)
+		box = BoundingBox2D(1, 2, 1, 2)
 
 		self.assertEqual(0, box.Width)
 		self.assertEqual(0, box.Height)
 
 	def test_BoundingBox_None1(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = BoundingBox(None, 2, 4, 6)
+			_ = BoundingBox2D(None, 2, 4, 6)
 
 		self.assertEqual("Parameter 'minX' is None.", str(context.exception))
 
 	def test_BoundingBox_None2(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = BoundingBox(1, None, 4, 6)
+			_ = BoundingBox2D(1, None, 4, 6)
 
 		self.assertEqual("Parameter 'minY' is None.", str(context.exception))
 
 	def test_BoundingBox_None3(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = BoundingBox(1, 2, None, 6)
+			_ = BoundingBox2D(1, 2, None, 6)
 
 		self.assertEqual("Parameter 'maxX' is None.", str(context.exception))
 
 	def test_BoundingBox_None4(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = BoundingBox(1, 2, 4, None)
+			_ = BoundingBox2D(1, 2, 4, None)
 
 		self.assertEqual("Parameter 'maxY' is None.", str(context.exception))
 
 	def test_BoundingBox_str1(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = BoundingBox("1", 2, 4, 6)
+			_ = BoundingBox2D("1", 2, 4, 6)
 
 		self.assertEqual("Parameter 'minX' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_BoundingBox_str4(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = BoundingBox(1, 2, 4, "6")
+			_ = BoundingBox2D(1, 2, 4, "6")
 
 		self.assertEqual("Parameter 'maxY' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_BoundingBox_MaxXLess(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = BoundingBox(4, 2, 1, 6)
+			_ = BoundingBox2D(4, 2, 1, 6)
 
 		self.assertEqual("Parameter 'maxX' is less than parameter 'minX'.", str(context.exception))
 		self.assertListEqual(["Got minX=4 and maxX=1."], context.exception.__notes__)
 
 	def test_BoundingBox_MaxYLess(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = BoundingBox(1, 6, 4, 2)
+			_ = BoundingBox2D(1, 6, 4, 2)
 
 		self.assertEqual("Parameter 'maxY' is less than parameter 'minY'.", str(context.exception))
 		self.assertListEqual(["Got minY=6 and maxY=2."], context.exception.__notes__)
 
 	def test_BoundingBox_ReadOnly(self) -> None:
-		box = BoundingBox(1, 2, 4, 6)
+		box = BoundingBox2D(1, 2, 4, 6)
 
 		with self.assertRaises(AttributeError):
 			box.MinX = 0
@@ -1133,51 +1134,51 @@ class Bounds(Testcase):
 		self.assertEqual(1, box.MinX)
 
 	def test_FromPoints(self) -> None:
-		box = BoundingBox.FromPoints((Point2D(3, -1), Point2D(-2, 4), Point2D(1, 1)))
+		box = BoundingBox2D.FromPoints((Point2D(3, -1), Point2D(-2, 4), Point2D(1, 1)))
 
-		self.assertIs(BoundingBox, type(box))
+		self.assertIs(BoundingBox2D, type(box))
 		self.assertTupleEqual((-2, -1, 3, 4), box.ToTuple())
 
 	def test_FromPoints_Generator(self) -> None:
-		box = BoundingBox.FromPoints(Point2D(x, 2 * x) for x in range(4))
+		box = BoundingBox2D.FromPoints(Point2D(x, 2 * x) for x in range(4))
 
 		self.assertTupleEqual((0, 0, 3, 6), box.ToTuple())
 
 	def test_FromPoints_None(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = BoundingBox.FromPoints(None)
+			_ = BoundingBox2D.FromPoints(None)
 
 		self.assertEqual("Parameter 'points' is None.", str(context.exception))
 
 	def test_FromPoints_int(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = BoundingBox.FromPoints(3)
+			_ = BoundingBox2D.FromPoints(3)
 
 		self.assertEqual("Parameter 'points' is not iterable.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 	def test_FromPoints_NoneElement(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = BoundingBox.FromPoints((Point2D(0, 0), None))
+			_ = BoundingBox2D.FromPoints((Point2D(0, 0), None))
 
 		self.assertEqual("An element of parameter 'points' is None.", str(context.exception))
 
 	def test_FromPoints_tupleElement(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = BoundingBox.FromPoints((Point2D(0, 0), (1, 1)))
+			_ = BoundingBox2D.FromPoints((Point2D(0, 0), (1, 1)))
 
 		self.assertEqual("An element of parameter 'points' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 	def test_FromPoints_Empty(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = BoundingBox.FromPoints(())
+			_ = BoundingBox2D.FromPoints(())
 
 		self.assertEqual("Parameter 'points' is empty.", str(context.exception))
 
 	def test_Union(self) -> None:
-		box1 = BoundingBox(0, 0, 2, 2)
-		box2 = BoundingBox(1, -1, 4, 1)
+		box1 = BoundingBox2D(0, 0, 2, 2)
+		box2 = BoundingBox2D(1, -1, 4, 1)
 
 		box = box1.Union(box2)
 
@@ -1186,7 +1187,7 @@ class Bounds(Testcase):
 		self.assertTupleEqual((1, -1, 4, 1), box2.ToTuple())
 
 	def test_Union_None(self) -> None:
-		box = BoundingBox(0, 0, 2, 2)
+		box = BoundingBox2D(0, 0, 2, 2)
 
 		with self.assertRaises(ValueError) as context:
 			_ = box.Union(None)
@@ -1194,33 +1195,33 @@ class Bounds(Testcase):
 		self.assertEqual("Parameter 'other' is None.", str(context.exception))
 
 	def test_Union_tuple(self) -> None:
-		box = BoundingBox(0, 0, 2, 2)
+		box = BoundingBox2D(0, 0, 2, 2)
 
 		with self.assertRaises(TypeError) as context:
 			_ = box.Union((1, 1, 3, 3))
 
-		self.assertEqual("Parameter 'other' is not of type 'BoundingBox'.", str(context.exception))
+		self.assertEqual("Parameter 'other' is not of type 'BoundingBox2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 	def test_HasOverlap(self) -> None:
-		box = BoundingBox(0, 0, 2, 2)
+		box = BoundingBox2D(0, 0, 2, 2)
 
-		self.assertTrue(box.HasOverlap(BoundingBox(1, 1, 3, 3)))
-		self.assertTrue(box.HasOverlap(BoundingBox(-1, -1, 3, 3)))
-		self.assertFalse(box.HasOverlap(BoundingBox(3, 0, 4, 2)))
-		self.assertFalse(box.HasOverlap(BoundingBox(0, -2, 2, -1)))
+		self.assertTrue(box.HasOverlap(BoundingBox2D(1, 1, 3, 3)))
+		self.assertTrue(box.HasOverlap(BoundingBox2D(-1, -1, 3, 3)))
+		self.assertFalse(box.HasOverlap(BoundingBox2D(3, 0, 4, 2)))
+		self.assertFalse(box.HasOverlap(BoundingBox2D(0, -2, 2, -1)))
 
 	def test_HasOverlap_Touching(self) -> None:
-		box = BoundingBox(0, 0, 2, 2)
+		box = BoundingBox2D(0, 0, 2, 2)
 
-		self.assertFalse(box.HasOverlap(BoundingBox(2, 0, 4, 2)))
-		self.assertFalse(box.HasOverlap(BoundingBox(-2, 0, 0, 2)))
-		self.assertFalse(box.HasOverlap(BoundingBox(0, 2, 2, 4)))
-		self.assertFalse(box.HasOverlap(BoundingBox(0, -2, 2, 0)))
-		self.assertFalse(box.HasOverlap(BoundingBox(2, 2, 3, 3)))
+		self.assertFalse(box.HasOverlap(BoundingBox2D(2, 0, 4, 2)))
+		self.assertFalse(box.HasOverlap(BoundingBox2D(-2, 0, 0, 2)))
+		self.assertFalse(box.HasOverlap(BoundingBox2D(0, 2, 2, 4)))
+		self.assertFalse(box.HasOverlap(BoundingBox2D(0, -2, 2, 0)))
+		self.assertFalse(box.HasOverlap(BoundingBox2D(2, 2, 3, 3)))
 
 	def test_HasOverlap_None(self) -> None:
-		box = BoundingBox(0, 0, 2, 2)
+		box = BoundingBox2D(0, 0, 2, 2)
 
 		with self.assertRaises(ValueError) as context:
 			_ = box.HasOverlap(None)
@@ -1228,16 +1229,16 @@ class Bounds(Testcase):
 		self.assertEqual("Parameter 'other' is None.", str(context.exception))
 
 	def test_HasOverlap_tuple(self) -> None:
-		box = BoundingBox(0, 0, 2, 2)
+		box = BoundingBox2D(0, 0, 2, 2)
 
 		with self.assertRaises(TypeError) as context:
 			_ = box.HasOverlap((1, 1, 3, 3))
 
-		self.assertEqual("Parameter 'other' is not of type 'BoundingBox'.", str(context.exception))
+		self.assertEqual("Parameter 'other' is not of type 'BoundingBox2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 	def test_ContainsPoint(self) -> None:
-		box = BoundingBox(0, 0, 2, 2)
+		box = BoundingBox2D(0, 0, 2, 2)
 
 		self.assertTrue(box.ContainsPoint(Point2D(1, 1)))
 		self.assertTrue(box.ContainsPoint(Point2D(2, 0)))
@@ -1245,7 +1246,7 @@ class Bounds(Testcase):
 		self.assertFalse(box.ContainsPoint(Point2D(1, -0.5)))
 
 	def test_ContainsPoint_None(self) -> None:
-		box = BoundingBox(0, 0, 2, 2)
+		box = BoundingBox2D(0, 0, 2, 2)
 
 		with self.assertRaises(ValueError) as context:
 			_ = box.ContainsPoint(None)
@@ -1253,7 +1254,7 @@ class Bounds(Testcase):
 		self.assertEqual("Parameter 'point' is None.", str(context.exception))
 
 	def test_ContainsPoint_tuple(self) -> None:
-		box = BoundingBox(0, 0, 2, 2)
+		box = BoundingBox2D(0, 0, 2, 2)
 
 		with self.assertRaises(TypeError) as context:
 			_ = box.ContainsPoint((1, 1))
@@ -1262,14 +1263,14 @@ class Bounds(Testcase):
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 	def test_In(self) -> None:
-		box = BoundingBox(0, 0, 2, 2)
+		box = BoundingBox2D(0, 0, 2, 2)
 
 		self.assertIn(Point2D(1, 1), box)
 		self.assertIn(Point2D(2, 0), box)
 		self.assertNotIn(Point2D(3, 1), box)
 
 	def test_In_tuple(self) -> None:
-		box = BoundingBox(0, 0, 2, 2)
+		box = BoundingBox2D(0, 0, 2, 2)
 
 		with self.assertRaises(TypeError) as context:
 			_ = (1, 1) in box
@@ -1281,7 +1282,7 @@ class Bounds(Testcase):
 		)
 
 	def test_In_None(self) -> None:
-		box = BoundingBox(0, 0, 2, 2)
+		box = BoundingBox2D(0, 0, 2, 2)
 
 		with self.assertRaises(TypeError) as context:
 			_ = None in box
@@ -1293,17 +1294,17 @@ class Bounds(Testcase):
 		)
 
 	def test_ToRectangle(self) -> None:
-		rectangle = BoundingBox(1, 2, 4, 6).ToRectangle()
+		rectangle = BoundingBox2D(1, 2, 4, 6).ToRectangle()
 
 		self.assertIsInstance(rectangle, Rectangle)
 		self.assertTupleEqual(
 			((1, 2), (1, 6), (4, 6), (4, 2)),
 			tuple(point.ToTuple() for point in rectangle.Points)
 		)
-		self.assertEqual(BoundingBox(1, 2, 4, 6), rectangle.BoundingBox)
+		self.assertEqual(BoundingBox2D(1, 2, 4, 6), rectangle.BoundingBox)
 
 	def test_ToRectangle_NoArea(self) -> None:
-		for box in (BoundingBox(1, 2, 1, 6), BoundingBox(1, 2, 4, 2)):
+		for box in (BoundingBox2D(1, 2, 1, 6), BoundingBox2D(1, 2, 4, 2)):
 			with self.subTest(box=box):
 				with self.assertRaises(NoAreaError) as context:
 					_ = box.ToRectangle()
@@ -1311,48 +1312,48 @@ class Bounds(Testcase):
 				self.assertEqual("Bounding box has no area.", str(context.exception))
 
 	def test_Equal(self) -> None:
-		box = BoundingBox(1, 2, 4, 6)
+		box = BoundingBox2D(1, 2, 4, 6)
 
-		self.assertTrue(box == BoundingBox(1, 2, 4, 6))
-		self.assertFalse(box == BoundingBox(1, 2, 4, 7))
-		self.assertFalse(box != BoundingBox(1, 2, 4, 6))
-		self.assertTrue(box != BoundingBox(0, 2, 4, 6))
+		self.assertTrue(box == BoundingBox2D(1, 2, 4, 6))
+		self.assertFalse(box == BoundingBox2D(1, 2, 4, 7))
+		self.assertFalse(box != BoundingBox2D(1, 2, 4, 6))
+		self.assertTrue(box != BoundingBox2D(0, 2, 4, 6))
 
 	def test_Equal_tuple(self) -> None:
-		box = BoundingBox(1, 2, 4, 6)
+		box = BoundingBox2D(1, 2, 4, 6)
 
 		with self.assertRaises(TypeError) as context:
 			_ = box == (1, 2, 4, 6)
 
 		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
 		self.assertListEqual(
-			["Got type 'tuple'.", "Supported types for second operand: BoundingBox"],
+			["Got type 'tuple'.", "Supported types for second operand: BoundingBox2D"],
 			context.exception.__notes__
 		)
 
 	def test_Unequal_tuple(self) -> None:
-		box = BoundingBox(1, 2, 4, 6)
+		box = BoundingBox2D(1, 2, 4, 6)
 
 		with self.assertRaises(TypeError) as context:
 			_ = box != (1, 2, 4, 6)
 
 		self.assertEqual("Second operand is not supported by != operator.", str(context.exception))
 		self.assertListEqual(
-			["Got type 'tuple'.", "Supported types for second operand: BoundingBox"],
+			["Got type 'tuple'.", "Supported types for second operand: BoundingBox2D"],
 			context.exception.__notes__
 		)
 
 	def test_Plus_Offset(self) -> None:
-		box = BoundingBox(1, 2, 4, 6)
+		box = BoundingBox2D(1, 2, 4, 6)
 
 		newBox = box + Offset2D(10, -2)
 
-		self.assertIs(BoundingBox, type(newBox))
+		self.assertIs(BoundingBox2D, type(newBox))
 		self.assertTupleEqual((11, 0, 14, 4), newBox.ToTuple())
 		self.assertTupleEqual((1, 2, 4, 6), box.ToTuple())
 
 	def test_Plus_tuple(self) -> None:
-		box = BoundingBox(1, 2, 4, 6)
+		box = BoundingBox2D(1, 2, 4, 6)
 
 		with self.assertRaises(TypeError) as context:
 			_ = box + (10, -2)
@@ -1361,20 +1362,20 @@ class Bounds(Testcase):
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 	def test_Copy(self) -> None:
-		box = BoundingBox(1, 2, 4, 6)
+		box = BoundingBox2D(1, 2, 4, 6)
 
 		for newBox in (box.Copy(), copy(box), deepcopy(box)):
-			self.assertIs(BoundingBox, type(newBox))
+			self.assertIs(BoundingBox2D, type(newBox))
 			self.assertIsNot(box, newBox)
 			self.assertEqual(box, newBox)
 
 	def test_repr(self) -> None:
-		box = BoundingBox(1, 2, 4.5, 6)
+		box = BoundingBox2D(1, 2, 4.5, 6)
 
-		self.assertEqual("BoundingBox(1, 2, 4.5, 6)", repr(box))
+		self.assertEqual("BoundingBox2D(1, 2, 4.5, 6)", repr(box))
 
 	def test_str(self) -> None:
-		box = BoundingBox(1, 2, 4.5, 6)
+		box = BoundingBox2D(1, 2, 4.5, 6)
 
 		self.assertEqual("((1, 2), (4.5, 6))", str(box))
 
@@ -1389,7 +1390,7 @@ class Bounds(Testcase):
 		line = LineSegment2D(Point2D(4, 1), Point2D(-1, 3))
 
 		with self.assertRaises(AttributeError):
-			line.BoundingBox = BoundingBox(0, 0, 1, 1)
+			line.BoundingBox = BoundingBox2D(0, 0, 1, 1)
 
 
 class Moving(Testcase):
@@ -1427,20 +1428,20 @@ class Moving(Testcase):
 class Hierarchy(Testcase):
 	def test_Base(self) -> None:
 		with self.assertRaises(AbstractClassError):
-			_ = Base()
+			_ = Base2D()
 
 	def test_Element2D(self) -> None:
 		with self.assertRaises(AbstractClassError):
 			_ = Element2D()
 
 	def test_Point(self) -> None:
-		self.assertIsInstance(Point2D(1, 2), Base)
+		self.assertIsInstance(Point2D(1, 2), Base2D)
 		self.assertNotIsInstance(Point2D(1, 2), Element2D)
 
 	def test_Origin(self) -> None:
 		origin = Origin2D()
 
-		self.assertIsInstance(origin, Base)
+		self.assertIsInstance(origin, Base2D)
 		self.assertIsNone(origin.Parent)
 		self.assertIsNone(origin.Frame)
 
@@ -1453,7 +1454,7 @@ class Hierarchy(Testcase):
 
 	def test_Slots(self) -> None:
 		"""The parent is a slot of the base-class only."""
-		self.assertTupleEqual(("_parent", ), Base.__slots__)
+		self.assertTupleEqual(("_parent", ), Base2D.__slots__)
 		self.assertTupleEqual((), Element2D.__slots__)
 		self.assertNotIn("_parent", Point2D.__slots__)
 		self.assertNotIn("_parent", Segment2D.__slots__)
@@ -1470,28 +1471,28 @@ class Mirroring(Testcase):
 	def test_MirrorY_MinY(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorY(Alignment.MinY)
+		line.MirrorY(Alignment2D.MinY)
 
 		self.assertTupleEqual(((1, 2), (4, -2)), line.ToTuple())
 
 	def test_MirrorY_MaxY(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorY(Alignment.MaxY)
+		line.MirrorY(Alignment2D.MaxY)
 
 		self.assertTupleEqual(((1, 10), (4, 6)), line.ToTuple())
 
 	def test_MirrorY_Offset(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorY(Alignment.MinY, 1)
+		line.MirrorY(Alignment2D.MinY, 1)
 
 		self.assertTupleEqual(((1, 4), (4, 0)), line.ToTuple())
 
 	def test_MirrorY_FloatOffset(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorY(Alignment.MaxY, -0.5)
+		line.MirrorY(Alignment2D.MaxY, -0.5)
 
 		self.assertTupleEqual(((1, 9.0), (4, 5.0)), line.ToTuple())
 
@@ -1499,7 +1500,7 @@ class Mirroring(Testcase):
 		"""An axis between two integer coordinates keeps integer coordinates."""
 		line = LineSegment2D(Point2D(1, 1), Point2D(4, 6))
 
-		line.MirrorY(Alignment.CenterY)
+		line.MirrorY(Alignment2D.CenterY)
 
 		self.assertTupleEqual(((1, 6), (4, 1)), line.ToTuple())
 		self.assertIs(int, type(line.Start.Y))
@@ -1520,23 +1521,23 @@ class Mirroring(Testcase):
 		with self.assertRaises(TypeError) as context:
 			line.MirrorY("MinY")
 
-		self.assertEqual("Parameter 'axis' is not of type 'Alignment'.", str(context.exception))
+		self.assertEqual("Parameter 'axis' is not of type 'Alignment2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
 	def test_MirrorY_AxisX(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		for axis in (Alignment.MinX, Alignment.CenterX, Alignment.MaxX):
+		for axis in (Alignment2D.MinX, Alignment2D.CenterX, Alignment2D.MaxX):
 			with self.subTest(axis=axis):
 				with self.assertRaises(ValueError) as context:
 					line.MirrorY(axis)
 
 				self.assertEqual(
-					"Parameter 'axis' is not Alignment.MinY, Alignment.CenterY or Alignment.MaxY.",
+					"Parameter 'axis' is not Alignment2D.MinY, Alignment2D.CenterY or Alignment2D.MaxY.",
 					str(context.exception)
 				)
-				self.assertListEqual([f"Got value 'Alignment.{axis.name}'."], context.exception.__notes__)
+				self.assertListEqual([f"Got value 'Alignment2D.{axis.name}'."], context.exception.__notes__)
 
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
@@ -1544,7 +1545,7 @@ class Mirroring(Testcase):
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		with self.assertRaises(ValueError) as context:
-			line.MirrorY(Alignment.MinY, None)
+			line.MirrorY(Alignment2D.MinY, None)
 
 		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
@@ -1553,7 +1554,7 @@ class Mirroring(Testcase):
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		with self.assertRaises(TypeError) as context:
-			line.MirrorY(Alignment.MinY, "1")
+			line.MirrorY(Alignment2D.MinY, "1")
 
 		self.assertEqual("Parameter 'offset' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
@@ -1569,28 +1570,28 @@ class Mirroring(Testcase):
 	def test_MirrorX_MinX(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorX(Alignment.MinX)
+		line.MirrorX(Alignment2D.MinX)
 
 		self.assertTupleEqual(((1, 2), (-2, 6)), line.ToTuple())
 
 	def test_MirrorX_MaxX(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorX(Alignment.MaxX)
+		line.MirrorX(Alignment2D.MaxX)
 
 		self.assertTupleEqual(((7, 2), (4, 6)), line.ToTuple())
 
 	def test_MirrorX_Offset(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorX(Alignment.MaxX, -1)
+		line.MirrorX(Alignment2D.MaxX, -1)
 
 		self.assertTupleEqual(((5, 2), (2, 6)), line.ToTuple())
 
 	def test_MirrorX_FloatOffset(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorX(Alignment.MinX, 0.5)
+		line.MirrorX(Alignment2D.MinX, 0.5)
 
 		self.assertTupleEqual(((2.0, 2), (-1.0, 6)), line.ToTuple())
 
@@ -1598,7 +1599,7 @@ class Mirroring(Testcase):
 		"""An axis between two integer coordinates keeps integer coordinates."""
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		line.MirrorX(Alignment.CenterX)
+		line.MirrorX(Alignment2D.CenterX)
 
 		self.assertTupleEqual(((4, 2), (1, 6)), line.ToTuple())
 		self.assertIs(int, type(line.Start.X))
@@ -1619,23 +1620,23 @@ class Mirroring(Testcase):
 		with self.assertRaises(TypeError) as context:
 			line.MirrorX("MinX")
 
-		self.assertEqual("Parameter 'axis' is not of type 'Alignment'.", str(context.exception))
+		self.assertEqual("Parameter 'axis' is not of type 'Alignment2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
 	def test_MirrorX_AxisY(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
-		for axis in (Alignment.MinY, Alignment.CenterY, Alignment.MaxY):
+		for axis in (Alignment2D.MinY, Alignment2D.CenterY, Alignment2D.MaxY):
 			with self.subTest(axis=axis):
 				with self.assertRaises(ValueError) as context:
 					line.MirrorX(axis)
 
 				self.assertEqual(
-					"Parameter 'axis' is not Alignment.MinX, Alignment.CenterX or Alignment.MaxX.",
+					"Parameter 'axis' is not Alignment2D.MinX, Alignment2D.CenterX or Alignment2D.MaxX.",
 					str(context.exception)
 				)
-				self.assertListEqual([f"Got value 'Alignment.{axis.name}'."], context.exception.__notes__)
+				self.assertListEqual([f"Got value 'Alignment2D.{axis.name}'."], context.exception.__notes__)
 
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
@@ -1643,7 +1644,7 @@ class Mirroring(Testcase):
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		with self.assertRaises(ValueError) as context:
-			line.MirrorX(Alignment.MinX, None)
+			line.MirrorX(Alignment2D.MinX, None)
 
 		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
 		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
@@ -1652,7 +1653,7 @@ class Mirroring(Testcase):
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		with self.assertRaises(TypeError) as context:
-			line.MirrorX(Alignment.MinX, "1")
+			line.MirrorX(Alignment2D.MinX, "1")
 
 		self.assertEqual("Parameter 'offset' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
@@ -1877,7 +1878,7 @@ class Ownership(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), copyPoints=False, parent=1)
 
-		self.assertEqual("Parameter 'parent' is not of type 'Shape' or 'Group' or 'Canvas'.", str(context.exception))
+		self.assertEqual("Parameter 'parent' is not of type 'Shape' or 'Group2D' or 'Canvas2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 	def test_LineSegment_Start(self) -> None:
@@ -1969,8 +1970,8 @@ class Ownership(Testcase):
 		self.assertIs(end, line1.End)
 
 
-class Node(Base):
-	"""A class with a parent, using the setter of :class:`Base`."""
+class Node(Base2D):
+	"""A class with a parent, using the setter of :class:`Base2D`."""
 
 	_PARENT_TYPE = (Point2D, )
 
@@ -2010,19 +2011,19 @@ class ParentTypes(Testcase):
 		self.assertTupleEqual((Element2D, ), Origin2D._PARENT_TYPE)
 
 	def test_Segment(self) -> None:
-		self.assertTupleEqual((Shape, Group, Canvas), Segment2D._PARENT_TYPE)
+		self.assertTupleEqual((Shape, Group2D, Canvas2D), Segment2D._PARENT_TYPE)
 
 	def test_LineSegment(self) -> None:
-		self.assertTupleEqual((Shape, Group, Canvas), LineSegment2D._PARENT_TYPE)
+		self.assertTupleEqual((Shape, Group2D, Canvas2D), LineSegment2D._PARENT_TYPE)
 
 	def test_Shape(self) -> None:
-		self.assertTupleEqual((Group, Canvas), Shape._PARENT_TYPE)
+		self.assertTupleEqual((Group2D, Canvas2D), Shape._PARENT_TYPE)
 
 	def test_Rectangle(self) -> None:
-		self.assertTupleEqual((Group, Canvas), Rectangle._PARENT_TYPE)
+		self.assertTupleEqual((Group2D, Canvas2D), Rectangle._PARENT_TYPE)
 
 	def test_Group(self) -> None:
-		self.assertTupleEqual((Group, Canvas), Group._PARENT_TYPE)
+		self.assertTupleEqual((Group2D, Canvas2D), Group2D._PARENT_TYPE)
 
 
 class Frames(Testcase):
@@ -2047,68 +2048,68 @@ class Aligning(Testcase):
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
 		circle =    Circle(Point2D(10, 10), 1)
 
-		circle.AlignTo(rectangle, Alignment.MinX)
+		circle.AlignTo(rectangle, Alignment2D.MinX)
 
-		self.assertEqual(BoundingBox(0, 9, 2, 11), circle.BoundingBox)
+		self.assertEqual(BoundingBox2D(0, 9, 2, 11), circle.BoundingBox)
 
 	def test_CenterX(self) -> None:
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
 		circle =    Circle(Point2D(10, 10), 1)
 
-		circle.AlignTo(rectangle, Alignment.CenterX)
+		circle.AlignTo(rectangle, Alignment2D.CenterX)
 
-		self.assertEqual(BoundingBox(1, 9, 3, 11), circle.BoundingBox)
+		self.assertEqual(BoundingBox2D(1, 9, 3, 11), circle.BoundingBox)
 
 	def test_Right(self) -> None:
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
 		circle =    Circle(Point2D(10, 10), 1)
 
-		circle.AlignTo(rectangle, Alignment.MaxX)
+		circle.AlignTo(rectangle, Alignment2D.MaxX)
 
-		self.assertEqual(BoundingBox(2, 9, 4, 11), circle.BoundingBox)
+		self.assertEqual(BoundingBox2D(2, 9, 4, 11), circle.BoundingBox)
 
 	def test_MinY(self) -> None:
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
 		circle =    Circle(Point2D(10, 10), 1)
 
-		circle.AlignTo(rectangle, Alignment.MinY)
+		circle.AlignTo(rectangle, Alignment2D.MinY)
 
-		self.assertEqual(BoundingBox(9, 0, 11, 2), circle.BoundingBox)
+		self.assertEqual(BoundingBox2D(9, 0, 11, 2), circle.BoundingBox)
 
 	def test_CenterY(self) -> None:
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 4), Point2D(0, 4))
 		circle =    Circle(Point2D(10, 10), 1)
 
-		circle.AlignTo(rectangle, Alignment.CenterY)
+		circle.AlignTo(rectangle, Alignment2D.CenterY)
 
-		self.assertEqual(BoundingBox(9, 1, 11, 3), circle.BoundingBox)
+		self.assertEqual(BoundingBox2D(9, 1, 11, 3), circle.BoundingBox)
 
 	def test_MaxY(self) -> None:
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
 		circle =    Circle(Point2D(10, 10), 1)
 
-		circle.AlignTo(rectangle, Alignment.MaxY)
+		circle.AlignTo(rectangle, Alignment2D.MaxY)
 
-		self.assertEqual(BoundingBox(9, 0, 11, 2), circle.BoundingBox)
+		self.assertEqual(BoundingBox2D(9, 0, 11, 2), circle.BoundingBox)
 
 	def test_OtherGroup(self) -> None:
 		"""Elements of different groups are aligned by their absolute bounding boxes."""
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
 		circle =    Circle(Point2D(1, 1), 1)
-		_ =         Group(Offset2D(10, 0), (rectangle, ))
-		_ =         Group(Offset2D(0, 50), (circle, ))
+		_ =         Group2D(Offset2D(10, 0), (rectangle, ))
+		_ =         Group2D(Offset2D(0, 50), (circle, ))
 
-		circle.AlignTo(rectangle, Alignment.MaxX)
+		circle.AlignTo(rectangle, Alignment2D.MaxX)
 
-		self.assertEqual(BoundingBox(12, 50, 14, 52), circle.AbsoluteBoundingBox)
-		self.assertEqual(BoundingBox(12, 0, 14, 2), circle.BoundingBox)
+		self.assertEqual(BoundingBox2D(12, 50, 14, 52), circle.AbsoluteBoundingBox)
+		self.assertEqual(BoundingBox2D(12, 0, 14, 2), circle.BoundingBox)
 
 	def test_Group(self) -> None:
 		"""Aligning a group changes its offset."""
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
-		group =     Group(Offset2D(10, 10), (Circle(Point2D(1, 1), 1), ))
+		group =     Group2D(Offset2D(10, 10), (Circle(Point2D(1, 1), 1), ))
 
-		group.AlignTo(rectangle, Alignment.MinX)
+		group.AlignTo(rectangle, Alignment2D.MinX)
 
 		self.assertTupleEqual((0, 10), group.Offset.ToTuple())
 
@@ -2116,7 +2117,7 @@ class Aligning(Testcase):
 		circle = Circle(Point2D(10, 10), 1)
 
 		with self.assertRaises(ValueError) as context:
-			circle.AlignTo(None, Alignment.MinX)
+			circle.AlignTo(None, Alignment2D.MinX)
 
 		self.assertEqual("Parameter 'reference' is None.", str(context.exception))
 
@@ -2124,7 +2125,7 @@ class Aligning(Testcase):
 		circle = Circle(Point2D(10, 10), 1)
 
 		with self.assertRaises(TypeError) as context:
-			circle.AlignTo(Point2D(0, 0), Alignment.MinX)
+			circle.AlignTo(Point2D(0, 0), Alignment2D.MinX)
 
 		self.assertEqual("Parameter 'reference' is not of type 'Element2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
@@ -2143,6 +2144,6 @@ class Aligning(Testcase):
 		with self.assertRaises(TypeError) as context:
 			circle.AlignTo(Circle(Point2D(0, 0), 1), "Left")
 
-		self.assertEqual("Parameter 'alignment' is not of type 'Alignment'.", str(context.exception))
+		self.assertEqual("Parameter 'alignment' is not of type 'Alignment2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 		self.assertTupleEqual((10, 10), circle.Center.ToTuple())

@@ -50,7 +50,7 @@ from pyTooling.Decorators         import export, readonly
 from pyTooling.Exceptions         import EmptyError
 from pyTooling.MetaClasses        import ExtendedType
 from pyTooling.Common             import getFullyQualifiedName
-from pyTooling.Cartesian2D        import Coordinate, Base, Offset2D, Size2D, BoundingBox, Alignment, Element2D, \
+from pyTooling.Cartesian2D        import Coordinate, Base2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, Element2D, \
                                          Segment2D, Cartesian2DError, AlreadyOwnedError, GroupCycleError, \
                                          NotOwnedError, NotInSameFrameError
 from pyTooling.Cartesian2D.Shapes import Shape
@@ -70,7 +70,7 @@ class EmptyGroupError(Cartesian2DError, EmptyError):
 
 
 @export
-class ContainerMixin(metaclass=ExtendedType, mixin=True):
+class Container2DMixin(metaclass=ExtendedType, mixin=True):
 	"""
 	Mixin-class for elements holding shapes, segments and groups: groups and canvases.
 
@@ -134,7 +134,7 @@ class ContainerMixin(metaclass=ExtendedType, mixin=True):
 		return tuple(self._children)
 
 	@readonly
-	def BoundingBox(self) -> BoundingBox:
+	def BoundingBox(self) -> BoundingBox2D:
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing all children.
 
@@ -199,9 +199,9 @@ class ContainerMixin(metaclass=ExtendedType, mixin=True):
 			ex.add_note(f"Got type '{getFullyQualifiedName(child)}'.")
 			raise ex
 		elif child._parent is not self:
-			ex = NotOwnedError(f"Element isn't a child of this {self.__class__.__name__.lower()}.")
+			ex = NotOwnedError(f"Element isn't a child of this {self.__class__.__name__}.")
 			ex.add_note(f"Got {child!r} owned by {child._parent!r}.")
-			raise ex from ValueError(f"Parameter 'child' isn't a child of this {self.__class__.__name__.lower()}.")
+			raise ex from ValueError(f"Parameter 'child' isn't a child of this {self.__class__.__name__}.")
 
 		child.Parent = None
 
@@ -307,7 +307,7 @@ class ContainerMixin(metaclass=ExtendedType, mixin=True):
 
 
 @export
-class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
+class Group2D(Element2D[Coordinate], Container2DMixin, Generic[Coordinate]):
 	"""
 	A group holds shapes, segments and other groups at an offset.
 
@@ -322,7 +322,7 @@ class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
 		offset:   Nullable[Offset2D[Coordinate]] = None,
 		children: Nullable[Iterable[Element2D[Coordinate]]] = None,
 		*,
-		parent:   Nullable[Union[Group[Coordinate], Canvas[Coordinate]]] = None
+		parent:   Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a group at an offset, holding the given children.
@@ -340,11 +340,11 @@ class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
 		                           :class:`~pyTooling.Cartesian2D.Element2D`.
 		:raises AlreadyOwnedError: If an element of parameter 'children' belongs to another element.
 		:raises ValueError:        If an element of parameter 'children' is given twice.
-		:raises TypeError:         If parameter 'parent' is not of type :class:`Group` or :class:`Canvas`.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`Group2D` or :class:`Canvas2D`.
 		:raises GroupCycleError:   If parameter 'parent' is inside an element of parameter 'children'.
 		"""
 		super().__init__(parent=parent)
-		ContainerMixin.__init__(self, children)
+		Container2DMixin.__init__(self, children)
 
 		if offset is not None and not isinstance(offset, Offset2D):
 			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
@@ -401,7 +401,7 @@ class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
 		return self._offset.Copy() if frame is None else self._offset + frame.AbsoluteOffset
 
 	@readonly
-	def _ChildFrame(self) -> Group[Coordinate]:
+	def _ChildFrame(self) -> Group2D[Coordinate]:
 		"""
 		Read-only property to access the frame the coordinates of this group's children are relative to: the group itself.
 
@@ -410,7 +410,7 @@ class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
 		return self
 
 	@readonly
-	def BoundingBox(self) -> BoundingBox[Coordinate]:
+	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing all children.
 
@@ -420,7 +420,7 @@ class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
 		:returns:                A new bounding box.
 		:raises EmptyGroupError: If the group or a group inside it has no children.
 		"""
-		return ContainerMixin.BoundingBox.fget(self) + self._offset
+		return Container2DMixin.BoundingBox.fget(self) + self._offset
 
 	def Move(self, offset: Offset2D[Coordinate]) -> None:
 		"""
@@ -471,19 +471,19 @@ class Group(Element2D[Coordinate], ContainerMixin, Generic[Coordinate]):
 
 		:returns: The string representation of the group, its offset and number of children.
 		"""
-		return f"Group({self._offset}, children={len(self._children)})"
+		return f"Group2D({self._offset}, children={len(self._children)})"
 
 
 @export
-class Canvas(Base[Coordinate], ContainerMixin, Generic[Coordinate]):
+class Canvas2D(Base2D[Coordinate], Container2DMixin, Generic[Coordinate]):
 	"""
 	A canvas is the root of a drawing: it holds shapes, segments and groups, and knows the direction of its y-axis.
 
 	The coordinates of the canvas' children are relative to the origin. A canvas has an optional :attr:`Size`; without
 	one, it is open in every direction.
 
-	As the root, it has no parent and no frame: :attr:`~pyTooling.Cartesian2D.Base.Parent` and
-	:attr:`~pyTooling.Cartesian2D.Base.Frame` are always ``None``.
+	As the root, it has no parent and no frame: :attr:`~pyTooling.Cartesian2D.Base2D.Parent` and
+	:attr:`~pyTooling.Cartesian2D.Base2D.Frame` are always ``None``.
 	"""
 
 	_direction: YAxisDirection    #: Direction, in which the y-coordinates grow.
@@ -515,7 +515,7 @@ class Canvas(Base[Coordinate], ContainerMixin, Generic[Coordinate]):
 		:raises ValueError:        If an element of parameter 'children' is given twice.
 		"""
 		super().__init__()
-		ContainerMixin.__init__(self, children)
+		Container2DMixin.__init__(self, children)
 
 		if direction is None:
 			raise ValueError("Parameter 'direction' is None.")
@@ -564,14 +564,14 @@ class Canvas(Base[Coordinate], ContainerMixin, Generic[Coordinate]):
 		"""
 		return Offset2D(0, 0)
 
-	@Base.Parent.setter
+	@Base2D.Parent.setter
 	def Parent(self, parent: None) -> None:
 		ex = TypeError(f"A '{getFullyQualifiedName(self)}' has no parent.")
 		ex.add_note(f"Got type '{getFullyQualifiedName(parent)}'.")
 		raise ex
 
 	@readonly
-	def _ChildFrame(self) -> Canvas[Coordinate]:
+	def _ChildFrame(self) -> Canvas2D[Coordinate]:
 		"""
 		Read-only property to access the frame the coordinates of this canvas' children are relative to: the canvas itself.
 
@@ -580,24 +580,24 @@ class Canvas(Base[Coordinate], ContainerMixin, Generic[Coordinate]):
 		return self
 
 	@readonly
-	def TopAlignment(self) -> Alignment:
+	def TopAlignment(self) -> Alignment2D:
 		"""
 		Read-only property to return the alignment of the elements' top edges on this canvas.
 
-		:returns: :attr:`Alignment.MaxY <pyTooling.Cartesian2D.Alignment.MaxY>`, if the y-axis points up, else
-		          :attr:`Alignment.MinY <pyTooling.Cartesian2D.Alignment.MinY>`.
+		:returns: :attr:`Alignment2D.MaxY <pyTooling.Cartesian2D.Alignment2D.MaxY>`, if the y-axis points up, else
+		          :attr:`Alignment2D.MinY <pyTooling.Cartesian2D.Alignment2D.MinY>`.
 		"""
-		return Alignment.MaxY if self._direction is YAxisDirection.Up else Alignment.MinY
+		return Alignment2D.MaxY if self._direction is YAxisDirection.Up else Alignment2D.MinY
 
 	@readonly
-	def BottomAlignment(self) -> Alignment:
+	def BottomAlignment(self) -> Alignment2D:
 		"""
 		Read-only property to return the alignment of the elements' bottom edges on this canvas.
 
-		:returns: :attr:`Alignment.MinY <pyTooling.Cartesian2D.Alignment.MinY>`, if the y-axis points up, else
-		          :attr:`Alignment.MaxY <pyTooling.Cartesian2D.Alignment.MaxY>`.
+		:returns: :attr:`Alignment2D.MinY <pyTooling.Cartesian2D.Alignment2D.MinY>`, if the y-axis points up, else
+		          :attr:`Alignment2D.MaxY <pyTooling.Cartesian2D.Alignment2D.MaxY>`.
 		"""
-		return Alignment.MinY if self._direction is YAxisDirection.Up else Alignment.MaxY
+		return Alignment2D.MinY if self._direction is YAxisDirection.Up else Alignment2D.MaxY
 
 	def Top(self, element: Element2D[Coordinate]) -> Coordinate:
 		"""
@@ -679,8 +679,8 @@ class Canvas(Base[Coordinate], ContainerMixin, Generic[Coordinate]):
 
 		:returns: The string representation of the canvas, its direction, size and number of children.
 		"""
-		return f"Canvas({self._direction.name}, {self._size}, children={len(self._children)})"
+		return f"Canvas2D({self._direction.name}, {self._size}, children={len(self._children)})"
 
 
-Element2D._PARENT_TYPE = (Group, Canvas)
-Segment2D._PARENT_TYPE = (Shape, Group, Canvas)
+Element2D._PARENT_TYPE = (Group2D, Canvas2D)
+Segment2D._PARENT_TYPE = (Shape, Group2D, Canvas2D)
