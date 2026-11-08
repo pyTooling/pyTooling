@@ -32,12 +32,13 @@
 from __future__            import annotations
 
 from copy                  import deepcopy
-from math                  import degrees, isclose, pi
+from math                  import degrees, isclose, pi, sqrt
 from typing                import TYPE_CHECKING, Any, Generic, Hashable, Iterable, Mapping, Optional as Nullable, \
                                   Self, Union
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import InvalidOperationError
+from pyTooling.MetaClasses import abstractmethod
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Segment2D, LineSegment2D, \
                                   ArcSegment2D, AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError
@@ -63,7 +64,34 @@ Segment2D._PARENT_TYPE = (Shape, )
 
 
 @export
-class Polygon(Shape[Coordinate], Generic[Coordinate]):
+class Geometry2D(Shape[Coordinate], Generic[Coordinate]):
+	"""
+	Abstract base-class for all 2D cartesian geometries: closed shapes enclosing an area.
+
+	A derived class implements :attr:`Area` and :attr:`Perimeter`, besides the abstract members of :class:`Shape`.
+	"""
+
+	@readonly
+	@abstractmethod
+	def Area(self) -> float:
+		"""
+		Read-only property to return the area enclosed by the geometry.
+
+		:returns: Area of the geometry.
+		"""
+
+	@readonly
+	@abstractmethod
+	def Perimeter(self) -> float:
+		"""
+		Read-only property to return the perimeter of the geometry, the length of its outline.
+
+		:returns: Perimeter of the geometry.
+		"""
+
+
+@export
+class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 	"""
 	A polygon is a closed shape, having three or more corners (vertices) connected by straight edges (sides).
 	"""
@@ -205,6 +233,37 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		return self._segments
 
 	@readonly
+	def Area(self) -> float:
+		"""
+		Read-only property to return the area enclosed by the polygon.
+
+		The corners may be given clockwise or counterclockwise. Where edges cross each other, the parts enclosed in opposite
+		orientations cancel each other out.
+
+		:returns: Area of the polygon.
+		"""
+		corners =   self._points
+		twiceArea = 0
+		for corner, nextCorner in zip(corners, (*corners[1:], corners[0])):
+			twiceArea += corner._x * nextCorner._y - nextCorner._x * corner._y
+
+		return abs(twiceArea) / 2
+
+	@readonly
+	def Perimeter(self) -> float:
+		"""
+		Read-only property to return the perimeter of the polygon, the sum of its edges' lengths.
+
+		:returns: Perimeter of the polygon.
+		"""
+		corners =   self._points
+		perimeter = 0.0
+		for corner, nextCorner in zip(corners, (*corners[1:], corners[0])):
+			perimeter += sqrt((nextCorner._x - corner._x) ** 2 + (nextCorner._y - corner._y) ** 2)
+
+		return perimeter
+
+	@readonly
 	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing the polygon's corners.
@@ -273,7 +332,7 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 
 
 @export
-class Trapezium(Shape[Coordinate], Generic[Coordinate]):
+class Trapezium(Geometry2D[Coordinate], Generic[Coordinate]):
 	"""
 	A Trapezium is a four-sided polygon, having four edges (sides) and four corners (vertices).
 	"""
@@ -482,6 +541,37 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		self._segments = edges
 
 	@readonly
+	def Area(self) -> float:
+		"""
+		Read-only property to return the area enclosed by the trapezium.
+
+		The corners may be given clockwise or counterclockwise. Where edges cross each other, the parts enclosed in opposite
+		orientations cancel each other out.
+
+		:returns: Area of the trapezium.
+		"""
+		corners =   self._points
+		twiceArea = 0
+		for corner, nextCorner in zip(corners, (*corners[1:], corners[0])):
+			twiceArea += corner._x * nextCorner._y - nextCorner._x * corner._y
+
+		return abs(twiceArea) / 2
+
+	@readonly
+	def Perimeter(self) -> float:
+		"""
+		Read-only property to return the perimeter of the trapezium, the sum of its edges' lengths.
+
+		:returns: Perimeter of the trapezium.
+		"""
+		corners =   self._points
+		perimeter = 0.0
+		for corner, nextCorner in zip(corners, (*corners[1:], corners[0])):
+			perimeter += sqrt((nextCorner._x - corner._x) ** 2 + (nextCorner._y - corner._y) ** 2)
+
+		return perimeter
+
+	@readonly
 	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing the trapezium's corners.
@@ -679,7 +769,7 @@ class Square(Rectangle[Coordinate]):
 
 
 @export
-class Circle(Shape[Coordinate], Generic[Coordinate]):
+class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 	"""
 	A circle is a round shape, where every point of its outline has the same distance (radius) to its center.
 	"""

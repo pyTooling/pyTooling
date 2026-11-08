@@ -38,7 +38,7 @@ from pyTooling.Cartesian2D        import Point2D, Offset2D, Size2D, BoundingBox2
                                          QuadraticBezierSegment2D, CubicBezierSegment2D, Alignment2D, SweepDirection, \
                                          AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
                                          NotInSameFrameError
-from pyTooling.Cartesian2D.Shapes import Shape, Polygon, Trapezium, Rectangle, Square, Circle, Path
+from pyTooling.Cartesian2D.Shapes import Shape, Geometry2D, Polygon, Trapezium, Rectangle, Square, Circle, Path
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection
 from pyTooling.Exceptions         import InvalidOperationError
 from pyTooling.MetaClasses        import ExtendedType, AbstractClassError
@@ -61,6 +61,28 @@ class Instantiation(Testcase):
 			"'_MirrorY' need to be overridden in a derived class.",
 			str(context.exception)
 		)
+
+	def test_Geometry2D(self) -> None:
+		with self.assertRaises(AbstractClassError) as context:
+			_ = Geometry2D()
+
+		self.assertEqual(
+			"Class 'Geometry2D' is abstract. The following methods: 'BoundingBox', 'Move', '_MirrorX', "
+			"'_MirrorY', 'Area', 'Perimeter' need to be overridden in a derived class.",
+			str(context.exception)
+		)
+
+	def test_Hierarchy(self) -> None:
+		"""Closed shapes are geometries; a path is a shape only."""
+		self.assertTrue(issubclass(Geometry2D, Shape))
+		for geometry in (Polygon, Trapezium, Rectangle, Square, Circle):
+			with self.subTest(geometry=geometry):
+				self.assertTrue(issubclass(geometry, Geometry2D))
+
+		self.assertFalse(issubclass(Path, Geometry2D))
+		self.assertTrue(issubclass(Path, Shape))
+		self.assertIsInstance(Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))), Geometry2D)
+		self.assertIsInstance(Circle(Point2D(1, 2), 3), Geometry2D)
 
 	def test_Polygon(self) -> None:
 		point0 = Point2D(0, 0)
@@ -866,6 +888,73 @@ class Measurements(Testcase):
 		circle = Circle(Point2D(1, 2), 3)
 
 		self.assertTrue(isclose(9 * pi, circle.Area))
+
+	def test_Polygon_Triangle(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		self.assertEqual(6.0, polygon.Area)
+		self.assertTrue(isclose(4 + 2 * sqrt(13), polygon.Perimeter))
+
+	def test_Polygon_Clockwise(self) -> None:
+		"""The corners in clockwise order enclose the same area."""
+		polygon = Polygon((Point2D(0, 0), Point2D(2, 3), Point2D(4, 0)))
+
+		self.assertEqual(6.0, polygon.Area)
+
+	def test_Polygon_Concave(self) -> None:
+		"""An L-shape: a 4 x 1 bar and a 1 x 2 bar on top of it."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(4, 1), Point2D(1, 1), Point2D(1, 3), Point2D(0, 3)))
+
+		self.assertEqual(6.0, polygon.Area)
+		self.assertEqual(14.0, polygon.Perimeter)
+
+	def test_Polygon_Float(self) -> None:
+		polygon = Polygon((Point2D(0.5, 0.5), Point2D(2.5, 0.5), Point2D(2.5, 1.5), Point2D(0.5, 1.5)))
+
+		self.assertEqual(2.0, polygon.Area)
+		self.assertEqual(6.0, polygon.Perimeter)
+
+	def test_Polygon_Crossing(self) -> None:
+		"""A bow tie: both triangles are enclosed in opposite orientations, so they cancel each other out."""
+		polygon = Polygon((Point2D(0, 0), Point2D(2, 2), Point2D(2, 0), Point2D(0, 2)))
+
+		self.assertEqual(0.0, polygon.Area)
+
+	def test_Trapezium(self) -> None:
+		"""Parallel sides 6 and 3, height 2; the legs are sqrt(8) and sqrt(5) long."""
+		trapezium = Trapezium(Point2D(0, 0), Point2D(6, 0), Point2D(4, 2), Point2D(1, 2))
+
+		self.assertEqual(9.0, trapezium.Area)
+		self.assertTrue(isclose(9 + sqrt(8) + sqrt(5), trapezium.Perimeter))
+
+	def test_Trapezium_Clockwise(self) -> None:
+		trapezium = Trapezium(Point2D(1, 2), Point2D(4, 2), Point2D(6, 0), Point2D(0, 0))
+
+		self.assertEqual(9.0, trapezium.Area)
+
+	def test_Rectangle(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+
+		self.assertEqual(8.0, rectangle.Area)
+		self.assertEqual(12.0, rectangle.Perimeter)
+
+	def test_Rectangle_Rotated(self) -> None:
+		"""A 2 x 1 rectangle rotated by 45 degrees."""
+		rectangle = Rectangle(
+			Point2D(0, 0),
+			Point2D(sqrt(2), sqrt(2)),
+			Point2D(sqrt(2) / 2, 3 * sqrt(2) / 2),
+			Point2D(-sqrt(2) / 2, sqrt(2) / 2)
+		)
+
+		self.assertTrue(isclose(2, rectangle.Area))
+		self.assertTrue(isclose(6, rectangle.Perimeter))
+
+	def test_Square(self) -> None:
+		square = Square(Point2D(1, 1), Point2D(3, 1), Point2D(3, 3), Point2D(1, 3))
+
+		self.assertEqual(4.0, square.Area)
+		self.assertEqual(8.0, square.Perimeter)
 
 
 class Bounds(Testcase):
