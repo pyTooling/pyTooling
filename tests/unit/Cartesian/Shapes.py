@@ -2005,7 +2005,7 @@ def openPath() -> Path:
 	"""A line, a semicircle bulging to the right and a quadratic curve bulging upwards."""
 	return Path((
 		LineSegment2D(Point2D(0, 0), Point2D(4, 0)),
-		ArcSegment2D(Point2D(4, 0), Point2D(4, 4), Point2D(4, 2), SweepDirection.Counterclockwise),
+		ArcSegment2D(Point2D(4, 0), Point2D(4, 4), center=Point2D(4, 2), direction=SweepDirection.Counterclockwise),
 		QuadraticBezierSegment2D(Point2D(4, 4), Point2D(2, 6), Point2D(0, 4))
 	))
 
@@ -2014,7 +2014,7 @@ def closedPath() -> Path:
 	"""A line and the upper semicircle back to its start."""
 	return Path((
 		LineSegment2D(Point2D(0, 0), Point2D(4, 0)),
-		ArcSegment2D(Point2D(4, 0), Point2D(0, 0), Point2D(2, 0), SweepDirection.Counterclockwise)
+		ArcSegment2D(Point2D(4, 0), Point2D(0, 0), center=Point2D(2, 0), direction=SweepDirection.Counterclockwise)
 	), closed=True)
 
 
@@ -2055,7 +2055,10 @@ class PathInstantiation(Testcase):
 
 	def test_Closed_FullCircle(self) -> None:
 		"""A single full-circle arc closes a path."""
-		path = Path((ArcSegment2D(Point2D(1, 0), Point2D(1, 0), Point2D(0, 0), SweepDirection.Clockwise), ), closed=True)
+		path = Path(
+			(ArcSegment2D(Point2D(1, 0), Point2D(1, 0), center=Point2D(0, 0), direction=SweepDirection.Clockwise), ),
+			closed=True
+		)
 
 		self.assertEqual(1, len(path.Points))
 		self.assertIs(path.Segments[0].Start, path.Segments[0].End)
@@ -2064,7 +2067,7 @@ class PathInstantiation(Testcase):
 	def test_Segments_Copied(self) -> None:
 		"""The given segments keep their points."""
 		line = LineSegment2D(Point2D(0, 0), Point2D(4, 0))
-		arc =  ArcSegment2D(Point2D(4, 0), Point2D(0, 0), Point2D(2, 0), SweepDirection.Counterclockwise)
+		arc =  ArcSegment2D(Point2D(4, 0), Point2D(0, 0), center=Point2D(2, 0), direction=SweepDirection.Counterclockwise)
 
 		path = Path((line, arc), closed=True)
 
@@ -2146,7 +2149,7 @@ class PathInstantiation(Testcase):
 		"""An open path ending at its start keeps two joints at that position."""
 		path = Path((
 			LineSegment2D(Point2D(0, 0), Point2D(4, 0)),
-			ArcSegment2D(Point2D(4, 0), Point2D(0, 0), Point2D(2, 0), SweepDirection.Counterclockwise)
+			ArcSegment2D(Point2D(4, 0), Point2D(0, 0), center=Point2D(2, 0), direction=SweepDirection.Counterclockwise)
 		))
 
 		self.assertEqual(3, len(path.Points))
@@ -2351,7 +2354,8 @@ class PathRepresentation(Testcase):
 		path = closedPath()
 
 		self.assertEqual(
-			"Path(LineSegment2D((0, 0), (4, 0)), ArcSegment2D((4, 0), (0, 0), (2, 0), Counterclockwise), closed=True)",
+			"Path(LineSegment2D((0, 0), (4, 0)), ArcSegment2D((4, 0), (0, 0), center=(2, 0), direction=Counterclockwise), "
+			"closed=True)",
 			repr(path)
 		)
 

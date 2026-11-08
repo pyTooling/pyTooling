@@ -685,7 +685,7 @@ tells whether the path is closed. The given segments stay as they are.
 
    drop = Path((
      LineSegment2D(Point2D(0, 0), Point2D(4, 0)),
-     ArcSegment2D(Point2D(4, 0), Point2D(4, 4), Point2D(4, 2), SweepDirection.Counterclockwise),
+     ArcSegment2D(Point2D(4, 0), Point2D(4, 4), center=Point2D(4, 2), direction=SweepDirection.Counterclockwise),
      QuadraticBezierSegment2D(Point2D(4, 4), Point2D(2, 6), Point2D(0, 4)),
      LineSegment2D(Point2D(0, 4), Point2D(0, 0))
    ), closed=True)

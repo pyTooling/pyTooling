@@ -2658,8 +2658,8 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		return self.__class__(
 			start,
 			end,
-			Point2D(self._center._x, self._center._y, parent=shape),
-			self._direction,
+			center=Point2D(self._center._x, self._center._y, parent=shape),
+			direction=self._direction,
 			copyPoints=False,
 			parent=shape
 		)
