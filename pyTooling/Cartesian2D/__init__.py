@@ -2158,7 +2158,7 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		direction:     Nullable[SweepDirection] = None,
 		arcPoint:      Nullable[Point2D[Coordinate]] = None,
 		chordPosition: Nullable[Union[int, float]] = None,
-		height:        Nullable[Union[int, float]] = None,
+		height:        Nullable[Coordinate] = None,
 		copyPoints:    bool = True,
 		value:         Any = None,
 		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,

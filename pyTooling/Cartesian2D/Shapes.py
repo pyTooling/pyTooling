@@ -848,7 +848,7 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 		cls,
 		start:         Point2D[Coordinate],
 		end:           Point2D[Coordinate],
-		height:        Union[int, float],
+		height:        Coordinate,
 		chordPosition: Union[int, float] = 0.5,
 		*,
 		value:         Any = None,
