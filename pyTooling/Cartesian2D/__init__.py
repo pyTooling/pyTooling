@@ -1134,6 +1134,77 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 	yOffset = YOffset
 
+	@readonly
+	def Length(self) -> float:
+		"""
+		Read-only property to return the Euclidean length of this 2D-offset.
+
+		:returns: The Euclidean length.
+		"""
+		return sqrt(self._xOffset ** 2 + self._yOffset ** 2)
+
+	def ScalarProduct(self, other: Offset2D[Coordinate]) -> Coordinate:
+		"""
+		Compute the :term:`dot product <Dot Product>` of this 2D-offset and another 2D-offset.
+
+		The dot product ``x1 * x2 + y1 * y2`` is zero for perpendicular offsets.
+
+		:param other:       The second 2D-offset.
+		:returns:           The dot product.
+		:raises ValueError: If parameter 'other' is None.
+		:raises TypeError:  If parameter 'other' is not of type :class:`Offset2D`.
+		"""
+		if other is None:
+			raise ValueError("Parameter 'other' is None.")
+		elif not isinstance(other, Offset2D):
+			ex = TypeError("Parameter 'other' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self._xOffset * other._xOffset + self._yOffset * other._yOffset
+
+	def VectorProduct(self, other: Offset2D[Coordinate]) -> Coordinate:
+		"""
+		Compute the :term:`cross product <Cross Product>` of this 2D-offset and another 2D-offset.
+
+		In 2D, the cross product is the number ``x1 * y2 - y1 * x2``: the z-component of the cross product of both offsets
+		as 3D-offsets. It is zero for parallel offsets, and positive, if the other offset points counterclockwise from this
+		one.
+
+		:param other:       The second 2D-offset.
+		:returns:           The cross product.
+		:raises ValueError: If parameter 'other' is None.
+		:raises TypeError:  If parameter 'other' is not of type :class:`Offset2D`.
+		"""
+		if other is None:
+			raise ValueError("Parameter 'other' is None.")
+		elif not isinstance(other, Offset2D):
+			ex = TypeError("Parameter 'other' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self._xOffset * other._yOffset - self._yOffset * other._xOffset
+
+	def Normalized(self) -> Offset2D[float]:
+		"""
+		Create a new 2D-offset of length 1 in the direction of this 2D-offset.
+
+		:returns:                      A new 2D-offset of length 1.
+		:raises InvalidOperationError: If this 2D-offset is a zero offset. |br|
+		                               A zero offset has no direction.
+		"""
+		if self._xOffset == 0 and self._yOffset == 0:
+			ex = InvalidOperationError("A zero offset can't be normalized.")
+			ex.add_note(f"Got offset {self}.")
+			ex.add_note("A zero offset has no direction.")
+			raise ex
+
+		length = sqrt(self._xOffset ** 2 + self._yOffset ** 2)
+		return self.__class__(
+			self._xOffset / length,
+			self._yOffset / length
+		)
+
 	def Copy(self) -> Self:
 		"""
 		Create a new 2D-offset as a copy of this 2D-offset.
@@ -1297,6 +1368,63 @@ class Offset2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'other' is not of type 'Offset2D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
+
+		return self
+
+	def __mul__(self, other: Any) -> Offset2D[Coordinate]:
+		"""
+		Multiplies this 2D-offset by a number and creates a new 2D-offset (``offset * number``).
+
+		:param other:      The factor.
+		:returns:          A new 2D-offset scaled by the factor.
+		:raises TypeError: If the second operand is not of type :class:`float` or :class:`int`.
+		"""
+		if not isinstance(other, (int, float)):
+			ex = TypeError("Second operand is not supported by * operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: float, int")
+			raise ex
+
+		return self.__class__(
+			self._xOffset * other,
+			self._yOffset * other
+		)
+
+	def __rmul__(self, other: Any) -> Offset2D[Coordinate]:
+		"""
+		Multiplies a number by this 2D-offset and creates a new 2D-offset (``number * offset``).
+
+		:param other:      The factor.
+		:returns:          A new 2D-offset scaled by the factor.
+		:raises TypeError: If the first operand is not of type :class:`float` or :class:`int`.
+		"""
+		if not isinstance(other, (int, float)):
+			ex = TypeError("First operand is not supported by * operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for first operand: float, int")
+			raise ex
+
+		return self.__class__(
+			other * self._xOffset,
+			other * self._yOffset
+		)
+
+	def __imul__(self, other: Any) -> Self:
+		"""
+		Multiplies this 2D-offset by a number (inplace).
+
+		:param other:      The factor.
+		:returns:          This 2D-offset.
+		:raises TypeError: If the second operand is not of type :class:`float` or :class:`int`.
+		"""
+		if not isinstance(other, (int, float)):
+			ex = TypeError("Second operand is not supported by *= operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: float, int")
+			raise ex
+
+		self._xOffset *= other
+		self._yOffset *= other
 
 		return self
 

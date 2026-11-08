@@ -1215,6 +1215,193 @@ class OffsetArithmetic(Testcase):
 			offset -= 2
 
 
+class OffsetVectors(Testcase):
+	def test_Length_int(self) -> None:
+		offset = Offset3D(2, 3, 6)
+
+		self.assertIsInstance(offset.Length, float)
+		self.assertEqual(7.0, offset.Length)
+
+	def test_Length_Zero(self) -> None:
+		self.assertEqual(0.0, Offset3D(0, 0, 0).Length)
+
+	def test_Length_ReadOnly(self) -> None:
+		offset = Offset3D(2, 3, 6)
+
+		with self.assertRaises(AttributeError):
+			offset.Length = 1
+
+	def test_ScalarProduct(self) -> None:
+		dot = Offset3D(1, 2, 3).ScalarProduct(Offset3D(4, 5, 6))
+
+		self.assertIsInstance(dot, int)
+		self.assertEqual(32, dot)
+
+	def test_ScalarProduct_Perpendicular(self) -> None:
+		self.assertEqual(0, Offset3D(1, 2, 3).ScalarProduct(Offset3D(-2, 1, 0)))
+
+	def test_ScalarProduct_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Offset3D(1, 2, 3).ScalarProduct(None)
+
+		self.assertEqual("Parameter 'other' is None.", str(context.exception))
+
+	def test_ScalarProduct_Offset2D(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Offset3D(1, 2, 3).ScalarProduct(Offset2D(1, 2))
+
+		self.assertEqual("Parameter 'other' is not of type 'Offset3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Offset2D'."], context.exception.__notes__)
+
+	def test_VectorProduct(self) -> None:
+		first =  Offset3D(1, 2, 3)
+		second = Offset3D(4, 5, 6)
+
+		cross = first.VectorProduct(second)
+
+		self.assertIsInstance(cross, Offset3D)
+		self.assertIsNot(first, cross)
+		self.assertIsNot(second, cross)
+		self.assertEqual(Offset3D(-3, 6, -3), cross)
+		self.assertEqual(0, cross.ScalarProduct(first))
+		self.assertEqual(0, cross.ScalarProduct(second))
+
+	def test_VectorProduct_RightHanded(self) -> None:
+		self.assertEqual(Offset3D(0, 0, 1), Offset3D(1, 0, 0).VectorProduct(Offset3D(0, 1, 0)))
+		self.assertEqual(Offset3D(1, 0, 0), Offset3D(0, 1, 0).VectorProduct(Offset3D(0, 0, 1)))
+		self.assertEqual(Offset3D(0, 1, 0), Offset3D(0, 0, 1).VectorProduct(Offset3D(1, 0, 0)))
+		self.assertEqual(Offset3D(0, 0, -1), Offset3D(0, 1, 0).VectorProduct(Offset3D(1, 0, 0)))
+
+	def test_VectorProduct_Parallel(self) -> None:
+		self.assertEqual(Offset3D(0, 0, 0), Offset3D(1, 2, 3).VectorProduct(Offset3D(-2, -4, -6)))
+
+	def test_VectorProduct_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Offset3D(1, 2, 3).VectorProduct(None)
+
+		self.assertEqual("Parameter 'other' is None.", str(context.exception))
+
+	def test_VectorProduct_Tuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Offset3D(1, 2, 3).VectorProduct((4, 5, 6))
+
+		self.assertEqual("Parameter 'other' is not of type 'Offset3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Normalized(self) -> None:
+		offset = Offset3D(2, 3, 6)
+
+		normalized = offset.Normalized()
+
+		self.assertIsNot(offset, normalized)
+		self.assertIsInstance(normalized, Offset3D)
+		self.assertIsInstance(normalized.XOffset, float)
+		self.assertIsInstance(normalized.YOffset, float)
+		self.assertIsInstance(normalized.ZOffset, float)
+		self.assertEqual(Offset3D(2 / 7, 3 / 7, 6 / 7), normalized)
+		self.assertEqual(Offset3D(2, 3, 6), offset)
+
+	def test_Normalized_Length(self) -> None:
+		self.assertTrue(isclose(1.0, Offset3D(-2, 7, 1).Normalized().Length))
+
+	def test_Normalized_Zero(self) -> None:
+		with self.assertRaises(InvalidOperationError) as context:
+			Offset3D(0, 0, 0).Normalized()
+
+		self.assertEqual("A zero offset can't be normalized.", str(context.exception))
+		self.assertListEqual(["Got offset (0, 0, 0).", "A zero offset has no direction."], context.exception.__notes__)
+
+	def test_Multiply_int(self) -> None:
+		offset = Offset3D(1, 2, 3)
+
+		product = offset * 3
+
+		self.assertIsNot(offset, product)
+		self.assertIsInstance(product, Offset3D)
+		self.assertIsInstance(product.XOffset, int)
+		self.assertEqual(Offset3D(3, 6, 9), product)
+		self.assertEqual(Offset3D(1, 2, 3), offset)
+
+	def test_Multiply_float(self) -> None:
+		product = Offset3D(1, 2, 3) * 0.5
+
+		self.assertIsInstance(product.XOffset, float)
+		self.assertEqual(Offset3D(0.5, 1.0, 1.5), product)
+
+	def test_Multiply_Offset(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Offset3D(1, 2, 3) * Offset3D(4, 5, 6)
+
+		self.assertEqual("Second operand is not supported by * operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'pyTooling.Cartesian3D.Offset3D'.", "Supported types for second operand: float, int"],
+			context.exception.__notes__
+		)
+
+	def test_Multiply_str(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Offset3D(1, 2, 3) * "2"
+
+		self.assertEqual("Second operand is not supported by * operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'str'.", "Supported types for second operand: float, int"],
+			context.exception.__notes__
+		)
+
+	def test_ReflectedMultiply_int(self) -> None:
+		offset = Offset3D(1, 2, 3)
+
+		product = 3 * offset
+
+		self.assertIsNot(offset, product)
+		self.assertIsInstance(product, Offset3D)
+		self.assertEqual(Offset3D(3, 6, 9), product)
+		self.assertEqual(Offset3D(1, 2, 3), offset)
+
+	def test_ReflectedMultiply_float(self) -> None:
+		self.assertEqual(Offset3D(-0.5, -1.0, -1.5), -0.5 * Offset3D(1, 2, 3))
+
+	def test_ReflectedMultiply_str(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = "2" * Offset3D(1, 2, 3)
+
+		self.assertEqual("First operand is not supported by * operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'str'.", "Supported types for first operand: float, int"],
+			context.exception.__notes__
+		)
+
+	def test_InplaceMultiply_int(self) -> None:
+		offset =   Offset3D(1, 2, 3)
+		original = offset
+
+		offset *= 3
+
+		self.assertIs(original, offset)
+		self.assertEqual(Offset3D(3, 6, 9), offset)
+
+	def test_InplaceMultiply_float(self) -> None:
+		offset = Offset3D(1, 2, 3)
+
+		offset *= 1.5
+
+		self.assertIsInstance(offset.XOffset, float)
+		self.assertEqual(Offset3D(1.5, 3.0, 4.5), offset)
+
+	def test_InplaceMultiply_Tuple(self) -> None:
+		offset = Offset3D(1, 2, 3)
+
+		with self.assertRaises(TypeError) as context:
+			offset *= (2, 3, 4)
+
+		self.assertEqual("Second operand is not supported by *= operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'tuple'.", "Supported types for second operand: float, int"],
+			context.exception.__notes__
+		)
+		self.assertEqual(Offset3D(1, 2, 3), offset)
+
+
 class Bounds(Testcase):
 	def test_BoundingBox_int(self) -> None:
 		box = BoundingBox3D(1, 2, 3, 4, 6, 8)

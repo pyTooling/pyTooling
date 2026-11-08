@@ -223,6 +223,20 @@ Glossary
 
      Wikipedia: :wiki:`Copyleft <Copyleft>`
 
+   Cross Product
+   Vector Product
+     The *cross product*, or *vector product*, of two vectors in 3D is the vector perpendicular to both, as long as the
+     area of the parallelogram they span. The two vectors and their cross product form a right-handed system; parallel
+     vectors have a zero cross product. In 2D it is the number ``x1 * y2 - y1 * x2`` (the z-component of the 3D cross
+     product): zero for parallel vectors, positive if the second vector points counterclockwise from the first.
+
+     In pyTooling an offset is a vector: :meth:`Offset2D.VectorProduct <pyTooling.Cartesian2D.Offset2D.VectorProduct>`
+     returns the number, :meth:`Offset3D.VectorProduct <pyTooling.Cartesian3D.Offset3D.VectorProduct>` a new offset.
+
+     MathWorld: `Cross Product <https://mathworld.wolfram.com/CrossProduct.html>`__
+
+     Wikipedia: :wiki:`Cross product <Cross_product>`
+
    Cygwin
      :wiki:`Cygwin <Cygwin>` is a :wiki:`POSIX <POSIX>`-compatible programming and runtime environment for Windows.
 
@@ -269,6 +283,19 @@ Glossary
      :func:`~pyTooling.Packaging.DescribePythonPackage` describes what goes into both - see :ref:`PACKAGING`.
 
      `Python Packaging User Guide <https://packaging.python.org/en/latest/discussions/package-formats/>`__
+
+   Dot Product
+   Scalar Product
+     The *dot product*, or *scalar product*, of two vectors is the sum of the products of their components,
+     ``x1 * x2 + y1 * y2`` (in 3D also ``+ z1 * z2``). It is the product of both lengths and the cosine of the angle
+     between the vectors: zero for perpendicular vectors, positive if they point into the same half-space.
+
+     In pyTooling an offset is a vector: :meth:`Offset2D.ScalarProduct <pyTooling.Cartesian2D.Offset2D.ScalarProduct>`
+     and :meth:`Offset3D.ScalarProduct <pyTooling.Cartesian3D.Offset3D.ScalarProduct>`.
+
+     MathWorld: `Dot Product <https://mathworld.wolfram.com/DotProduct.html>`__
+
+     Wikipedia: :wiki:`Dot product <Dot_product>`
 
    DG
      A *directed graph* (DG) is a :term:`graph` where all :term:`edges <edge>` have a direction.
