@@ -40,7 +40,8 @@ Features
 * Shapes validated on construction: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with any number of corners, the
   four-cornered :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` narrowed down to a
   :class:`~pyTooling.Cartesian2D.Shapes.Square`, and a :class:`~pyTooling.Cartesian2D.Shapes.Circle`.
-* **A circle measured** - it reports its diameter, circumference and area.
+* **Closed shapes measured** - every :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D`, like a polygon or a circle,
+  reports the area it encloses and its perimeter; a circle its diameter too.
 * **Bounding boxes** - every shape and segment reports the smallest axis-aligned
   :class:`~pyTooling.Cartesian2D.BoundingBox2D` enclosing it, and bounding boxes unite, intersect and contain points.
 * **Shapes and segments moved as a whole** - ``Move(offset)`` shifts all their points in place.
@@ -69,7 +70,6 @@ Missing Features
 * The length of a Bezier curve.
 * Exact containment and intersection tests (*is this point inside that rotated rectangle?*). Only bounding boxes are
   compared.
-* Area and perimeter of a polygon.
 
 
 .. _STRUCT/Cartesian2D/PlannedFeatures:
@@ -77,7 +77,6 @@ Missing Features
 Planned Features
 ================
 
-* An area per polygon, and a perimeter derived from its segments.
 * The 3-dimensional volumes, which currently exist as empty classes - see :ref:`STRUCT/Cartesian3D/Volumes`.
 
 
@@ -501,7 +500,9 @@ Shapes
 
 The shapes live in :mod:`pyTooling.Cartesian2D.Shapes`. The four-cornered shapes form a chain in which **each class
 is the one above it with one more constraint**. The constraint is checked in the constructor, so an object that exists
-is an object of that shape. A polygon and a circle stand beside that chain.
+is an object of that shape. A polygon and a circle stand beside that chain. All of them are closed shapes, deriving
+from :ref:`Geometry2D <STRUCT/Cartesian2D/Geometry2D>`; a :ref:`path <STRUCT/Cartesian2D/Path>` is a shape, but no
+geometry.
 
 
 .. _STRUCT/Cartesian2D/Shape:
@@ -529,6 +530,37 @@ derived from a shape can declare ``slots=True`` too and gets no instance diction
       |rarr| Its counterpart, the base-class of the 3-dimensional volumes.
 
 
+.. _STRUCT/Cartesian2D/Geometry2D:
+
+Geometry2D
+==========
+
+:class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` is the abstract base-class of the closed shapes, the ones enclosing
+an area. Besides the members of a :ref:`shape <STRUCT/Cartesian2D/Shape>`, it declares two abstract read-only
+properties:
+
+* :attr:`~pyTooling.Cartesian2D.Shapes.Geometry2D.Area` - the area it encloses, a :class:`float`;
+* :attr:`~pyTooling.Cartesian2D.Shapes.Geometry2D.Perimeter` - the length of its outline, a :class:`float`.
+
+A polygon and a trapezium compute both from their corners, which may be given clockwise or counterclockwise; a
+rectangle and a square inherit them. A :ref:`path <STRUCT/Cartesian2D/Path>` is a shape, but no geometry, even
+when it is closed.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D
+   from pyTooling.Cartesian2D.Shapes import Polygon
+
+   corner = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(4, 1), Point2D(1, 1), Point2D(1, 3), Point2D(0, 3)))
+   corner.Area                        # 6.0
+   corner.Perimeter                   # 14.0
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Shape`
+      |rarr| Its base-class, the base-class of the 2-dimensional shapes.
+
+
 .. _STRUCT/Cartesian2D/Polygon:
 
 Polygon
@@ -553,13 +585,15 @@ its edges have the polygon as parent.
    str(triangle)                      # ((0, 0) → (4, 0) → (2, 3) → (0, 0))
 
 A corner that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`, fewer than three corners
-raise :exc:`~pyTooling.Cartesian2D.NotEnoughCornersError`. The corners are not checked any further: edges may cross
-each other.
+raise :exc:`~pyTooling.Cartesian2D.NotEnoughCornersError`. Edges must not cross: two edges may have only their shared
+corner in common, else :exc:`~pyTooling.Cartesian2D.CrossingEdgesError` is raised - for crossing edges, a corner on
+another edge, or an edge running back along the previous one. The coordinates are compared exactly. Corners moved in
+place later aren't checked again.
 
 .. seealso::
 
-   :ref:`STRUCT/Cartesian2D/Shape`
-      |rarr| Its base-class, the base-class of the 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/Geometry2D`
+      |rarr| Its base-class, the base-class of the closed 2-dimensional shapes.
    :ref:`STRUCT/Cartesian2D/Trapezium`
       |rarr| The polygon with exactly four corners, given as four parameters.
 
@@ -569,26 +603,24 @@ each other.
 Trapezium
 =========
 
-A :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` is a four-sided polygon, built from four corners given in the
-order ``p00``, ``p01``, ``p11``, ``p10`` - around the outline, not across it.
-
-It keeps both views: :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Points`, the four corners it copied, and
-:attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Segments`, the four :class:`~pyTooling.Cartesian2D.LineSegment2D` edges
-between them. The segments are built with ``copyPoints=False``, so consecutive edges share a corner object and the
-outline stays closed.
+A :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` is a :ref:`polygon <STRUCT/Cartesian2D/Polygon>` with exactly
+four corners, given as four parameters in the order ``p00``, ``p01``, ``p11``, ``p10`` - around the outline, not
+across it. It copies them, and inherits everything else from the polygon: the corners in
+:attr:`~pyTooling.Cartesian2D.Shapes.Polygon.Points`, the four :class:`~pyTooling.Cartesian2D.LineSegment2D` edges in
+:attr:`~pyTooling.Cartesian2D.Shapes.Polygon.Segments` sharing the corners, its area and perimeter, and the check that
+its edges don't cross.
 
 Both properties are read-only. Their deprecated aliases ``points`` and ``segments`` are assignable until v11.0.0, but
 an assignment replaces only its own tuple: the other one isn't updated, and the shape of a
 :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` or :class:`~pyTooling.Cartesian2D.Shapes.Square` isn't checked again.
 
-A corner that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`.
+A corner that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`, crossing edges raise
+:exc:`~pyTooling.Cartesian2D.CrossingEdgesError`.
 
 .. seealso::
 
-   :ref:`STRUCT/Cartesian2D/Shape`
-      |rarr| Its base-class, the base-class of the 2-dimensional shapes.
    :ref:`STRUCT/Cartesian2D/Polygon`
-      |rarr| The closed shape with any number of corners.
+      |rarr| Its base-class, the closed shape with any number of corners.
 
 
 .. _STRUCT/Cartesian2D/Rectangle:
@@ -598,9 +630,10 @@ Rectangle
 
 A :class:`~pyTooling.Cartesian2D.Shapes.Rectangle` is a trapezium whose opposite edges are parallel and equal in
 length, with 90 |degree| inner angles. The constructor compares the opposite edges' lengths and the four inner angles,
-and raises :exc:`ValueError` when the four corners describe something else - a parallelogram, for example, or two
-consecutive corners at the same point. Lengths and angles are compared with :func:`math.isclose`, so a rectangle
-rotated by an arbitrary angle, with floating-point corners, is accepted.
+and raises :exc:`ValueError` when the four corners describe something else - a parallelogram, for example. Two
+consecutive corners at the same point make edges touching each other, which the polygon rejects with
+:exc:`~pyTooling.Cartesian2D.CrossingEdgesError`. Lengths and angles are compared with :func:`math.isclose`, so a
+rectangle rotated by an arbitrary angle, with floating-point corners, is accepted.
 
 .. seealso::
 
@@ -639,7 +672,7 @@ point instead. The circle owns its center.
 Three read-only properties measure it:
 
 * :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Diameter` - twice the radius, in the radius' type;
-* :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Circumference` - the length of its outline, a :class:`float`;
+* :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Perimeter` - the length of its outline (circumference), a :class:`float`;
 * :attr:`~pyTooling.Cartesian2D.Shapes.Circle.Area` - the area it encloses, a :class:`float`.
 
 .. code-block:: Python
@@ -656,8 +689,8 @@ A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D` or a radius that i
 
 .. seealso::
 
-   :ref:`STRUCT/Cartesian2D/Shape`
-      |rarr| Its base-class, the base-class of the 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/Geometry2D`
+      |rarr| Its base-class, the base-class of the closed 2-dimensional shapes.
 
 
 .. _STRUCT/Cartesian2D/Path:

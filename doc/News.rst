@@ -15,8 +15,11 @@ Version 10.x (2026)
    .. rubric:: New Features
 
    * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with three or more
-     corners, and a :class:`~pyTooling.Cartesian2D.Shapes.Circle` by center and radius, measuring its diameter,
-     circumference and area.
+     corners, whose edges don't cross (:exc:`~pyTooling.Cartesian2D.CrossingEdgesError`), and a
+     :class:`~pyTooling.Cartesian2D.Shapes.Circle` by center and radius, measuring its diameter, perimeter and area.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: closed shapes derive from the abstract
+     :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` and report their ``Area`` and ``Perimeter``; a polygon and a
+     trapezium compute both from their corners.
    * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: points, offsets, sizes, segments and shapes support
      :func:`copy.copy` and :func:`copy.deepcopy`, and segments and shapes have a ``Copy()`` method. A copy shares no
      point with the original.
@@ -58,13 +61,21 @@ Version 10.x (2026)
      :attr:`~pyTooling.Cartesian2D.Offset2D.XOffset`, :attr:`~pyTooling.Cartesian2D.Size2D.Width`,
      :attr:`~pyTooling.Cartesian2D.Segment2D.Start`, ...). Constructors and setters check their values: ``None``
      raises :exc:`ValueError`, a wrong type :exc:`TypeError`. A trapezium's
-     :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Points` and :attr:`~pyTooling.Cartesian2D.Shapes.Trapezium.Segments`
-     are read-only. The lower-case names (``x``, ``points``, ...) stay as deprecated aliases until v11.0.0.
+     :attr:`Points <pyTooling.Cartesian2D.Shapes.Polygon.Points>` and
+     :attr:`Segments <pyTooling.Cartesian2D.Shapes.Polygon.Segments>` are read-only. The lower-case names (``x``,
+     ``points``, ...) stay as deprecated aliases until v11.0.0.
    * :mod:`pyTooling.Cartesian2D.Shapes`: shapes are created by :class:`~pyTooling.MetaClasses.ExtendedType` and use
      slots, so a derived class can use slots too. :class:`~pyTooling.Cartesian2D.Shapes.Shape` is abstract.
+   * ⚠️ :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` is a
+     :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with four corners, and so are a rectangle and a square: they
+     inherit the polygon's members. A corner that is ``None`` or not a point raises the polygon's error, naming
+     parameter ``points`` (was ``p00`` ... ``p10``).
 
    .. rubric:: Bug Fixes
 
+   * ⚠️ :mod:`pyTooling.Cartesian2D.Shapes`: a trapezium with crossing edges, or with two consecutive corners at the
+     same point, was accepted. It raises :exc:`~pyTooling.Cartesian2D.CrossingEdgesError` now, also for a rectangle
+     or square, which raised a :exc:`ValueError` for these corners before.
    * :mod:`pyTooling.Tracing`: an OTLP timestamp in the hour repeated at the end of daylight saving time was read
      back one hour early.
 
