@@ -36,7 +36,7 @@ from math                         import isclose, pi
 from pyTooling.Cartesian2D        import Base2D, Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, Element2D, \
                                          Segment2D, LineSegment2D, AlreadyOwnedError, DuplicatePointError, \
                                          NotEnoughCornersError, NotOwnedError, NotInSameFrameError, GroupCycleError
-from pyTooling.Cartesian2D.Shapes import Polygon, PolyLine, Trapezium, Rectangle, Square, Circle
+from pyTooling.Cartesian2D.Shapes import Polygon, PolyLine, Trapezium, Rectangle, Square, Circle, Ellipse
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection, EmptyGroupError
 from pyTooling.Exceptions         import EmptyError
 from pyTooling.MetaClasses        import AbstractClassError
@@ -633,6 +633,38 @@ class ParentParameter(Testcase):
 
 		with self.assertRaises(ValueError):
 			_ = Circle(Point2D(1, 2), 0, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Ellipse(self) -> None:
+		group = Group2D()
+
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, parent=group)
+
+		self.assertIs(group, ellipse.Parent)
+		self.assertTupleEqual((ellipse, ), group.Children)
+		self.assertIs(group, ellipse.Center.Frame)
+
+	def test_Ellipse_Int(self) -> None:
+		"""A wrong parent is found before the ellipse takes the given center."""
+		center = Point2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Ellipse(center, 3, 2, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(center.Parent)
+
+	def test_Ellipse_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Ellipse(Point2D(1, 2), 3, 2, Group2D())
+
+	def test_Ellipse_Failing(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(ValueError):
+			_ = Ellipse(Point2D(1, 2), 3, 0, parent=group)
 
 		self.assertTupleEqual((), group.Children)
 
@@ -1294,6 +1326,15 @@ class CanvasParentParameter(Testcase):
 		self.assertTupleEqual((circle, ), canvas.Children)
 		self.assertIs(canvas, circle.Center.Frame)
 
+	def test_Ellipse(self) -> None:
+		canvas = Canvas2D()
+
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, parent=canvas)
+
+		self.assertIs(canvas, ellipse.Parent)
+		self.assertTupleEqual((ellipse, ), canvas.Children)
+		self.assertIs(canvas, ellipse.Center.Frame)
+
 	def test_Group(self) -> None:
 		canvas = Canvas2D()
 
@@ -1457,6 +1498,19 @@ class Mirroring(Testcase):
 		self.assertTupleEqual(((0, 0), (4, -1), (2, -3)), tuple(point.ToTuple() for point in polyline.Points))
 		self.assertTupleEqual(((4, -1), (2, -3)), polyline.Segments[1].ToTuple())
 		self.assertEqual(BoundingBox2D(10, 17, 14, 20), group.BoundingBox)
+
+	def test_MirrorX_Ellipse(self) -> None:
+		"""An ellipse in a group is mirrored at the group's origin, its radii stay."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+		group =   Group2D(Offset2D(10, 20), (ellipse, ))
+
+		group.MirrorX(Alignment2D.MinX)
+
+		self.assertTupleEqual((6, 20), group.Offset.ToTuple())
+		self.assertTupleEqual((-1, 2), ellipse.Center.ToTuple())
+		self.assertEqual(3, ellipse.RadiusX)
+		self.assertEqual(2, ellipse.RadiusY)
+		self.assertEqual(BoundingBox2D(2, 20, 8, 24), group.BoundingBox)
 
 	def test_MirrorX(self) -> None:
 		"""A group mirrors its offset at the axis, its children are mirrored at the group's origin."""
