@@ -845,7 +845,7 @@ class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		The plane is in absolute coordinates, relative to the origin, so elements of different groups can be mirrored at
 		the same plane. At a plane ``x = a``, every absolute x-coordinate ``x`` becomes ``2a - x``; the planes ``y = a`` and
 		``z = a`` mirror the y- and z-coordinates the same way. A group mirrors its offset, and its children at the group's
-		origin.
+		origin. A :class:`Plane3D` with normal ``(1, 0, 0)``, ``(0, 1, 0)`` or ``(0, 0, 1)`` is such a plane too.
 
 		Mirrored at a plane ``x = a``, seen along the z-axis: the element on the left of the plane is mirrored to the
 		right of it.
@@ -861,9 +861,12 @@ class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		                       |
 		        before                   after
 
-		:param plane:       The plane to mirror at, like a :class:`YZPlane3D`, :class:`XZPlane3D` or :class:`XYPlane3D`.
-		:raises ValueError: If parameter 'plane' is None.
-		:raises TypeError:  If parameter 'plane' is not of type :class:`Plane3D`.
+		:param plane:                  The plane to mirror at, like a :class:`YZPlane3D`, :class:`XZPlane3D` or
+		                               :class:`XYPlane3D`.
+		:raises ValueError:            If parameter 'plane' is None.
+		:raises TypeError:             If parameter 'plane' is not of type :class:`Plane3D`.
+		:raises InvalidOperationError: If parameter 'plane' is oblique. |br|
+		                               Mirror at a plane parallel to a coordinate plane.
 		"""
 		if plane is None:
 			raise ValueError("Parameter 'plane' is None.")
@@ -2042,32 +2045,491 @@ class BoundingBox3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 
 @export
-@abstractclass
 class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""
-	Abstract base-class of 3D planes, which are infinite in all directions within the plane.
+	A 3D plane, which is infinite in all directions within the plane.
+
+	The plane is stored in Hesse normal form: a normal ``(nx, ny, nz)`` of length 1 and the signed distance ``d`` of the
+	plane from the origin, so the plane is all points ``(x, y, z)`` with ``nx * x + ny * y + nz * z = d``. The first
+	non-zero component of the normal is positive, so a plane has one form only.
 
 	A plane is in absolute coordinates, relative to the origin, so elements of different groups can be mirrored at the
-	same plane with :meth:`Element3D.MirrorAt`. A plane is a value: it can't be changed after creation, compares by value
-	and is hashable.
+	same plane with :meth:`Element3D.MirrorAt`. A plane is a value: it compares by value and is hashable. Two planes are
+	equal, if they have the same normal and distance, whatever class or constructor created them.
 	"""
 
-	@abstractmethod
+	_normal:   Offset3D[float]  #: The normal of length 1, its first non-zero component is positive.
+	_distance: float            #: The signed distance of the plane from the origin, in direction of the normal.
+
+	def __init__(self, normal: Offset3D[Coordinate], distance: Coordinate) -> None:
+		"""
+		Initializes a 3D plane from a normal and a distance, the plane ``nx * x + ny * y + nz * z = distance``.
+
+		A normal of another length than 1 is normalized, and the distance is divided by the normal's length, so the plane
+		stays the same. If the first non-zero component of the normal is negative, the normal and the distance are
+		negated. A normal of length 1 keeps its values, so the plane with normal ``(1, 0, 0)`` keeps an integer distance.
+		Zeros are stored without sign.
+
+		:param normal:      A normal of the plane, perpendicular to it.
+		:param distance:    The right-hand side of the plane's equation; for a normal of length 1, the signed distance of
+		                    the plane from the origin.
+		:raises ValueError: If parameter 'normal' is None.
+		:raises TypeError:  If parameter 'normal' is not of type :class:`Offset3D`.
+		:raises ValueError: If parameter 'normal' is a zero offset. |br|
+		                    A plane needs a normal direction.
+		:raises ValueError: If parameter 'distance' is None.
+		:raises TypeError:  If parameter 'distance' is not of type :class:`float` or :class:`int`.
+		"""
+		if normal is None:
+			raise ValueError("Parameter 'normal' is None.")
+		elif not isinstance(normal, Offset3D):
+			ex = TypeError("Parameter 'normal' is not of type 'Offset3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
+			raise ex
+		elif normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameter 'normal' is a zero offset.")
+			ex.add_note(f"Got offset {normal}.")
+			ex.add_note("A plane needs a normal direction.")
+			raise ex
+
+		if distance is None:
+			raise ValueError("Parameter 'distance' is None.")
+		elif not isinstance(distance, (int, float)):
+			ex = TypeError("Parameter 'distance' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(distance)}'.")
+			raise ex
+
+		normalX = normal._xOffset
+		normalY = normal._yOffset
+		normalZ = normal._zOffset
+		if (squaredLength := normalX ** 2 + normalY ** 2 + normalZ ** 2) != 1:
+			length =   sqrt(squaredLength)
+			normalX =  normalX / length
+			normalY =  normalY / length
+			normalZ =  normalZ / length
+			distance = distance / length
+
+		if normalX < 0 or (normalX == 0 and (normalY < 0 or (normalY == 0 and normalZ < 0))):
+			normalX =  -normalX
+			normalY =  -normalY
+			normalZ =  -normalZ
+			distance = -distance
+
+		self._normal =   Offset3D(normalX + 0, normalY + 0, normalZ + 0)
+		self._distance = distance + 0
+
+	@classmethod
+	def FromPoints(
+		cls,
+		first:  Point3D[Coordinate],
+		second: Point3D[Coordinate],
+		third:  Point3D[Coordinate]
+	) -> Plane3D[float]:
+		"""
+		Create the plane through three points, which aren't on one line.
+
+		The points are taken in absolute coordinates: a point inside a group is converted. The normal is the cross product
+		of the offsets from the first point to the second and to the third point.
+
+		:param first:       A first point of the plane.
+		:param second:      A second point of the plane.
+		:param third:       A third point of the plane.
+		:returns:           A new plane, a :class:`Plane3D` also if called on a derived class.
+		:raises ValueError: If parameter 'first' is None.
+		:raises TypeError:  If parameter 'first' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'second' is None.
+		:raises TypeError:  If parameter 'second' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'third' is None.
+		:raises TypeError:  If parameter 'third' is not of type :class:`Point3D`.
+		:raises ValueError: If parameters 'first', 'second' and 'third' are on one line. |br|
+		                    Three points on one line don't define a plane.
+		"""
+		for name, point in (
+			("first",  first),
+			("second", second),
+			("third",  third)
+		):
+			if point is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(point, Point3D):
+				ex = TypeError(f"Parameter '{name}' is not of type 'Point3D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+				raise ex
+
+		start =  first.Absolute
+		normal = (second.Absolute - start).VectorProduct(third.Absolute - start)
+		if normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameters 'first', 'second' and 'third' are on one line.")
+			ex.add_note(f"Got points {first}, {second} and {third}.")
+			ex.add_note("Three points on one line don't define a plane.")
+			raise ex
+
+		return Plane3D(normal, normal._xOffset * start._x + normal._yOffset * start._y + normal._zOffset * start._z)
+
+	@classmethod
+	def FromPointAndSpanningVectors(
+		cls,
+		point: Point3D[Coordinate],
+		u:     Offset3D[Coordinate],
+		v:     Offset3D[Coordinate]
+	) -> Plane3D[float]:
+		"""
+		Create the plane through a point, spanned by two vectors, the plane ``point + s * u + t * v``.
+
+		The point is taken in absolute coordinates: a point inside a group is converted. The normal is the cross product of
+		the spanning vectors.
+
+		:param point:       A point of the plane.
+		:param u:           A first spanning vector.
+		:param v:           A second spanning vector.
+		:returns:           A new plane, a :class:`Plane3D` also if called on a derived class.
+		:raises ValueError: If parameter 'point' is None.
+		:raises TypeError:  If parameter 'point' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'u' is None.
+		:raises TypeError:  If parameter 'u' is not of type :class:`Offset3D`.
+		:raises ValueError: If parameter 'v' is None.
+		:raises TypeError:  If parameter 'v' is not of type :class:`Offset3D`.
+		:raises ValueError: If parameters 'u' and 'v' are parallel, or one of them is a zero offset. |br|
+		                    Two parallel vectors don't span a plane.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point3D):
+			ex = TypeError("Parameter 'point' is not of type 'Point3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		for name, vector in (
+			("u", u),
+			("v", v)
+		):
+			if vector is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(vector, Offset3D):
+				ex = TypeError(f"Parameter '{name}' is not of type 'Offset3D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(vector)}'.")
+				raise ex
+
+		normal = u.VectorProduct(v)
+		if normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameters 'u' and 'v' are parallel.")
+			ex.add_note(f"Got offsets {u} and {v}.")
+			ex.add_note("Two parallel vectors don't span a plane.")
+			raise ex
+
+		absolute = point.Absolute
+		return Plane3D(
+			normal,
+			normal._xOffset * absolute._x + normal._yOffset * absolute._y + normal._zOffset * absolute._z
+		)
+
+	@classmethod
+	def FromPointAndNormal(cls, point: Point3D[Coordinate], normal: Offset3D[Coordinate]) -> Plane3D[float]:
+		"""
+		Create the plane through a point, perpendicular to a normal.
+
+		The point is taken in absolute coordinates: a point inside a group is converted.
+
+		:param point:       A point of the plane.
+		:param normal:      A normal of the plane, perpendicular to it.
+		:returns:           A new plane, a :class:`Plane3D` also if called on a derived class.
+		:raises ValueError: If parameter 'point' is None.
+		:raises TypeError:  If parameter 'point' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'normal' is None.
+		:raises TypeError:  If parameter 'normal' is not of type :class:`Offset3D`.
+		:raises ValueError: If parameter 'normal' is a zero offset. |br|
+		                    A plane needs a normal direction.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point3D):
+			ex = TypeError("Parameter 'point' is not of type 'Point3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		if normal is None:
+			raise ValueError("Parameter 'normal' is None.")
+		elif not isinstance(normal, Offset3D):
+			ex = TypeError("Parameter 'normal' is not of type 'Offset3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
+			raise ex
+		elif normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameter 'normal' is a zero offset.")
+			ex.add_note(f"Got offset {normal}.")
+			ex.add_note("A plane needs a normal direction.")
+			raise ex
+
+		absolute = point.Absolute
+		return Plane3D(
+			normal,
+			normal._xOffset * absolute._x + normal._yOffset * absolute._y + normal._zOffset * absolute._z
+		)
+
+	@readonly
+	def Normal(self) -> Offset3D[float]:
+		"""
+		Read-only property to access the normal of the plane (:attr:`_normal`).
+
+		:returns: The normal of length 1, its first non-zero component is positive.
+		"""
+		return self._normal
+
+	@readonly
+	def Distance(self) -> float:
+		"""
+		Read-only property to access the signed distance of the plane from the origin (:attr:`_distance`).
+
+		:returns: The signed distance, positive in direction of the normal.
+		"""
+		return self._distance
+
+	def SignedDistance(self, point: Point3D[Coordinate]) -> float:
+		"""
+		Compute the signed distance of a point from the plane.
+
+		The point is taken in absolute coordinates. The distance is positive on the side the normal points to, negative on
+		the other side, and zero for a point on the plane.
+
+		:param point:       The point.
+		:returns:           The signed distance ``nx * x + ny * y + nz * z - d``.
+		:raises ValueError: If parameter 'point' is None.
+		:raises TypeError:  If parameter 'point' is not of type :class:`Point3D`.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point3D):
+			ex = TypeError("Parameter 'point' is not of type 'Point3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		absolute = point.Absolute
+		normal =   self._normal
+		return (
+			normal._xOffset * absolute._x + normal._yOffset * absolute._y + normal._zOffset * absolute._z - self._distance
+		)
+
+	def Project(self, point: Point3D[Coordinate]) -> Point3D[float]:
+		"""
+		Project a point onto the plane, the foot of the perpendicular from the point to the plane.
+
+		The point is taken in absolute coordinates, and the projection is in absolute coordinates too.
+
+		:param point:       The point to project.
+		:returns:           A new 3D-point without owner.
+		:raises ValueError: If parameter 'point' is None.
+		:raises TypeError:  If parameter 'point' is not of type :class:`Point3D`.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point3D):
+			ex = TypeError("Parameter 'point' is not of type 'Point3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		absolute = point.Absolute
+		normal =   self._normal
+		signedDistance = (
+			normal._xOffset * absolute._x + normal._yOffset * absolute._y + normal._zOffset * absolute._z - self._distance
+		)
+		return Point3D(
+			absolute._x - signedDistance * normal._xOffset,
+			absolute._y - signedDistance * normal._yOffset,
+			absolute._z - signedDistance * normal._zOffset
+		)
+
+	def Intersects(self, ray: Ray3D[Coordinate]) -> bool:
+		"""
+		Check if a ray hits the plane.
+
+		A ray starting on the plane hits it, also a ray running within the plane. A ray parallel to the plane, or pointing
+		away from it, doesn't.
+
+		:param ray:         The ray.
+		:returns:           ``True``, if the ray has a point on the plane.
+		:raises ValueError: If parameter 'ray' is None.
+		:raises TypeError:  If parameter 'ray' is not of type :class:`Ray3D`.
+		"""
+		if ray is None:
+			raise ValueError("Parameter 'ray' is None.")
+		elif not isinstance(ray, Ray3D):
+			ex = TypeError("Parameter 'ray' is not of type 'Ray3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(ray)}'.")
+			raise ex
+
+		normal =    self._normal
+		start =     ray._start
+		direction = ray._direction
+		startDistance = (
+			normal._xOffset * start._x + normal._yOffset * start._y + normal._zOffset * start._z - self._distance
+		)
+		approach = normal.ScalarProduct(direction)
+		return startDistance == 0 or startDistance * approach < 0
+
+	def Intersection(self, ray: Ray3D[Coordinate]) -> Point3D[float]:
+		"""
+		Compute the point, where a ray hits the plane.
+
+		A ray starting on the plane, also one running within the plane, hits it at its start point.
+
+		:param ray:         The ray.
+		:returns:           A new 3D-point without owner, in absolute coordinates.
+		:raises ValueError: If parameter 'ray' is None.
+		:raises TypeError:  If parameter 'ray' is not of type :class:`Ray3D`.
+		:raises ValueError: If parameter 'ray' is parallel to the plane, but doesn't start on it. |br|
+		                    Check with :meth:`Intersects` first.
+		:raises ValueError: If parameter 'ray' points away from the plane. |br|
+		                    Check with :meth:`Intersects` first.
+		"""
+		if ray is None:
+			raise ValueError("Parameter 'ray' is None.")
+		elif not isinstance(ray, Ray3D):
+			ex = TypeError("Parameter 'ray' is not of type 'Ray3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(ray)}'.")
+			raise ex
+
+		normal =    self._normal
+		start =     ray._start
+		direction = ray._direction
+		startDistance = (
+			normal._xOffset * start._x + normal._yOffset * start._y + normal._zOffset * start._z - self._distance
+		)
+		approach = normal.ScalarProduct(direction)
+		if startDistance == 0:
+			return Point3D(start._x, start._y, start._z)
+		elif approach == 0:
+			ex = ValueError("Parameter 'ray' is parallel to the plane.")
+			ex.add_note(f"Got ray {ray!r} and plane {self!r}.")
+			ex.add_note("Check with 'Intersects' first.")
+			raise ex
+		elif startDistance * approach > 0:
+			ex = ValueError("Parameter 'ray' points away from the plane.")
+			ex.add_note(f"Got ray {ray!r} and plane {self!r}.")
+			ex.add_note("Check with 'Intersects' first.")
+			raise ex
+
+		factor = -startDistance / approach
+		return Point3D(
+			start._x + factor * direction._xOffset,
+			start._y + factor * direction._yOffset,
+			start._z + factor * direction._zOffset
+		)
+
 	def _MirrorElement(self, element: Element3D[Coordinate]) -> None:
 		"""
 		Mirror an element at this plane (inplace).
 
-		:param element: The element to mirror.
+		A plane with normal ``(1, 0, 0)``, ``(0, 1, 0)`` or ``(0, 0, 1)`` mirrors an element like a :class:`YZPlane3D`,
+		:class:`XZPlane3D` or :class:`XYPlane3D`.
+
+		:param element:                The element to mirror.
+		:raises InvalidOperationError: If the plane is oblique. |br|
+		                               Mirror at a plane parallel to a coordinate plane.
 		"""
+		normal = self._normal
+		if normal._yOffset == 0 and normal._zOffset == 0:
+			frame = element.Frame
+			x =     self._distance if frame is None else self._distance - frame.AbsoluteOffset._xOffset
+			element._MirrorX(2 * x)
+		elif normal._xOffset == 0 and normal._zOffset == 0:
+			frame = element.Frame
+			y =     self._distance if frame is None else self._distance - frame.AbsoluteOffset._yOffset
+			element._MirrorY(2 * y)
+		elif normal._xOffset == 0 and normal._yOffset == 0:
+			frame = element.Frame
+			z =     self._distance if frame is None else self._distance - frame.AbsoluteOffset._zOffset
+			element._MirrorZ(2 * z)
+		else:
+			ex = InvalidOperationError("Mirroring at an oblique plane isn't supported.")
+			ex.add_note(f"Got plane {self!r}.")
+			ex.add_note("Mirror at a plane parallel to a coordinate plane.")
+			raise ex
+
+	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two planes for equality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if both planes have the same normal and distance.
+		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
+		"""
+		if not isinstance(other, Plane3D):
+			ex = TypeError("Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Plane3D")
+			raise ex
+
+		normal =      self._normal
+		otherNormal = other._normal
+		return (
+			normal._xOffset == otherNormal._xOffset
+			and normal._yOffset == otherNormal._yOffset
+			and normal._zOffset == otherNormal._zOffset
+			and self._distance == other._distance
+		)
+
+	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two planes for inequality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if the planes differ in normal or distance.
+		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
+		"""
+		if not isinstance(other, Plane3D):
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Plane3D")
+			raise ex
+
+		normal =      self._normal
+		otherNormal = other._normal
+		return (
+			normal._xOffset != otherNormal._xOffset
+			or normal._yOffset != otherNormal._yOffset
+			or normal._zOffset != otherNormal._zOffset
+			or self._distance != other._distance
+		)
+
+	def __hash__(self) -> int:
+		"""
+		Returns a hash of the plane's normal and distance, so equal planes have the same hash.
+
+		:returns: The hash value.
+		"""
+		normal = self._normal
+		return hash((normal._xOffset, normal._yOffset, normal._zOffset, self._distance))
+
+	def __repr__(self) -> str:
+		"""
+		Returns the plane's string representation.
+
+		:returns: The string representation of the plane, its normal and distance.
+		"""
+		return f"Plane3D({self._normal}, {self._distance})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the plane's string equivalent as an equation.
+
+		The plane with normal ``(0.6, 0.0, 0.8)`` and distance ``2.0`` returns ``0.6 * x + 0.0 * y + 0.8 * z = 2.0``.
+
+		:returns: The equation of the plane.
+		"""
+		normal = self._normal
+		ySign =  "-" if normal._yOffset < 0 else "+"
+		zSign =  "-" if normal._zOffset < 0 else "+"
+		return (
+			f"{normal._xOffset} * x {ySign} {abs(normal._yOffset)} * y {zSign} {abs(normal._zOffset)} * z = {self._distance}"
+		)
 
 
 @export
 class YZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 	"""
 	A 3D plane parallel to the yz-plane: all its points have the same x-coordinate, the plane ``x = c``.
-	"""
 
-	_x: Coordinate  #: The x-coordinate of all points of the plane.
+	Its normal is ``(1, 0, 0)``, and its distance is the x-coordinate.
+	"""
 
 	def __init__(self, x: Coordinate) -> None:
 		"""
@@ -2077,6 +2539,8 @@ class YZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'x' is None.
 		:raises TypeError:  If parameter 'x' is not of type :class:`float` or :class:`int`.
 		"""
+		super().__init__(Offset3D(1, 0, 0), 0)
+
 		if x is None:
 			raise ValueError("Parameter 'x' is None.")
 		elif not isinstance(x, (int, float)):
@@ -2084,7 +2548,7 @@ class YZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(x)}'.")
 			raise ex
 
-		self._x = x
+		self._distance = x + 0
 
 	@classmethod
 	def FromElement(cls, element: Element3D[Coordinate], alignment: Alignment3D) -> Self:
@@ -2134,61 +2598,11 @@ class YZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 	@readonly
 	def X(self) -> Coordinate:
 		"""
-		Read-only property to access the x-coordinate of all points of the plane (:attr:`_x`).
+		Read-only property to access the x-coordinate of all points of the plane (:attr:`_distance`).
 
 		:returns: The x-coordinate of the plane.
 		"""
-		return self._x
-
-	def _MirrorElement(self, element: Element3D[Coordinate]) -> None:
-		"""
-		Mirror an element at this plane (inplace), so every absolute x-coordinate ``x`` becomes ``2c - x``.
-
-		:param element: The element to mirror.
-		"""
-		frame = element.Frame
-		x =     self._x if frame is None else self._x - frame.AbsoluteOffset._xOffset
-		element._MirrorX(2 * x)
-
-	def __eq__(self, other: Any) -> bool:
-		"""
-		Compare two planes for equality.
-
-		:param other:      Operand to compare against.
-		:returns:          ``True``, if both planes are parallel to the yz-plane and have the same x-coordinate.
-		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
-		"""
-		if not isinstance(other, Plane3D):
-			ex = TypeError("Second operand is not supported by == operator.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: Plane3D")
-			raise ex
-
-		return isinstance(other, YZPlane3D) and self._x == other._x
-
-	def __ne__(self, other: Any) -> bool:
-		"""
-		Compare two planes for inequality.
-
-		:param other:      Operand to compare against.
-		:returns:          ``True``, if the other plane isn't parallel to the yz-plane or has another x-coordinate.
-		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
-		"""
-		if not isinstance(other, Plane3D):
-			ex = TypeError("Second operand is not supported by != operator.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: Plane3D")
-			raise ex
-
-		return not isinstance(other, YZPlane3D) or self._x != other._x
-
-	def __hash__(self) -> int:
-		"""
-		Returns a hash of the plane's x-coordinate, so equal planes have the same hash.
-
-		:returns: The hash value.
-		"""
-		return hash(self._x)
+		return self._distance
 
 	def __repr__(self) -> str:
 		"""
@@ -2196,7 +2610,7 @@ class YZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 
 		:returns: The string representation of the plane.
 		"""
-		return f"YZPlane3D({self._x})"
+		return f"YZPlane3D({self._distance})"
 
 	def __str__(self) -> str:
 		"""
@@ -2206,16 +2620,16 @@ class YZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 
 		:returns: The equation of the plane.
 		"""
-		return f"x = {self._x}"
+		return f"x = {self._distance}"
 
 
 @export
 class XZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 	"""
 	A 3D plane parallel to the xz-plane: all its points have the same y-coordinate, the plane ``y = c``.
-	"""
 
-	_y: Coordinate  #: The y-coordinate of all points of the plane.
+	Its normal is ``(0, 1, 0)``, and its distance is the y-coordinate.
+	"""
 
 	def __init__(self, y: Coordinate) -> None:
 		"""
@@ -2225,6 +2639,8 @@ class XZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'y' is None.
 		:raises TypeError:  If parameter 'y' is not of type :class:`float` or :class:`int`.
 		"""
+		super().__init__(Offset3D(0, 1, 0), 0)
+
 		if y is None:
 			raise ValueError("Parameter 'y' is None.")
 		elif not isinstance(y, (int, float)):
@@ -2232,7 +2648,7 @@ class XZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
 			raise ex
 
-		self._y = y
+		self._distance = y + 0
 
 	@classmethod
 	def FromElement(cls, element: Element3D[Coordinate], alignment: Alignment3D) -> Self:
@@ -2282,61 +2698,11 @@ class XZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 	@readonly
 	def Y(self) -> Coordinate:
 		"""
-		Read-only property to access the y-coordinate of all points of the plane (:attr:`_y`).
+		Read-only property to access the y-coordinate of all points of the plane (:attr:`_distance`).
 
 		:returns: The y-coordinate of the plane.
 		"""
-		return self._y
-
-	def _MirrorElement(self, element: Element3D[Coordinate]) -> None:
-		"""
-		Mirror an element at this plane (inplace), so every absolute y-coordinate ``y`` becomes ``2c - y``.
-
-		:param element: The element to mirror.
-		"""
-		frame = element.Frame
-		y =     self._y if frame is None else self._y - frame.AbsoluteOffset._yOffset
-		element._MirrorY(2 * y)
-
-	def __eq__(self, other: Any) -> bool:
-		"""
-		Compare two planes for equality.
-
-		:param other:      Operand to compare against.
-		:returns:          ``True``, if both planes are parallel to the xz-plane and have the same y-coordinate.
-		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
-		"""
-		if not isinstance(other, Plane3D):
-			ex = TypeError("Second operand is not supported by == operator.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: Plane3D")
-			raise ex
-
-		return isinstance(other, XZPlane3D) and self._y == other._y
-
-	def __ne__(self, other: Any) -> bool:
-		"""
-		Compare two planes for inequality.
-
-		:param other:      Operand to compare against.
-		:returns:          ``True``, if the other plane isn't parallel to the xz-plane or has another y-coordinate.
-		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
-		"""
-		if not isinstance(other, Plane3D):
-			ex = TypeError("Second operand is not supported by != operator.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: Plane3D")
-			raise ex
-
-		return not isinstance(other, XZPlane3D) or self._y != other._y
-
-	def __hash__(self) -> int:
-		"""
-		Returns a hash of the plane's y-coordinate, so equal planes have the same hash.
-
-		:returns: The hash value.
-		"""
-		return hash(self._y)
+		return self._distance
 
 	def __repr__(self) -> str:
 		"""
@@ -2344,7 +2710,7 @@ class XZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 
 		:returns: The string representation of the plane.
 		"""
-		return f"XZPlane3D({self._y})"
+		return f"XZPlane3D({self._distance})"
 
 	def __str__(self) -> str:
 		"""
@@ -2354,16 +2720,16 @@ class XZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 
 		:returns: The equation of the plane.
 		"""
-		return f"y = {self._y}"
+		return f"y = {self._distance}"
 
 
 @export
 class XYPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 	"""
 	A 3D plane parallel to the xy-plane: all its points have the same z-coordinate, the plane ``z = c``.
-	"""
 
-	_z: Coordinate  #: The z-coordinate of all points of the plane.
+	Its normal is ``(0, 0, 1)``, and its distance is the z-coordinate.
+	"""
 
 	def __init__(self, z: Coordinate) -> None:
 		"""
@@ -2373,6 +2739,8 @@ class XYPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'z' is None.
 		:raises TypeError:  If parameter 'z' is not of type :class:`float` or :class:`int`.
 		"""
+		super().__init__(Offset3D(0, 0, 1), 0)
+
 		if z is None:
 			raise ValueError("Parameter 'z' is None.")
 		elif not isinstance(z, (int, float)):
@@ -2380,7 +2748,7 @@ class XYPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(z)}'.")
 			raise ex
 
-		self._z = z
+		self._distance = z + 0
 
 	@classmethod
 	def FromElement(cls, element: Element3D[Coordinate], alignment: Alignment3D) -> Self:
@@ -2430,61 +2798,11 @@ class XYPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 	@readonly
 	def Z(self) -> Coordinate:
 		"""
-		Read-only property to access the z-coordinate of all points of the plane (:attr:`_z`).
+		Read-only property to access the z-coordinate of all points of the plane (:attr:`_distance`).
 
 		:returns: The z-coordinate of the plane.
 		"""
-		return self._z
-
-	def _MirrorElement(self, element: Element3D[Coordinate]) -> None:
-		"""
-		Mirror an element at this plane (inplace), so every absolute z-coordinate ``z`` becomes ``2c - z``.
-
-		:param element: The element to mirror.
-		"""
-		frame = element.Frame
-		z =     self._z if frame is None else self._z - frame.AbsoluteOffset._zOffset
-		element._MirrorZ(2 * z)
-
-	def __eq__(self, other: Any) -> bool:
-		"""
-		Compare two planes for equality.
-
-		:param other:      Operand to compare against.
-		:returns:          ``True``, if both planes are parallel to the xy-plane and have the same z-coordinate.
-		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
-		"""
-		if not isinstance(other, Plane3D):
-			ex = TypeError("Second operand is not supported by == operator.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: Plane3D")
-			raise ex
-
-		return isinstance(other, XYPlane3D) and self._z == other._z
-
-	def __ne__(self, other: Any) -> bool:
-		"""
-		Compare two planes for inequality.
-
-		:param other:      Operand to compare against.
-		:returns:          ``True``, if the other plane isn't parallel to the xy-plane or has another z-coordinate.
-		:raises TypeError: If the second operand is not of type :class:`Plane3D`.
-		"""
-		if not isinstance(other, Plane3D):
-			ex = TypeError("Second operand is not supported by != operator.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: Plane3D")
-			raise ex
-
-		return not isinstance(other, XYPlane3D) or self._z != other._z
-
-	def __hash__(self) -> int:
-		"""
-		Returns a hash of the plane's z-coordinate, so equal planes have the same hash.
-
-		:returns: The hash value.
-		"""
-		return hash(self._z)
+		return self._distance
 
 	def __repr__(self) -> str:
 		"""
@@ -2492,7 +2810,7 @@ class XYPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 
 		:returns: The string representation of the plane.
 		"""
-		return f"XYPlane3D({self._z})"
+		return f"XYPlane3D({self._distance})"
 
 	def __str__(self) -> str:
 		"""
@@ -2502,7 +2820,7 @@ class XYPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 
 		:returns: The equation of the plane.
 		"""
-		return f"z = {self._z}"
+		return f"z = {self._distance}"
 
 
 @export

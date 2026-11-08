@@ -49,6 +49,8 @@ Features
 * **Bounding boxes** - every shape and segment reports the smallest axis-aligned
   :class:`~pyTooling.Cartesian2D.BoundingBox2D` enclosing it, and bounding boxes unite, intersect and contain points.
 * **Shapes and segments moved as a whole** - ``Move(offset)`` shifts all their points in place.
+* **Lines in Hesse normal form** - a :class:`~pyTooling.Cartesian2D.Line2D` from two points, a point and a direction,
+  or a point and a normal; it measures the signed distance of a point, projects a point onto it and intersects a ray.
 * **Mirroring at a shared line** - a :class:`~pyTooling.Cartesian2D.VerticalLine2D` or
   :class:`~pyTooling.Cartesian2D.HorizontalLine2D` is in absolute coordinates, so elements of different groups are
   mirrored at the same line.
@@ -327,22 +329,81 @@ Line2D
 ======
 
 A :class:`~pyTooling.Cartesian2D.Line2D` is a line in the geometric sense: infinite in both directions, unlike a
-:class:`~pyTooling.Cartesian2D.LineSegment2D`, which ends at its start and end point. It is the abstract base-class of
-the lines an element can be mirrored at:
+:class:`~pyTooling.Cartesian2D.LineSegment2D`, which ends at its start and end point.
 
-* :class:`~pyTooling.Cartesian2D.VerticalLine2D` - the line ``x = c``, all its points have the same
+A line is stored in **Hesse normal form**: a :attr:`~pyTooling.Cartesian2D.Line2D.Normal` ``(nx, ny)`` of length 1
+and the signed :attr:`~pyTooling.Cartesian2D.Line2D.Distance` ``d`` of the line from the origin, so the line is all
+points ``(x, y)`` with ``nx * x + ny * y = d``. The common operations are one dot product each. The first non-zero
+component of the normal is positive, so every line has exactly one form.
+
+``Line2D(normal, distance)`` takes any non-zero normal: a normal of another length than 1 is normalized, and the
+distance is divided by the normal's length, so ``Line2D(Offset2D(3, 4), 10)`` is the line ``3x + 4y = 10``, stored as
+normal ``(0.6, 0.8)`` and distance ``2.0``. A normal of length 1, like ``(1, 0)``, keeps its values, so integers stay
+integers. A zero normal raises :exc:`ValueError`. The classmethods create a line from what is at hand:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 45 55
+
+   * - Classmethod
+     - Line
+   * - :meth:`FromPoints(first, second) <pyTooling.Cartesian2D.Line2D.FromPoints>`
+     - Through two points; two points at the same position raise :exc:`ValueError`.
+   * - :meth:`FromPointAndDirection(point, direction) <pyTooling.Cartesian2D.Line2D.FromPointAndDirection>`
+     - Through a point in a direction; a zero direction raises :exc:`ValueError`.
+   * - :meth:`FromPointAndNormal(point, normal) <pyTooling.Cartesian2D.Line2D.FromPointAndNormal>`
+     - Through a point, perpendicular to a normal; a zero normal raises :exc:`ValueError`.
+
+The points are taken in **absolute coordinates**, relative to the origin: a point inside a group is converted, like the
+start point of a :ref:`ray <STRUCT/Cartesian2D/Ray2D>`. The classmethods return a
+:class:`~pyTooling.Cartesian2D.Line2D`, also when called on a derived class.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Operation
+     - Result
+   * - :meth:`line.SignedDistance(point) <pyTooling.Cartesian2D.Line2D.SignedDistance>`
+     - ``nx * x + ny * y - d``: positive on the side the normal points to, negative on the other side, zero on the
+       line.
+   * - :meth:`line.Project(point) <pyTooling.Cartesian2D.Line2D.Project>`
+     - A new point, the foot of the perpendicular from the point to the line.
+   * - :meth:`line.Intersects(ray) <pyTooling.Cartesian2D.Line2D.Intersects>`
+     - ``True``, if the ray hits the line.
+   * - :meth:`line.Intersection(ray) <pyTooling.Cartesian2D.Line2D.Intersection>`
+     - A new point, where the ray hits the line. A ray parallel to the line, or pointing away from it, raises
+       :exc:`ValueError`. A ray starting on the line, also one running along it, hits it at its start point.
+
+Points and results are in absolute coordinates.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D import Point2D, Offset2D, Line2D, Ray2D
+
+   line = Line2D.FromPoints(Point2D(2, 1), Point2D(6, -2))
+
+   str(line)                                          # '0.6 * x + 0.8 * y = 2.0'
+   line.SignedDistance(Point2D(5, 5))                 # 5.0
+   line.Project(Point2D(5, 5))                        # (2.0, 1.0)
+   line.Intersection(Ray2D(Point2D(0, 0), Offset2D(0, 1)))   # (0.0, 2.5)
+
+Two axis-parallel lines are derived classes with a fixed normal. They keep their coordinate as given, an integer stays
+an integer:
+
+* :class:`~pyTooling.Cartesian2D.VerticalLine2D` - the line ``x = c``, normal ``(1, 0)``; all its points have the same
   :attr:`~pyTooling.Cartesian2D.VerticalLine2D.X`;
-* :class:`~pyTooling.Cartesian2D.HorizontalLine2D` - the line ``y = c``, all its points have the same
-  :attr:`~pyTooling.Cartesian2D.HorizontalLine2D.Y`.
+* :class:`~pyTooling.Cartesian2D.HorizontalLine2D` - the line ``y = c``, normal ``(0, 1)``; all its points have the
+  same :attr:`~pyTooling.Cartesian2D.HorizontalLine2D.Y`.
 
-:func:`str` returns the line's equation.
-
-A line is in **absolute coordinates**, relative to the origin. :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`
-mirrors an element at it in the element's frame, so elements of different groups are mirrored at the same line.
-:meth:`VerticalLine2D.FromElement <pyTooling.Cartesian2D.VerticalLine2D.FromElement>` creates the line through an edge
-or the center of an element's absolute bounding box, named by an :class:`~pyTooling.Cartesian2D.Alignment2D` (``MinX``,
-``CenterX`` or ``MaxX``); :meth:`HorizontalLine2D.FromElement <pyTooling.Cartesian2D.HorizontalLine2D.FromElement>`
-takes ``MinY``, ``CenterY`` or ``MaxY``.
+:meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt` mirrors an element at a line in the element's frame, so elements of
+different groups are mirrored at the same line. A line parallel to an axis mirrors exactly, also a
+:class:`~pyTooling.Cartesian2D.Line2D` with normal ``(1, 0)`` or ``(0, 1)``; mirroring at an oblique line raises
+:exc:`~pyTooling.Exceptions.InvalidOperationError`. :meth:`VerticalLine2D.FromElement
+<pyTooling.Cartesian2D.VerticalLine2D.FromElement>` creates the line through an edge or the center of an element's
+absolute bounding box, named by an :class:`~pyTooling.Cartesian2D.Alignment2D` (``MinX``, ``CenterX`` or ``MaxX``);
+:meth:`HorizontalLine2D.FromElement <pyTooling.Cartesian2D.HorizontalLine2D.FromElement>` takes ``MinY``, ``CenterY``
+or ``MaxY``.
 
 .. code-block:: Python
 
@@ -363,12 +424,19 @@ takes ``MinY``, ``CenterY`` or ``MaxY``.
    HorizontalLine2D.FromElement(wheel, Alignment2D.MinY)   # HorizontalLine2D(0)
 
 Like a :ref:`style <STRUCT/Cartesian2D/Drawing>`, a line is a **value**: its properties are read-only, it compares
-with ``==`` and ``!=`` by value and is hashable. A vertical and a horizontal line are never equal.
+with ``==`` and ``!=`` and is hashable. Equality is geometric - two lines are equal, if their normals and distances
+are, whatever class or classmethod created them, and equal lines have the same hash:
+
+.. code-block:: Python
+
+   VerticalLine2D(5) == Line2D(Offset2D(1, 0), 5)                        # True
+   VerticalLine2D(5) == Line2D.FromPoints(Point2D(5, 0), Point2D(5, 3))  # True
+   VerticalLine2D(5) == HorizontalLine2D(5)                              # False
 
 .. seealso::
 
    :ref:`STRUCT/Cartesian3D/Plane3D`
-      |rarr| Its counterpart, the plane parallel to a coordinate plane.
+      |rarr| Its counterpart, the plane in Hesse normal form.
 
 
 .. _STRUCT/Cartesian2D/Ray2D:
@@ -1556,17 +1624,58 @@ touching at a face, an edge or a corner don't overlap. There is no conversion to
 Plane3D
 =======
 
-A :class:`~pyTooling.Cartesian3D.Plane3D` is a plane, infinite in all directions within it. It is the abstract
-base-class of the planes an element can be mirrored at, each named after the coordinate plane it is parallel to:
+A :class:`~pyTooling.Cartesian3D.Plane3D` is a plane, infinite in all directions within it. Like a
+:ref:`2D line <STRUCT/Cartesian2D/Line2D>`, it is stored in **Hesse normal form**: a
+:attr:`~pyTooling.Cartesian3D.Plane3D.Normal` ``(nx, ny, nz)`` of length 1, whose first non-zero component is
+positive, and the signed :attr:`~pyTooling.Cartesian3D.Plane3D.Distance` ``d`` from the origin; the plane is all points
+``(x, y, z)`` with ``nx * x + ny * y + nz * z = d``. ``Plane3D(normal, distance)`` normalizes the normal and scales the
+distance the same way as ``Line2D(normal, distance)``.
 
-* :class:`~pyTooling.Cartesian3D.YZPlane3D` - the plane ``x = c``, all its points have the same
+.. list-table::
+   :header-rows: 1
+   :widths: 45 55
+
+   * - Classmethod
+     - Plane
+   * - :meth:`FromPoints(first, second, third) <pyTooling.Cartesian3D.Plane3D.FromPoints>`
+     - Through three points; the normal is the cross product of the offsets from the first point to the others. Three
+       points on one line raise :exc:`ValueError`.
+   * - :meth:`FromPointAndSpanningVectors(point, u, v) <pyTooling.Cartesian3D.Plane3D.FromPointAndSpanningVectors>`
+     - Through a point, spanned by two vectors: the plane ``point + s * u + t * v``. Parallel spanning vectors raise
+       :exc:`ValueError`.
+   * - :meth:`FromPointAndNormal(point, normal) <pyTooling.Cartesian3D.Plane3D.FromPointAndNormal>`
+     - Through a point, perpendicular to a normal; a zero normal raises :exc:`ValueError`.
+
+:meth:`~pyTooling.Cartesian3D.Plane3D.SignedDistance`, :meth:`~pyTooling.Cartesian3D.Plane3D.Project`,
+:meth:`~pyTooling.Cartesian3D.Plane3D.Intersects` and :meth:`~pyTooling.Cartesian3D.Plane3D.Intersection` (with a
+:ref:`Ray3D <STRUCT/Cartesian3D/Ray3D>`) work as for a line, in absolute coordinates.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian3D import Point3D, Offset3D, Plane3D, Ray3D
+
+   plane = Plane3D.FromPointAndSpanningVectors(Point3D(0, 0, 2), Offset3D(1, 0, 0), Offset3D(0, 3, -4))
+
+   str(plane)                                         # '0.0 * x + 0.8 * y + 0.6 * z = 1.2'
+   plane.SignedDistance(Point3D(0, 0, 0))             # -1.2
+   plane.Project(Point3D(0, 0, 0))                    # (0.0, 0.96, 0.72)
+   plane.Intersection(Ray3D(Point3D(0, 0, 0), Offset3D(0, 0, 1)))   # (0.0, 0.0, 2.0)
+
+Three planes are derived classes with a fixed normal, each named after the coordinate plane it is parallel to; they
+keep their coordinate as given:
+
+* :class:`~pyTooling.Cartesian3D.YZPlane3D` - the plane ``x = c``, normal ``(1, 0, 0)``; all its points have the same
   :attr:`~pyTooling.Cartesian3D.YZPlane3D.X`;
-* :class:`~pyTooling.Cartesian3D.XZPlane3D` - the plane ``y = c``, with :attr:`~pyTooling.Cartesian3D.XZPlane3D.Y`;
-* :class:`~pyTooling.Cartesian3D.XYPlane3D` - the plane ``z = c``, with :attr:`~pyTooling.Cartesian3D.XYPlane3D.Z`.
+* :class:`~pyTooling.Cartesian3D.XZPlane3D` - the plane ``y = c``, normal ``(0, 1, 0)``, with
+  :attr:`~pyTooling.Cartesian3D.XZPlane3D.Y`;
+* :class:`~pyTooling.Cartesian3D.XYPlane3D` - the plane ``z = c``, normal ``(0, 0, 1)``, with
+  :attr:`~pyTooling.Cartesian3D.XYPlane3D.Z`.
 
-Like the 2D line, a plane is a value in absolute coordinates: :meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt` mirrors
-an element of any group at it, and ``FromElement`` creates the plane through a face or the center of an element's
-absolute bounding box, named by an :class:`~pyTooling.Cartesian3D.Alignment3D` of the plane's axis.
+Like the 2D line, a plane is a value in absolute coordinates, compared geometrically and hashable:
+:meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt` mirrors an element of any group at a plane parallel to a coordinate
+plane (an oblique plane raises :exc:`~pyTooling.Exceptions.InvalidOperationError`), and ``FromElement`` creates the
+plane through a face or the center of an element's absolute bounding box, named by an
+:class:`~pyTooling.Cartesian3D.Alignment3D` of the plane's axis.
 
 .. code-block:: Python
 
@@ -1586,7 +1695,7 @@ absolute bounding box, named by an :class:`~pyTooling.Cartesian3D.Alignment3D` o
 .. seealso::
 
    :ref:`STRUCT/Cartesian2D/Line2D`
-      |rarr| Its counterpart, the line parallel to a coordinate axis.
+      |rarr| Its counterpart, the line in Hesse normal form.
 
 
 .. _STRUCT/Cartesian3D/Ray3D:

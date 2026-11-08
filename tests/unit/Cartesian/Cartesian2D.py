@@ -1943,18 +1943,468 @@ class Mirroring(Testcase):
 
 class Lines(Testcase):
 	def test_Line2D(self) -> None:
-		"""A line is a vertical or horizontal line; the base class can't be instantiated."""
-		with self.assertRaises(AbstractClassError) as context:
-			Line2D()
+		line = Line2D(Offset2D(0.6, 0.8), 2.0)
 
-		self.assertEqual(
-			"Class 'Line2D' is abstract. The following methods: '_MirrorElement' need to be overridden in a derived class.",
-			str(context.exception)
-		)
+		self.assertEqual(Offset2D(0.6, 0.8), line.Normal)
+		self.assertEqual(2.0, line.Distance)
+
+	def test_Normalize(self) -> None:
+		"""A normal of another length is normalized, and the distance is divided by its length."""
+		line = Line2D(Offset2D(3, 4), 10)
+
+		self.assertIsInstance(line.Normal.XOffset, float)
+		self.assertEqual(Offset2D(0.6, 0.8), line.Normal)
+		self.assertEqual(2.0, line.Distance)
+
+	def test_Normalize_Copy(self) -> None:
+		"""The line stores its own normal, the given one is unchanged."""
+		normal = Offset2D(3, 4)
+
+		line = Line2D(normal, 10)
+
+		self.assertIsNot(normal, line.Normal)
+		self.assertEqual(Offset2D(3, 4), normal)
+
+	def test_UnitNormal_Int(self) -> None:
+		"""A normal of length 1 keeps its values, so integers stay integers."""
+		line = Line2D(Offset2D(0, 1), 5)
+
+		self.assertIs(int, type(line.Normal.XOffset))
+		self.assertIs(int, type(line.Normal.YOffset))
+		self.assertIs(int, type(line.Distance))
+
+	def test_SignRule(self) -> None:
+		"""The first non-zero component of the normal is positive: normal and distance are negated otherwise."""
+		line = Line2D(Offset2D(-3, 4), 10)
+
+		self.assertEqual(Offset2D(0.6, -0.8), line.Normal)
+		self.assertEqual(-2.0, line.Distance)
+
+	def test_SignRule_SecondComponent(self) -> None:
+		line = Line2D(Offset2D(0, -2), 4)
+
+		self.assertEqual(Offset2D(0, 1), line.Normal)
+		self.assertEqual(-2.0, line.Distance)
+
+	def test_SignRule_NoNegativeZero(self) -> None:
+		line = Line2D(Offset2D(-1.0, 0.0), 0.0)
+
+		self.assertEqual("Line2D((1.0, 0.0), 0.0)", repr(line))
+
+	def test_NormalNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Line2D(None, 1)
+
+		self.assertEqual("Parameter 'normal' is None.", str(context.exception))
+
+	def test_NormalTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Line2D((1, 0), 1)
+
+		self.assertEqual("Parameter 'normal' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_NormalZero(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Line2D(Offset2D(0, 0), 1)
+
+		self.assertEqual("Parameter 'normal' is a zero offset.", str(context.exception))
+		self.assertListEqual(["Got offset (0, 0).", "A line needs a normal direction."], context.exception.__notes__)
+
+	def test_DistanceNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Line2D(Offset2D(1, 0), None)
+
+		self.assertEqual("Parameter 'distance' is None.", str(context.exception))
+
+	def test_DistanceStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Line2D(Offset2D(1, 0), "1")
+
+		self.assertEqual("Parameter 'distance' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Immutable(self) -> None:
+		line = Line2D(Offset2D(3, 4), 10)
+
+		with self.assertRaises(AttributeError):
+			line.Normal = Offset2D(1, 0)
+
+		with self.assertRaises(AttributeError):
+			line.Distance = 1
 
 	def test_Derived(self) -> None:
 		self.assertIsInstance(VerticalLine2D(5), Line2D)
 		self.assertIsInstance(HorizontalLine2D(5), Line2D)
+
+	def test_FromPoints(self) -> None:
+		line = Line2D.FromPoints(Point2D(0, 1), Point2D(4, -2))
+
+		self.assertIs(Line2D, type(line))
+		self.assertEqual(Offset2D(0.6, 0.8), line.Normal)
+		self.assertEqual(0.8, line.Distance)
+
+	def test_FromPoints_Group(self) -> None:
+		"""The points are taken in absolute coordinates."""
+		segment = LineSegment2D(Point2D(0, 0), Point2D(0, 3))
+		Group2D(Offset2D(5, 0), (segment, ))
+
+		line = Line2D.FromPoints(segment.Start, segment.End)
+
+		self.assertEqual(VerticalLine2D(5), line)
+
+	def test_FromPoints_Derived(self) -> None:
+		"""A derived class creates a general line."""
+		line = VerticalLine2D.FromPoints(Point2D(5, 0), Point2D(5, 3))
+
+		self.assertIs(Line2D, type(line))
+		self.assertEqual(VerticalLine2D(5), line)
+
+	def test_FromPoints_FirstNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Line2D.FromPoints(None, Point2D(1, 2))
+
+		self.assertEqual("Parameter 'first' is None.", str(context.exception))
+
+	def test_FromPoints_SecondTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Line2D.FromPoints(Point2D(1, 2), (3, 4))
+
+		self.assertEqual("Parameter 'second' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_FromPoints_SamePosition(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Line2D.FromPoints(Point2D(1, 2), Point2D(1, 2))
+
+		self.assertEqual("Parameters 'first' and 'second' are at the same position.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got points (1, 2) and (1, 2), both at (1, 2) in absolute coordinates.",
+				"Two points at the same position don't define a line."
+			],
+			context.exception.__notes__
+		)
+
+	def test_FromPoints_SamePosition_Group(self) -> None:
+		"""Two points at the same absolute position, but in different frames."""
+		segment = LineSegment2D(Point2D(0, 0), Point2D(0, 3))
+		Group2D(Offset2D(5, 0), (segment, ))
+
+		with self.assertRaises(ValueError) as context:
+			Line2D.FromPoints(segment.Start, Point2D(5, 0))
+
+		self.assertEqual("Parameters 'first' and 'second' are at the same position.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got points (0, 0) and (5, 0), both at (5, 0) in absolute coordinates.",
+				"Two points at the same position don't define a line."
+			],
+			context.exception.__notes__
+		)
+
+	def test_FromPointAndDirection(self) -> None:
+		line = Line2D.FromPointAndDirection(Point2D(0, 1), Offset2D(4, -3))
+
+		self.assertIs(Line2D, type(line))
+		self.assertEqual(Line2D.FromPoints(Point2D(0, 1), Point2D(4, -2)), line)
+
+	def test_FromPointAndDirection_Horizontal(self) -> None:
+		self.assertEqual(HorizontalLine2D(2), Line2D.FromPointAndDirection(Point2D(1, 2), Offset2D(-3, 0)))
+
+	def test_FromPointAndDirection_PointNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Line2D.FromPointAndDirection(None, Offset2D(1, 0))
+
+		self.assertEqual("Parameter 'point' is None.", str(context.exception))
+
+	def test_FromPointAndDirection_PointOffset(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Line2D.FromPointAndDirection(Offset2D(1, 2), Offset2D(1, 0))
+
+		self.assertEqual("Parameter 'point' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Offset2D'."], context.exception.__notes__)
+
+	def test_FromPointAndDirection_DirectionNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Line2D.FromPointAndDirection(Point2D(1, 2), None)
+
+		self.assertEqual("Parameter 'direction' is None.", str(context.exception))
+
+	def test_FromPointAndDirection_DirectionPoint(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Line2D.FromPointAndDirection(Point2D(1, 2), Point2D(1, 0))
+
+		self.assertEqual("Parameter 'direction' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
+	def test_FromPointAndDirection_DirectionZero(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Line2D.FromPointAndDirection(Point2D(1, 2), Offset2D(0, 0))
+
+		self.assertEqual("Parameter 'direction' is a zero offset.", str(context.exception))
+		self.assertListEqual(["Got offset (0, 0).", "A line needs a direction."], context.exception.__notes__)
+
+	def test_FromPointAndNormal(self) -> None:
+		line = Line2D.FromPointAndNormal(Point2D(6, 8), Offset2D(-3, -4))
+
+		self.assertIs(Line2D, type(line))
+		self.assertEqual(Offset2D(0.6, 0.8), line.Normal)
+		self.assertEqual(10.0, line.Distance)
+
+	def test_FromPointAndNormal_Group(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		Group2D(Offset2D(10, 20), (circle, ))
+
+		line = Line2D.FromPointAndNormal(circle.Center, Offset2D(0, 1))
+
+		self.assertEqual(HorizontalLine2D(22), line)
+
+	def test_FromPointAndNormal_PointNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Line2D.FromPointAndNormal(None, Offset2D(1, 0))
+
+		self.assertEqual("Parameter 'point' is None.", str(context.exception))
+
+	def test_FromPointAndNormal_PointTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Line2D.FromPointAndNormal((1, 2), Offset2D(1, 0))
+
+		self.assertEqual("Parameter 'point' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_FromPointAndNormal_NormalNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Line2D.FromPointAndNormal(Point2D(1, 2), None)
+
+		self.assertEqual("Parameter 'normal' is None.", str(context.exception))
+
+	def test_FromPointAndNormal_NormalTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Line2D.FromPointAndNormal(Point2D(1, 2), (1, 0))
+
+		self.assertEqual("Parameter 'normal' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_FromPointAndNormal_NormalZero(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Line2D.FromPointAndNormal(Point2D(1, 2), Offset2D(0, 0))
+
+		self.assertEqual("Parameter 'normal' is a zero offset.", str(context.exception))
+		self.assertListEqual(["Got offset (0, 0).", "A line needs a normal direction."], context.exception.__notes__)
+
+	def test_SignedDistance(self) -> None:
+		line = Line2D(Offset2D(3, 4), 10)
+
+		self.assertEqual(-2.0, line.SignedDistance(Point2D(0, 0)))
+		self.assertEqual(3.0, line.SignedDistance(Point2D(3, 4)))
+		self.assertEqual(0.0, line.SignedDistance(Point2D(2, 1)))
+
+	def test_SignedDistance_Int(self) -> None:
+		distance = VerticalLine2D(5).SignedDistance(Point2D(2, 7))
+
+		self.assertIs(int, type(distance))
+		self.assertEqual(-3, distance)
+
+	def test_SignedDistance_Group(self) -> None:
+		"""The point is taken in absolute coordinates."""
+		circle = Circle(Point2D(1, 2), 1)
+		Group2D(Offset2D(10, 20), (circle, ))
+
+		self.assertEqual(6, VerticalLine2D(5).SignedDistance(circle.Center))
+
+	def test_SignedDistance_PointNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			VerticalLine2D(5).SignedDistance(None)
+
+		self.assertEqual("Parameter 'point' is None.", str(context.exception))
+
+	def test_SignedDistance_PointTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			VerticalLine2D(5).SignedDistance((1, 2))
+
+		self.assertEqual("Parameter 'point' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Project(self) -> None:
+		line =  Line2D(Offset2D(3, 4), 10)
+		point = Point2D(3, 4)
+
+		projection = line.Project(point)
+
+		self.assertIsNot(point, projection)
+		self.assertIsNone(projection.Parent)
+		self.assertTrue(isclose(1.2, projection.X))
+		self.assertTrue(isclose(1.6, projection.Y))
+		self.assertTrue(isclose(0.0, line.SignedDistance(projection), abs_tol=1e-12))
+
+	def test_Project_Group(self) -> None:
+		"""The point is taken in absolute coordinates, the projection is in absolute coordinates."""
+		circle = Circle(Point2D(1, 2), 1)
+		Group2D(Offset2D(10, 20), (circle, ))
+
+		projection = HorizontalLine2D(0).Project(circle.Center)
+
+		self.assertTupleEqual((11, 0), projection.ToTuple())
+
+	def test_Project_PointNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			VerticalLine2D(5).Project(None)
+
+		self.assertEqual("Parameter 'point' is None.", str(context.exception))
+
+	def test_Project_PointOffset(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			VerticalLine2D(5).Project(Offset2D(1, 2))
+
+		self.assertEqual("Parameter 'point' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Offset2D'."], context.exception.__notes__)
+
+	def test_Intersection(self) -> None:
+		line = Line2D(Offset2D(1, 1), 4)
+		ray =  Ray2D(Point2D(0, 0), Offset2D(1, 3))
+
+		self.assertTrue(line.Intersects(ray))
+		intersection = line.Intersection(ray)
+		self.assertIsNone(intersection.Parent)
+		self.assertTrue(isclose(1.0, intersection.X))
+		self.assertTrue(isclose(3.0, intersection.Y))
+
+	def test_Intersection_Int(self) -> None:
+		line = VerticalLine2D(4)
+		ray =  Ray2D(Point2D(0, 1), Offset2D(2, 1))
+
+		self.assertTrue(line.Intersects(ray))
+		self.assertTupleEqual((4.0, 3.0), line.Intersection(ray).ToTuple())
+
+	def test_Intersection_StartOnLine(self) -> None:
+		line = VerticalLine2D(4)
+		ray =  Ray2D(Point2D(4, 1), Offset2D(-2, 1))
+
+		self.assertTrue(line.Intersects(ray))
+		intersection = line.Intersection(ray)
+		self.assertIsNot(ray.Start, intersection)
+		self.assertTupleEqual((4, 1), intersection.ToTuple())
+
+	def test_Intersection_AlongLine(self) -> None:
+		"""A ray running along the line hits it at its start point."""
+		line = HorizontalLine2D(1)
+		ray =  Ray2D(Point2D(4, 1), Offset2D(-2, 0))
+
+		self.assertTrue(line.Intersects(ray))
+		self.assertTupleEqual((4, 1), line.Intersection(ray).ToTuple())
+
+	def test_Intersection_Parallel(self) -> None:
+		line = HorizontalLine2D(1)
+		ray =  Ray2D(Point2D(4, 2), Offset2D(-2, 0))
+
+		self.assertFalse(line.Intersects(ray))
+		with self.assertRaises(ValueError) as context:
+			line.Intersection(ray)
+
+		self.assertEqual("Parameter 'ray' is parallel to the line.", str(context.exception))
+		self.assertListEqual(
+			["Got ray Ray2D((4, 2), (-2, 0)) and line HorizontalLine2D(1).", "Check with 'Intersects' first."],
+			context.exception.__notes__
+		)
+
+	def test_Intersection_Behind(self) -> None:
+		line = Line2D(Offset2D(1, 1), 4)
+		ray =  Ray2D(Point2D(0, 0), Offset2D(-1, 0))
+
+		self.assertFalse(line.Intersects(ray))
+		with self.assertRaises(ValueError) as context:
+			line.Intersection(ray)
+
+		self.assertEqual("Parameter 'ray' points away from the line.", str(context.exception))
+		self.assertListEqual(
+			[
+				"Got ray Ray2D((0, 0), (-1, 0)) and line Line2D((0.7071067811865475, 0.7071067811865475), "
+				"2.82842712474619).",
+				"Check with 'Intersects' first."
+			],
+			context.exception.__notes__
+		)
+
+	def test_Intersects_RayNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			VerticalLine2D(5).Intersects(None)
+
+		self.assertEqual("Parameter 'ray' is None.", str(context.exception))
+
+	def test_Intersects_RayLine(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			VerticalLine2D(5).Intersects(VerticalLine2D(6))
+
+		self.assertEqual("Parameter 'ray' is not of type 'Ray2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.VerticalLine2D'."], context.exception.__notes__)
+
+	def test_Intersection_RayNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			VerticalLine2D(5).Intersection(None)
+
+		self.assertEqual("Parameter 'ray' is None.", str(context.exception))
+
+	def test_Intersection_RayLine(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			VerticalLine2D(5).Intersection(VerticalLine2D(6))
+
+		self.assertEqual("Parameter 'ray' is not of type 'Ray2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.VerticalLine2D'."], context.exception.__notes__)
+
+	def test_Equal(self) -> None:
+		"""Equality is geometric: lines created by different classes and constructors are equal."""
+		self.assertTrue(VerticalLine2D(5) == Line2D(Offset2D(1, 0), 5))
+		self.assertTrue(Line2D(Offset2D(1, 0), 5) == Line2D.FromPoints(Point2D(5, 0), Point2D(5, 3)))
+		self.assertTrue(VerticalLine2D(5) == Line2D.FromPoints(Point2D(5, 0), Point2D(5, 3)))
+		self.assertTrue(Line2D(Offset2D(3, 4), 10) == Line2D(Offset2D(-6, -8), -20))
+		self.assertFalse(Line2D(Offset2D(3, 4), 10) == Line2D(Offset2D(3, 4), -10))
+
+	def test_Unequal(self) -> None:
+		self.assertTrue(Line2D(Offset2D(3, 4), 10) != Line2D(Offset2D(3, 4), -10))
+		self.assertTrue(Line2D(Offset2D(3, 4), 10) != Line2D(Offset2D(4, 3), 10))
+		self.assertFalse(VerticalLine2D(5) != Line2D(Offset2D(2, 0), 10))
+
+	def test_EqualRay(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Line2D(Offset2D(3, 4), 10) == Ray2D(Point2D(1, 2), Offset2D(3, 4))
+
+		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'pyTooling.Cartesian2D.Ray2D'.", "Supported types for second operand: Line2D"],
+			context.exception.__notes__
+		)
+
+	def test_UnequalNone(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Line2D(Offset2D(3, 4), 10) != None
+
+		self.assertEqual("Second operand is not supported by != operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'NoneType'.", "Supported types for second operand: Line2D"],
+			context.exception.__notes__
+		)
+
+	def test_Hash(self) -> None:
+		"""Equal lines hash alike, also across the hierarchy and for 1 and 1.0."""
+		lines = {
+			VerticalLine2D(5),
+			Line2D(Offset2D(1, 0), 5),
+			Line2D.FromPoints(Point2D(5, 0), Point2D(5, 3)),
+			VerticalLine2D(5.0),
+			HorizontalLine2D(5)
+		}
+
+		self.assertEqual(2, len(lines))
+
+	def test_repr(self) -> None:
+		self.assertEqual("Line2D((0.6, 0.8), 2.0)", repr(Line2D(Offset2D(3, 4), 10)))
+
+	def test_str(self) -> None:
+		self.assertEqual("0.6 * x + 0.8 * y = 2.0", str(Line2D(Offset2D(3, 4), 10)))
+
+	def test_str_NegativeY(self) -> None:
+		self.assertEqual("0.6 * x - 0.8 * y = -2.0", str(Line2D(Offset2D(-3, 4), 10)))
 
 
 class VerticalLines(Testcase):
@@ -2525,6 +2975,45 @@ class MirroringAtLine(Testcase):
 		self.assertTupleEqual((3, 0), arc.Start.ToTuple())
 		self.assertTupleEqual((4, 1), arc.End.ToTuple())
 		self.assertIs(SweepDirection.Counterclockwise, arc.Direction)
+
+	def test_Line2D_Vertical(self) -> None:
+		"""A general line with normal (1, 0) mirrors like a vertical line."""
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		line.MirrorAt(Line2D.FromPoints(Point2D(10, 0), Point2D(10, -7)))
+
+		self.assertTupleEqual(((19.0, 2), (16.0, 6)), line.ToTuple())
+
+	def test_Line2D_Horizontal(self) -> None:
+		"""A general line with normal (0, 1) mirrors like a horizontal line, keeping integers for a unit normal."""
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		line.MirrorAt(Line2D(Offset2D(0, -1), -3))
+
+		self.assertTupleEqual(((1, 4), (4, 0)), line.ToTuple())
+		self.assertIs(int, type(line.Start.Y))
+
+	def test_Line2D_Group(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		Group2D(Offset2D(10, 0), (circle, ))
+
+		circle.MirrorAt(Line2D(Offset2D(1, 0), 20))
+
+		self.assertTupleEqual((19, 2), circle.Center.ToTuple())
+		self.assertTupleEqual((29, 2), circle.Center.Absolute.ToTuple())
+
+	def test_Line2D_Oblique(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		with self.assertRaises(InvalidOperationError) as context:
+			line.MirrorAt(Line2D(Offset2D(3, 4), 10))
+
+		self.assertEqual("Mirroring at an oblique line isn't supported.", str(context.exception))
+		self.assertListEqual(
+			["Got line Line2D((0.6, 0.8), 2.0).", "Mirror at a vertical or horizontal line."],
+			context.exception.__notes__
+		)
+		self.assertTupleEqual(((1, 2), (4, 6)), line.ToTuple())
 
 	def test_LineNone(self) -> None:
 		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
