@@ -543,9 +543,8 @@ properties:
 * :attr:`~pyTooling.Cartesian2D.Shapes.Geometry2D.Perimeter` - the length of its outline, a :class:`float`.
 
 A polygon and a trapezium compute both from their corners, which may be given clockwise or counterclockwise; a
-rectangle and a square inherit them. Where edges of a polygon cross each other, the parts enclosed in opposite
-orientations cancel each other out. A :ref:`path <STRUCT/Cartesian2D/Path>` is a shape, but no geometry, even when
-it is closed.
+rectangle and a square inherit them. A :ref:`path <STRUCT/Cartesian2D/Path>` is a shape, but no geometry, even
+when it is closed.
 
 .. code-block:: Python
 
@@ -586,8 +585,10 @@ its edges have the polygon as parent.
    str(triangle)                      # ((0, 0) → (4, 0) → (2, 3) → (0, 0))
 
 A corner that isn't a :class:`~pyTooling.Cartesian2D.Point2D` raises :exc:`TypeError`, fewer than three corners
-raise :exc:`~pyTooling.Cartesian2D.NotEnoughCornersError`. The corners are not checked any further: edges may cross
-each other.
+raise :exc:`~pyTooling.Cartesian2D.NotEnoughCornersError`. Edges must not cross: two edges may have only their shared
+corner in common, else :exc:`~pyTooling.Cartesian2D.CrossingEdgesError` is raised - for crossing edges, a corner on
+another edge, or an edge running back along the previous one. The coordinates are compared exactly. Corners moved in
+place later aren't checked again.
 
 .. seealso::
 

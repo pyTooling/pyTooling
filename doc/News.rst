@@ -15,8 +15,8 @@ Version 10.x (2026)
    .. rubric:: New Features
 
    * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with three or more
-     corners, and a :class:`~pyTooling.Cartesian2D.Shapes.Circle` by center and radius, measuring its diameter,
-     perimeter and area.
+     corners, whose edges don't cross (:exc:`~pyTooling.Cartesian2D.CrossingEdgesError`), and a
+     :class:`~pyTooling.Cartesian2D.Shapes.Circle` by center and radius, measuring its diameter, perimeter and area.
    * :mod:`pyTooling.Cartesian2D.Shapes`: closed shapes derive from the abstract
      :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` and report their ``Area`` and ``Perimeter``; a polygon and a
      trapezium compute both from their corners.

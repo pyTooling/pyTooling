@@ -135,6 +135,15 @@ class NotEnoughCornersError(Cartesian2DError):
 
 
 @export
+class CrossingEdgesError(Cartesian2DError):
+	"""
+	The exception is raised when edges of a polygon have a point in common, which isn't their shared corner.
+
+	For example, two edges crossing each other, a corner on another edge, or an edge running back along the previous one.
+	"""
+
+
+@export
 class GroupCycleError(Cartesian2DError, CycleError):
 	"""The exception is raised when a group would become its own parent or the parent of one of its ancestors."""
 

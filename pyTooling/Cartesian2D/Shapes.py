@@ -41,7 +41,8 @@ from pyTooling.Exceptions  import InvalidOperationError
 from pyTooling.MetaClasses import abstractmethod
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Segment2D, LineSegment2D, \
-                                  ArcSegment2D, AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError
+                                  ArcSegment2D, AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, \
+                                  CrossingEdgesError
 
 if TYPE_CHECKING:
 	from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D
@@ -132,6 +133,7 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 		                               ``False``. |br|
 		                               Use ``copyPoints=True`` to copy the points.
 		:raises NotEnoughCornersError: If parameter 'points' has fewer than 3 points.
+		:raises CrossingEdgesError:    If two edges have a point in common, which isn't their shared corner.
 		:raises ValueError:            If parameter 'copyPoints' is None.
 		:raises TypeError:             If parameter 'copyPoints' is not of type :class:`bool`.
 		:raises TypeError:             If parameter 'keyValuePairs' is not a mapping.
@@ -183,6 +185,68 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 			ex = NotEnoughCornersError("Polygon has fewer than 3 corners.")
 			ex.add_note(f"Got {len(pointList)} points.")
 			raise ex from ValueError("Parameter 'points' has fewer than 3 points.")
+
+		def orientation(
+			first:  Point2D[Coordinate],
+			second: Point2D[Coordinate],
+			third:  Point2D[Coordinate]
+		) -> Coordinate:
+			"""
+			Nested function computing on which side of the line from the first to the second point the third point is.
+
+			:param first:  Start of the line.
+			:param second: End of the line.
+			:param third:  The point to check.
+			:returns:      Positive, if the third point is on the left, negative, if it is on the right, 0, if it is on the
+			               line.
+			"""
+			return (second._x - first._x) * (third._y - first._y) - (second._y - first._y) * (third._x - first._x)
+
+		def isBetween(start: Point2D[Coordinate], end: Point2D[Coordinate], point: Point2D[Coordinate]) -> bool:
+			"""
+			Nested function checking if a point on the line through two points is between them.
+
+			:param start: Start of the line segment.
+			:param end:   End of the line segment.
+			:param point: A point on the line through start and end.
+			:returns:     ``True``, if the point is on the line segment, its ends included.
+			"""
+			return (
+				min(start._x, end._x) <= point._x <= max(start._x, end._x) and
+				min(start._y, end._y) <= point._y <= max(start._y, end._y)
+			)
+
+		count = len(pointList)
+		for index in range(count):
+			start =   pointList[index]
+			end =     pointList[(index + 1) % count]
+			nextEnd = pointList[(index + 2) % count]
+			if orientation(start, end, nextEnd) == 0 and (
+				(end._x - start._x) * (nextEnd._x - end._x) + (end._y - start._y) * (nextEnd._y - end._y) < 0
+			):
+				ex = CrossingEdgesError("Polygon has overlapping edges.")
+				ex.add_note(f"Got edges ({start} → {end}) and ({end} → {nextEnd}).")
+				raise ex from ValueError("Parameter 'points' describes edges running back along each other.")
+
+			for otherIndex in range(index + 2, count if index > 0 else count - 1):
+				otherStart =     pointList[otherIndex]
+				otherEnd =       pointList[(otherIndex + 1) % count]
+				startSide =      orientation(start, end, otherStart)
+				endSide =        orientation(start, end, otherEnd)
+				otherStartSide = orientation(otherStart, otherEnd, start)
+				otherEndSide =   orientation(otherStart, otherEnd, end)
+				if (
+					((startSide > 0 and endSide < 0) or (startSide < 0 and endSide > 0)) and
+					((otherStartSide > 0 and otherEndSide < 0) or (otherStartSide < 0 and otherEndSide > 0))
+				) or (
+					(startSide == 0 and isBetween(start, end, otherStart)) or
+					(endSide == 0 and isBetween(start, end, otherEnd)) or
+					(otherStartSide == 0 and isBetween(otherStart, otherEnd, start)) or
+					(otherEndSide == 0 and isBetween(otherStart, otherEnd, end))
+				):
+					ex = CrossingEdgesError("Polygon has crossing edges.")
+					ex.add_note(f"Got edges ({start} → {end}) and ({otherStart} → {otherEnd}).")
+					raise ex from ValueError("Parameter 'points' describes edges crossing or touching each other.")
 
 		self._points = corners = tuple(pointList)
 		for corner in corners:
@@ -237,8 +301,7 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		Read-only property to return the area enclosed by the polygon.
 
-		The corners may be given clockwise or counterclockwise. Where edges cross each other, the parts enclosed in opposite
-		orientations cancel each other out.
+		The corners may be given clockwise or counterclockwise.
 
 		:returns: Area of the polygon.
 		"""
@@ -545,8 +608,7 @@ class Trapezium(Geometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		Read-only property to return the area enclosed by the trapezium.
 
-		The corners may be given clockwise or counterclockwise. Where edges cross each other, the parts enclosed in opposite
-		orientations cancel each other out.
+		The corners may be given clockwise or counterclockwise.
 
 		:returns: Area of the trapezium.
 		"""

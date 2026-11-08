@@ -37,7 +37,7 @@ from math                         import cos, isclose, pi, radians, sin, sqrt
 from pyTooling.Cartesian2D        import Point2D, Offset2D, Size2D, BoundingBox2D, LineSegment2D, ArcSegment2D, \
                                          QuadraticBezierSegment2D, CubicBezierSegment2D, Alignment2D, SweepDirection, \
                                          AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
-                                         NotInSameFrameError
+                                         NotInSameFrameError, CrossingEdgesError, Cartesian2DError
 from pyTooling.Cartesian2D.Shapes import Shape, Geometry2D, Polygon, Trapezium, Rectangle, Square, Circle, Path
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection
 from pyTooling.Exceptions         import InvalidOperationError
@@ -502,6 +502,68 @@ class Instantiation(Testcase):
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 
+class CrossingEdges(Testcase):
+	def test_BowTie(self) -> None:
+		corners = (Point2D(0, 0), Point2D(2, 2), Point2D(2, 0), Point2D(0, 2))
+
+		with self.assertRaises(CrossingEdgesError) as context:
+			_ = Polygon(corners, copyPoints=False)
+
+		self.assertEqual("Polygon has crossing edges.", str(context.exception))
+		self.assertListEqual(["Got edges ((0, 0) → (2, 2)) and ((2, 0) → (0, 2))."], context.exception.__notes__)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual(
+			"Parameter 'points' describes edges crossing or touching each other.",
+			str(context.exception.__cause__)
+		)
+		self.assertIsNone(corners[0].Parent)
+
+	def test_TouchingCorner(self) -> None:
+		"""The corner (3, 0) lies on the first edge."""
+		with self.assertRaises(CrossingEdgesError) as context:
+			_ = Polygon((Point2D(0, 0), Point2D(6, 0), Point2D(6, 4), Point2D(3, 0), Point2D(0, 4)))
+
+		self.assertEqual("Polygon has crossing edges.", str(context.exception))
+		self.assertListEqual(["Got edges ((0, 0) → (6, 0)) and ((6, 4) → (3, 0))."], context.exception.__notes__)
+
+	def test_SamePosition(self) -> None:
+		"""A figure eight with its crossing given twice: two corners at the same position touch each other."""
+		with self.assertRaises(CrossingEdgesError) as context:
+			_ = Polygon((Point2D(0, 0), Point2D(2, 2), Point2D(4, 0), Point2D(4, 4), Point2D(2, 2), Point2D(0, 4)))
+
+		self.assertEqual("Polygon has crossing edges.", str(context.exception))
+		self.assertListEqual(["Got edges ((0, 0) → (2, 2)) and ((4, 4) → (2, 2))."], context.exception.__notes__)
+
+	def test_BackTracking(self) -> None:
+		"""The second edge runs back along the first one."""
+		with self.assertRaises(CrossingEdgesError) as context:
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 0), Point2D(2, 3)))
+
+		self.assertEqual("Polygon has overlapping edges.", str(context.exception))
+		self.assertListEqual(["Got edges ((0, 0) → (4, 0)) and ((4, 0) → (2, 0))."], context.exception.__notes__)
+		self.assertEqual(
+			"Parameter 'points' describes edges running back along each other.",
+			str(context.exception.__cause__)
+		)
+
+	def test_Collinear(self) -> None:
+		"""Three corners on one line: the closing edge runs back along the others."""
+		with self.assertRaises(CrossingEdgesError) as context:
+			_ = Polygon((Point2D(0, 0), Point2D(2, 0), Point2D(4, 0)))
+
+		self.assertEqual("Polygon has overlapping edges.", str(context.exception))
+		self.assertListEqual(["Got edges ((2, 0) → (4, 0)) and ((4, 0) → (0, 0))."], context.exception.__notes__)
+
+	def test_Concave(self) -> None:
+		"""A concave polygon has no crossing edges."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(4, 1), Point2D(1, 1), Point2D(1, 3), Point2D(0, 3)))
+
+		self.assertEqual(6, len(polygon.Segments))
+
+	def test_Error(self) -> None:
+		self.assertTrue(issubclass(CrossingEdgesError, Cartesian2DError))
+
+
 class Slots(Testcase):
 	"""A class derived from a shape with ``slots=True`` gets its own slots and no instance dictionary."""
 
@@ -914,11 +976,12 @@ class Measurements(Testcase):
 		self.assertEqual(2.0, polygon.Area)
 		self.assertEqual(6.0, polygon.Perimeter)
 
-	def test_Polygon_Crossing(self) -> None:
-		"""A bow tie: both triangles are enclosed in opposite orientations, so they cancel each other out."""
-		polygon = Polygon((Point2D(0, 0), Point2D(2, 2), Point2D(2, 0), Point2D(0, 2)))
+	def test_Polygon_StraightCorner(self) -> None:
+		"""A corner in the middle of a straight side is allowed."""
+		polygon = Polygon((Point2D(0, 0), Point2D(2, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2)))
 
-		self.assertEqual(0.0, polygon.Area)
+		self.assertEqual(8.0, polygon.Area)
+		self.assertEqual(12.0, polygon.Perimeter)
 
 	def test_Trapezium(self) -> None:
 		"""Parallel sides 6 and 3, height 2; the legs are sqrt(8) and sqrt(5) long."""
