@@ -2000,6 +2000,66 @@ class ElementData(Testcase):
 		self.assertIs(value, newCircle.Value)
 		self.assertIsNot(circle._dict, newCircle._dict)
 
+	def test_Path(self) -> None:
+		value = object()
+		pairs = {"layer": 1}
+		path =  Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ), value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, path.Value)
+		self.assertEqual(1, path["layer"])
+		self.assertIsNot(pairs, path._dict)
+
+	def test_Path_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Path_Edges(self) -> None:
+		"""An edge references the given segment's value and holds a shallow copy of its key-value-pairs."""
+		value = object()
+		line =  LineSegment2D(Point2D(0, 0), Point2D(4, 0), value=value, keyValuePairs={"net": "a"})
+		arc =   ArcSegment2D(Point2D(4, 0), Point2D(0, 0), height=2, value=2, keyValuePairs={"net": "b"})
+
+		path = Path((line, arc), closed=True)
+		path.Segments[0]["net"] = "c"
+
+		self.assertIs(value, path.Segments[0].Value)
+		self.assertEqual(2, path.Segments[1].Value)
+		self.assertEqual("b", path.Segments[1]["net"])
+		self.assertEqual("a", line["net"])
+		self.assertEqual(0, len(path))
+
+	def test_Path_Copy(self) -> None:
+		value = [1, 2]
+		path =  Path(
+			(QuadraticBezierSegment2D(Point2D(0, 0), Point2D(2, 4), Point2D(4, 0), value=3, keyValuePairs={"a": 1}), ),
+			value=value,
+			keyValuePairs={"layer": 1}
+		)
+
+		newPath =          path.Copy()
+		newPath["layer"] = 2
+
+		self.assertIs(value, newPath.Value)
+		self.assertEqual(1, path["layer"])
+		self.assertEqual(2, newPath["layer"])
+		self.assertEqual(3, newPath.Segments[0].Value)
+		self.assertEqual(1, newPath.Segments[0]["a"])
+		self.assertIs(value, copy(path).Value)
+
+	def test_Path_deepcopy(self) -> None:
+		value = [1, 2]
+		path =  Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ), value=value, keyValuePairs={"nets": ["a"]})
+
+		newPath = deepcopy(path)
+
+		self.assertIsNot(value, newPath.Value)
+		self.assertListEqual([1, 2], newPath.Value)
+		self.assertIsNot(path["nets"], newPath["nets"])
+		self.assertIs(newPath, newPath.Points[0].Parent)
+
 
 def openPath() -> Path:
 	"""A line, a semicircle bulging to the right and a quadratic curve bulging upwards."""

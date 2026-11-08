@@ -2017,14 +2017,15 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		"""
 		Create a copy of this segment as an edge of a shape, between two of the shape's points.
 
-		The copy's other points are copies owned by the shape.
+		The copy's other points are copies owned by the shape. It references the same :attr:`Value` and holds a shallow
+		copy of the key-value-pairs.
 
 		:param start: The shape's point the edge starts at.
 		:param end:   The shape's point the edge ends at.
 		:param shape: The shape the edge belongs to.
 		:returns:     A new edge of the shape.
 		"""
-		return self.__class__(start, end, copyPoints=False, parent=shape)
+		return self.__class__(start, end, copyPoints=False, value=self._value, keyValuePairs=self._dict, parent=shape)
 
 
 @export
@@ -2648,7 +2649,8 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		Create a copy of this arc as an edge of a shape, between two of the shape's points.
 
-		The copy's center is a copy owned by the shape.
+		The copy's center is a copy owned by the shape. It references the same :attr:`Value` and holds a shallow copy of the
+		key-value-pairs.
 
 		:param start: The shape's point the edge starts at.
 		:param end:   The shape's point the edge ends at.
@@ -2661,6 +2663,8 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 			center=Point2D(self._center._x, self._center._y, parent=shape),
 			direction=self._direction,
 			copyPoints=False,
+			value=self._value,
+			keyValuePairs=self._dict,
 			parent=shape
 		)
 
@@ -3073,7 +3077,8 @@ class QuadraticBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate])
 		"""
 		Create a copy of this curve as an edge of a shape, between two of the shape's points.
 
-		The copy's control point is a copy owned by the shape.
+		The copy's control point is a copy owned by the shape. It references the same :attr:`Value` and holds a
+		shallow copy of the key-value-pairs.
 
 		:param start: The shape's point the edge starts at.
 		:param end:   The shape's point the edge ends at.
@@ -3086,6 +3091,8 @@ class QuadraticBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate])
 			Point2D(controlPoint._x, controlPoint._y, parent=shape),
 			end,
 			copyPoints=False,
+			value=self._value,
+			keyValuePairs=self._dict,
 			parent=shape
 		)
 
@@ -3372,7 +3379,8 @@ class CubicBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate]):
 		"""
 		Create a copy of this curve as an edge of a shape, between two of the shape's points.
 
-		The copy's control points are copies owned by the shape.
+		The copy's control points are copies owned by the shape. It references the same :attr:`Value` and holds a
+		shallow copy of the key-value-pairs.
 
 		:param start: The shape's point the edge starts at.
 		:param end:   The shape's point the edge ends at.
@@ -3387,6 +3395,8 @@ class CubicBezierSegment2D(BezierSegment2D[Coordinate], Generic[Coordinate]):
 			Point2D(controlPoint2._x, controlPoint2._y, parent=shape),
 			end,
 			copyPoints=False,
+			value=self._value,
+			keyValuePairs=self._dict,
 			parent=shape
 		)
 

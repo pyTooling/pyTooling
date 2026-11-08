@@ -31,6 +31,7 @@
 """An implementation of 2D cartesian shapes for Python."""
 from __future__            import annotations
 
+from copy                  import deepcopy
 from math                  import degrees, isclose, pi
 from typing                import TYPE_CHECKING, Any, Generic, Hashable, Iterable, Mapping, Optional as Nullable, \
                                   Self, Union
@@ -901,35 +902,43 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 
 	def __init__(
 		self,
-		segments: Iterable[Segment2D[Coordinate]],
+		segments:      Iterable[Segment2D[Coordinate]],
 		*,
-		closed:   bool = False,
-		parent:   Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+		closed:        bool = False,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a path from its segments.
 
 		The path copies the segments as its edges: consecutive edges share a joint, and the path owns all their points.
-		The given segments stay as they are.
+		An edge references the segment's value and holds a shallow copy of its key-value-pairs. The given segments stay
+		as they are.
 
-		:param segments:    Segments of the path, in drawing order.
-		:param closed:      Optional, if ``True``, the last segment ends at the start point of the first segment. Default:
-		                    ``False``.
-		:param parent:      Optional, the group or canvas the path is added to. Default: ``None``, no parent.
-		:raises ValueError: If parameter 'segments' is None.
-		:raises TypeError:  If parameter 'segments' is not iterable.
-		:raises ValueError: If an element of parameter 'segments' is None.
-		:raises TypeError:  If an element of parameter 'segments' is not of type :class:`~pyTooling.Cartesian2D.Segment2D`.
-		:raises ValueError: If an element of parameter 'segments' doesn't start at the end point of the previous element.
-		:raises ValueError: If parameter 'segments' is empty.
-		:raises ValueError: If parameter 'closed' is None.
-		:raises TypeError:  If parameter 'closed' is not of type :class:`bool`.
-		:raises ValueError: If parameter 'closed' is ``True``, while the last segment doesn't end at the start point of the
-		                    first segment.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
-		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:param segments:      Segments of the path, in drawing order.
+		:param closed:        Optional, if ``True``, the last segment ends at the start point of the first segment.
+		                      Default: ``False``.
+		:param value:         Optional, value of the path. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, the group or canvas the path is added to. Default: ``None``, no parent.
+		:raises ValueError:   If parameter 'segments' is None.
+		:raises TypeError:    If parameter 'segments' is not iterable.
+		:raises ValueError:   If an element of parameter 'segments' is None.
+		:raises TypeError:    If an element of parameter 'segments' is not of type
+		                      :class:`~pyTooling.Cartesian2D.Segment2D`.
+		:raises ValueError:   If an element of parameter 'segments' doesn't start at the end point of the previous
+		                      element.
+		:raises ValueError:   If parameter 'segments' is empty.
+		:raises ValueError:   If parameter 'closed' is None.
+		:raises TypeError:    If parameter 'closed' is not of type :class:`bool`.
+		:raises ValueError:   If parameter 'closed' is ``True``, while the last segment doesn't end at the start point of
+		                      the first segment.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
-		super().__init__(parent=parent)
+		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
 
 		if segments is None:
 			raise ValueError("Parameter 'segments' is None.")
@@ -1107,11 +1116,12 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 		"""
 		Create a new path as a copy of this path.
 
-		The copy holds copies of all points, and its edges share the copied joints.
+		The copy holds copies of all points, and its edges share the copied joints. It references the same :attr:`Value`
+		and holds a shallow copy of the key-value-pairs; so do its edges.
 
 		:returns: Copy of this path.
 		"""
-		return self.__class__(self._segments, closed=self._closed)
+		return self.__class__(self._segments, closed=self._closed, value=self._value, keyValuePairs=self._dict)
 
 	def __copy__(self) -> Self:
 		"""
@@ -1125,10 +1135,18 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 		"""
 		Returns a copy of this path for :func:`copy.deepcopy`.
 
+		The copy holds copies of all points, and deep copies of the :attr:`Value` and the key-value-pairs. Its edges
+		are copied as by :meth:`Copy`.
+
 		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
 		:returns:    Copy of this path.
 		"""
-		return self.Copy()
+		return self.__class__(
+			self._segments,
+			closed=self._closed,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
 
 	def __repr__(self) -> str:
 		"""

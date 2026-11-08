@@ -675,7 +675,8 @@ The path copies the given segments as its **edges**, the way a :ref:`polygon <ST
 edges from its corners: consecutive edges share their joint, and the path owns every point - the joints in
 :attr:`~pyTooling.Cartesian2D.Shapes.Path.Points` and the points defining the curves, like an arc's center.
 :attr:`~pyTooling.Cartesian2D.Shapes.Path.Segments` holds the edges, :attr:`~pyTooling.Cartesian2D.Shapes.Path.IsClosed`
-tells whether the path is closed. The given segments stay as they are.
+tells whether the path is closed. The given segments stay as they are; an edge references its segment's
+:attr:`~pyTooling.Cartesian2D.Element2D.Value` and holds a shallow copy of its key-value-pairs.
 
 .. code-block:: Python
 
