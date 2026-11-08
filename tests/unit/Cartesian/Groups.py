@@ -389,7 +389,7 @@ class ParentParameter(Testcase):
 	def test_Segment(self) -> None:
 		group = Group2D()
 
-		segment = Segment2D(Point2D(1, 2), Point2D(4, 6), parent=group)
+		segment = LineSegment2D(Point2D(1, 2), Point2D(4, 6), parent=group)
 
 		self.assertIs(group, segment.Parent)
 		self.assertTupleEqual((segment, ), group.Children)
@@ -1252,7 +1252,7 @@ class CanvasParentParameter(Testcase):
 	def test_Segment(self) -> None:
 		canvas = Canvas2D()
 
-		segment = Segment2D(Point2D(1, 2), Point2D(4, 6), parent=canvas)
+		segment = LineSegment2D(Point2D(1, 2), Point2D(4, 6), parent=canvas)
 
 		self.assertIs(canvas, segment.Parent)
 		self.assertTupleEqual((segment, ), canvas.Children)

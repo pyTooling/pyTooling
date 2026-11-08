@@ -52,7 +52,7 @@ from typing                       import Any, ClassVar, Generic, Hashable, Itera
 
 from pyTooling                    import Cartesian2D
 from pyTooling.Decorators         import export, readonly
-from pyTooling.MetaClasses        import ExtendedType, abstractmethod
+from pyTooling.MetaClasses        import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Common             import getFullyQualifiedName
 from pyTooling.Cartesian2D        import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Shapes, \
                                          AlreadyOwnedError
@@ -97,6 +97,7 @@ class FontStyle(Enum):
 
 
 @export
+@abstractclass
 class Color(metaclass=ExtendedType, slots=True):
 	"""
 	Abstract base-class of all colors.

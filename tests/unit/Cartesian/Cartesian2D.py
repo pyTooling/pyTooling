@@ -1447,7 +1447,13 @@ class Hierarchy(Testcase):
 		self.assertIsNone(origin.Frame)
 
 	def test_Segment(self) -> None:
-		self.assertIsInstance(Segment2D(Point2D(1, 2), Point2D(4, 6)), Element2D)
+		with self.assertRaises(AbstractClassError) as context:
+			_ = Segment2D(Point2D(1, 2), Point2D(4, 6))
+
+		self.assertEqual("Class 'Segment2D' is abstract and needs to be derived.", str(context.exception))
+
+	def test_LineSegment(self) -> None:
+		self.assertIsInstance(LineSegment2D(Point2D(1, 2), Point2D(4, 6)), Segment2D)
 		self.assertIsInstance(LineSegment2D(Point2D(1, 2), Point2D(4, 6)), Element2D)
 
 	def test_Shape(self) -> None:
@@ -1857,7 +1863,7 @@ class Ownership(Testcase):
 
 	def test_Segment_copyPointsPositional(self) -> None:
 		with self.assertRaises(TypeError):
-			_ = Segment2D(Point2D(1, 2), Point2D(4, 6), False)
+			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), False)
 
 	def test_LineSegment_copyPointsPositional(self) -> None:
 		with self.assertRaises(TypeError):
@@ -2164,21 +2170,21 @@ class ElementData(Testcase):
 	def test_Segment(self) -> None:
 		value =   object()
 		pairs =   {"layer": 1}
-		segment = Segment2D(Point2D(1, 2), Point2D(4, 6), value=value, keyValuePairs=pairs)
+		segment = LineSegment2D(Point2D(1, 2), Point2D(4, 6), value=value, keyValuePairs=pairs)
 
 		self.assertIs(value, segment.Value)
 		self.assertEqual(1, segment["layer"])
 		self.assertIsNot(pairs, segment._dict)
 
 	def test_Segment_Default(self) -> None:
-		segment = Segment2D(Point2D(1, 2), Point2D(4, 6))
+		segment = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
 
 		self.assertIsNone(segment.Value)
 		self.assertEqual(0, len(segment))
 
 	def test_Segment_keyValuePairsInt(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Segment2D(Point2D(1, 2), Point2D(4, 6), keyValuePairs=1)
+			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), keyValuePairs=1)
 
 		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)

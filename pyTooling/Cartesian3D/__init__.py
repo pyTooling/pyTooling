@@ -508,6 +508,7 @@ class Origin3D(Point3D[Coordinate], Generic[Coordinate]):
 
 
 @export
+@abstractclass
 class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 	"""
 	Abstract base-class of all elements a :class:`~pyTooling.Cartesian3D.Groups.Group3D` can hold: segments and groups.
@@ -1868,6 +1869,7 @@ class BoundingBox3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 
 @export
+@abstractclass
 class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 	"""
 	An implementation of a 3D cartesian segment.

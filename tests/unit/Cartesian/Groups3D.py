@@ -332,7 +332,7 @@ class ParentParameter(Testcase):
 	def test_Segment(self) -> None:
 		group = Group3D()
 
-		segment = Segment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), parent=group)
+		segment = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8), parent=group)
 
 		self.assertIs(group, segment.Parent)
 		self.assertTupleEqual((segment, ), group.Children)

@@ -25,6 +25,9 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D.Shapes`: an axis-aligned :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` by center and
      two radii, a :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` with its area and its perimeter (Ramanujan's
      approximation).
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a circle and an ellipse derive from the abstract
+     :class:`~pyTooling.Cartesian2D.Shapes.EllipticalGeometry2D`, which owns, moves and mirrors their center; neither
+     derives from the other.
    * :mod:`pyTooling.Cartesian2D.Shapes`: conversions without approximation:
      :meth:`Path.ToPolyLine() <pyTooling.Cartesian2D.Shapes.Path.ToPolyLine>` and
      :meth:`Path.ToPolygon() <pyTooling.Cartesian2D.Shapes.Path.ToPolygon>` for a path of line segments (a polyline
@@ -115,6 +118,9 @@ Version 10.x (2026)
      parameter ``points`` (was ``p00`` ... ``p10``).
    * :mod:`pyTooling.Cartesian3D`: parameter ``copyPoints`` of :class:`~pyTooling.Cartesian3D.Segment3D` is
      keyword-only, as in :mod:`pyTooling.Cartesian2D`.
+   * ⚠️ :mod:`pyTooling.Cartesian2D`, :mod:`pyTooling.Cartesian3D`: :class:`~pyTooling.Cartesian2D.Segment2D` and
+     :class:`~pyTooling.Cartesian3D.Segment3D` are abstract; a straight segment is a
+     :class:`~pyTooling.Cartesian2D.LineSegment2D` / :class:`~pyTooling.Cartesian3D.LineSegment3D`.
 
    .. rubric:: Bug Fixes
 
