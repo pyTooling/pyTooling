@@ -44,7 +44,7 @@ canvas is the root of such a tree and knows the direction of its y-axis.
 from __future__                   import annotations
 
 from enum                         import Enum
-from typing                       import Generic, Iterable, Optional as Nullable, Union
+from typing                       import Any, Generic, Hashable, Iterable, Mapping, Optional as Nullable, Union
 
 from pyTooling.Decorators         import export, readonly
 from pyTooling.Exceptions         import EmptyError
@@ -319,10 +319,12 @@ class Group2D(Element2D[Coordinate], Container2DMixin, Generic[Coordinate]):
 
 	def __init__(
 		self,
-		offset:   Nullable[Offset2D[Coordinate]] = None,
-		children: Nullable[Iterable[Element2D[Coordinate]]] = None,
+		offset:        Nullable[Offset2D[Coordinate]] = None,
+		children:      Nullable[Iterable[Element2D[Coordinate]]] = None,
 		*,
-		parent:   Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a group at an offset, holding the given children.
@@ -332,6 +334,8 @@ class Group2D(Element2D[Coordinate], Container2DMixin, Generic[Coordinate]):
 
 		:param offset:             Optional, offset of the group's origin. Default: ``None``, which places it at ``(0, 0)``.
 		:param children:           Optional, shapes, segments and groups held by the group. Default: ``None``.
+		:param value:              Optional, value of the group. Default: ``None``.
+		:param keyValuePairs:      Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:             Optional, the group or canvas this group is added to. Default: ``None``, no parent.
 		:raises TypeError:         If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
 		:raises TypeError:         If parameter 'children' is not iterable.
@@ -340,10 +344,11 @@ class Group2D(Element2D[Coordinate], Container2DMixin, Generic[Coordinate]):
 		                           :class:`~pyTooling.Cartesian2D.Element2D`.
 		:raises AlreadyOwnedError: If an element of parameter 'children' belongs to another element.
 		:raises ValueError:        If an element of parameter 'children' is given twice.
+		:raises TypeError:         If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:         If parameter 'parent' is not of type :class:`Group2D` or :class:`Canvas2D`.
 		:raises GroupCycleError:   If parameter 'parent' is inside an element of parameter 'children'.
 		"""
-		super().__init__(parent=parent)
+		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
 		Container2DMixin.__init__(self, children)
 
 		if offset is not None and not isinstance(offset, Offset2D):

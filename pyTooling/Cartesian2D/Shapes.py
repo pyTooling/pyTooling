@@ -32,7 +32,8 @@
 from __future__            import annotations
 
 from math                  import degrees, isclose, pi
-from typing                import TYPE_CHECKING, Generic, Iterable, Optional as Nullable, Self, Union
+from typing                import TYPE_CHECKING, Any, Generic, Hashable, Iterable, Mapping, Optional as Nullable, \
+                                  Self, Union
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Common      import getFullyQualifiedName
@@ -69,10 +70,12 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 
 	def __init__(
 		self,
-		points:     Iterable[Point2D[Coordinate]],
+		points:        Iterable[Point2D[Coordinate]],
 		*,
-		copyPoints: bool = True,
-		parent:     Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+		copyPoints:    bool = True,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a polygon from its corners.
@@ -84,6 +87,8 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		:param points:                 Corners of the polygon.
 		:param copyPoints:             Optional, if ``True``, the given points are copied instead of referenced. Default:
 		                               ``True``.
+		:param value:                  Optional, value of the polygon. Default: ``None``.
+		:param keyValuePairs:          Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:                 Optional, the group or canvas the polygon is added to. Default: ``None``, no parent.
 		:raises ValueError:            If parameter 'points' is None.
 		:raises TypeError:             If parameter 'points' is not iterable.
@@ -99,10 +104,11 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		:raises NotEnoughCornersError: If parameter 'points' has fewer than 3 points.
 		:raises ValueError:            If parameter 'copyPoints' is None.
 		:raises TypeError:             If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:             If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:             If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D`
 		                               or :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
-		super().__init__(parent=parent)
+		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
 
 		if points is None:
 			raise ValueError("Parameter 'points' is None.")
@@ -163,11 +169,12 @@ class Polygon(Shape[Coordinate], Generic[Coordinate]):
 		"""
 		Create a new polygon as a copy of this polygon.
 
-		The copy holds copies of the corners, shared by its edges.
+		The copy holds copies of the corners, shared by its edges. It references the same :attr:`Value` and holds a shallow
+		copy of the key-value-pairs.
 
 		:returns: Copy of this polygon.
 		"""
-		return self.__class__(self._points)
+		return self.__class__(self._points, value=self._value, keyValuePairs=self._dict)
 
 	def __copy__(self) -> Self:
 		"""
@@ -273,33 +280,38 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 
 	def __init__(
 		self,
-		p00:    Point2D[Coordinate],
-		p01:    Point2D[Coordinate],
-		p11:    Point2D[Coordinate],
-		p10:    Point2D[Coordinate],
+		p00:           Point2D[Coordinate],
+		p01:           Point2D[Coordinate],
+		p11:           Point2D[Coordinate],
+		p10:           Point2D[Coordinate],
 		*,
-		parent: Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a trapezium with 4 corners.
 
-		:param p00:         First corner.
-		:param p01:         Second corner.
-		:param p11:         Third corner.
-		:param p10:         Fourth corner.
-		:param parent:      Optional, the group or canvas the trapezium is added to. Default: ``None``, no parent.
-		:raises ValueError: If parameter 'p00' is None.
-		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError: If parameter 'p01' is None.
-		:raises TypeError:  If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError: If parameter 'p11' is None.
-		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError: If parameter 'p10' is None.
-		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
-		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:param p00:           First corner.
+		:param p01:           Second corner.
+		:param p11:           Third corner.
+		:param p10:           Fourth corner.
+		:param value:         Optional, value of the trapezium. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, the group or canvas the trapezium is added to. Default: ``None``, no parent.
+		:raises ValueError:   If parameter 'p00' is None.
+		:raises TypeError:    If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p01' is None.
+		:raises TypeError:    If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p11' is None.
+		:raises TypeError:    If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p10' is None.
+		:raises TypeError:    If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
-		super().__init__(parent=parent)
+		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
 
 		if p00 is None:
 			raise ValueError("Parameter 'p00' is None.")
@@ -523,11 +535,12 @@ class Trapezium(Shape[Coordinate], Generic[Coordinate]):
 		Create a new trapezium as a copy of this trapezium.
 
 		The copy holds copies of the corners, shared by its edges. A copy of a derived shape, like a
-		:class:`Rectangle`, is of the same class, and its corners are checked again.
+		:class:`Rectangle`, is of the same class, and its corners are checked again. It references the same :attr:`Value`
+		and holds a shallow copy of the key-value-pairs.
 
 		:returns: Copy of this trapezium.
 		"""
-		return self.__class__(*self._points)
+		return self.__class__(*self._points, value=self._value, keyValuePairs=self._dict)
 
 	def __copy__(self) -> Self:
 		"""
@@ -546,36 +559,41 @@ class Rectangle(Trapezium[Coordinate]):
 
 	def __init__(
 		self,
-		p00:    Point2D[Coordinate],
-		p01:    Point2D[Coordinate],
-		p11:    Point2D[Coordinate],
-		p10:    Point2D[Coordinate],
+		p00:           Point2D[Coordinate],
+		p01:           Point2D[Coordinate],
+		p11:           Point2D[Coordinate],
+		p10:           Point2D[Coordinate],
 		*,
-		parent: Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a rectangle with 4 corners.
 
-		:param p00:         First corner.
-		:param p01:         Second corner.
-		:param p11:         Third corner.
-		:param p10:         Fourth corner.
-		:param parent:      Optional, the group or canvas the rectangle is added to. Default: ``None``, no parent.
-		:raises ValueError: If parameter 'p00' is None.
-		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError: If parameter 'p01' is None.
-		:raises TypeError:  If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError: If parameter 'p11' is None.
-		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError: If parameter 'p10' is None.
-		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
-		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
-		:raises ValueError: If opposite edges have different lengths.
-		:raises ValueError: If two consecutive corners are the same point.
-		:raises ValueError: If an inner angle isn't 90 |degree|.
+		:param p00:           First corner.
+		:param p01:           Second corner.
+		:param p11:           Third corner.
+		:param p10:           Fourth corner.
+		:param value:         Optional, value of the rectangle. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, the group or canvas the rectangle is added to. Default: ``None``, no parent.
+		:raises ValueError:   If parameter 'p00' is None.
+		:raises TypeError:    If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p01' is None.
+		:raises TypeError:    If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p11' is None.
+		:raises TypeError:    If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p10' is None.
+		:raises TypeError:    If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:raises ValueError:   If opposite edges have different lengths.
+		:raises ValueError:   If two consecutive corners are the same point.
+		:raises ValueError:   If an inner angle isn't 90 |degree|.
 		"""
-		super().__init__(p00, p01, p11, p10)
+		super().__init__(p00, p01, p11, p10, value=value, keyValuePairs=keyValuePairs)
 
 		for index in range(2):
 			edge =         self._segments[index]
@@ -611,37 +629,42 @@ class Square(Rectangle[Coordinate]):
 
 	def __init__(
 		self,
-		p00:    Point2D[Coordinate],
-		p01:    Point2D[Coordinate],
-		p11:    Point2D[Coordinate],
-		p10:    Point2D[Coordinate],
+		p00:           Point2D[Coordinate],
+		p01:           Point2D[Coordinate],
+		p11:           Point2D[Coordinate],
+		p10:           Point2D[Coordinate],
 		*,
-		parent: Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a square with 4 corners.
 
-		:param p00:         First corner.
-		:param p01:         Second corner.
-		:param p11:         Third corner.
-		:param p10:         Fourth corner.
-		:param parent:      Optional, the group or canvas the square is added to. Default: ``None``, no parent.
-		:raises ValueError: If parameter 'p00' is None.
-		:raises TypeError:  If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError: If parameter 'p01' is None.
-		:raises TypeError:  If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError: If parameter 'p11' is None.
-		:raises TypeError:  If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises ValueError: If parameter 'p10' is None.
-		:raises TypeError:  If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
-		:raises TypeError:  If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
-		                    :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
-		:raises ValueError: If opposite edges have different lengths.
-		:raises ValueError: If two consecutive corners are the same point.
-		:raises ValueError: If an inner angle isn't 90 |degree|.
-		:raises ValueError: If adjacent edges have different lengths.
+		:param p00:           First corner.
+		:param p01:           Second corner.
+		:param p11:           Third corner.
+		:param p10:           Fourth corner.
+		:param value:         Optional, value of the square. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, the group or canvas the square is added to. Default: ``None``, no parent.
+		:raises ValueError:   If parameter 'p00' is None.
+		:raises TypeError:    If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p01' is None.
+		:raises TypeError:    If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p11' is None.
+		:raises TypeError:    If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p10' is None.
+		:raises TypeError:    If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:raises ValueError:   If opposite edges have different lengths.
+		:raises ValueError:   If two consecutive corners are the same point.
+		:raises ValueError:   If an inner angle isn't 90 |degree|.
+		:raises ValueError:   If adjacent edges have different lengths.
 		"""
-		super().__init__(p00, p01, p11, p10)
+		super().__init__(p00, p01, p11, p10, value=value, keyValuePairs=keyValuePairs)
 
 		edge =     self._segments[0]
 		nextEdge = self._segments[1]
@@ -663,11 +686,13 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 
 	def __init__(
 		self,
-		center:     Point2D[Coordinate],
-		radius:     Coordinate,
+		center:        Point2D[Coordinate],
+		radius:        Coordinate,
 		*,
-		copyPoints: bool = True,
-		parent:     Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+		copyPoints:    bool = True,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
 		Initializes a circle by its center and radius.
@@ -678,6 +703,8 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		:param radius:             Radius of the circle.
 		:param copyPoints:         Optional, if ``True``, the given center is copied instead of referenced. Default:
 		                           ``True``.
+		:param value:              Optional, value of the circle. Default: ``None``.
+		:param keyValuePairs:      Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:             Optional, the group or canvas the circle is added to. Default: ``None``, no parent.
 		:raises ValueError:        If parameter 'center' is None.
 		:raises TypeError:         If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
@@ -688,10 +715,11 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		:raises ValueError:        If parameter 'radius' isn't positive.
 		:raises ValueError:        If parameter 'copyPoints' is None.
 		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:         If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
 		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
 		"""
-		super().__init__(parent=parent)
+		super().__init__(value=value, keyValuePairs=keyValuePairs, parent=parent)
 
 		if center is None:
 			raise ValueError("Parameter 'center' is None.")
@@ -734,11 +762,12 @@ class Circle(Shape[Coordinate], Generic[Coordinate]):
 		"""
 		Create a new circle as a copy of this circle.
 
-		The copy holds a copy of the center point.
+		The copy holds a copy of the center point. It references the same :attr:`Value` and holds a shallow copy of the
+		key-value-pairs.
 
 		:returns: Copy of this circle.
 		"""
-		return self.__class__(self._center, self._radius)
+		return self.__class__(self._center, self._radius, value=self._value, keyValuePairs=self._dict)
 
 	def __copy__(self) -> Self:
 		"""

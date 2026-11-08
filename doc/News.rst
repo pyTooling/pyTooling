@@ -33,6 +33,10 @@ Version 10.x (2026)
      with the y-axis pointing up or down and an optional size. :meth:`~pyTooling.Cartesian2D.Groups.Canvas2D.Mirror`
      flips a drawing to the other direction. Every element mirrors at an axis through an edge or the center of its
      bounding box with ``MirrorX(axis, offset)`` and ``MirrorY(axis, offset)``.
+   * :mod:`pyTooling.Cartesian2D`: every shape, segment and group carries a
+     :attr:`~pyTooling.Cartesian2D.Element2D.Value` and key-value-pairs
+     (:class:`~pyTooling.DataModel.KeyValuePairsMixin`), given by the keyword-only parameters ``value`` and
+     ``keyValuePairs``. ``Copy()`` keeps the value and copies the pairs.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

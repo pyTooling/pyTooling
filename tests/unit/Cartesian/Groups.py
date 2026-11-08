@@ -1540,3 +1540,57 @@ class CanvasEdges(Testcase):
 
 		self.assertEqual("Parameter 'element' is not of type 'Element2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
+
+class ElementData(Testcase):
+	def test_Group(self) -> None:
+		value = object()
+		pairs = {"layer": 1}
+		group = Group2D(Offset2D(1, 2), value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, group.Value)
+		self.assertEqual(1, group["layer"])
+		self.assertIsNot(pairs, group._dict)
+
+	def test_Group_Default(self) -> None:
+		group = Group2D()
+
+		self.assertIsNone(group.Value)
+		self.assertEqual(0, len(group))
+
+	def test_Group_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Group2D(keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Group_Value(self) -> None:
+		group = Group2D(value=1)
+
+		group.Value = "layer"
+
+		self.assertEqual("layer", group.Value)
+
+	def test_Group_Pairs(self) -> None:
+		"""The dictionary syntax addresses the key-value-pairs, not the children."""
+		group = Group2D(children=(Circle(Point2D(1, 2), 1), ))
+
+		group["layer"] = 1
+
+		self.assertEqual(1, len(group))
+		self.assertIn("layer", group)
+		self.assertListEqual(["layer"], list(group))
+		self.assertEqual(1, len(group.Children))
+
+		del group["layer"]
+
+		self.assertEqual(0, len(group))
+
+	def test_Group_Parent(self) -> None:
+		"""A child with a value and key-value-pairs registers in its parent like any other."""
+		canvas = Canvas2D()
+		group =  Group2D(value=1, keyValuePairs={"layer": 1}, parent=canvas)
+
+		self.assertIs(canvas, group.Parent)
+		self.assertTupleEqual((group, ), canvas.Children)
