@@ -36,9 +36,9 @@ from copy                         import copy, deepcopy
 from math                         import isclose, pi, sqrt
 
 from pyTooling.Cartesian3D        import Base3D, Element3D, Origin3D, Point3D, Offset3D, Size3D, BoundingBox3D, \
-                                         Segment3D, LineSegment3D
+                                         Segment3D, LineSegment3D, Alignment3D
 from pyTooling.Cartesian3D.Groups import Group3D
-from pyTooling.Cartesian2D        import AlreadyOwnedError, DuplicatePointError
+from pyTooling.Cartesian2D        import Alignment2D, AlreadyOwnedError, DuplicatePointError
 from pyTooling.Exceptions         import AlreadyInHierarchyError, DuplicateElementError, InvalidOperationError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
@@ -1994,3 +1994,142 @@ class Frames(Testcase):
 
 		self.assertTrue(isclose(pi / 2, line1.AngleTo(line2)))
 
+
+class Aligning(Testcase):
+	def test_MinX(self) -> None:
+		reference = LineSegment3D(Point3D(0, 0, 0), Point3D(4, 2, 6))
+		line =      LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		line.AlignTo(reference, Alignment3D.MinX)
+
+		self.assertEqual(BoundingBox3D(0, 9, 9, 2, 11, 11), line.BoundingBox)
+
+	def test_CenterX(self) -> None:
+		reference = LineSegment3D(Point3D(0, 0, 0), Point3D(4, 2, 6))
+		line =      LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		line.AlignTo(reference, Alignment3D.CenterX)
+
+		self.assertEqual(BoundingBox3D(1, 9, 9, 3, 11, 11), line.BoundingBox)
+
+	def test_MaxX(self) -> None:
+		reference = LineSegment3D(Point3D(0, 0, 0), Point3D(4, 2, 6))
+		line =      LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		line.AlignTo(reference, Alignment3D.MaxX)
+
+		self.assertEqual(BoundingBox3D(2, 9, 9, 4, 11, 11), line.BoundingBox)
+
+	def test_MinY(self) -> None:
+		reference = LineSegment3D(Point3D(0, 0, 0), Point3D(4, 2, 6))
+		line =      LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		line.AlignTo(reference, Alignment3D.MinY)
+
+		self.assertEqual(BoundingBox3D(9, 0, 9, 11, 2, 11), line.BoundingBox)
+
+	def test_CenterY(self) -> None:
+		reference = LineSegment3D(Point3D(0, 0, 0), Point3D(4, 4, 6))
+		line =      LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		line.AlignTo(reference, Alignment3D.CenterY)
+
+		self.assertEqual(BoundingBox3D(9, 1, 9, 11, 3, 11), line.BoundingBox)
+
+	def test_MaxY(self) -> None:
+		reference = LineSegment3D(Point3D(0, 0, 0), Point3D(4, 2, 6))
+		line =      LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		line.AlignTo(reference, Alignment3D.MaxY)
+
+		self.assertEqual(BoundingBox3D(9, 0, 9, 11, 2, 11), line.BoundingBox)
+
+	def test_MinZ(self) -> None:
+		reference = LineSegment3D(Point3D(0, 0, 0), Point3D(4, 2, 6))
+		line =      LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		line.AlignTo(reference, Alignment3D.MinZ)
+
+		self.assertEqual(BoundingBox3D(9, 9, 0, 11, 11, 2), line.BoundingBox)
+
+	def test_CenterZ(self) -> None:
+		reference = LineSegment3D(Point3D(0, 0, 0), Point3D(4, 2, 6))
+		line =      LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		line.AlignTo(reference, Alignment3D.CenterZ)
+
+		self.assertEqual(BoundingBox3D(9, 9, 2, 11, 11, 4), line.BoundingBox)
+
+	def test_MaxZ(self) -> None:
+		reference = LineSegment3D(Point3D(0, 0, 0), Point3D(4, 2, 6))
+		line =      LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		line.AlignTo(reference, Alignment3D.MaxZ)
+
+		self.assertEqual(BoundingBox3D(9, 9, 4, 11, 11, 6), line.BoundingBox)
+
+	def test_OtherGroup(self) -> None:
+		"""Elements of different groups are aligned by their absolute bounding boxes."""
+		reference = LineSegment3D(Point3D(0, 0, 0), Point3D(4, 2, 6))
+		line =      LineSegment3D(Point3D(0, 0, 0), Point3D(2, 2, 2))
+		_ =         Group3D(Offset3D(10, 0, 0), (reference, ))
+		_ =         Group3D(Offset3D(0, 50, 0), (line, ))
+
+		line.AlignTo(reference, Alignment3D.MaxX)
+
+		self.assertEqual(BoundingBox3D(12, 50, 0, 14, 52, 2), line.AbsoluteBoundingBox)
+		self.assertEqual(BoundingBox3D(12, 0, 0, 14, 2, 2), line.BoundingBox)
+
+	def test_Group(self) -> None:
+		"""Aligning a group changes its offset."""
+		reference = LineSegment3D(Point3D(0, 0, 0), Point3D(4, 2, 6))
+		group =     Group3D(Offset3D(10, 10, 10), (LineSegment3D(Point3D(0, 0, 0), Point3D(2, 2, 2)), ))
+
+		group.AlignTo(reference, Alignment3D.MaxZ)
+
+		self.assertTupleEqual((10, 10, 4), group.Offset.ToTuple())
+
+	def test_ReferenceNone(self) -> None:
+		line = LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		with self.assertRaises(ValueError) as context:
+			line.AlignTo(None, Alignment3D.MinX)
+
+		self.assertEqual("Parameter 'reference' is None.", str(context.exception))
+
+	def test_ReferencePoint(self) -> None:
+		line = LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		with self.assertRaises(TypeError) as context:
+			line.AlignTo(Point3D(0, 0, 0), Alignment3D.MinX)
+
+		self.assertEqual("Parameter 'reference' is not of type 'Element3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian3D.Point3D'."], context.exception.__notes__)
+
+	def test_AlignmentNone(self) -> None:
+		line = LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		with self.assertRaises(ValueError) as context:
+			line.AlignTo(LineSegment3D(Point3D(0, 0, 0), Point3D(1, 1, 1)), None)
+
+		self.assertEqual("Parameter 'alignment' is None.", str(context.exception))
+
+	def test_AlignmentStr(self) -> None:
+		line = LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		with self.assertRaises(TypeError) as context:
+			line.AlignTo(LineSegment3D(Point3D(0, 0, 0), Point3D(1, 1, 1)), "MinX")
+
+		self.assertEqual("Parameter 'alignment' is not of type 'Alignment3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+		self.assertTupleEqual(((9, 9, 9), (11, 11, 11)), line.ToTuple())
+
+	def test_Alignment2D(self) -> None:
+		"""The 2D alignment isn't accepted."""
+		line = LineSegment3D(Point3D(9, 9, 9), Point3D(11, 11, 11))
+
+		with self.assertRaises(TypeError) as context:
+			line.AlignTo(LineSegment3D(Point3D(0, 0, 0), Point3D(1, 1, 1)), Alignment2D.MinX)
+
+		self.assertEqual("Parameter 'alignment' is not of type 'Alignment3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Alignment2D'."], context.exception.__notes__)

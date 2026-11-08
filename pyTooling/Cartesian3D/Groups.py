@@ -146,7 +146,8 @@ class Container3DMixin(metaclass=ExtendedType, mixin=True):
 		:param child:              The segment or group to add.
 		:raises ValueError:        If parameter 'child' is None.
 		:raises TypeError:         If parameter 'child' is not of type :class:`~pyTooling.Cartesian3D.Element3D`.
-		:raises AlreadyOwnedError: If parameter 'child' belongs to another element.
+		:raises AlreadyOwnedError: If parameter 'child' belongs to another element. |br|
+		                           Use :meth:`~pyTooling.Cartesian3D.Element3D.MoveTo` to move it between groups.
 		:raises GroupCycleError:   If parameter 'child' is this group or one of its ancestors.
 		"""
 		if child is None:
@@ -158,6 +159,7 @@ class Container3DMixin(metaclass=ExtendedType, mixin=True):
 		elif child._parent is not None:
 			ex = AlreadyOwnedError("Element is owned by another element already.")
 			ex.add_note(f"Got {child!r} owned by {child._parent!r}.")
+			ex.add_note("Use 'MoveTo' to move it between groups.")
 			raise ex from ValueError("Parameter 'child' belongs to another element.")
 
 		child.Parent = self
@@ -185,6 +187,141 @@ class Container3DMixin(metaclass=ExtendedType, mixin=True):
 			raise ex from ValueError(f"Parameter 'child' isn't a child of this {self.__class__.__name__}.")
 
 		child.Parent = None
+
+	def DistributeX(self, gap: Nullable[Coordinate] = None) -> None:
+		"""
+		Move the children along the x-axis, so the gaps between their bounding boxes are equal.
+
+		The children are ordered by their smallest x-coordinate. The first child keeps its position. Without a gap, the
+		last child keeps its position too and the gaps follow from the space between them. With fewer than three children,
+		there is then nothing to distribute. With a gap, the other children follow the first one at that distance.
+
+		:param gap:              Optional, the distance between two bounding boxes. Default: ``None``, equal gaps between
+		                         the first and the last child.
+		:raises TypeError:       If parameter 'gap' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:      If parameter 'gap' is negative.
+		:raises EmptyGroupError: If a group inside this container has no children.
+		"""
+		if gap is not None:
+			if not isinstance(gap, (int, float)):
+				ex = TypeError("Parameter 'gap' is not of type 'float' or 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(gap)}'.")
+				raise ex
+			elif gap < 0:
+				ex = ValueError("Parameter 'gap' is negative.")
+				ex.add_note(f"Got value '{gap}'.")
+				raise ex
+
+		if len(self._children) < (3 if gap is None else 2):
+			return
+
+		entries = []
+		for child in self._children:
+			box = child.BoundingBox
+			entries.append((box._minX, box._maxX, child))
+
+		for child, distance in self._ComputeDistribution(entries, gap):
+			child.Move(Offset3D(distance, 0, 0))
+
+	def DistributeY(self, gap: Nullable[Coordinate] = None) -> None:
+		"""
+		Move the children along the y-axis, so the gaps between their bounding boxes are equal.
+
+		The children are ordered by their smallest y-coordinate. The first child keeps its position. Without a gap, the
+		last child keeps its position too and the gaps follow from the space between them. With fewer than three children,
+		there is then nothing to distribute. With a gap, the other children follow the first one at that distance.
+
+		:param gap:              Optional, the distance between two bounding boxes. Default: ``None``, equal gaps between
+		                         the first and the last child.
+		:raises TypeError:       If parameter 'gap' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:      If parameter 'gap' is negative.
+		:raises EmptyGroupError: If a group inside this container has no children.
+		"""
+		if gap is not None:
+			if not isinstance(gap, (int, float)):
+				ex = TypeError("Parameter 'gap' is not of type 'float' or 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(gap)}'.")
+				raise ex
+			elif gap < 0:
+				ex = ValueError("Parameter 'gap' is negative.")
+				ex.add_note(f"Got value '{gap}'.")
+				raise ex
+
+		if len(self._children) < (3 if gap is None else 2):
+			return
+
+		entries = []
+		for child in self._children:
+			box = child.BoundingBox
+			entries.append((box._minY, box._maxY, child))
+
+		for child, distance in self._ComputeDistribution(entries, gap):
+			child.Move(Offset3D(0, distance, 0))
+
+	def DistributeZ(self, gap: Nullable[Coordinate] = None) -> None:
+		"""
+		Move the children along the z-axis, so the gaps between their bounding boxes are equal.
+
+		The children are ordered by their smallest z-coordinate. The first child keeps its position. Without a gap, the
+		last child keeps its position too and the gaps follow from the space between them. With fewer than three children,
+		there is then nothing to distribute. With a gap, the other children follow the first one at that distance.
+
+		:param gap:              Optional, the distance between two bounding boxes. Default: ``None``, equal gaps between
+		                         the first and the last child.
+		:raises TypeError:       If parameter 'gap' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:      If parameter 'gap' is negative.
+		:raises EmptyGroupError: If a group inside this container has no children.
+		"""
+		if gap is not None:
+			if not isinstance(gap, (int, float)):
+				ex = TypeError("Parameter 'gap' is not of type 'float' or 'int'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(gap)}'.")
+				raise ex
+			elif gap < 0:
+				ex = ValueError("Parameter 'gap' is negative.")
+				ex.add_note(f"Got value '{gap}'.")
+				raise ex
+
+		if len(self._children) < (3 if gap is None else 2):
+			return
+
+		entries = []
+		for child in self._children:
+			box = child.BoundingBox
+			entries.append((box._minZ, box._maxZ, child))
+
+		for child, distance in self._ComputeDistribution(entries, gap):
+			child.Move(Offset3D(0, 0, distance))
+
+	@staticmethod
+	def _ComputeDistribution(
+		entries: list[tuple[Coordinate, Coordinate, Element3D]],
+		gap: Nullable[Coordinate]
+	) -> list[tuple[Element3D, Coordinate]]:
+		"""
+		Compute how far the children move along an axis, so the gaps between their bounding boxes are equal.
+
+		:param entries: Smallest coordinate, largest coordinate and child, for each child.
+		:param gap:     The distance between two bounding boxes, or ``None`` for equal gaps between the first and last
+		                child.
+		:returns:       The children to move, each with the distance to move it by.
+		"""
+		entries.sort(key=lambda entry: entry[0])
+		first = entries[0]
+		if gap is None:
+			last =  entries[-1]
+			gap =   (last[1] - first[0] - sum(high - low for low, high, _ in entries)) / (len(entries) - 1)
+			moved = entries[1:-1]
+		else:
+			moved = entries[1:]
+
+		distances = []
+		position =  first[1] + gap
+		for low, high, child in moved:
+			distances.append((child, position - low))
+			position += high - low + gap
+
+		return distances
 
 
 @export
