@@ -1750,3 +1750,250 @@ class Representation(Testcase):
 		circle = Circle(Point2D(1.5, 2), 0.5)
 
 		self.assertEqual("((1.5, 2), r=0.5)", str(circle))
+
+
+class ElementData(Testcase):
+	def test_Polygon(self) -> None:
+		value =   object()
+		pairs =   {"layer": 1}
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, polygon.Value)
+		self.assertEqual(1, polygon["layer"])
+		self.assertIsNot(pairs, polygon._dict)
+
+	def test_Polygon_Default(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		self.assertIsNone(polygon.Value)
+		self.assertEqual(0, len(polygon))
+
+	def test_Polygon_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Polygon_Value(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), value=1)
+
+		polygon.Value = "triangle"
+
+		self.assertEqual("triangle", polygon.Value)
+
+	def test_Polygon_Pairs(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		polygon["layer"] = 1
+
+		self.assertEqual(1, len(polygon))
+		self.assertIn("layer", polygon)
+		self.assertEqual(1, polygon.get("layer"))
+		self.assertListEqual(["layer"], list(polygon))
+
+		del polygon["layer"]
+
+		self.assertNotIn("layer", polygon)
+
+	def test_Polygon_Copy(self) -> None:
+		value =   [1, 2]
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), value=value, keyValuePairs={"layer": 1})
+
+		newPolygon =          polygon.Copy()
+		newPolygon["layer"] = 2
+
+		self.assertIs(value, newPolygon.Value)
+		self.assertEqual(1, polygon["layer"])
+		self.assertEqual(2, newPolygon["layer"])
+
+	def test_Polygon_copy(self) -> None:
+		value =   [1, 2]
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), value=value, keyValuePairs={"layer": 1})
+
+		newPolygon = copy(polygon)
+
+		self.assertIs(value, newPolygon.Value)
+		self.assertEqual(1, newPolygon["layer"])
+		self.assertIsNot(polygon._dict, newPolygon._dict)
+
+	def test_Polygon_deepcopy(self) -> None:
+		value =   [1, 2]
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), value=value, keyValuePairs={"nets": ["a"]})
+
+		newPolygon = deepcopy(polygon)
+
+		self.assertIsNot(value, newPolygon.Value)
+		self.assertListEqual([1, 2], newPolygon.Value)
+		self.assertIsNot(polygon["nets"], newPolygon["nets"])
+
+	def test_Trapezium(self) -> None:
+		value =     object()
+		trapezium = Trapezium(
+			Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3),
+			value=value,
+			keyValuePairs={"layer": 1}
+		)
+
+		self.assertIs(value, trapezium.Value)
+		self.assertEqual(1, trapezium["layer"])
+
+	def test_Trapezium_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Trapezium_Value(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3))
+
+		trapezium.Value =    "trapezium"
+		trapezium["layer"] = 1
+
+		self.assertEqual("trapezium", trapezium.Value)
+		self.assertEqual(1, len(trapezium))
+
+	def test_Trapezium_Copy(self) -> None:
+		value =     [1, 2]
+		trapezium = Trapezium(
+			Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3),
+			value=value,
+			keyValuePairs={"layer": 1}
+		)
+
+		newTrapezium =          trapezium.Copy()
+		newTrapezium["layer"] = 2
+
+		self.assertIs(value, newTrapezium.Value)
+		self.assertEqual(1, trapezium["layer"])
+		self.assertEqual(2, newTrapezium["layer"])
+
+	def test_Rectangle(self) -> None:
+		value =     object()
+		rectangle = Rectangle(
+			Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2),
+			value=value,
+			keyValuePairs={"layer": 1}
+		)
+
+		self.assertIs(value, rectangle.Value)
+		self.assertEqual(1, rectangle["layer"])
+
+	def test_Rectangle_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Rectangle_Value(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+
+		rectangle.Value =    "rectangle"
+		rectangle["layer"] = 1
+
+		self.assertEqual("rectangle", rectangle.Value)
+		self.assertEqual(1, len(rectangle))
+
+	def test_Rectangle_Copy(self) -> None:
+		value =     [1, 2]
+		rectangle = Rectangle(
+			Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2),
+			value=value,
+			keyValuePairs={"layer": 1}
+		)
+
+		newRectangle =          rectangle.Copy()
+		newRectangle["layer"] = 2
+
+		self.assertIs(Rectangle, type(newRectangle))
+		self.assertIs(value, newRectangle.Value)
+		self.assertEqual(1, rectangle["layer"])
+		self.assertEqual(2, newRectangle["layer"])
+
+	def test_Square(self) -> None:
+		value =  object()
+		square = Square(
+			Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2),
+			value=value,
+			keyValuePairs={"layer": 1}
+		)
+
+		self.assertIs(value, square.Value)
+		self.assertEqual(1, square["layer"])
+
+	def test_Square_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Square_Value(self) -> None:
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
+
+		square.Value =    "square"
+		square["layer"] = 1
+
+		self.assertEqual("square", square.Value)
+		self.assertEqual(1, len(square))
+
+	def test_Square_Copy(self) -> None:
+		value =  [1, 2]
+		square = Square(
+			Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2),
+			value=value,
+			keyValuePairs={"layer": 1}
+		)
+
+		newSquare =          square.Copy()
+		newSquare["layer"] = 2
+
+		self.assertIs(Square, type(newSquare))
+		self.assertIs(value, newSquare.Value)
+		self.assertEqual(1, square["layer"])
+		self.assertEqual(2, newSquare["layer"])
+
+	def test_Circle(self) -> None:
+		value =  object()
+		circle = Circle(Point2D(1, 2), 3, value=value, keyValuePairs={"layer": 1})
+
+		self.assertIs(value, circle.Value)
+		self.assertEqual(1, circle["layer"])
+
+	def test_Circle_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Circle(Point2D(1, 2), 3, keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Circle_Value(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		circle.Value =    "circle"
+		circle["layer"] = 1
+
+		self.assertEqual("circle", circle.Value)
+		self.assertEqual(1, len(circle))
+
+	def test_Circle_Copy(self) -> None:
+		value =  [1, 2]
+		circle = Circle(Point2D(1, 2), 3, value=value, keyValuePairs={"layer": 1})
+
+		newCircle =          circle.Copy()
+		newCircle["layer"] = 2
+
+		self.assertIs(value, newCircle.Value)
+		self.assertEqual(1, circle["layer"])
+		self.assertEqual(2, newCircle["layer"])
+
+	def test_Circle_copy(self) -> None:
+		value =  [1, 2]
+		circle = Circle(Point2D(1, 2), 3, value=value, keyValuePairs={"layer": 1})
+
+		newCircle = copy(circle)
+
+		self.assertIs(value, newCircle.Value)
+		self.assertIsNot(circle._dict, newCircle._dict)

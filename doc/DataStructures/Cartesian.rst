@@ -45,6 +45,8 @@ Features
 * **Groups with relative coordinates** - a :class:`~pyTooling.Cartesian2D.Groups.Group2D` holds shapes, segments and
   groups at an offset, so moving a group moves everything in it. Absolute positions, alignment and distribution are
   computed across groups.
+* **Data attached to elements** - every shape, segment and group carries a value and key-value-pairs, so a drawing
+  element knows the model object it draws.
 * **A canvas knowing its y-axis** - a :class:`~pyTooling.Cartesian2D.Groups.Canvas2D` is the root of a drawing, with
   the y-axis pointing up (mathematics) or down (screen, SVG), and flips a whole drawing to the other direction.
 * **Independent copies** - ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` return an object sharing no point
@@ -553,6 +555,26 @@ new element, as :meth:`~pyTooling.Cartesian2D.Groups.Group2D.AddChild` does. The
 initialized, so a failing check leaves nothing in the group or canvas. A segment with a shape as ``parent`` is an edge
 of that shape instead. A :class:`~pyTooling.Cartesian2D.Point2D` with a ``parent`` is different, it isn't registered:
 see :ref:`STRUCT/Cartesian2D/Ownership`.
+
+An element carries an optional :attr:`~pyTooling.Cartesian2D.Element2D.Value` and arbitrary key-value-pairs
+(:class:`~pyTooling.DataModel.KeyValuePairsMixin`), given by the keyword-only parameters ``value`` and
+``keyValuePairs``. The value is any object, for example the model object a shape draws. The key-value-pairs are read
+and written with the dictionary syntax; ``in``, :pycode:`len(element)` and iterating an element address the
+key-value-pairs, not its points or children. ``Copy()`` and :func:`copy.copy` keep the value (the same object) and copy
+the key-value-pairs shallowly; :func:`copy.deepcopy` copies both deeply. Points carry neither, to stay small.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D
+   from pyTooling.Cartesian2D.Shapes import Circle
+
+   pin = Circle(Point2D(10, 5), 2, value="clock", keyValuePairs={"layer": 1})
+
+   pin["inverted"] = True
+
+   pin.Value                          # 'clock'
+   len(pin)                           # 2
+   pin.Copy()["layer"]                # 1
 
 
 .. _STRUCT/Cartesian2D/Group2D:
