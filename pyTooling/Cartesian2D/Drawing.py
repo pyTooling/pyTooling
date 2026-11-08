@@ -144,12 +144,12 @@ class Color(metaclass=ExtendedType, slots=True):
 			ex = TypeError("Parameter 'value' is not of type 'str'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(value)}'.")
 			raise ex
-		elif len(value) not in (7, 9) or value[0] != "#" or not set(value[1:]).issubset("0123456789abcdefABCDEF"):
+		elif (l := len(value)) not in (7, 9) or value[0] != "#" or not set(value[1:]).issubset("0123456789abcdefABCDEF"):
 			ex = ValueError("Parameter 'value' is not of the form '#rrggbb' or '#rrggbbaa'.")
 			ex.add_note(f"Got value '{value}'.")
 			raise ex
 
-		alpha = 1.0 if len(value) == 7 else int(value[7:9], 16) / 255
+		alpha = 1.0 if l == 7 else int(value[7:9], 16) / 255
 		return cls(int(value[1:3], 16), int(value[3:5], 16), int(value[5:7], 16), alpha)
 
 	@readonly
