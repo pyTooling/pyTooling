@@ -1211,8 +1211,9 @@ same class with copied points, the same style objects and value, and a shallow c
    dot.BoundingBox                    # BoundingBox2D(37, 7, 43, 13)
    len(canvas.Children)               # 2
 
-A drawable shape registers in its ``parent`` when its geometry and styles are checked, so a failing check leaves
-nothing in the group or canvas. A drawable line segment is no edge of a shape: its ``parent`` is a group or canvas.
+A drawable shape checks its ``parent`` first and registers in it when its geometry and styles are checked, so a failing
+check leaves nothing in the group or canvas, and points given with ``copyPoints=False`` stay free. A drawable line
+segment is no edge of a shape: its ``parent`` is a group or canvas.
 
 
 .. _STRUCT/Cartesian2D/Text:
