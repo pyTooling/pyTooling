@@ -1134,6 +1134,59 @@ A drawable shape registers in its ``parent`` when its geometry and styles are ch
 nothing in the group or canvas. A drawable line segment is no edge of a shape: its ``parent`` is a group or canvas.
 
 
+.. _STRUCT/Cartesian2D/Text:
+
+Text
+====
+
+A :class:`~pyTooling.Cartesian2D.Drawing.Text` is an element of one or more lines at a
+:attr:`~pyTooling.Cartesian2D.Drawing.Text.Position`, so it groups, moves and aligns like a shape. Newlines in its
+:attr:`~pyTooling.Cartesian2D.Drawing.Text.Content` separate the lines, which
+:attr:`~pyTooling.Cartesian2D.Drawing.Text.Lines` returns; a text without a newline has one line. The glyphs are drawn
+with the text's fill, an outline around them with its stroke. The text owns its position point, like a circle owns its
+center. Like every element, it takes a ``value`` and ``keyValuePairs``.
+
+* :attr:`~pyTooling.Cartesian2D.Drawing.Text.Alignment` - a :class:`~pyTooling.Cartesian2D.Drawing.TextAlignment`:
+  every line starts (``Left``, the default), is centered (``Center``) or ends (``Right``) at the position's
+  x-coordinate.
+* :attr:`~pyTooling.Cartesian2D.Drawing.Text.Anchor` - a :class:`~pyTooling.Cartesian2D.Drawing.VerticalAnchor`: the
+  point of the text at the position's y-coordinate - the ``Top`` of the text, its ``Middle``, the ``Baseline`` of its
+  first line (the default, as in SVG) or its ``Bottom``.
+* :attr:`~pyTooling.Cartesian2D.Drawing.Text.LineHeight` - the distance of two baselines as a factor of the font size,
+  ``1.2`` by default.
+
+Top and bottom are those of the :ref:`canvas <STRUCT/Cartesian2D/Canvas2D>` holding the text: with the y-axis pointing
+down, the top of a text has its smallest y-coordinate. Without a canvas, the y-axis points up.
+:meth:`~pyTooling.Cartesian2D.Groups.Canvas2D.Mirror` therefore keeps a text where it is drawn. Mirroring a text with
+``MirrorX`` or ``MirrorY`` moves its position only: the glyphs aren't mirrored, and its alignment and anchor stay.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D         import Point2D
+   from pyTooling.Cartesian2D.Drawing import Font, Text, TextAlignment, VerticalAnchor
+   from pyTooling.Cartesian2D.Groups  import Canvas2D, YAxisDirection
+
+   canvas = Canvas2D(YAxisDirection.Down)
+   label =  Text(
+       Point2D(20, 10), "clock\nreset",
+       font=Font("monospace", 10),
+       alignment=TextAlignment.Center,
+       anchor=VerticalAnchor.Top,
+       parent=canvas
+   )
+
+   label.Lines                        # ('clock', 'reset')
+   label.BoundingBox                  # BoundingBox2D(5.0, 10, 35.0, 32.0)
+
+.. attention::
+
+   The :attr:`~pyTooling.Cartesian2D.Drawing.Text.BoundingBox` of a text is an **estimate**: the longest line times the
+   font's :attr:`~pyTooling.Cartesian2D.Drawing.Font.CharacterWidth` (``0.6`` of the size by default, the advance width
+   of common monospace fonts) is its width; a line is one font size high, ``0.8`` of it above the baseline, and each
+   further line adds the line height. A renderer measuring the glyphs gets other values, for a proportional font
+   especially.
+
+
 .. _STRUCT/Cartesian3D:
 
 3D Cartesian

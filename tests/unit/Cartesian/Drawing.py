@@ -29,15 +29,17 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`pyTooling.Cartesian2D.Drawing` - colors, strokes, fills, fonts and drawable shapes.
+Unit tests for :mod:`pyTooling.Cartesian2D.Drawing` - colors, strokes, fills, fonts, drawable shapes and texts.
 """
 from copy                          import copy
+from math                          import isclose
 
-from pyTooling.Cartesian2D         import Point2D, Offset2D, Shapes, AlreadyOwnedError, \
-                                          LineSegment2D as GeometricLineSegment2D
-from pyTooling.Cartesian2D.Groups  import Group2D, Canvas2D
-from pyTooling.Cartesian2D.Drawing import LineStyle, Color, RGBAColor, Stroke, Fill, FontStyle, Font, StrokeMixin, \
-                                          StyleMixin, LineSegment2D, Polygon, Trapezium, Rectangle, Square, Circle
+from pyTooling.Cartesian2D         import Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, Shapes, \
+                                          AlreadyOwnedError, LineSegment2D as GeometricLineSegment2D
+from pyTooling.Cartesian2D.Groups  import Group2D, Canvas2D, YAxisDirection
+from pyTooling.Cartesian2D.Drawing import TextAlignment, VerticalAnchor, LineStyle, Color, RGBAColor, Stroke, Fill, \
+                                          FontStyle, Font, StrokeMixin, StyleMixin, LineSegment2D, Polygon, Trapezium, \
+                                          Rectangle, Square, Circle, Text
 from pyTooling.MetaClasses         import ExtendedType, AbstractClassError
 from pyTooling.Testing             import Testcase
 
@@ -332,6 +334,32 @@ class Fonts(Testcase):
 
 		self.assertIs(FontStyle.Slanted, font.FontStyle)
 
+	def test_Font_CharacterWidth(self) -> None:
+		font = Font("sans-serif", 10, characterWidth=0.5)
+
+		self.assertEqual(0.5, font.CharacterWidth)
+		self.assertEqual(0.6, Font("monospace", 10).CharacterWidth)
+
+	def test_Font_CharacterWidthNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Font("serif", 10, characterWidth=None)
+
+		self.assertEqual("Parameter 'characterWidth' is None.", str(context.exception))
+
+	def test_Font_CharacterWidthStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Font("serif", 10, characterWidth="0.5")
+
+		self.assertEqual("Parameter 'characterWidth' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Font_CharacterWidthZero(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Font("serif", 10, characterWidth=0)
+
+		self.assertEqual("Parameter 'characterWidth' isn't positive.", str(context.exception))
+		self.assertListEqual(["Got value '0'."], context.exception.__notes__)
+
 	def test_Font_FamilyNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = Font(None, 10)
@@ -510,6 +538,8 @@ class Comparison(Testcase):
 		self.assertFalse(Font("serif", 10) == Font("serif", 10, smallCaps=True))
 		self.assertTrue(Font("serif", 10, fontStyle=FontStyle.Italic) != Font("serif", 10, fontStyle=FontStyle.Slanted))
 		self.assertTrue(Font("serif", 10) != Font("serif", 10, smallCaps=True))
+		self.assertTrue(Font("serif", 10) != Font("serif", 10, characterWidth=0.5))
+		self.assertFalse(Font("serif", 10) == Font("serif", 10, characterWidth=0.5))
 		self.assertTrue(Font("serif", 10) != Font("sans-serif", 10))
 		self.assertTrue(Font("serif", 10) != Font("serif", 10, bold=True))
 		self.assertFalse(Font("serif", 10) != Font("serif", 10))
@@ -582,7 +612,7 @@ class Representation(Testcase):
 
 	def test_Font_repr(self) -> None:
 		self.assertEqual(
-			"Font('monospace', 10, bold=True, smallCaps=False, fontStyle=FontStyle.Upright)",
+			"Font('monospace', 10, bold=True, smallCaps=False, fontStyle=FontStyle.Upright, characterWidth=0.6)",
 			repr(Font("monospace", 10, bold=True))
 		)
 
@@ -1153,3 +1183,414 @@ class ElementData(Testcase):
 		self.assertIs(value, newCircle.Value)
 		self.assertEqual(1, circle["layer"])
 		self.assertEqual(2, newCircle["layer"])
+
+	def test_Text(self) -> None:
+		value = object()
+		pairs = {"pin": "clock"}
+		text =  Text(Point2D(0, 0), "clock", fill=FILL, value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, text.Value)
+		self.assertEqual("clock", text["pin"])
+		self.assertIsNot(pairs, text._dict)
+
+	def test_Text_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Text(Point2D(0, 0), "clock", keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Text_Copy(self) -> None:
+		value = [1, 2]
+		text =  Text(Point2D(0, 0), "clock", fill=FILL, value=value, keyValuePairs={"layer": 1})
+
+		newText =          text.Copy()
+		newText["layer"] = 2
+
+		self.assertIs(Text, type(newText))
+		self.assertIs(value, newText.Value)
+		self.assertEqual(1, text["layer"])
+		self.assertEqual(2, newText["layer"])
+
+
+MONOSPACE = Font("monospace", 10)
+"""A 10 point monospace font: a character is 6 points wide, a line 10 points high, the next baseline 12 points below."""
+
+
+class Texts(Testcase):
+	def test_Text(self) -> None:
+		position = Point2D(10, 20)
+		text =     Text(position, "Hello", font=MONOSPACE, fill=FILL)
+
+		self.assertIsNot(position, text.Position)
+		self.assertIs(text, text.Position.Parent)
+		self.assertTupleEqual((10, 20), text.Position.ToTuple())
+		self.assertEqual("Hello", text.Content)
+		self.assertTupleEqual(("Hello", ), text.Lines)
+		self.assertEqual(1, text.LineCount)
+		self.assertIs(MONOSPACE, text.Font)
+		self.assertIs(FILL, text.Fill)
+		self.assertIsNone(text.Stroke)
+
+	def test_Text_Default(self) -> None:
+		text = Text(Point2D(0, 0), "Hello")
+
+		self.assertEqual(Font("sans-serif", 10), text.Font)
+		self.assertIs(TextAlignment.Left, text.Alignment)
+		self.assertIs(VerticalAnchor.Baseline, text.Anchor)
+		self.assertEqual(1.2, text.LineHeight)
+
+	def test_Text_MultiLine(self) -> None:
+		text = Text(Point2D(0, 0), "clock\nreset\n")
+
+		self.assertTupleEqual(("clock", "reset", ""), text.Lines)
+		self.assertEqual(3, text.LineCount)
+
+	def test_Text_copyPoints(self) -> None:
+		position = Point2D(10, 20)
+		text =     Text(position, "Hello", copyPoints=False)
+
+		self.assertIs(position, text.Position)
+		self.assertIs(text, position.Parent)
+
+	def test_Text_PositionOwned(self) -> None:
+		position = Point2D(10, 20)
+		_ =        Text(position, "Hello", copyPoints=False)
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			_ = Text(position, "World", copyPoints=False)
+
+		self.assertEqual("Point is owned by another element already.", str(context.exception))
+		self.assertListEqual(
+			["Got point (10, 20) owned by Text((10, 20), 'Hello').", "Use 'copyPoints=True' to copy the point."],
+			context.exception.__notes__
+		)
+		self.assertEqual("Parameter 'position' is owned by another element.", str(context.exception.__cause__))
+
+	def test_Text_PositionNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Text(None, "Hello")
+
+		self.assertEqual("Parameter 'position' is None.", str(context.exception))
+
+	def test_Text_PositionTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Text((1, 2), "Hello")
+
+		self.assertEqual("Parameter 'position' is not of type 'Point2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Text_ContentNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Text(Point2D(0, 0), None)
+
+		self.assertEqual("Parameter 'content' is None.", str(context.exception))
+
+	def test_Text_ContentInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Text(Point2D(0, 0), 42)
+
+		self.assertEqual("Parameter 'content' is not of type 'str'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Text_copyPointsNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Text(Point2D(0, 0), "Hello", copyPoints=None)
+
+		self.assertEqual("Parameter 'copyPoints' is None.", str(context.exception))
+
+	def test_Text_copyPointsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Text(Point2D(0, 0), "Hello", copyPoints=1)
+
+		self.assertEqual("Parameter 'copyPoints' is not of type 'bool'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Text_FontNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Text(Point2D(0, 0), "Hello", font=None)
+
+		self.assertEqual("Parameter 'font' is None.", str(context.exception))
+
+	def test_Text_FontStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Text(Point2D(0, 0), "Hello", font="monospace")
+
+		self.assertEqual("Parameter 'font' is not of type 'Font'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Text_AlignmentNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Text(Point2D(0, 0), "Hello", alignment=None)
+
+		self.assertEqual("Parameter 'alignment' is None.", str(context.exception))
+
+	def test_Text_AlignmentAlignment2D(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Text(Point2D(0, 0), "Hello", alignment=Alignment2D.MinX)
+
+		self.assertEqual("Parameter 'alignment' is not of type 'TextAlignment'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Alignment2D'."], context.exception.__notes__)
+
+	def test_Text_AnchorNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Text(Point2D(0, 0), "Hello", anchor=None)
+
+		self.assertEqual("Parameter 'anchor' is None.", str(context.exception))
+
+	def test_Text_AnchorAlignment(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Text(Point2D(0, 0), "Hello", anchor=TextAlignment.Center)
+
+		self.assertEqual("Parameter 'anchor' is not of type 'VerticalAnchor'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.TextAlignment'."], context.exception.__notes__)
+
+	def test_Text_LineHeightNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Text(Point2D(0, 0), "Hello", lineHeight=None)
+
+		self.assertEqual("Parameter 'lineHeight' is None.", str(context.exception))
+
+	def test_Text_LineHeightStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Text(Point2D(0, 0), "Hello", lineHeight="1.2")
+
+		self.assertEqual("Parameter 'lineHeight' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Text_LineHeightZero(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Text(Point2D(0, 0), "Hello", lineHeight=0)
+
+		self.assertEqual("Parameter 'lineHeight' isn't positive.", str(context.exception))
+		self.assertListEqual(["Got value '0'."], context.exception.__notes__)
+
+	def test_Text_FillColor(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Text(Point2D(0, 0), "Hello", fill=RGBAColor(0, 0, 0))
+
+		self.assertEqual("Parameter 'fill' is not of type 'Fill'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.RGBAColor'."], context.exception.__notes__)
+
+	def test_Text_Parent(self) -> None:
+		group = Group2D()
+		text =  Text(Point2D(0, 0), "Hello", parent=group)
+
+		self.assertIs(group, text.Parent)
+		self.assertTupleEqual((text, ), group.Children)
+
+	def test_Text_ParentInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Text(Point2D(0, 0), "Hello", parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Text_FailingCheck(self) -> None:
+		"""A failing check leaves nothing registered."""
+		group = Group2D()
+
+		with self.assertRaises(ValueError):
+			_ = Text(Point2D(0, 0), "Hello", lineHeight=-1, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+
+class TextBounds(Testcase):
+	def test_Baseline(self) -> None:
+		text = Text(Point2D(10, 20), "Hello", font=MONOSPACE)
+
+		self.assertEqual(BoundingBox2D(10, 18, 40, 28), text.BoundingBox)
+
+	def test_Top(self) -> None:
+		text = Text(Point2D(10, 20), "Hello", font=MONOSPACE, anchor=VerticalAnchor.Top)
+
+		self.assertEqual(BoundingBox2D(10, 10, 40, 20), text.BoundingBox)
+
+	def test_Middle(self) -> None:
+		text = Text(Point2D(10, 20), "Hello", font=MONOSPACE, anchor=VerticalAnchor.Middle)
+
+		self.assertEqual(BoundingBox2D(10, 15, 40, 25), text.BoundingBox)
+
+	def test_Bottom(self) -> None:
+		text = Text(Point2D(10, 20), "Hello", font=MONOSPACE, anchor=VerticalAnchor.Bottom)
+
+		self.assertEqual(BoundingBox2D(10, 20, 40, 30), text.BoundingBox)
+
+	def test_Center(self) -> None:
+		text = Text(Point2D(10, 20), "Hello", font=MONOSPACE, alignment=TextAlignment.Center)
+
+		self.assertEqual(BoundingBox2D(-5, 18, 25, 28), text.BoundingBox)
+
+	def test_Right(self) -> None:
+		text = Text(Point2D(10, 20), "Hello", font=MONOSPACE, alignment=TextAlignment.Right)
+
+		self.assertEqual(BoundingBox2D(-20, 18, 10, 28), text.BoundingBox)
+
+	def test_MultiLine(self) -> None:
+		"""The longest line sets the width; each further line adds the line height."""
+		text = Text(Point2D(0, 0), "a\nabcd\nab", font=MONOSPACE, anchor=VerticalAnchor.Top)
+
+		box = text.BoundingBox
+
+		self.assertTrue(isclose(24, box.Width))
+		self.assertTrue(isclose(34, box.Height))
+		self.assertEqual(0, box.MaxY)
+
+	def test_MultiLine_Baseline(self) -> None:
+		"""The baseline of the first line is at the position."""
+		text = Text(Point2D(0, 0), "ab\nab", font=MONOSPACE)
+
+		box = text.BoundingBox
+
+		self.assertTrue(isclose(8, box.MaxY))
+		self.assertTrue(isclose(-14, box.MinY))
+
+	def test_LineHeight(self) -> None:
+		text = Text(Point2D(0, 0), "ab\nab", font=MONOSPACE, anchor=VerticalAnchor.Top, lineHeight=2)
+
+		self.assertTrue(isclose(30, text.BoundingBox.Height))
+
+	def test_CharacterWidth(self) -> None:
+		text = Text(Point2D(0, 0), "Hello", font=Font("sans-serif", 10, characterWidth=0.5))
+
+		self.assertTrue(isclose(25, text.BoundingBox.Width))
+
+	def test_Empty(self) -> None:
+		text = Text(Point2D(10, 20), "", font=MONOSPACE)
+
+		self.assertEqual(BoundingBox2D(10, 18, 10, 28), text.BoundingBox)
+
+	def test_CanvasDown(self) -> None:
+		"""On a canvas with the y-axis pointing down, the top of a text has its smallest y-coordinate."""
+		canvas = Canvas2D(YAxisDirection.Down)
+		text =   Text(Point2D(10, 20), "Hello", font=MONOSPACE, parent=canvas)
+
+		self.assertEqual(BoundingBox2D(10, 12, 40, 22), text.BoundingBox)
+
+	def test_CanvasDown_Top(self) -> None:
+		canvas = Canvas2D(YAxisDirection.Down)
+		group =  Group2D(parent=canvas)
+		text =   Text(Point2D(10, 20), "a\nb", font=MONOSPACE, anchor=VerticalAnchor.Top, parent=group)
+
+		self.assertEqual(BoundingBox2D(10, 20, 16, 42), text.BoundingBox)
+
+	def test_CanvasUp(self) -> None:
+		canvas = Canvas2D(YAxisDirection.Up)
+		text =   Text(Point2D(10, 20), "Hello", font=MONOSPACE, anchor=VerticalAnchor.Top, parent=canvas)
+
+		self.assertEqual(BoundingBox2D(10, 10, 40, 20), text.BoundingBox)
+
+	def test_CanvasMirror(self) -> None:
+		"""Flipping the canvas keeps the text where it is drawn."""
+		canvas = Canvas2D(YAxisDirection.Down, Size2D(100, 100))
+		text =   Text(Point2D(10, 20), "Hello", font=MONOSPACE, anchor=VerticalAnchor.Top, parent=canvas)
+
+		canvas.Mirror()
+
+		self.assertEqual(BoundingBox2D(10, 70, 40, 80), text.BoundingBox)
+		self.assertEqual(80, canvas.Top(text))
+
+	def test_Group(self) -> None:
+		group = Group2D(Offset2D(100, 0))
+		text =  Text(Point2D(10, 20), "Hello", font=MONOSPACE, parent=group)
+
+		self.assertEqual(BoundingBox2D(10, 18, 40, 28), text.BoundingBox)
+		self.assertEqual(BoundingBox2D(110, 18, 140, 28), text.AbsoluteBoundingBox)
+		self.assertEqual(BoundingBox2D(110, 18, 140, 28), group.BoundingBox)
+
+
+class TextTransformations(Testcase):
+	def test_Move(self) -> None:
+		text = Text(Point2D(10, 20), "Hello")
+
+		text.Move(Offset2D(1, 2))
+
+		self.assertTupleEqual((11, 22), text.Position.ToTuple())
+
+	def test_Move_None(self) -> None:
+		text = Text(Point2D(10, 20), "Hello")
+
+		with self.assertRaises(ValueError) as context:
+			text.Move(None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+
+	def test_Move_Tuple(self) -> None:
+		text = Text(Point2D(10, 20), "Hello")
+
+		with self.assertRaises(TypeError) as context:
+			text.Move((1, 2))
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_MirrorX(self) -> None:
+		"""Mirroring moves the position; the alignment stays, so the box isn't the mirror image."""
+		text = Text(Point2D(10, 20), "Hello", font=MONOSPACE)
+
+		text.MirrorX(Alignment2D.MinX)
+
+		self.assertTupleEqual((10, 20), text.Position.ToTuple())
+		self.assertIs(TextAlignment.Left, text.Alignment)
+
+		text.MirrorX(Alignment2D.MaxX)
+
+		self.assertTupleEqual((70, 20), text.Position.ToTuple())
+		self.assertEqual(BoundingBox2D(70, 18, 100, 28), text.BoundingBox)
+
+	def test_MirrorY(self) -> None:
+		text = Text(Point2D(10, 20), "Hello", font=MONOSPACE)
+
+		text.MirrorY(Alignment2D.MaxY)
+
+		self.assertTupleEqual((10, 36), text.Position.ToTuple())
+		self.assertIs(VerticalAnchor.Baseline, text.Anchor)
+
+	def test_AlignTo(self) -> None:
+		box =  Rectangle(Point2D(0, 0), Point2D(40, 0), Point2D(40, 20), Point2D(0, 20))
+		text = Text(Point2D(100, 100), "Hi", font=MONOSPACE, anchor=VerticalAnchor.Top)
+
+		text.AlignTo(box, Alignment2D.MaxX)
+
+		self.assertTupleEqual((28, 100), text.Position.ToTuple())
+
+	def test_Copy(self) -> None:
+		text = Text(
+			Point2D(10, 20), "a\nb",
+			font=MONOSPACE,
+			alignment=TextAlignment.Right,
+			anchor=VerticalAnchor.Top,
+			lineHeight=1.5,
+			stroke=STROKE,
+			fill=FILL
+		)
+
+		newText = text.Copy()
+
+		self.assertIs(Text, type(newText))
+		self.assertIsNot(text.Position, newText.Position)
+		self.assertIs(newText, newText.Position.Parent)
+		self.assertTupleEqual((10, 20), newText.Position.ToTuple())
+		self.assertEqual("a\nb", newText.Content)
+		self.assertIs(MONOSPACE, newText.Font)
+		self.assertIs(TextAlignment.Right, newText.Alignment)
+		self.assertIs(VerticalAnchor.Top, newText.Anchor)
+		self.assertEqual(1.5, newText.LineHeight)
+		self.assertIs(STROKE, newText.Stroke)
+		self.assertIs(FILL, newText.Fill)
+
+	def test_Copy_copy(self) -> None:
+		text = Text(Point2D(10, 20), "Hello", fill=FILL)
+
+		newText = copy(text)
+
+		self.assertIs(Text, type(newText))
+		self.assertIsNot(text.Position, newText.Position)
+		self.assertIs(FILL, newText.Fill)
+
+	def test_repr(self) -> None:
+		self.assertEqual("Text((10, 20), 'a\\nb')", repr(Text(Point2D(10, 20), "a\nb")))
+
+	def test_str(self) -> None:
+		self.assertEqual("a\nb", str(Text(Point2D(10, 20), "a\nb")))

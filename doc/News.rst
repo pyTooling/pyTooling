@@ -83,6 +83,8 @@ Version 10.x (2026)
      :class:`~pyTooling.Cartesian2D.Drawing.FontStyle`: upright, italic or slanted).
    * :mod:`pyTooling.Cartesian2D.Drawing`: drawable shapes with the names of their geometry classes (``Polygon``,
      ``Trapezium``, ``Rectangle``, ``Square``, ``Circle``, ``LineSegment2D``), drawn with a ``Stroke`` and a ``Fill``.
+   * :mod:`pyTooling.Cartesian2D.Drawing`: a :class:`~pyTooling.Cartesian2D.Drawing.Text` of one or more lines, aligned
+     horizontally and anchored vertically at its position, with an estimated bounding box.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:
