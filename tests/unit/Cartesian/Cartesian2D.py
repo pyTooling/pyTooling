@@ -2558,6 +2558,22 @@ class ArcCircleParameters(Testcase):
 		self.assertIs(polygon, edge.Center.Parent)
 
 
+class ArcChord(Testcase):
+	def test_ToChord(self) -> None:
+		group = Group2D()
+		arc =   ArcSegment2D(Point2D(0, 0), Point2D(2, 0), height=1, parent=group)
+
+		chord = arc.ToChord()
+
+		self.assertIs(LineSegment2D, type(chord))
+		self.assertTupleEqual(((0, 0), (2, 0)), chord.ToTuple())
+		self.assertIsNone(chord.Parent)
+		self.assertIsNot(arc.Start, chord.Start)
+		self.assertIs(chord, chord.Start.Parent)
+		self.assertIs(arc, arc.Start.Parent)
+		self.assertEqual(2.0, chord.Length)
+
+
 class ArcGeometry(Testcase):
 	def test_QuarterCounterclockwise(self) -> None:
 		arc = ArcSegment2D(Point2D(2, 0), Point2D(0, 2), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)

@@ -2600,6 +2600,16 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		return self.__class__(self._start, self._end, center=self._center, direction=self._direction)
 
+	def ToChord(self) -> LineSegment2D[Coordinate]:
+		"""
+		Create a new line segment from the arc's start point to its end point, the arc's chord.
+
+		The line segment holds copies of the start and end point and has no parent.
+
+		:returns: A new line segment from the start point to the end point.
+		"""
+		return LineSegment2D(self._start, self._end)
+
 	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
 		"""
 		Returns a copy of this 2D arc segment for :func:`copy.deepcopy`.

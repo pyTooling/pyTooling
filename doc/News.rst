@@ -39,7 +39,7 @@ Version 10.x (2026)
      ``keyValuePairs``. ``Copy()`` keeps the value and copies the pairs.
    * :mod:`pyTooling.Cartesian2D`: a circular :class:`~pyTooling.Cartesian2D.ArcSegment2D` from a start to an end point,
      given by its center and :class:`~pyTooling.Cartesian2D.SweepDirection`, a third point of the arc, or its height
-     over the chord. It reports its radius, angles, length and exact bounding box.
+     over the chord. It reports its radius, angles, length, exact bounding box and its chord.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

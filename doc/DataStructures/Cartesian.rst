@@ -392,7 +392,9 @@ With ``arcPoint`` or ``height``, a start and an end point at the same position h
   counterclockwise and negative clockwise;
 * :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Length` - the radius times the absolute sweep angle;
 * :attr:`~pyTooling.Cartesian2D.ArcSegment2D.BoundingBox` - exact: where the arc passes the leftmost, rightmost,
-  lowest or highest point of its circle, it bulges past its start and end point.
+  lowest or highest point of its circle, it bulges past its start and end point;
+* :meth:`~pyTooling.Cartesian2D.ArcSegment2D.ToChord` - a new :class:`~pyTooling.Cartesian2D.LineSegment2D` from the
+  start to the end point.
 
 .. code-block:: Python
 
@@ -400,6 +402,7 @@ With ``arcPoint`` or ``height``, a start and an end point at the same position h
    arc.SweepAngle                     # 3.14159... (math.pi)
    arc.Length                         # 6.28318...
    arc.BoundingBox                    # BoundingBox2D(-2, 0, 2, 2.0)
+   arc.ToChord().Length               # 4.0
    arc.MirrorY()                      # arc.Direction is SweepDirection.Clockwise
 
 Mirroring an arc reverses its direction, so the mirrored arc bulges to the other side.
