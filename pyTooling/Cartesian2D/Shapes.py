@@ -1061,6 +1061,80 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 
 		return box
 
+	def AppendSegment(self, segment: Segment2D[Coordinate]) -> None:
+		"""
+		Append a segment at the end of the path.
+
+		The segment must start at the path's end point. The path copies it as an edge, which starts at the path's last
+		joint; the copy's end point becomes the path's new end point. Like the initializer, the edge references the
+		segment's value and holds a shallow copy of its key-value-pairs. The given segment stays as it is.
+
+		:param segment:                The segment to append.
+		:raises ValueError:            If parameter 'segment' is None.
+		:raises TypeError:             If parameter 'segment' is not of type :class:`~pyTooling.Cartesian2D.Segment2D`.
+		:raises ValueError:            If parameter 'segment' doesn't start at the end point of the path.
+		:raises InvalidOperationError: If the path is closed. |br|
+		                               A closed path doesn't get opened by appending a segment.
+		"""
+		if segment is None:
+			raise ValueError("Parameter 'segment' is None.")
+		elif not isinstance(segment, Segment2D):
+			ex = TypeError("Parameter 'segment' is not of type 'Segment2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(segment)}'.")
+			raise ex
+		elif self._closed:
+			ex = InvalidOperationError("Path is closed.")
+			ex.add_note("A closed path doesn't get opened by appending a segment.")
+			raise ex
+		elif segment._start._x != (lastJoint := self._points[-1])._x or segment._start._y != lastJoint._y:
+			ex = ValueError("Parameter 'segment' doesn't start at the end point of the path.")
+			ex.add_note(f"Got start point {segment._start}, expected {lastJoint}.")
+			raise ex
+
+		end =         segment._end.Copy()
+		end._parent = self
+		edge =        segment._CopyAsEdge(lastJoint, end, self)
+
+		self._points +=   (end, )
+		self._segments += (edge, )
+
+	def PrependSegment(self, segment: Segment2D[Coordinate]) -> None:
+		"""
+		Prepend a segment at the start of the path.
+
+		The segment must end at the path's start point. The path copies it as an edge, which ends at the path's first
+		joint; the copy's start point becomes the path's new start point. Like the initializer, the edge references the
+		segment's value and holds a shallow copy of its key-value-pairs. The given segment stays as it is.
+
+		:param segment:                The segment to prepend.
+		:raises ValueError:            If parameter 'segment' is None.
+		:raises TypeError:             If parameter 'segment' is not of type :class:`~pyTooling.Cartesian2D.Segment2D`.
+		:raises ValueError:            If parameter 'segment' doesn't end at the start point of the path.
+		:raises InvalidOperationError: If the path is closed. |br|
+		                               A closed path doesn't get opened by prepending a segment.
+		"""
+		if segment is None:
+			raise ValueError("Parameter 'segment' is None.")
+		elif not isinstance(segment, Segment2D):
+			ex = TypeError("Parameter 'segment' is not of type 'Segment2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(segment)}'.")
+			raise ex
+		elif self._closed:
+			ex = InvalidOperationError("Path is closed.")
+			ex.add_note("A closed path doesn't get opened by prepending a segment.")
+			raise ex
+		elif segment._end._x != (firstJoint := self._points[0])._x or segment._end._y != firstJoint._y:
+			ex = ValueError("Parameter 'segment' doesn't end at the start point of the path.")
+			ex.add_note(f"Got end point {segment._end}, expected {firstJoint}.")
+			raise ex
+
+		start =         segment._start.Copy()
+		start._parent = self
+		edge =          segment._CopyAsEdge(start, firstJoint, self)
+
+		self._points =   (start, ) + self._points
+		self._segments = (edge, ) + self._segments
+
 	def Move(self, offset: Offset2D[Coordinate]) -> None:
 		"""
 		Move the path by moving all its points (inplace).

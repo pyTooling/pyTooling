@@ -2216,6 +2216,151 @@ class PathInstantiation(Testcase):
 		self.assertIsNot(path.Segments[0].Start, path.Segments[1].End)
 
 
+class PathAppending(Testcase):
+	def test_Append(self) -> None:
+		"""The new edge starts at the path's last joint; the given segment stays as it is."""
+		path =    Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+		arc =     ArcSegment2D(Point2D(4, 0), Point2D(4, 4), height=-2)
+		lastEnd = path.Points[-1]
+
+		path.AppendSegment(arc)
+
+		line, edge = path.Segments
+
+		self.assertIs(ArcSegment2D, type(edge))
+		self.assertIsNot(arc, edge)
+		self.assertIs(path, edge.Parent)
+		self.assertIs(lastEnd, edge.Start)
+		self.assertIs(line.End, edge.Start)
+		self.assertTupleEqual(((0, 0), (4, 0), (4, 4)), tuple(point.ToTuple() for point in path.Points))
+		self.assertIs(edge.End, path.Points[-1])
+		self.assertIs(path, edge.End.Parent)
+		self.assertIs(path, edge.Center.Parent)
+		self.assertIs(arc, arc.Start.Parent)
+		self.assertEqual(BoundingBox2D(0, 0, 6, 4), path.BoundingBox)
+
+	def test_Append_Data(self) -> None:
+		value = object()
+		path =  Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+
+		path.AppendSegment(LineSegment2D(Point2D(4, 0), Point2D(4, 4), value=value, keyValuePairs={"net": "a"}))
+
+		self.assertIs(value, path.Segments[1].Value)
+		self.assertEqual("a", path.Segments[1]["net"])
+
+	def test_Append_Edge(self) -> None:
+		"""A segment owned by another element is copied, as by the initializer."""
+		polygon = Polygon((Point2D(4, 0), Point2D(4, 4), Point2D(8, 0)))
+		path =    Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+
+		path.AppendSegment(polygon.Segments[0])
+
+		self.assertIs(path, path.Segments[1].Parent)
+		self.assertIs(polygon, polygon.Segments[0].Parent)
+		self.assertIs(polygon, polygon.Points[0].Parent)
+
+	def test_Append_Move(self) -> None:
+		"""The new joint is moved once."""
+		path = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+		path.AppendSegment(QuadraticBezierSegment2D(Point2D(4, 0), Point2D(6, 2), Point2D(4, 4)))
+
+		path.Move(Offset2D(1, 1))
+
+		self.assertTupleEqual(((1, 1), (5, 1), (5, 5)), tuple(point.ToTuple() for point in path.Points))
+		self.assertTupleEqual((7, 3), path.Segments[1].ControlPoint.ToTuple())
+
+	def test_Append_None(self) -> None:
+		path = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+
+		with self.assertRaises(ValueError) as context:
+			path.AppendSegment(None)
+
+		self.assertEqual("Parameter 'segment' is None.", str(context.exception))
+
+	def test_Append_Point(self) -> None:
+		path = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+
+		with self.assertRaises(TypeError) as context:
+			path.AppendSegment(Point2D(4, 4))
+
+		self.assertEqual("Parameter 'segment' is not of type 'Segment2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
+	def test_Append_Gap(self) -> None:
+		path = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+
+		with self.assertRaises(ValueError) as context:
+			path.AppendSegment(LineSegment2D(Point2D(4, 1), Point2D(4, 4)))
+
+		self.assertEqual("Parameter 'segment' doesn't start at the end point of the path.", str(context.exception))
+		self.assertListEqual(["Got start point (4, 1), expected (4, 0)."], context.exception.__notes__)
+		self.assertEqual(1, len(path.Segments))
+		self.assertEqual(2, len(path.Points))
+
+	def test_Append_Closed(self) -> None:
+		path = closedPath()
+
+		with self.assertRaises(InvalidOperationError) as context:
+			path.AppendSegment(LineSegment2D(Point2D(0, 0), Point2D(-4, 0)))
+
+		self.assertEqual("Path is closed.", str(context.exception))
+		self.assertListEqual(["A closed path doesn't get opened by appending a segment."], context.exception.__notes__)
+		self.assertEqual(2, len(path.Segments))
+
+	def test_Prepend(self) -> None:
+		"""The new edge ends at the path's first joint."""
+		path =       Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+		firstStart = path.Points[0]
+
+		path.PrependSegment(CubicBezierSegment2D(Point2D(-4, 0), Point2D(-4, 2), Point2D(0, 2), Point2D(0, 0)))
+
+		edge, line = path.Segments
+
+		self.assertIs(CubicBezierSegment2D, type(edge))
+		self.assertIs(firstStart, edge.End)
+		self.assertIs(line.Start, edge.End)
+		self.assertTupleEqual(((-4, 0), (0, 0), (4, 0)), tuple(point.ToTuple() for point in path.Points))
+		self.assertIs(edge.Start, path.Points[0])
+		self.assertIs(path, edge.Start.Parent)
+		self.assertIs(path, edge.ControlPoint1.Parent)
+
+	def test_Prepend_None(self) -> None:
+		path = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+
+		with self.assertRaises(ValueError) as context:
+			path.PrependSegment(None)
+
+		self.assertEqual("Parameter 'segment' is None.", str(context.exception))
+
+	def test_Prepend_Tuple(self) -> None:
+		path = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+
+		with self.assertRaises(TypeError) as context:
+			path.PrependSegment((Point2D(-4, 0), Point2D(0, 0)))
+
+		self.assertEqual("Parameter 'segment' is not of type 'Segment2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Prepend_Gap(self) -> None:
+		path = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+
+		with self.assertRaises(ValueError) as context:
+			path.PrependSegment(LineSegment2D(Point2D(-4, 0), Point2D(0, 1)))
+
+		self.assertEqual("Parameter 'segment' doesn't end at the start point of the path.", str(context.exception))
+		self.assertListEqual(["Got end point (0, 1), expected (0, 0)."], context.exception.__notes__)
+		self.assertEqual(1, len(path.Segments))
+
+	def test_Prepend_Closed(self) -> None:
+		path = closedPath()
+
+		with self.assertRaises(InvalidOperationError) as context:
+			path.PrependSegment(LineSegment2D(Point2D(-4, 0), Point2D(0, 0)))
+
+		self.assertEqual("Path is closed.", str(context.exception))
+		self.assertListEqual(["A closed path doesn't get opened by prepending a segment."], context.exception.__notes__)
+
+
 class PathGeometry(Testcase):
 	def test_Length(self) -> None:
 		self.assertEqual(4 + 2 * pi, closedPath().Length)

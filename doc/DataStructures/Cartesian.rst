@@ -702,6 +702,21 @@ raises :exc:`~pyTooling.Exceptions.InvalidOperationError`. Moving or mirroring a
 and the edges' other points; a mirrored arc reverses its direction. A copy shares its copied joints between its edges,
 like the original.
 
+An open path grows at both ends: :meth:`~pyTooling.Cartesian2D.Shapes.Path.AppendSegment` takes a segment starting at
+the path's end point, :meth:`~pyTooling.Cartesian2D.Shapes.Path.PrependSegment` one ending at its start point. The path
+copies the segment as a new edge sharing that joint, like the initializer does. A closed path doesn't get opened: both
+raise :exc:`~pyTooling.Exceptions.InvalidOperationError`.
+
+.. code-block:: Python
+
+   wire = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), ))
+   wire.AppendSegment(ArcSegment2D(Point2D(4, 0), Point2D(4, 4), height=-2))
+   wire.PrependSegment(LineSegment2D(Point2D(-2, 0), Point2D(0, 0)))
+
+   len(wire.Segments)                 # 3
+   wire.Points[-1]                    # (4, 4)
+   wire.BoundingBox                   # BoundingBox2D(-2, 0, 6.0, 4)
+
 .. seealso::
 
    :ref:`STRUCT/Cartesian2D/Shape`
