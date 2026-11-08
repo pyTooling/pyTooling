@@ -935,7 +935,7 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		The line is in absolute coordinates, relative to the origin, so elements of different groups can be mirrored at
 		the same line. At a vertical line ``x = a``, every absolute x-coordinate ``x`` becomes ``2a - x``; at a horizontal
 		line ``y = a``, every absolute y-coordinate ``y`` becomes ``2a - y``. A group mirrors its offset, and its children
-		at the group's origin.
+		at the group's origin. A :class:`Line2D` with normal ``(1, 0)`` or ``(0, 1)`` is a vertical or horizontal line too.
 
 		Mirrored at a vertical line: the element on the left of the line is mirrored to the right of it.
 
@@ -950,9 +950,11 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		                       |
 		        before                   after
 
-		:param line:        The line to mirror at, like a :class:`VerticalLine2D` or a :class:`HorizontalLine2D`.
-		:raises ValueError: If parameter 'line' is None.
-		:raises TypeError:  If parameter 'line' is not of type :class:`Line2D`.
+		:param line:                   The line to mirror at, like a :class:`VerticalLine2D` or a :class:`HorizontalLine2D`.
+		:raises ValueError:            If parameter 'line' is None.
+		:raises TypeError:             If parameter 'line' is not of type :class:`Line2D`.
+		:raises InvalidOperationError: If parameter 'line' is oblique. |br|
+		                               Mirror at a vertical or horizontal line.
 		"""
 		if line is None:
 			raise ValueError("Parameter 'line' is None.")
@@ -1986,32 +1988,445 @@ class BoundingBox2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 
 @export
-@abstractclass
 class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""
-	Abstract base-class of 2D lines, which are infinite in both directions, unlike a :class:`LineSegment2D`.
+	A 2D line, which is infinite in both directions, unlike a :class:`LineSegment2D`.
+
+	The line is stored in Hesse normal form: a normal ``(nx, ny)`` of length 1 and the signed distance ``d`` of the line
+	from the origin, so the line is all points ``(x, y)`` with ``nx * x + ny * y = d``. The first non-zero component of
+	the normal is positive, so a line has one form only.
 
 	A line is in absolute coordinates, relative to the origin, so elements of different groups can be mirrored at the
-	same line with :meth:`Element2D.MirrorAt`. A line is a value: it can't be changed after creation, compares by value
-	and is hashable.
+	same line with :meth:`Element2D.MirrorAt`. A line is a value: it compares by value and is hashable. Two lines are
+	equal, if they have the same normal and distance, whatever class or constructor created them.
 	"""
 
-	@abstractmethod
+	_normal:   Offset2D[float]  #: The normal of length 1, its first non-zero component is positive.
+	_distance: float            #: The signed distance of the line from the origin, in direction of the normal.
+
+	def __init__(self, normal: Offset2D[Coordinate], distance: Coordinate) -> None:
+		"""
+		Initializes a 2D line from a normal and a distance, the line ``nx * x + ny * y = distance``.
+
+		A normal of another length than 1 is normalized, and the distance is divided by the normal's length, so the line
+		stays the same. If the first non-zero component of the normal is negative, the normal and the distance are
+		negated. A normal of length 1 keeps its values, so the line with normal ``(1, 0)`` keeps an integer distance. Zeros
+		are stored without sign.
+
+		:param normal:      A normal of the line, perpendicular to it.
+		:param distance:    The right-hand side of the line's equation; for a normal of length 1, the signed distance of the
+		                    line from the origin.
+		:raises ValueError: If parameter 'normal' is None.
+		:raises TypeError:  If parameter 'normal' is not of type :class:`Offset2D`.
+		:raises ValueError: If parameter 'normal' is a zero offset. |br|
+		                    A line needs a normal direction.
+		:raises ValueError: If parameter 'distance' is None.
+		:raises TypeError:  If parameter 'distance' is not of type :class:`float` or :class:`int`.
+		"""
+		if normal is None:
+			raise ValueError("Parameter 'normal' is None.")
+		elif not isinstance(normal, Offset2D):
+			ex = TypeError("Parameter 'normal' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
+			raise ex
+		elif normal._xOffset == 0 and normal._yOffset == 0:
+			ex = ValueError("Parameter 'normal' is a zero offset.")
+			ex.add_note(f"Got offset {normal}.")
+			ex.add_note("A line needs a normal direction.")
+			raise ex
+
+		if distance is None:
+			raise ValueError("Parameter 'distance' is None.")
+		elif not isinstance(distance, (int, float)):
+			ex = TypeError("Parameter 'distance' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(distance)}'.")
+			raise ex
+
+		normalX = normal._xOffset
+		normalY = normal._yOffset
+		if (squaredLength := normalX ** 2 + normalY ** 2) != 1:
+			length =   sqrt(squaredLength)
+			normalX =  normalX / length
+			normalY =  normalY / length
+			distance = distance / length
+
+		if normalX < 0 or (normalX == 0 and normalY < 0):
+			normalX =  -normalX
+			normalY =  -normalY
+			distance = -distance
+
+		self._normal =   Offset2D(normalX + 0, normalY + 0)
+		self._distance = distance + 0
+
+	@classmethod
+	def FromPoints(cls, first: Point2D[Coordinate], second: Point2D[Coordinate]) -> Line2D[float]:
+		"""
+		Create the line through two points.
+
+		The points are taken in absolute coordinates: a point inside a group is converted.
+
+		:param first:       A first point of the line.
+		:param second:      A second point of the line.
+		:returns:           A new line, a :class:`Line2D` also if called on a derived class.
+		:raises ValueError: If parameter 'first' is None.
+		:raises TypeError:  If parameter 'first' is not of type :class:`Point2D`.
+		:raises ValueError: If parameter 'second' is None.
+		:raises TypeError:  If parameter 'second' is not of type :class:`Point2D`.
+		:raises ValueError: If parameters 'first' and 'second' are at the same position. |br|
+		                    Two points at the same position don't define a line.
+		"""
+		for name, point in (
+			("first",  first),
+			("second", second)
+		):
+			if point is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(point, Point2D):
+				ex = TypeError(f"Parameter '{name}' is not of type 'Point2D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+				raise ex
+
+		start =     first.Absolute
+		direction = second.Absolute - start
+		if direction._xOffset == 0 and direction._yOffset == 0:
+			ex = ValueError("Parameters 'first' and 'second' are at the same position.")
+			ex.add_note(f"Got points {first} and {second}, both at {start} in absolute coordinates.")
+			ex.add_note("Two points at the same position don't define a line.")
+			raise ex
+
+		return Line2D(
+			Offset2D(-direction._yOffset, direction._xOffset),
+			direction._xOffset * start._y - direction._yOffset * start._x
+		)
+
+	@classmethod
+	def FromPointAndDirection(cls, point: Point2D[Coordinate], direction: Offset2D[Coordinate]) -> Line2D[float]:
+		"""
+		Create the line through a point in a direction.
+
+		The point is taken in absolute coordinates: a point inside a group is converted.
+
+		:param point:       A point of the line.
+		:param direction:   The direction of the line.
+		:returns:           A new line, a :class:`Line2D` also if called on a derived class.
+		:raises ValueError: If parameter 'point' is None.
+		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
+		:raises ValueError: If parameter 'direction' is None.
+		:raises TypeError:  If parameter 'direction' is not of type :class:`Offset2D`.
+		:raises ValueError: If parameter 'direction' is a zero offset. |br|
+		                    A line needs a direction.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point2D):
+			ex = TypeError("Parameter 'point' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		if direction is None:
+			raise ValueError("Parameter 'direction' is None.")
+		elif not isinstance(direction, Offset2D):
+			ex = TypeError("Parameter 'direction' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
+			raise ex
+		elif direction._xOffset == 0 and direction._yOffset == 0:
+			ex = ValueError("Parameter 'direction' is a zero offset.")
+			ex.add_note(f"Got offset {direction}.")
+			ex.add_note("A line needs a direction.")
+			raise ex
+
+		absolute = point.Absolute
+		return Line2D(
+			Offset2D(-direction._yOffset, direction._xOffset),
+			direction._xOffset * absolute._y - direction._yOffset * absolute._x
+		)
+
+	@classmethod
+	def FromPointAndNormal(cls, point: Point2D[Coordinate], normal: Offset2D[Coordinate]) -> Line2D[float]:
+		"""
+		Create the line through a point, perpendicular to a normal.
+
+		The point is taken in absolute coordinates: a point inside a group is converted.
+
+		:param point:       A point of the line.
+		:param normal:      A normal of the line, perpendicular to it.
+		:returns:           A new line, a :class:`Line2D` also if called on a derived class.
+		:raises ValueError: If parameter 'point' is None.
+		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
+		:raises ValueError: If parameter 'normal' is None.
+		:raises TypeError:  If parameter 'normal' is not of type :class:`Offset2D`.
+		:raises ValueError: If parameter 'normal' is a zero offset. |br|
+		                    A line needs a normal direction.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point2D):
+			ex = TypeError("Parameter 'point' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		if normal is None:
+			raise ValueError("Parameter 'normal' is None.")
+		elif not isinstance(normal, Offset2D):
+			ex = TypeError("Parameter 'normal' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
+			raise ex
+		elif normal._xOffset == 0 and normal._yOffset == 0:
+			ex = ValueError("Parameter 'normal' is a zero offset.")
+			ex.add_note(f"Got offset {normal}.")
+			ex.add_note("A line needs a normal direction.")
+			raise ex
+
+		absolute = point.Absolute
+		return Line2D(normal, normal._xOffset * absolute._x + normal._yOffset * absolute._y)
+
+	@readonly
+	def Normal(self) -> Offset2D[float]:
+		"""
+		Read-only property to access the normal of the line (:attr:`_normal`).
+
+		:returns: The normal of length 1, its first non-zero component is positive.
+		"""
+		return self._normal
+
+	@readonly
+	def Distance(self) -> float:
+		"""
+		Read-only property to access the signed distance of the line from the origin (:attr:`_distance`).
+
+		:returns: The signed distance, positive in direction of the normal.
+		"""
+		return self._distance
+
+	def SignedDistance(self, point: Point2D[Coordinate]) -> float:
+		"""
+		Compute the signed distance of a point from the line.
+
+		The point is taken in absolute coordinates. The distance is positive on the side the normal points to, negative on
+		the other side, and zero for a point on the line.
+
+		:param point:       The point.
+		:returns:           The signed distance ``nx * x + ny * y - d``.
+		:raises ValueError: If parameter 'point' is None.
+		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point2D):
+			ex = TypeError("Parameter 'point' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		absolute = point.Absolute
+		normal =   self._normal
+		return normal._xOffset * absolute._x + normal._yOffset * absolute._y - self._distance
+
+	def Project(self, point: Point2D[Coordinate]) -> Point2D[float]:
+		"""
+		Project a point onto the line, the foot of the perpendicular from the point to the line.
+
+		The point is taken in absolute coordinates, and the projection is in absolute coordinates too.
+
+		:param point:       The point to project.
+		:returns:           A new 2D-point without owner.
+		:raises ValueError: If parameter 'point' is None.
+		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point2D):
+			ex = TypeError("Parameter 'point' is not of type 'Point2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		absolute =       point.Absolute
+		normal =         self._normal
+		signedDistance = normal._xOffset * absolute._x + normal._yOffset * absolute._y - self._distance
+		return Point2D(
+			absolute._x - signedDistance * normal._xOffset,
+			absolute._y - signedDistance * normal._yOffset
+		)
+
+	def Intersects(self, ray: Ray2D[Coordinate]) -> bool:
+		"""
+		Check if a ray hits the line.
+
+		A ray starting on the line hits it, also a ray running along the line. A ray parallel to the line, or pointing away
+		from it, doesn't.
+
+		:param ray:         The ray.
+		:returns:           ``True``, if the ray has a point on the line.
+		:raises ValueError: If parameter 'ray' is None.
+		:raises TypeError:  If parameter 'ray' is not of type :class:`Ray2D`.
+		"""
+		if ray is None:
+			raise ValueError("Parameter 'ray' is None.")
+		elif not isinstance(ray, Ray2D):
+			ex = TypeError("Parameter 'ray' is not of type 'Ray2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(ray)}'.")
+			raise ex
+
+		normal =        self._normal
+		start =         ray._start
+		direction =     ray._direction
+		startDistance = normal._xOffset * start._x + normal._yOffset * start._y - self._distance
+		approach =      normal.Dot(direction)
+		return startDistance == 0 or startDistance * approach < 0
+
+	def Intersection(self, ray: Ray2D[Coordinate]) -> Point2D[float]:
+		"""
+		Compute the point, where a ray hits the line.
+
+		A ray starting on the line, also one running along the line, hits it at its start point.
+
+		:param ray:         The ray.
+		:returns:           A new 2D-point without owner, in absolute coordinates.
+		:raises ValueError: If parameter 'ray' is None.
+		:raises TypeError:  If parameter 'ray' is not of type :class:`Ray2D`.
+		:raises ValueError: If parameter 'ray' is parallel to the line, but doesn't start on it. |br|
+		                    Check with :meth:`Intersects` first.
+		:raises ValueError: If parameter 'ray' points away from the line. |br|
+		                    Check with :meth:`Intersects` first.
+		"""
+		if ray is None:
+			raise ValueError("Parameter 'ray' is None.")
+		elif not isinstance(ray, Ray2D):
+			ex = TypeError("Parameter 'ray' is not of type 'Ray2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(ray)}'.")
+			raise ex
+
+		normal =        self._normal
+		start =         ray._start
+		direction =     ray._direction
+		startDistance = normal._xOffset * start._x + normal._yOffset * start._y - self._distance
+		approach =      normal.Dot(direction)
+		if startDistance == 0:
+			return Point2D(start._x, start._y)
+		elif approach == 0:
+			ex = ValueError("Parameter 'ray' is parallel to the line.")
+			ex.add_note(f"Got ray {ray!r} and line {self!r}.")
+			ex.add_note("Check with 'Intersects' first.")
+			raise ex
+		elif startDistance * approach > 0:
+			ex = ValueError("Parameter 'ray' points away from the line.")
+			ex.add_note(f"Got ray {ray!r} and line {self!r}.")
+			ex.add_note("Check with 'Intersects' first.")
+			raise ex
+
+		factor = -startDistance / approach
+		return Point2D(
+			start._x + factor * direction._xOffset,
+			start._y + factor * direction._yOffset
+		)
+
 	def _MirrorElement(self, element: Element2D[Coordinate]) -> None:
 		"""
 		Mirror an element at this line (inplace).
 
-		:param element: The element to mirror.
+		A line with normal ``(1, 0)`` or ``(0, 1)`` mirrors an element like a :class:`VerticalLine2D` or a
+		:class:`HorizontalLine2D`.
+
+		:param element:                The element to mirror.
+		:raises InvalidOperationError: If the line is oblique. |br|
+		                               Mirror at a vertical or horizontal line.
 		"""
+		normal = self._normal
+		if normal._yOffset == 0:
+			frame = element.Frame
+			x =     self._distance if frame is None else self._distance - frame.AbsoluteOffset._xOffset
+			element._MirrorX(2 * x)
+		elif normal._xOffset == 0:
+			frame = element.Frame
+			y =     self._distance if frame is None else self._distance - frame.AbsoluteOffset._yOffset
+			element._MirrorY(2 * y)
+		else:
+			ex = InvalidOperationError("Mirroring at an oblique line isn't supported.")
+			ex.add_note(f"Got line {self!r}.")
+			ex.add_note("Mirror at a vertical or horizontal line.")
+			raise ex
+
+	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two lines for equality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if both lines have the same normal and distance.
+		:raises TypeError: If the second operand is not of type :class:`Line2D`.
+		"""
+		if not isinstance(other, Line2D):
+			ex = TypeError("Second operand is not supported by == operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Line2D")
+			raise ex
+
+		normal =      self._normal
+		otherNormal = other._normal
+		return (
+			normal._xOffset == otherNormal._xOffset
+			and normal._yOffset == otherNormal._yOffset
+			and self._distance == other._distance
+		)
+
+	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two lines for inequality.
+
+		:param other:      Operand to compare against.
+		:returns:          ``True``, if the lines differ in normal or distance.
+		:raises TypeError: If the second operand is not of type :class:`Line2D`.
+		"""
+		if not isinstance(other, Line2D):
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Line2D")
+			raise ex
+
+		normal =      self._normal
+		otherNormal = other._normal
+		return (
+			normal._xOffset != otherNormal._xOffset
+			or normal._yOffset != otherNormal._yOffset
+			or self._distance != other._distance
+		)
+
+	def __hash__(self) -> int:
+		"""
+		Returns a hash of the line's normal and distance, so equal lines have the same hash.
+
+		:returns: The hash value.
+		"""
+		return hash((self._normal._xOffset, self._normal._yOffset, self._distance))
+
+	def __repr__(self) -> str:
+		"""
+		Returns the line's string representation.
+
+		:returns: The string representation of the line, its normal and distance.
+		"""
+		return f"Line2D({self._normal}, {self._distance})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the line's string equivalent as an equation.
+
+		The line with normal ``(0.6, 0.8)`` and distance ``2.0`` returns ``0.6 * x + 0.8 * y = 2.0``.
+
+		:returns: The equation of the line.
+		"""
+		normal = self._normal
+		if normal._yOffset < 0:
+			return f"{normal._xOffset} * x - {-normal._yOffset} * y = {self._distance}"
+
+		return f"{normal._xOffset} * x + {normal._yOffset} * y = {self._distance}"
 
 
 @export
 class VerticalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 	"""
 	A vertical 2D line: all its points have the same x-coordinate, the line ``x = c``.
-	"""
 
-	_x: Coordinate  #: The x-coordinate of all points of the line.
+	Its normal is ``(1, 0)``, and its distance is the x-coordinate.
+	"""
 
 	def __init__(self, x: Coordinate) -> None:
 		"""
@@ -2021,6 +2436,8 @@ class VerticalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'x' is None.
 		:raises TypeError:  If parameter 'x' is not of type :class:`float` or :class:`int`.
 		"""
+		super().__init__(Offset2D(1, 0), 0)
+
 		if x is None:
 			raise ValueError("Parameter 'x' is None.")
 		elif not isinstance(x, (int, float)):
@@ -2028,7 +2445,7 @@ class VerticalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(x)}'.")
 			raise ex
 
-		self._x = x
+		self._distance = x + 0
 
 	@classmethod
 	def FromElement(cls, element: Element2D[Coordinate], alignment: Alignment2D) -> Self:
@@ -2078,61 +2495,11 @@ class VerticalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 	@readonly
 	def X(self) -> Coordinate:
 		"""
-		Read-only property to access the x-coordinate of all points of the line (:attr:`_x`).
+		Read-only property to access the x-coordinate of all points of the line (:attr:`_distance`).
 
 		:returns: The x-coordinate of the line.
 		"""
-		return self._x
-
-	def _MirrorElement(self, element: Element2D[Coordinate]) -> None:
-		"""
-		Mirror an element at this line (inplace), so every absolute x-coordinate ``x`` becomes ``2c - x``.
-
-		:param element: The element to mirror.
-		"""
-		frame = element.Frame
-		x =     self._x if frame is None else self._x - frame.AbsoluteOffset._xOffset
-		element._MirrorX(2 * x)
-
-	def __eq__(self, other: Any) -> bool:
-		"""
-		Compare two lines for equality.
-
-		:param other:      Operand to compare against.
-		:returns:          ``True``, if both lines are vertical lines with the same x-coordinate.
-		:raises TypeError: If the second operand is not of type :class:`Line2D`.
-		"""
-		if not isinstance(other, Line2D):
-			ex = TypeError("Second operand is not supported by == operator.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: Line2D")
-			raise ex
-
-		return isinstance(other, VerticalLine2D) and self._x == other._x
-
-	def __ne__(self, other: Any) -> bool:
-		"""
-		Compare two lines for inequality.
-
-		:param other:      Operand to compare against.
-		:returns:          ``True``, if the other line isn't a vertical line or has another x-coordinate.
-		:raises TypeError: If the second operand is not of type :class:`Line2D`.
-		"""
-		if not isinstance(other, Line2D):
-			ex = TypeError("Second operand is not supported by != operator.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: Line2D")
-			raise ex
-
-		return not isinstance(other, VerticalLine2D) or self._x != other._x
-
-	def __hash__(self) -> int:
-		"""
-		Returns a hash of the line's x-coordinate, so equal lines have the same hash.
-
-		:returns: The hash value.
-		"""
-		return hash(self._x)
+		return self._distance
 
 	def __repr__(self) -> str:
 		"""
@@ -2140,7 +2507,7 @@ class VerticalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 
 		:returns: The string representation of the line.
 		"""
-		return f"VerticalLine2D({self._x})"
+		return f"VerticalLine2D({self._distance})"
 
 	def __str__(self) -> str:
 		"""
@@ -2150,16 +2517,16 @@ class VerticalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 
 		:returns: The equation of the line.
 		"""
-		return f"x = {self._x}"
+		return f"x = {self._distance}"
 
 
 @export
 class HorizontalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 	"""
 	A horizontal 2D line: all its points have the same y-coordinate, the line ``y = c``.
-	"""
 
-	_y: Coordinate  #: The y-coordinate of all points of the line.
+	Its normal is ``(0, 1)``, and its distance is the y-coordinate.
+	"""
 
 	def __init__(self, y: Coordinate) -> None:
 		"""
@@ -2169,6 +2536,8 @@ class HorizontalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'y' is None.
 		:raises TypeError:  If parameter 'y' is not of type :class:`float` or :class:`int`.
 		"""
+		super().__init__(Offset2D(0, 1), 0)
+
 		if y is None:
 			raise ValueError("Parameter 'y' is None.")
 		elif not isinstance(y, (int, float)):
@@ -2176,7 +2545,7 @@ class HorizontalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 			ex.add_note(f"Got type '{getFullyQualifiedName(y)}'.")
 			raise ex
 
-		self._y = y
+		self._distance = y + 0
 
 	@classmethod
 	def FromElement(cls, element: Element2D[Coordinate], alignment: Alignment2D) -> Self:
@@ -2226,61 +2595,11 @@ class HorizontalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 	@readonly
 	def Y(self) -> Coordinate:
 		"""
-		Read-only property to access the y-coordinate of all points of the line (:attr:`_y`).
+		Read-only property to access the y-coordinate of all points of the line (:attr:`_distance`).
 
 		:returns: The y-coordinate of the line.
 		"""
-		return self._y
-
-	def _MirrorElement(self, element: Element2D[Coordinate]) -> None:
-		"""
-		Mirror an element at this line (inplace), so every absolute y-coordinate ``y`` becomes ``2c - y``.
-
-		:param element: The element to mirror.
-		"""
-		frame = element.Frame
-		y =     self._y if frame is None else self._y - frame.AbsoluteOffset._yOffset
-		element._MirrorY(2 * y)
-
-	def __eq__(self, other: Any) -> bool:
-		"""
-		Compare two lines for equality.
-
-		:param other:      Operand to compare against.
-		:returns:          ``True``, if both lines are horizontal lines with the same y-coordinate.
-		:raises TypeError: If the second operand is not of type :class:`Line2D`.
-		"""
-		if not isinstance(other, Line2D):
-			ex = TypeError("Second operand is not supported by == operator.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: Line2D")
-			raise ex
-
-		return isinstance(other, HorizontalLine2D) and self._y == other._y
-
-	def __ne__(self, other: Any) -> bool:
-		"""
-		Compare two lines for inequality.
-
-		:param other:      Operand to compare against.
-		:returns:          ``True``, if the other line isn't a horizontal line or has another y-coordinate.
-		:raises TypeError: If the second operand is not of type :class:`Line2D`.
-		"""
-		if not isinstance(other, Line2D):
-			ex = TypeError("Second operand is not supported by != operator.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: Line2D")
-			raise ex
-
-		return not isinstance(other, HorizontalLine2D) or self._y != other._y
-
-	def __hash__(self) -> int:
-		"""
-		Returns a hash of the line's y-coordinate, so equal lines have the same hash.
-
-		:returns: The hash value.
-		"""
-		return hash(self._y)
+		return self._distance
 
 	def __repr__(self) -> str:
 		"""
@@ -2288,7 +2607,7 @@ class HorizontalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 
 		:returns: The string representation of the line.
 		"""
-		return f"HorizontalLine2D({self._y})"
+		return f"HorizontalLine2D({self._distance})"
 
 	def __str__(self) -> str:
 		"""
@@ -2298,7 +2617,7 @@ class HorizontalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 
 		:returns: The equation of the line.
 		"""
-		return f"y = {self._y}"
+		return f"y = {self._distance}"
 
 
 @export
