@@ -1172,8 +1172,9 @@ Points belong to segments as in 2D: a segment owns its two points, a point owned
 :exc:`~pyTooling.Cartesian2D.DuplicatePointError`. ``Point3D(x, y, z, parent=segment)`` sets the owner without
 registering the point.
 
-Points and segments derive from the abstract :class:`~pyTooling.Cartesian3D.Base3D`, which holds the parent and
-returns the :attr:`~pyTooling.Cartesian3D.Base3D.Frame`; segments also from :class:`~pyTooling.Cartesian3D.Element3D`.
+Points, segments and groups derive from the abstract :class:`~pyTooling.Cartesian3D.Base3D`, which holds the parent
+and returns the :attr:`~pyTooling.Cartesian3D.Base3D.Frame`; segments and groups also from
+:class:`~pyTooling.Cartesian3D.Element3D`.
 Subtracting points or measuring the angle between line segments of different frames raises
 :exc:`~pyTooling.Cartesian2D.NotInSameFrameError`. The errors are the classes of :mod:`pyTooling.Cartesian2D`.
 
@@ -1239,3 +1240,77 @@ of :class:`~pyTooling.Cartesian2D.Shapes.Square`.
       |rarr| Its base-class, the volume a rectangle corresponds to.
    :ref:`STRUCT/Cartesian2D/Square`
       |rarr| Its counterpart, the rectangle with four equal sides.
+
+
+.. _STRUCT/Cartesian3D/Groups:
+
+Groups
+******
+
+The groups live in :mod:`pyTooling.Cartesian3D.Groups` and work as in 2D: a group places segments and other groups at
+an offset, and the coordinates of its children are relative to the group. There is no 3D canvas yet, so a group
+without a parent is the root of a drawing, relative to the origin.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Groups`
+      |rarr| Its counterpart, the 2D groups and the canvas.
+
+
+.. _STRUCT/Cartesian3D/Element3D:
+
+Element3D
+=========
+
+:class:`~pyTooling.Cartesian3D.Element3D` is the abstract base-class of everything a group can hold: segments and
+groups. An element belongs to at most one group, its :attr:`~pyTooling.Cartesian3D.Element3D.Parent`, and offers:
+
+* :attr:`~pyTooling.Cartesian3D.Element3D.BoundingBox` in its frame and
+  :attr:`~pyTooling.Cartesian3D.Element3D.AbsoluteBoundingBox` relative to the origin;
+* :meth:`~pyTooling.Cartesian3D.Element3D.Move`, shifting it in its frame.
+
+Assigning :attr:`~pyTooling.Cartesian3D.Element3D.Parent` moves an element into a group and keeps its local
+coordinates. A group can't become its own descendant: that raises :exc:`~pyTooling.Cartesian2D.GroupCycleError`.
+Every segment and group takes a keyword-only parameter ``parent``: a group given there registers the new element, as
+:meth:`~pyTooling.Cartesian3D.Groups.Group3D.AddChild` does.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Element2D`
+      |rarr| Its counterpart, the 2-dimensional element.
+
+
+.. _STRUCT/Cartesian3D/Group3D:
+
+Group3D
+=======
+
+A :class:`~pyTooling.Cartesian3D.Groups.Group3D` has an :attr:`~pyTooling.Cartesian3D.Groups.Group3D.Offset` and
+:attr:`~pyTooling.Cartesian3D.Groups.Group3D.Children`. Moving a group changes its offset only - the coordinates of its
+children stay as they are.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian3D        import Point3D, Offset3D, LineSegment3D
+   from pyTooling.Cartesian3D.Groups import Group3D
+
+   rod =      LineSegment3D(Point3D(0, 0, 0), Point3D(0, 0, 2))
+   part =     Group3D(Offset3D(10, 0, 0), (rod, ))
+   assembly = Group3D(Offset3D(0, 5, 1), (part, ))
+
+   rod.End                            # (0, 0, 2), relative to part
+   rod.End.Absolute                   # (10, 5, 3)
+   assembly.BoundingBox               # BoundingBox3D(10, 5, 1, 10, 5, 3)
+   assembly.Move(Offset3D(100, 0, 0)) # rod.End is still (0, 0, 2)
+
+Children are given to the constructor or added by :meth:`~pyTooling.Cartesian3D.Groups.Group3D.AddChild`, and removed
+by :meth:`~pyTooling.Cartesian3D.Groups.Group3D.RemoveChild`; a child of another group raises
+:exc:`~pyTooling.Cartesian2D.AlreadyOwnedError`, removing an element of another group
+:exc:`~pyTooling.Cartesian2D.NotOwnedError`. A group without children has no bounding box and raises
+:exc:`~pyTooling.Cartesian2D.Groups.EmptyGroupError`. Subtracting points of different groups raises
+:exc:`~pyTooling.Cartesian2D.NotInSameFrameError`; subtract their absolute positions instead.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Group2D`
+      |rarr| Its counterpart, the 2-dimensional group.
