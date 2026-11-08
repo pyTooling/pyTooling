@@ -55,7 +55,7 @@ from pyTooling                    import Cartesian2D
 from pyTooling.Decorators         import export, readonly
 from pyTooling.MetaClasses        import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Common             import getFullyQualifiedName
-from pyTooling.Cartesian2D        import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Shapes, \
+from pyTooling.Cartesian2D        import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Segment2D, Shapes, \
                                          AlreadyOwnedError
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, Container2DMixin, YAxisDirection
 
@@ -1453,6 +1453,400 @@ class Circle(Shapes.Circle[Coordinate], StyleMixin, Generic[Coordinate]):
 		return self.__class__(
 			self._center,
 			self._radius,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
+
+@export
+class Ellipse(Shapes.Ellipse[Coordinate], StyleMixin, Generic[Coordinate]):
+	"""
+	A drawable ellipse: a :class:`pyTooling.Cartesian2D.Shapes.Ellipse` drawn with an outline and a fill.
+	"""
+
+	def __init__(
+		self,
+		center:        Point2D[Coordinate],
+		radiusX:       Coordinate,
+		radiusY:       Coordinate,
+		*,
+		copyPoints:    bool = True,
+		stroke:        Nullable[Stroke] = None,
+		fill:          Nullable[Fill] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a drawable ellipse by its center, its radii in x- and y-direction and its styles.
+
+		:param center:             Center point of the ellipse.
+		:param radiusX:            Radius of the ellipse in x-direction.
+		:param radiusY:            Radius of the ellipse in y-direction.
+		:param copyPoints:         Optional, if ``True``, the given center is copied instead of referenced. Default:
+		                           ``True``.
+		:param stroke:             Optional, style of the outline. Default: ``None``, no outline.
+		:param fill:               Optional, style of the area. Default: ``None``, transparent.
+		:param value:              Optional, value of the ellipse. Default: ``None``.
+		:param keyValuePairs:      Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:             Optional, the group or canvas the ellipse is added to. Default: ``None``, no parent.
+		:raises ValueError:        If parameter 'center' is None.
+		:raises TypeError:         If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError: If parameter 'center' is owned by another element, while 'copyPoints' is ``False``. |br|
+		                           Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:        If parameter 'radiusX' is None.
+		:raises TypeError:         If parameter 'radiusX' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:        If parameter 'radiusX' isn't positive.
+		:raises ValueError:        If parameter 'radiusY' is None.
+		:raises TypeError:         If parameter 'radiusY' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:        If parameter 'radiusY' isn't positive.
+		:raises ValueError:        If parameter 'copyPoints' is None.
+		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:         If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:         If parameter 'fill' is not of type :class:`Fill`.
+		:raises TypeError:         If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(
+			center,
+			radiusX,
+			radiusY,
+			copyPoints=copyPoints,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
+
+		try:
+			StyleMixin.__init__(self, stroke=stroke, fill=fill)
+		except TypeError:
+			self._center._parent = None
+
+			raise
+
+		self.Parent = parent
+
+	def Copy(self) -> Self:
+		"""
+		Create a new drawable ellipse as a copy of this ellipse.
+
+		The copy holds a copy of the center point, and the same stroke and fill. It references the same :attr:`Value` and
+		holds a shallow copy of the key-value-pairs.
+
+		:returns: Copy of this ellipse.
+		"""
+		return self.__class__(
+			self._center,
+			self._radiusX,
+			self._radiusY,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this ellipse for :func:`copy.deepcopy`.
+
+		The copy holds a copy of the center point, and the same stroke and fill. It holds deep copies of the
+		:attr:`Value` and the key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this ellipse.
+		"""
+		return self.__class__(
+			self._center,
+			self._radiusX,
+			self._radiusY,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
+
+@export
+class Path(Shapes.Path[Coordinate], StyleMixin, Generic[Coordinate]):
+	"""
+	A drawable path: a :class:`pyTooling.Cartesian2D.Shapes.Path` drawn with a :class:`Stroke`, and with a :class:`Fill`,
+	if it is closed.
+
+	An open path has no area, so it has no fill.
+	"""
+
+	def __init__(
+		self,
+		segments:      Iterable[Segment2D[Coordinate]],
+		*,
+		closed:        bool = False,
+		stroke:        Nullable[Stroke] = None,
+		fill:          Nullable[Fill] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a drawable path from its segments and its styles.
+
+		:param segments:      Segments of the path, in drawing order.
+		:param closed:        Optional, if ``True``, the last segment ends at the start point of the first segment.
+		                      Default: ``False``.
+		:param stroke:        Optional, style of the line or outline. Default: ``None``, no line.
+		:param fill:          Optional, style of the area of a closed path. Default: ``None``, transparent.
+		:param value:         Optional, value of the path. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, the group or canvas the path is added to. Default: ``None``, no parent.
+		:raises ValueError:   If parameter 'segments' is None.
+		:raises TypeError:    If parameter 'segments' is not iterable.
+		:raises ValueError:   If an element of parameter 'segments' is None.
+		:raises TypeError:    If an element of parameter 'segments' is not of type
+		                      :class:`~pyTooling.Cartesian2D.Segment2D`.
+		:raises ValueError:   If an element of parameter 'segments' doesn't start at the end point of the previous
+		                      element.
+		:raises ValueError:   If parameter 'segments' is empty.
+		:raises ValueError:   If parameter 'closed' is None.
+		:raises TypeError:    If parameter 'closed' is not of type :class:`bool`.
+		:raises ValueError:   If parameter 'closed' is ``True``, while the last segment doesn't end at the start point of
+		                      the first segment.
+		:raises TypeError:    If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:    If parameter 'fill' is not of type :class:`Fill`.
+		:raises ValueError:   If parameter 'fill' is given, while 'closed' is ``False``. |br|
+		                      Only a closed path encloses an area.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(
+			segments,
+			closed=closed,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
+		StyleMixin.__init__(self, stroke=stroke, fill=fill)
+
+		if fill is not None and not closed:
+			ex = ValueError("Parameter 'fill' is given, while 'closed' is False.")
+			ex.add_note("Only a closed path encloses an area.")
+			raise ex
+
+		self.Parent = parent
+
+	@property
+	def Fill(self) -> Nullable[Fill]:
+		"""
+		Property to access the style of the area of a closed path (:attr:`_fill`).
+
+		Assigning ``None`` makes the area transparent.
+
+		:returns:           The fill, or ``None``, if the area is transparent or the path is open.
+		:raises TypeError:  If an assigned value is not of type :class:`Fill`.
+		:raises ValueError: If a fill is assigned, while the path is open. |br|
+		                    Only a closed path encloses an area.
+		"""
+		return self._fill
+
+	@Fill.setter
+	def Fill(self, fill: Nullable[Fill]) -> None:
+		if fill is not None:
+			if not isinstance(fill, Fill):
+				ex = TypeError("Parameter 'fill' is not of type 'Fill'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(fill)}'.")
+				raise ex
+			elif not self._closed:
+				ex = ValueError("Parameter 'fill' is given, while the path is open.")
+				ex.add_note("Only a closed path encloses an area.")
+				raise ex
+
+		self._fill = fill
+
+	def Copy(self) -> Self:
+		"""
+		Create a new drawable path as a copy of this path.
+
+		The copy holds copies of all points, its edges share the copied joints, and it has the same stroke and fill. It
+		references the same :attr:`Value` and holds a shallow copy of the key-value-pairs; so do its edges.
+
+		:returns: Copy of this path.
+		"""
+		return self.__class__(
+			self._segments,
+			closed=self._closed,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this drawable path for :func:`copy.deepcopy`.
+
+		The copy holds copies of all points, the same stroke and fill, and deep copies of the :attr:`Value` and the
+		key-value-pairs. Its edges are copied as by :meth:`Copy`.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this path.
+		"""
+		return self.__class__(
+			self._segments,
+			closed=self._closed,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=deepcopy(self._value, memo),
+			keyValuePairs=deepcopy(self._dict, memo)
+		)
+
+
+@export
+class PolyLine(Shapes.PolyLine[Coordinate], StyleMixin, Generic[Coordinate]):
+	"""
+	A drawable polyline: a :class:`pyTooling.Cartesian2D.Shapes.PolyLine` drawn with a :class:`Stroke`, and with a
+	:class:`Fill`, if it is closed.
+
+	An open polyline has no area, so it has no fill.
+	"""
+
+	def __init__(
+		self,
+		points:        Iterable[Point2D[Coordinate]],
+		*,
+		closed:        bool = False,
+		copyPoints:    bool = True,
+		stroke:        Nullable[Stroke] = None,
+		fill:          Nullable[Fill] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a drawable polyline from its points and its styles.
+
+		:param points:                 Points of the polyline.
+		:param closed:                 Optional, if ``True``, the last point is connected back to the first point. Default:
+		                               ``False``.
+		:param copyPoints:             Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                               ``True``.
+		:param stroke:                 Optional, style of the line or outline. Default: ``None``, no line.
+		:param fill:                   Optional, style of the area of a closed polyline. Default: ``None``, transparent.
+		:param value:                  Optional, value of the polyline. Default: ``None``.
+		:param keyValuePairs:          Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:                 Optional, the group or canvas the polyline is added to. Default: ``None``, no
+		                               parent.
+		:raises ValueError:            If parameter 'points' is None.
+		:raises TypeError:             If parameter 'points' is not iterable.
+		:raises ValueError:            If an element of parameter 'points' is None.
+		:raises TypeError:             If an element of parameter 'points' is not of type
+		                               :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError:     If an element of parameter 'points' is owned by another element, while
+		                               'copyPoints' is ``False``. |br|
+		                               Use ``copyPoints=True`` to copy the point.
+		:raises DuplicatePointError:   If an element of parameter 'points' is given twice, while 'copyPoints' is
+		                               ``False``. |br|
+		                               Use ``copyPoints=True`` to copy the points.
+		:raises NotEnoughCornersError: If parameter 'points' has fewer than 2 points.
+		:raises ValueError:            If parameter 'closed' is None.
+		:raises TypeError:             If parameter 'closed' is not of type :class:`bool`.
+		:raises NotEnoughCornersError: If parameter 'closed' is ``True``, while parameter 'points' has fewer than 3
+		                               points.
+		:raises ValueError:            If parameter 'copyPoints' is None.
+		:raises TypeError:             If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:             If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:             If parameter 'fill' is not of type :class:`Fill`.
+		:raises ValueError:            If parameter 'fill' is given, while 'closed' is ``False``. |br|
+		                               Only a closed polyline encloses an area.
+		:raises TypeError:             If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:             If parameter 'parent' is not of type
+		                               :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                               :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(
+			points,
+			closed=closed,
+			copyPoints=copyPoints,
+			value=value,
+			keyValuePairs=keyValuePairs,
+			parent=None if isinstance(parent, Container2DMixin) else parent
+		)
+
+		try:
+			StyleMixin.__init__(self, stroke=stroke, fill=fill)
+
+			if fill is not None and not closed:
+				ex = ValueError("Parameter 'fill' is given, while 'closed' is False.")
+				ex.add_note("Only a closed polyline encloses an area.")
+				raise ex
+		except (TypeError, ValueError):
+			for point in self._points:
+				point._parent = None
+
+			raise
+
+		self.Parent = parent
+
+	@property
+	def Fill(self) -> Nullable[Fill]:
+		"""
+		Property to access the style of the area of a closed polyline (:attr:`_fill`).
+
+		Assigning ``None`` makes the area transparent.
+
+		:returns:           The fill, or ``None``, if the area is transparent or the polyline is open.
+		:raises TypeError:  If an assigned value is not of type :class:`Fill`.
+		:raises ValueError: If a fill is assigned, while the polyline is open. |br|
+		                    Only a closed polyline encloses an area.
+		"""
+		return self._fill
+
+	@Fill.setter
+	def Fill(self, fill: Nullable[Fill]) -> None:
+		if fill is not None:
+			if not isinstance(fill, Fill):
+				ex = TypeError("Parameter 'fill' is not of type 'Fill'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(fill)}'.")
+				raise ex
+			elif not self._closed:
+				ex = ValueError("Parameter 'fill' is given, while the polyline is open.")
+				ex.add_note("Only a closed polyline encloses an area.")
+				raise ex
+
+		self._fill = fill
+
+	def Copy(self) -> Self:
+		"""
+		Create a new drawable polyline as a copy of this polyline.
+
+		The copy holds copies of the points, shared by its edges, and the same stroke and fill. It references the same
+		:attr:`Value` and holds a shallow copy of the key-value-pairs.
+
+		:returns: Copy of this polyline.
+		"""
+		return self.__class__(
+			self._points,
+			closed=self._closed,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+	def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+		"""
+		Returns a copy of this drawable polyline for :func:`copy.deepcopy`.
+
+		The copy holds copies of the points, the same stroke and fill, and deep copies of the :attr:`Value` and the
+		key-value-pairs.
+
+		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
+		:returns:    Copy of this polyline.
+		"""
+		return self.__class__(
+			self._points,
+			closed=self._closed,
 			stroke=self._stroke,
 			fill=self._fill,
 			value=deepcopy(self._value, memo),
