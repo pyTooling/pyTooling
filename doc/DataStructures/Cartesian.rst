@@ -330,14 +330,61 @@ and end point: copied by default, referenced with ``copyPoints=False``, and move
 ArcSegment2D
 ------------
 
-An :class:`~pyTooling.Cartesian2D.ArcSegment2D` is a piece of a circle: a start and an end point, the
-:attr:`~pyTooling.Cartesian2D.ArcSegment2D.Center` of the circle, and the
-:attr:`~pyTooling.Cartesian2D.ArcSegment2D.Direction` from the start to the end point, a
-:class:`~pyTooling.Cartesian2D.SweepDirection` - ``Counterclockwise`` or ``Clockwise``, seen with the y-axis pointing
-up. The :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Radius` is the start point's distance to the center; the end point
-must have the same distance, compared with :func:`math.isclose`, else the constructor raises :exc:`ValueError`. A
-point assigned to :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Start` or :attr:`~pyTooling.Cartesian2D.ArcSegment2D.End`
-is checked the same way. A start and an end point at the same position make a full circle.
+An :class:`~pyTooling.Cartesian2D.ArcSegment2D` is a piece of a circle from a start to an end point. It stores its
+circle as the :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Center`, the
+:attr:`~pyTooling.Cartesian2D.ArcSegment2D.Radius` and the :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Direction` from
+the start to the end point, a :class:`~pyTooling.Cartesian2D.SweepDirection` - ``Counterclockwise`` or ``Clockwise``,
+seen with the y-axis pointing up. Besides the start and end point, the constructor takes exactly one group of keyword
+parameters describing the circle; none or more than one group raises :exc:`ValueError`:
+
+``center`` and ``direction``
+   The center of the circle and the direction. The end point must have the start point's distance to the center,
+   compared with :func:`math.isclose`. A start and an end point at the same position make a full circle.
+
+``arcPoint``
+   A third point of the arc: the arc runs from the start point through this point to the end point, so the order of
+   the three points gives the direction. Only its coordinates are used. Three points on a line raise
+   :exc:`ValueError`.
+
+``height`` and optionally ``chordPosition``
+   The arc's distance from its chord, the line segment from the start to the end point, measured perpendicular at a
+   root point. ``chordPosition`` places the root point on the chord, as a fraction from ``0.0`` at the start point to
+   ``1.0`` at the end point; the default ``0.5`` is the chord's midpoint, where the height is the arc's *sagitta*. A
+   positive height lies on the left of the chord, seen from the start point, so the arc runs clockwise; a negative
+   height lies on the right.
+
+.. code-block:: text
+
+                    arc point
+                .-------x-------.
+             .'         |         '.
+           /            | height     \
+    start x-------------+-------------x end
+                    root point
+          |<----------->|
+          chordPosition * chord length
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D import Point2D, ArcSegment2D, SweepDirection
+
+   start = Point2D(0, 0)
+   end =   Point2D(2, 0)
+
+   # Three times the upper half of the circle around (1, 0) with radius 1, clockwise:
+   byCenter =   ArcSegment2D(start, end, center=Point2D(1, 0), direction=SweepDirection.Clockwise)
+   byArcPoint = ArcSegment2D(start, end, arcPoint=Point2D(1, 1))
+   byHeight =   ArcSegment2D(start, end, height=1)
+
+   flat = ArcSegment2D(Point2D(0, 0), Point2D(4, 0), height=-1)
+   flat.Center                        # (2.0, 1.5)
+   flat.Radius                        # 2.5
+   flat.Direction                     # SweepDirection.Counterclockwise
+
+With ``arcPoint`` or ``height``, a start and an end point at the same position have no chord and raise
+:exc:`ValueError`. A point assigned to :attr:`~pyTooling.Cartesian2D.ArcSegment2D.Start` or
+:attr:`~pyTooling.Cartesian2D.ArcSegment2D.End` must lie on the circle, compared with the radius by
+:func:`math.isclose`.
 
 * :attr:`~pyTooling.Cartesian2D.ArcSegment2D.StartAngle` and :attr:`~pyTooling.Cartesian2D.ArcSegment2D.EndAngle` -
   the angles of both points seen from the center, in radians, from -:data:`math.pi` to :data:`math.pi`;
@@ -349,9 +396,7 @@ is checked the same way. A start and an end point at the same position make a fu
 
 .. code-block:: Python
 
-   from pyTooling.Cartesian2D import Point2D, ArcSegment2D, SweepDirection
-
-   arc = ArcSegment2D(Point2D(2, 0), Point2D(-2, 0), Point2D(0, 0), SweepDirection.Counterclockwise)
+   arc = ArcSegment2D(Point2D(2, 0), Point2D(-2, 0), center=Point2D(0, 0), direction=SweepDirection.Counterclockwise)
    arc.SweepAngle                     # 3.14159... (math.pi)
    arc.Length                         # 6.28318...
    arc.BoundingBox                    # BoundingBox2D(-2, 0, 2, 2.0)
