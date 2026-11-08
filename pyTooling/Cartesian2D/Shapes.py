@@ -849,7 +849,7 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 		start:         Point2D[Coordinate],
 		end:           Point2D[Coordinate],
 		height:        Coordinate,
-		chordPosition: Union[int, float] = 0.5,
+		chordPosition: float = 0.5,
 		*,
 		value:         Any = None,
 		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
@@ -882,7 +882,7 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 		:raises TypeError:    If parameter 'height' is not of type :class:`float` or :class:`int`.
 		:raises ValueError:   If parameter 'height' is 0.
 		:raises ValueError:   If parameter 'chordPosition' is None.
-		:raises TypeError:    If parameter 'chordPosition' is not of type :class:`float` or :class:`int`.
+		:raises TypeError:    If parameter 'chordPosition' is not of type :class:`float`.
 		:raises ValueError:   If parameter 'chordPosition' is out of range 0..1.
 		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
 		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
@@ -916,7 +916,7 @@ class Circle(Geometry2D[Coordinate], Generic[Coordinate]):
 		if chordPosition is None:
 			raise ValueError("Parameter 'chordPosition' is None.")
 		elif not isinstance(chordPosition, (int, float)):
-			ex = TypeError("Parameter 'chordPosition' is not of type 'float' or 'int'.")
+			ex = TypeError("Parameter 'chordPosition' is not of type 'float'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(chordPosition)}'.")
 			raise ex
 		elif not 0 <= chordPosition <= 1:

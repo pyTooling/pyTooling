@@ -985,7 +985,7 @@ class CircleConstructors(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Circle.FromChord(Point2D(0, 0), Point2D(4, 0), 1, "0.5")
 
-		self.assertEqual("Parameter 'chordPosition' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertEqual("Parameter 'chordPosition' is not of type 'float'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
 	def test_FromChord_ChordPositionRange(self) -> None:
