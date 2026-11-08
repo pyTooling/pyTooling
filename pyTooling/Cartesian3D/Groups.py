@@ -460,6 +460,42 @@ class Group3D(Element3D[Coordinate], Container3DMixin, Generic[Coordinate]):
 
 		self._offset += offset
 
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the group at a plane parallel to the yz-plane by mirroring the x-component of its :attr:`Offset` (inplace).
+
+		The children are mirrored at the group's origin: every x-coordinate inside the group is negated.
+
+		:param twiceAxis: Twice the x-coordinate of the plane.
+		"""
+		self._offset._xOffset = twiceAxis - self._offset._xOffset
+		for child in self._children:
+			child._MirrorX(0)
+
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the group at a plane parallel to the xz-plane by mirroring the y-component of its :attr:`Offset` (inplace).
+
+		The children are mirrored at the group's origin: every y-coordinate inside the group is negated.
+
+		:param twiceAxis: Twice the y-coordinate of the plane.
+		"""
+		self._offset._yOffset = twiceAxis - self._offset._yOffset
+		for child in self._children:
+			child._MirrorY(0)
+
+	def _MirrorZ(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the group at a plane parallel to the xy-plane by mirroring the z-component of its :attr:`Offset` (inplace).
+
+		The children are mirrored at the group's origin: every z-coordinate inside the group is negated.
+
+		:param twiceAxis: Twice the z-coordinate of the plane.
+		"""
+		self._offset._zOffset = twiceAxis - self._offset._zOffset
+		for child in self._children:
+			child._MirrorZ(0)
+
 	def __repr__(self) -> str:
 		"""
 		Returns the group's string representation.
