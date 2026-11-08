@@ -38,7 +38,7 @@ from typing                import TYPE_CHECKING, Any, Generic, Hashable, Iterabl
 
 from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import InvalidOperationError
-from pyTooling.MetaClasses import abstractmethod
+from pyTooling.MetaClasses import abstractclass, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName
 from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Segment2D, LineSegment2D, \
                                   ArcSegment2D, AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, \
@@ -668,6 +668,7 @@ class Square(Rectangle[Coordinate]):
 
 
 @export
+@abstractclass
 class EllipticalGeometry2D(Geometry2D[Coordinate], Generic[Coordinate]):
 	"""
 	Abstract base-class for closed round shapes around a center point, like a circle or an ellipse.
