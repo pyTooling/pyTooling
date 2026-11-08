@@ -61,6 +61,56 @@ if TYPE_CHECKING:
 Coordinate = TypeVar("Coordinate", bound=Union[int, float])
 
 
+def _chordPoint(
+	start:          Point2D[Coordinate],
+	end:            Point2D[Coordinate],
+	chordPosition:  float,
+	relativeHeight: Union[int, float]
+) -> Point2D[float]:
+	"""
+	Compute the point at a height over a chord, perpendicular to the chord at a root point.
+
+	:param start:          Start point of the chord.
+	:param end:            End point of the chord.
+	:param chordPosition:  The root point's position on the chord, as a fraction from the start point.
+	:param relativeHeight: Signed distance of the point from the chord, as a fraction of the chord length. A positive
+	                       height is on the left of the chord, seen from the start point.
+	:returns:              A new 2D-point without owner.
+	"""
+	chordX = end._x - start._x
+	chordY = end._y - start._y
+	return Point2D(
+		start._x + chordPosition * chordX - relativeHeight * chordY,
+		start._y + chordPosition * chordY + relativeHeight * chordX
+	)
+
+
+def _circumcenter(
+	first:  Point2D[Coordinate],
+	second: Point2D[Coordinate],
+	third:  Point2D[Coordinate]
+) -> Point2D[float]:
+	"""
+	Compute the center of the circle through three points, which aren't on one line.
+
+	:param first:  First point of the circle.
+	:param second: Second point of the circle.
+	:param third:  Third point of the circle.
+	:returns:      A new 2D-point without owner.
+	"""
+	secondX =      second._x - first._x
+	secondY =      second._y - first._y
+	thirdX =       third._x - first._x
+	thirdY =       third._y - first._y
+	cross =        secondX * thirdY - secondY * thirdX
+	secondSquare = secondX ** 2 + secondY ** 2
+	thirdSquare =  thirdX ** 2 + thirdY ** 2
+	return Point2D(
+		first._x + (thirdY * secondSquare - secondY * thirdSquare) / (2 * cross),
+		first._y + (secondX * thirdSquare - thirdX * secondSquare) / (2 * cross)
+	)
+
+
 @export
 class Alignment2D(Enum):
 	"""
@@ -2882,7 +2932,7 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 						ex.add_note(f"Got points {start}, {arcPoint} and {end}.")
 						raise ex
 
-					center =    self._Circumcenter(start, arcPoint, end)
+					center =    _circumcenter(start, arcPoint, end)
 					radius =    sqrt((start._x - center._x) ** 2 + (start._y - center._y) ** 2)
 					direction = SweepDirection.Counterclockwise if cross > 0 else SweepDirection.Clockwise
 
@@ -2929,56 +2979,6 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 
 		if self._parent is None:
 			self.Parent = parent
-
-	@staticmethod
-	def _ChordPoint(
-		start:          Point2D[Coordinate],
-		end:            Point2D[Coordinate],
-		chordPosition:  float,
-		relativeHeight: Union[int, float]
-	) -> Point2D[float]:
-		"""
-		Compute the point at a height over a chord, perpendicular to the chord at a root point.
-
-		:param start:          Start point of the chord.
-		:param end:            End point of the chord.
-		:param chordPosition:  The root point's position on the chord, as a fraction from the start point.
-		:param relativeHeight: Signed distance of the point from the chord, as a fraction of the chord length. A positive
-		                       height is on the left of the chord, seen from the start point.
-		:returns:              A new 2D-point without owner.
-		"""
-		chordX = end._x - start._x
-		chordY = end._y - start._y
-		return Point2D(
-			start._x + chordPosition * chordX - relativeHeight * chordY,
-			start._y + chordPosition * chordY + relativeHeight * chordX
-		)
-
-	@staticmethod
-	def _Circumcenter(
-		first:  Point2D[Coordinate],
-		second: Point2D[Coordinate],
-		third:  Point2D[Coordinate]
-	) -> Point2D[float]:
-		"""
-		Compute the center of the circle through three points, which aren't on one line.
-
-		:param first:  First point of the circle.
-		:param second: Second point of the circle.
-		:param third:  Third point of the circle.
-		:returns:      A new 2D-point without owner.
-		"""
-		secondX =      second._x - first._x
-		secondY =      second._y - first._y
-		thirdX =       third._x - first._x
-		thirdY =       third._y - first._y
-		cross =        secondX * thirdY - secondY * thirdX
-		secondSquare = secondX ** 2 + secondY ** 2
-		thirdSquare =  thirdX ** 2 + thirdY ** 2
-		return Point2D(
-			first._x + (thirdY * secondSquare - secondY * thirdSquare) / (2 * cross),
-			first._y + (secondX * thirdSquare - thirdX * secondSquare) / (2 * cross)
-		)
 
 	@property
 	def Start(self) -> Point2D[Coordinate]:
@@ -3095,7 +3095,7 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		start = self._start
 		end =   self._end
-		return self._Circumcenter(start, self._ChordPoint(start, end, self._chordPosition, self._height), end)
+		return _circumcenter(start, _chordPoint(start, end, self._chordPosition, self._height), end)
 
 	@readonly
 	def Direction(self) -> SweepDirection:
