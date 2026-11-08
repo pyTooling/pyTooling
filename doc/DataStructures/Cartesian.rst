@@ -40,9 +40,11 @@ Features
   center.
 * Shapes validated on construction: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with any number of corners, the
   four-cornered :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` narrowed down to a
-  :class:`~pyTooling.Cartesian2D.Shapes.Square`, and a :class:`~pyTooling.Cartesian2D.Shapes.Circle`.
+  :class:`~pyTooling.Cartesian2D.Shapes.Square`, a :class:`~pyTooling.Cartesian2D.Shapes.Circle` and an axis-aligned
+  :class:`~pyTooling.Cartesian2D.Shapes.Ellipse`.
 * **Closed shapes measured** - every :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D`, like a polygon or a circle,
-  reports the area it encloses and its perimeter; a circle its diameter too.
+  reports the area it encloses and its perimeter; a circle its diameter too, an ellipse its area and an approximate
+  circumference.
 * **Bounding boxes** - every shape and segment reports the smallest axis-aligned
   :class:`~pyTooling.Cartesian2D.BoundingBox2D` enclosing it, and bounding boxes unite, intersect and contain points.
 * **Shapes and segments moved as a whole** - ``Move(offset)`` shifts all their points in place.
@@ -67,7 +69,7 @@ Missing Features
 
 * Rotation and scaling - an element can be shifted and mirrored at a vertical or horizontal axis, but not rotated or
   scaled.
-* Ellipses and elliptical arcs.
+* Rotated ellipses and elliptical arcs.
 * The length of a Bezier curve.
 * Exact containment and intersection tests (*is this point inside that rotated rectangle?*). Only bounding boxes are
   compared.
@@ -502,7 +504,7 @@ Shapes
 
 The shapes live in :mod:`pyTooling.Cartesian2D.Shapes`. The four-cornered shapes form a chain in which **each class
 is the one above it with one more constraint**. The constraint is checked in the constructor, so an object that exists
-is an object of that shape. A polygon and a circle stand beside that chain. The closed shapes derive from
+is an object of that shape. A polygon, a circle and an ellipse stand beside that chain. The closed shapes derive from
 :ref:`Geometry2D <STRUCT/Cartesian2D/Geometry2D>`; a :ref:`path <STRUCT/Cartesian2D/Path>` and a
 :ref:`polyline <STRUCT/Cartesian2D/PolyLine>`, a path of line segments, are shapes, but no geometries.
 
@@ -695,6 +697,48 @@ A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D` or a radius that i
 
    :ref:`STRUCT/Cartesian2D/Geometry2D`
       |rarr| Its base-class, the base-class of the closed 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/Ellipse`
+      |rarr| The round shape with two radii.
+
+
+.. _STRUCT/Cartesian2D/Ellipse:
+
+Ellipse
+=======
+
+An :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` is placed by its
+:attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Center`, a :class:`~pyTooling.Cartesian2D.Point2D`, and sized by two
+radii, SVG's ``rx`` and ``ry``: :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.RadiusX` in x-direction and
+:attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.RadiusY` in y-direction, each a positive :class:`int` or :class:`float`.
+Its axes are parallel to the coordinate axes; an ellipse can't be rotated. The center is copied by default;
+``copyPoints=False`` keeps the given point instead. The ellipse owns its center.
+
+Two read-only properties measure it:
+
+* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Area` - the area it encloses, a :class:`float`;
+* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Circumference` - the length of its outline, a :class:`float`. It is
+  Ramanujan's second approximation: exact for equal radii, otherwise less than 0.04 % too small.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D
+   from pyTooling.Cartesian2D.Shapes import Ellipse
+
+   egg = Ellipse(Point2D(10, 5), 3, 2)
+   egg.BoundingBox                    # BoundingBox2D(7, 3, 13, 7)
+   egg.Area                           # 18.849...
+   egg.Circumference                  # 15.865...
+
+A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D` or a radius that isn't a number raises
+:exc:`TypeError`; a radius of 0 or below raises :exc:`ValueError`. Equal radii are accepted: such an ellipse is a
+circle, but not a :class:`~pyTooling.Cartesian2D.Shapes.Circle` object.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Shape`
+      |rarr| Its base-class, the base-class of the 2-dimensional shapes.
+   :ref:`STRUCT/Cartesian2D/Circle`
+      |rarr| The round shape with one radius.
 
 
 .. _STRUCT/Cartesian2D/Path:
