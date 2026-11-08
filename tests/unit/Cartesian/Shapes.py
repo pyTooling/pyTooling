@@ -749,11 +749,9 @@ class CrossingEdges(Testcase):
 
 class CircleConstructors(Testcase):
 	def test_FromPoints(self) -> None:
-		first =  Point2D(0, 0)
-		second = Point2D(2, 0)
-		third =  Point2D(1, 1)
+		first = Point2D(0, 0)
 
-		circle = Circle.FromPoints(first, second, third)
+		circle = Circle.FromPoints((first, Point2D(2, 0), Point2D(1, 1)))
 
 		self.assertIs(Circle, type(circle))
 		self.assertTupleEqual((1.0, 0.0), circle.Center.ToTuple())
@@ -763,66 +761,120 @@ class CircleConstructors(Testcase):
 
 	def test_FromPoints_RightTriangle(self) -> None:
 		"""The center of a right triangle's circumcircle is the midpoint of its hypotenuse."""
-		circle = Circle.FromPoints(Point2D(0, 0), Point2D(4, 0), Point2D(0, 3))
+		circle = Circle.FromPoints((Point2D(0, 0), Point2D(4, 0), Point2D(0, 3)))
 
 		self.assertTupleEqual((2.0, 1.5), circle.Center.ToTuple())
 		self.assertEqual(2.5, circle.Radius)
+
+	def test_FromPoints_FourPoints(self) -> None:
+		circle = Circle.FromPoints((Point2D(0, 0), Point2D(2, 0), Point2D(1, 1), Point2D(1, -1)))
+
+		self.assertTupleEqual((1.0, 0.0), circle.Center.ToTuple())
+		self.assertEqual(1.0, circle.Radius)
+
+	def test_FromPoints_FivePoints(self) -> None:
+		circle = Circle.FromPoints((Point2D(5, 0), Point2D(0, 5), Point2D(-5, 0), Point2D(3, 4), Point2D(-4, -3)))
+
+		self.assertAlmostEqual(0, circle.Center.X)
+		self.assertAlmostEqual(0, circle.Center.Y)
+		self.assertEqual(5.0, circle.Radius)
+
+	def test_FromPoints_Generator(self) -> None:
+		circle = Circle.FromPoints(Point2D(x, y) for x, y in ((0, 0), (4, 0), (0, 3)))
+
+		self.assertTupleEqual((2.0, 1.5), circle.Center.ToTuple())
 
 	def test_FromPoints_Data(self) -> None:
 		group = Group2D()
 		value = object()
 
 		circle = Circle.FromPoints(
-			Point2D(0, 0), Point2D(2, 0), Point2D(1, 1), value=value, keyValuePairs={"layer": 1}, parent=group
+			(Point2D(0, 0), Point2D(2, 0), Point2D(1, 1)), value=value, keyValuePairs={"layer": 1}, parent=group
 		)
 
 		self.assertIs(value, circle.Value)
 		self.assertEqual(1, circle["layer"])
 		self.assertTupleEqual((circle, ), group.Children)
 
-	def test_FromPoints_FirstNone(self) -> None:
+	def test_FromPoints_None(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Circle.FromPoints(None, Point2D(2, 0), Point2D(1, 1))
+			_ = Circle.FromPoints(None)
 
-		self.assertEqual("Parameter 'first' is None.", str(context.exception))
+		self.assertEqual("Parameter 'points' is None.", str(context.exception))
 
-	def test_FromPoints_ThirdTuple(self) -> None:
+	def test_FromPoints_Int(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = Circle.FromPoints(Point2D(0, 0), Point2D(2, 0), (1, 1))
+			_ = Circle.FromPoints(3)
 
-		self.assertEqual("Parameter 'third' is not of type 'Point2D'.", str(context.exception))
+		self.assertEqual("Parameter 'points' is not iterable.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_FromPoints_ElementNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Circle.FromPoints((Point2D(0, 0), None, Point2D(1, 1)))
+
+		self.assertEqual("An element of parameter 'points' is None.", str(context.exception))
+
+	def test_FromPoints_ElementTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Circle.FromPoints((Point2D(0, 0), Point2D(2, 0), (1, 1)))
+
+		self.assertEqual("An element of parameter 'points' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
-	def test_FromPoints_SecondAtFirst(self) -> None:
+	def test_FromPoints_Empty(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Circle.FromPoints(Point2D(0, 0), Point2D(0, 0), Point2D(1, 1))
+			_ = Circle.FromPoints(())
 
-		self.assertEqual("Parameter 'second' is at the position of parameter 'first'.", str(context.exception))
-		self.assertListEqual(["Got point (0, 0)."], context.exception.__notes__)
+		self.assertEqual("Parameter 'points' has fewer than 3 points.", str(context.exception))
+		self.assertListEqual(["Got 0 points."], context.exception.__notes__)
 
-	def test_FromPoints_ThirdAtFirst(self) -> None:
+	def test_FromPoints_TwoPoints(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Circle.FromPoints(Point2D(0, 0), Point2D(2, 0), Point2D(0, 0))
+			_ = Circle.FromPoints((Point2D(0, 0), Point2D(2, 0)))
 
-		self.assertEqual("Parameter 'third' is at the position of parameter 'first'.", str(context.exception))
-		self.assertListEqual(["Got point (0, 0)."], context.exception.__notes__)
+		self.assertEqual("Parameter 'points' has fewer than 3 points.", str(context.exception))
+		self.assertListEqual(["Got 2 points."], context.exception.__notes__)
 
-	def test_FromPoints_ThirdAtSecond(self) -> None:
+	def test_FromPoints_SamePosition01(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Circle.FromPoints(Point2D(0, 0), Point2D(2, 0), Point2D(2, 0))
+			_ = Circle.FromPoints((Point2D(0, 0), Point2D(0, 0), Point2D(1, 1)))
 
-		self.assertEqual("Parameter 'third' is at the position of parameter 'second'.", str(context.exception))
-		self.assertListEqual(["Got point (2, 0)."], context.exception.__notes__)
+		self.assertEqual(
+			"Two of the first three points of parameter 'points' are at the same position.",
+			str(context.exception)
+		)
+		self.assertListEqual(["Got point (0, 0) at index 0 and 1."], context.exception.__notes__)
+
+	def test_FromPoints_SamePosition12(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Circle.FromPoints((Point2D(0, 0), Point2D(2, 0), Point2D(2, 0)))
+
+		self.assertEqual(
+			"Two of the first three points of parameter 'points' are at the same position.",
+			str(context.exception)
+		)
+		self.assertListEqual(["Got point (2, 0) at index 1 and 2."], context.exception.__notes__)
 
 	def test_FromPoints_Collinear(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = Circle.FromPoints(Point2D(0, 0), Point2D(1, 1), Point2D(3, 3))
+			_ = Circle.FromPoints((Point2D(0, 0), Point2D(1, 1), Point2D(3, 3), Point2D(4, 4)))
+
+		self.assertEqual("The first three points of parameter 'points' are on one line.", str(context.exception))
+		self.assertListEqual(["Got points (0, 0), (1, 1) and (3, 3)."], context.exception.__notes__)
+
+	def test_FromPoints_OffCircle(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Circle.FromPoints((Point2D(0, 0), Point2D(2, 0), Point2D(1, 1), Point2D(3, 0)))
 
 		self.assertEqual(
-			"Parameter 'third' is on the line through parameter 'first' and parameter 'second'.",
+			"A point of parameter 'points' isn't on the circle through the first three points.",
 			str(context.exception)
 		)
-		self.assertListEqual(["Got points (0, 0), (1, 1) and (3, 3)."], context.exception.__notes__)
+		self.assertListEqual(
+			["Got point (3, 0) at index 3 with distance 2.0 to the center, while the radius is 1.0."],
+			context.exception.__notes__
+		)
 
 	def test_FromChord(self) -> None:
 		"""The circle passes (2, 1) above the chord's midpoint: center (2, -1.5), radius 2.5."""

@@ -710,15 +710,15 @@ A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D` or a radius that i
 Two class methods create a circle from the parameter groups of an :ref:`arc <STRUCT/Cartesian2D/ArcSegment2D>`; the
 circle owns a new center, the given points are only read:
 
-* :meth:`~pyTooling.Cartesian2D.Shapes.Circle.FromPoints` - the circle through three points, which must be distinct
-  and not on one line;
+* :meth:`~pyTooling.Cartesian2D.Shapes.Circle.FromPoints` - the circle through three or more points: the first three
+  must be distinct and not on one line, and every further point must be on their circle;
 * :meth:`~pyTooling.Cartesian2D.Shapes.Circle.FromChord` - the circle through the end points of a chord and a point
   at a signed ``height`` over the chord, measured at ``chordPosition`` (default ``0.5``, the midpoint). A positive
   height is on the left of the chord, seen from its start point.
 
 .. code-block:: Python
 
-   ring = Circle.FromPoints(Point2D(0, 0), Point2D(4, 0), Point2D(0, 3))
+   ring = Circle.FromPoints((Point2D(0, 0), Point2D(4, 0), Point2D(0, 3), Point2D(4, 3)))
    ring.Center                        # (2.0, 1.5)
    ring.Radius                        # 2.5
 
