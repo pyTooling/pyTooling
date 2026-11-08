@@ -2374,16 +2374,13 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	"""
 	A 3D ray: a half-line, which starts at a point and is infinite in one direction.
 
-	The ray is in absolute coordinates, relative to the origin. It stores plain coordinates, so it owns no point of an
-	element. It is a value: it can't be changed after creation, compares by value and is hashable.
+	The ray is in absolute coordinates, relative to the origin. Its start point is a free copy, so it owns no point of an
+	element. It is a value: it can't be changed after creation and is hashable. Two rays are equal, if they start at the
+	same point and their directions point the same way, whatever their lengths.
 	"""
 
-	_startX:     Coordinate  #: The x-coordinate of the start point.
-	_startY:     Coordinate  #: The y-coordinate of the start point.
-	_startZ:     Coordinate  #: The z-coordinate of the start point.
-	_directionX: Coordinate  #: The x-component of the direction.
-	_directionY: Coordinate  #: The y-component of the direction.
-	_directionZ: Coordinate  #: The z-component of the direction.
+	_start:     Point3D[Coordinate]   #: The start point of the ray, in absolute coordinates and without owner.
+	_direction: Offset3D[Coordinate]  #: The direction of the ray.
 
 	def __init__(self, start: Point3D[Coordinate], direction: Offset3D[Coordinate]) -> None:
 		"""
@@ -2420,13 +2417,8 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note("A ray needs a direction.")
 			raise ex
 
-		absolute =         start.Absolute
-		self._startX =     absolute._x
-		self._startY =     absolute._y
-		self._startZ =     absolute._z
-		self._directionX = direction._xOffset
-		self._directionY = direction._yOffset
-		self._directionZ = direction._zOffset
+		self._start =     start.Absolute
+		self._direction = direction.Copy()
 
 	@readonly
 	def Start(self) -> Point3D[Coordinate]:
@@ -2435,7 +2427,7 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:returns: A new 3D-point without owner.
 		"""
-		return Point3D(self._startX, self._startY, self._startZ)
+		return self._start.Copy()
 
 	@readonly
 	def Direction(self) -> Offset3D[Coordinate]:
@@ -2444,7 +2436,7 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:returns: A new 3D-offset.
 		"""
-		return Offset3D(self._directionX, self._directionY, self._directionZ)
+		return self._direction.Copy()
 
 	def PointAt(self, distance: Coordinate) -> Point3D[float]:
 		"""
@@ -2469,19 +2461,24 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note("A point before the start point isn't on the ray.")
 			raise ex
 
-		factor = distance / sqrt(self._directionX ** 2 + self._directionY ** 2 + self._directionZ ** 2)
+		start =     self._start
+		direction = self._direction
+		factor =    distance / sqrt(direction._xOffset ** 2 + direction._yOffset ** 2 + direction._zOffset ** 2)
 		return Point3D(
-			self._startX + self._directionX * factor,
-			self._startY + self._directionY * factor,
-			self._startZ + self._directionZ * factor
+			start._x + direction._xOffset * factor,
+			start._y + direction._yOffset * factor,
+			start._z + direction._zOffset * factor
 		)
 
 	def __eq__(self, other: Any) -> bool:
 		"""
 		Compare two rays for equality.
 
+		The directions point the same way, if all components of their cross product are zero and their dot product is
+		positive. The lengths of the directions don't matter.
+
 		:param other:      Operand to compare against.
-		:returns:          ``True``, if both rays have the same start point and the same direction.
+		:returns:          ``True``, if both rays have the same start point and their directions point the same way.
 		:raises TypeError: If the second operand is not of type :class:`Ray3D`.
 		"""
 		if not isinstance(other, Ray3D):
@@ -2490,13 +2487,22 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note("Supported types for second operand: Ray3D")
 			raise ex
 
+		start =          self._start
+		otherStart =     other._start
+		direction =      self._direction
+		otherDirection = other._direction
 		return (
-			self._startX == other._startX
-			and self._startY == other._startY
-			and self._startZ == other._startZ
-			and self._directionX == other._directionX
-			and self._directionY == other._directionY
-			and self._directionZ == other._directionZ
+			start._x == otherStart._x
+			and start._y == otherStart._y
+			and start._z == otherStart._z
+			and direction._yOffset * otherDirection._zOffset - direction._zOffset * otherDirection._yOffset == 0
+			and direction._zOffset * otherDirection._xOffset - direction._xOffset * otherDirection._zOffset == 0
+			and direction._xOffset * otherDirection._yOffset - direction._yOffset * otherDirection._xOffset == 0
+			and (
+				direction._xOffset * otherDirection._xOffset
+				+ direction._yOffset * otherDirection._yOffset
+				+ direction._zOffset * otherDirection._zOffset
+			) > 0
 		)
 
 	def __ne__(self, other: Any) -> bool:
@@ -2504,7 +2510,7 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		Compare two rays for inequality.
 
 		:param other:      Operand to compare against.
-		:returns:          ``True``, if the rays differ in start point or direction.
+		:returns:          ``True``, if the rays differ in start point or their directions point different ways.
 		:raises TypeError: If the second operand is not of type :class:`Ray3D`.
 		"""
 		if not isinstance(other, Ray3D):
@@ -2513,22 +2519,32 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note("Supported types for second operand: Ray3D")
 			raise ex
 
+		start =          self._start
+		otherStart =     other._start
+		direction =      self._direction
+		otherDirection = other._direction
 		return (
-			self._startX != other._startX
-			or self._startY != other._startY
-			or self._startZ != other._startZ
-			or self._directionX != other._directionX
-			or self._directionY != other._directionY
-			or self._directionZ != other._directionZ
+			start._x != otherStart._x
+			or start._y != otherStart._y
+			or start._z != otherStart._z
+			or direction._yOffset * otherDirection._zOffset - direction._zOffset * otherDirection._yOffset != 0
+			or direction._zOffset * otherDirection._xOffset - direction._xOffset * otherDirection._zOffset != 0
+			or direction._xOffset * otherDirection._yOffset - direction._yOffset * otherDirection._xOffset != 0
+			or (
+				direction._xOffset * otherDirection._xOffset
+				+ direction._yOffset * otherDirection._yOffset
+				+ direction._zOffset * otherDirection._zOffset
+			) <= 0
 		)
 
 	def __hash__(self) -> int:
 		"""
-		Returns a hash of the ray's start point and direction, so equal rays have the same hash.
+		Returns a hash of the ray's start point, so equal rays have the same hash.
 
 		:returns: The hash value.
 		"""
-		return hash((self._startX, self._startY, self._startZ, self._directionX, self._directionY, self._directionZ))
+		start = self._start
+		return hash((start._x, start._y, start._z))
 
 	def __repr__(self) -> str:
 		"""
@@ -2536,7 +2552,7 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:returns: The string representation of the ray, its start point and direction.
 		"""
-		return f"Ray3D({self.Start}, {self.Direction})"
+		return f"Ray3D({self._start}, {self._direction})"
 
 	def __str__(self) -> str:
 		"""
@@ -2546,7 +2562,7 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:returns: The equation of the ray.
 		"""
-		return f"{self.Start} + t * {self.Direction}, t >= 0"
+		return f"{self._start} + t * {self._direction}, t >= 0"
 
 
 @export
