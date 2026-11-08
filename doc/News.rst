@@ -94,6 +94,9 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian3D`: every segment and group carries a :attr:`~pyTooling.Cartesian3D.Element3D.Value` and
      key-value-pairs (:class:`~pyTooling.DataModel.KeyValuePairsMixin`), given by the keyword-only parameters ``value``
      and ``keyValuePairs``. ``Copy()`` keeps the value and copies the pairs.
+   * :mod:`pyTooling.Cartesian2D`: an :class:`~pyTooling.Cartesian2D.AxisAlignedLine2D` is the line ``x = c`` or
+     ``y = c`` in absolute coordinates, a value. Every element mirrors at it with
+     :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`, so elements of different groups mirror at the same line.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

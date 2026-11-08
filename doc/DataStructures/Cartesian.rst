@@ -47,6 +47,8 @@ Features
 * **Bounding boxes** - every shape and segment reports the smallest axis-aligned
   :class:`~pyTooling.Cartesian2D.BoundingBox2D` enclosing it, and bounding boxes unite, intersect and contain points.
 * **Shapes and segments moved as a whole** - ``Move(offset)`` shifts all their points in place.
+* **Mirroring at a shared line** - an :class:`~pyTooling.Cartesian2D.AxisAlignedLine2D` is a vertical or horizontal
+  line in absolute coordinates, so elements of different groups are mirrored at the same line.
 * **Points owned by one element** - a shape or segment owns its points, so a point can't silently belong to two
   shapes. Coordinates of different frames aren't mixed in a computation.
 * **Groups with relative coordinates** - a :class:`~pyTooling.Cartesian2D.Groups.Group2D` holds shapes, segments and
@@ -274,6 +276,45 @@ number of points, and ``box + offset`` returns a shifted bounding box.
 
 Like an offset, a bounding box compares with ``==`` and ``!=``, and ``Copy()``, :func:`copy.copy` and
 :func:`copy.deepcopy` return an independent one.
+
+
+.. _STRUCT/Cartesian2D/AxisAlignedLine2D:
+
+AxisAlignedLine2D
+=================
+
+An :class:`~pyTooling.Cartesian2D.AxisAlignedLine2D` is a line parallel to a coordinate axis: the vertical line
+``x = c`` or the horizontal line ``y = c``. Its :attr:`~pyTooling.Cartesian2D.AxisAlignedLine2D.Axis`, an
+:class:`~pyTooling.Cartesian2D.Axis2D`, names the coordinate all its points have in common, its
+:attr:`~pyTooling.Cartesian2D.AxisAlignedLine2D.Position` the value of that coordinate. :func:`str` returns the line's
+equation.
+
+A line is in **absolute coordinates**, relative to the origin. :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`
+mirrors an element at it in the element's frame, so elements of different groups are mirrored at the same line.
+:meth:`~pyTooling.Cartesian2D.AxisAlignedLine2D.FromElement` creates the line through an edge or the center of an
+element's absolute bounding box, named by an :class:`~pyTooling.Cartesian2D.Alignment2D`: ``MinX``, ``CenterX`` and
+``MaxX`` give a vertical line, ``MinY``, ``CenterY`` and ``MaxY`` a horizontal one.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D        import Point2D, Offset2D, Alignment2D, Axis2D, AxisAlignedLine2D
+   from pyTooling.Cartesian2D.Shapes import Circle, Square
+   from pyTooling.Cartesian2D.Groups import Group2D
+
+   pad =    Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2))
+   wheel =  Circle(Point2D(1, 1), 1)
+   axle =   Group2D(Offset2D(10, 0), (wheel, ))
+   mirror = AxisAlignedLine2D(Axis2D.X, 20)
+
+   str(mirror)                        # 'x = 20'
+   pad.MirrorAt(mirror)               # pad.BoundingBox is BoundingBox2D(38, 0, 40, 2)
+   wheel.MirrorAt(mirror)             # wheel.Center is (19, 1), relative to axle
+   wheel.Center.Absolute              # (29, 1)
+
+   AxisAlignedLine2D.FromElement(wheel, Alignment2D.MinY)   # AxisAlignedLine2D(Axis2D.Y, 0)
+
+Like a :ref:`style <STRUCT/Cartesian2D/Drawing>`, a line is a **value**: its properties are read-only, it compares
+with ``==`` and ``!=`` by value and is hashable.
 
 
 .. _STRUCT/Cartesian2D/Segment2D:
@@ -973,6 +1014,9 @@ segments and groups. An element belongs to at most one group or canvas, its
   it vertically at a vertical axis (the x-coordinates flip) or horizontally at a horizontal axis (the y-coordinates
   flip), through an edge or the center of its bounding box, named by an :class:`~pyTooling.Cartesian2D.Alignment2D` and
   optionally shifted by an offset;
+* :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`, mirroring it at an
+  :ref:`axis-aligned line <STRUCT/Cartesian2D/AxisAlignedLine2D>` in absolute coordinates, which several elements can
+  share;
 * :meth:`~pyTooling.Cartesian2D.Element2D.MoveTo`, moving it into another group - by default keeping its absolute
   position, so its local coordinates change;
 * :meth:`~pyTooling.Cartesian2D.Element2D.AlignTo`, moving it so an edge or the center of its bounding box aligns
