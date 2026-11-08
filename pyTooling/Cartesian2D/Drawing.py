@@ -29,7 +29,10 @@
 # ==================================================================================================================== #
 #
 """
-Styles for drawing 2D cartesian shapes: colors, strokes, fills and fonts.
+Drawable 2D cartesian shapes and their styles: colors, strokes, fills and fonts.
+
+A drawable shape is its geometry class from :mod:`pyTooling.Cartesian2D.Shapes` with a style, and has the same name:
+:class:`Rectangle` is a :class:`pyTooling.Cartesian2D.Shapes.Rectangle` with a :class:`Stroke` and a :class:`Fill`.
 
 The style classes are values: they can't be changed after creation, compare by value and can be shared by any number
 of elements.
@@ -38,15 +41,23 @@ of elements.
 
    :mod:`pyTooling.Cartesian2D.Shapes`
       |rarr| The geometry of the shapes.
+   :mod:`pyTooling.Cartesian2D.Groups`
+      |rarr| Groups and canvases holding drawable shapes.
 """
-from __future__            import annotations
+from __future__                   import annotations
 
-from enum                  import Enum
-from typing                import Any, Self
+from enum                         import Enum
+from typing                       import TYPE_CHECKING, Any, Generic, Hashable, Iterable, Mapping, \
+                                         Optional as Nullable, Self, Union
 
-from pyTooling.Decorators  import export, readonly
-from pyTooling.MetaClasses import ExtendedType, abstractmethod
-from pyTooling.Common      import getFullyQualifiedName
+from pyTooling                    import Cartesian2D
+from pyTooling.Decorators         import export, readonly
+from pyTooling.MetaClasses        import ExtendedType, abstractmethod
+from pyTooling.Common             import getFullyQualifiedName
+from pyTooling.Cartesian2D        import Coordinate, Point2D, Shapes
+
+if TYPE_CHECKING:
+	from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D
 
 
 @export
@@ -703,4 +714,519 @@ class Font(metaclass=ExtendedType, slots=True):
 		return (
 			f"Font({self._family!r}, {self._size}, bold={self._bold}, smallCaps={self._smallCaps}, "
 			f"fontStyle={self._fontStyle})"
+		)
+
+
+@export
+class StrokeMixin(metaclass=ExtendedType, mixin=True):
+	"""
+	Mixin-class for drawable elements with a line or an outline, drawn with a :class:`Stroke`.
+
+	Without a stroke, the element has no line or outline.
+	"""
+
+	_stroke: Nullable[Stroke]  #: Style of the line or outline, or ``None`` for no outline.
+
+	def __init__(self, *, stroke: Nullable[Stroke] = None) -> None:
+		"""
+		Initializes the style of the line or outline.
+
+		:param stroke:     Optional, style of the line or outline. Default: ``None``, no outline.
+		:raises TypeError: If parameter 'stroke' is not of type :class:`Stroke`.
+		"""
+		if stroke is not None and not isinstance(stroke, Stroke):
+			ex = TypeError("Parameter 'stroke' is not of type 'Stroke'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(stroke)}'.")
+			raise ex
+
+		self._stroke = stroke
+
+	@property
+	def Stroke(self) -> Nullable[Stroke]:
+		"""
+		Property to access the style of the line or outline (:attr:`_stroke`).
+
+		Assigning ``None`` removes the outline.
+
+		:returns:          The stroke, or ``None``, if the element has no outline.
+		:raises TypeError: If an assigned value is not of type :class:`Stroke`.
+		"""
+		return self._stroke
+
+	@Stroke.setter
+	def Stroke(self, stroke: Nullable[Stroke]) -> None:
+		if stroke is not None and not isinstance(stroke, Stroke):
+			ex = TypeError("Parameter 'stroke' is not of type 'Stroke'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(stroke)}'.")
+			raise ex
+
+		self._stroke = stroke
+
+
+@export
+class StyleMixin(StrokeMixin, mixin=True):
+	"""
+	Mixin-class for drawable elements with an area, drawn with an outline (:class:`Stroke`) and a :class:`Fill`.
+
+	Without a fill, the area is transparent.
+	"""
+
+	_fill: Nullable[Fill]  #: Style of the area, or ``None`` for a transparent area.
+
+	def __init__(self, *, stroke: Nullable[Stroke] = None, fill: Nullable[Fill] = None) -> None:
+		"""
+		Initializes the styles of the outline and the area.
+
+		:param stroke:     Optional, style of the outline. Default: ``None``, no outline.
+		:param fill:       Optional, style of the area. Default: ``None``, transparent.
+		:raises TypeError: If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError: If parameter 'fill' is not of type :class:`Fill`.
+		"""
+		super().__init__(stroke=stroke)
+
+		if fill is not None and not isinstance(fill, Fill):
+			ex = TypeError("Parameter 'fill' is not of type 'Fill'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(fill)}'.")
+			raise ex
+
+		self._fill = fill
+
+	@property
+	def Fill(self) -> Nullable[Fill]:
+		"""
+		Property to access the style of the area (:attr:`_fill`).
+
+		Assigning ``None`` makes the area transparent.
+
+		:returns:          The fill, or ``None``, if the area is transparent.
+		:raises TypeError: If an assigned value is not of type :class:`Fill`.
+		"""
+		return self._fill
+
+	@Fill.setter
+	def Fill(self, fill: Nullable[Fill]) -> None:
+		if fill is not None and not isinstance(fill, Fill):
+			ex = TypeError("Parameter 'fill' is not of type 'Fill'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(fill)}'.")
+			raise ex
+
+		self._fill = fill
+
+
+@export
+class LineSegment2D(Cartesian2D.LineSegment2D[Coordinate], StrokeMixin, Generic[Coordinate]):
+	"""
+	A drawable line segment: a :class:`pyTooling.Cartesian2D.LineSegment2D` drawn with a :class:`Stroke`.
+
+	A line has no area, so it has no fill.
+	"""
+
+	def __init__(
+		self,
+		start:         Point2D[Coordinate],
+		end:           Point2D[Coordinate],
+		*,
+		copyPoints:    bool = True,
+		stroke:        Nullable[Stroke] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a drawable line segment from its start and end point and its style.
+
+		:param start:                Start point of the line segment.
+		:param end:                  End point of the line segment.
+		:param copyPoints:           Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                             ``True``.
+		:param stroke:               Optional, style of the line. Default: ``None``, no line.
+		:param value:                Optional, value of the line segment. Default: ``None``.
+		:param keyValuePairs:        Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:               Optional, the group or canvas the line segment is added to. Default: ``None``, no
+		                             parent.
+		:raises ValueError:          If parameter 'start' is None.
+		:raises TypeError:           If parameter 'start' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError:   If parameter 'start' is owned by another element, while 'copyPoints' is ``False``.
+		                             |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'end' is None.
+		:raises TypeError:           If parameter 'end' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises DuplicatePointError: If parameter 'end' is the same point as parameter 'start', while 'copyPoints' is
+		                             ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the points.
+		:raises AlreadyOwnedError:   If parameter 'end' is owned by another element, while 'copyPoints' is ``False``. |br|
+		                             Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:          If parameter 'copyPoints' is None.
+		:raises TypeError:           If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:           If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:           If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:           If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                             :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(start, end, copyPoints=copyPoints, value=value, keyValuePairs=keyValuePairs)
+		StrokeMixin.__init__(self, stroke=stroke)
+
+		self.Parent = parent
+
+	def Copy(self) -> Self:
+		"""
+		Create a new drawable line segment as a copy of this line segment.
+
+		The copy holds copies of the start and end point, and the same stroke. It references the same :attr:`Value` and
+		holds a shallow copy of the key-value-pairs.
+
+		:returns: Copy of this line segment.
+		"""
+		return self.__class__(self._start, self._end, stroke=self._stroke, value=self._value, keyValuePairs=self._dict)
+
+
+@export
+class Polygon(Shapes.Polygon[Coordinate], StyleMixin, Generic[Coordinate]):
+	"""
+	A drawable polygon: a :class:`pyTooling.Cartesian2D.Shapes.Polygon` drawn with an outline and a fill.
+	"""
+
+	def __init__(
+		self,
+		points:        Iterable[Point2D[Coordinate]],
+		*,
+		copyPoints:    bool = True,
+		stroke:        Nullable[Stroke] = None,
+		fill:          Nullable[Fill] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a drawable polygon from its corners and its styles.
+
+		:param points:                 Corners of the polygon.
+		:param copyPoints:             Optional, if ``True``, the given points are copied instead of referenced. Default:
+		                               ``True``.
+		:param stroke:                 Optional, style of the outline. Default: ``None``, no outline.
+		:param fill:                   Optional, style of the area. Default: ``None``, transparent.
+		:param value:                  Optional, value of the polygon. Default: ``None``.
+		:param keyValuePairs:          Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:                 Optional, the group or canvas the polygon is added to. Default: ``None``, no parent.
+		:raises ValueError:            If parameter 'points' is None.
+		:raises TypeError:             If parameter 'points' is not iterable.
+		:raises ValueError:            If an element of parameter 'points' is None.
+		:raises TypeError:             If an element of parameter 'points' is not of type
+		                               :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError:     If an element of parameter 'points' is owned by another element, while
+		                               'copyPoints' is ``False``. |br|
+		                               Use ``copyPoints=True`` to copy the point.
+		:raises DuplicatePointError:   If an element of parameter 'points' is given twice, while 'copyPoints' is
+		                               ``False``. |br|
+		                               Use ``copyPoints=True`` to copy the points.
+		:raises NotEnoughCornersError: If parameter 'points' has fewer than 3 points.
+		:raises ValueError:            If parameter 'copyPoints' is None.
+		:raises TypeError:             If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:             If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:             If parameter 'fill' is not of type :class:`Fill`.
+		:raises TypeError:             If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:             If parameter 'parent' is not of type
+		                               :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                               :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(points, copyPoints=copyPoints, value=value, keyValuePairs=keyValuePairs)
+		StyleMixin.__init__(self, stroke=stroke, fill=fill)
+
+		self.Parent = parent
+
+	def Copy(self) -> Self:
+		"""
+		Create a new drawable polygon as a copy of this polygon.
+
+		The copy holds copies of the corners, shared by its edges, and the same stroke and fill. It references the same
+		:attr:`Value` and holds a shallow copy of the key-value-pairs.
+
+		:returns: Copy of this polygon.
+		"""
+		return self.__class__(
+			self._points,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+
+@export
+class Trapezium(Shapes.Trapezium[Coordinate], StyleMixin, Generic[Coordinate]):
+	"""
+	A drawable trapezium: a :class:`pyTooling.Cartesian2D.Shapes.Trapezium` drawn with an outline and a fill.
+	"""
+
+	def __init__(
+		self,
+		p00:           Point2D[Coordinate],
+		p01:           Point2D[Coordinate],
+		p11:           Point2D[Coordinate],
+		p10:           Point2D[Coordinate],
+		*,
+		stroke:        Nullable[Stroke] = None,
+		fill:          Nullable[Fill] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a drawable trapezium with 4 corners and its styles.
+
+		:param p00:           First corner.
+		:param p01:           Second corner.
+		:param p11:           Third corner.
+		:param p10:           Fourth corner.
+		:param stroke:        Optional, style of the outline. Default: ``None``, no outline.
+		:param fill:          Optional, style of the area. Default: ``None``, transparent.
+		:param value:         Optional, value of the trapezium. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, the group or canvas the trapezium is added to. Default: ``None``, no parent.
+		:raises ValueError:   If parameter 'p00' is None.
+		:raises TypeError:    If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p01' is None.
+		:raises TypeError:    If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p11' is None.
+		:raises TypeError:    If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p10' is None.
+		:raises TypeError:    If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:    If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:    If parameter 'fill' is not of type :class:`Fill`.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(p00, p01, p11, p10, value=value, keyValuePairs=keyValuePairs)
+		StyleMixin.__init__(self, stroke=stroke, fill=fill)
+
+		self.Parent = parent
+
+	def Copy(self) -> Self:
+		"""
+		Create a new drawable trapezium as a copy of this trapezium.
+
+		The copy holds copies of the corners, shared by its edges, and the same stroke and fill. It references the same
+		:attr:`Value` and holds a shallow copy of the key-value-pairs.
+
+		:returns: Copy of this trapezium.
+		"""
+		return self.__class__(
+			*self._points,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+
+@export
+class Rectangle(Shapes.Rectangle[Coordinate], StyleMixin, Generic[Coordinate]):
+	"""
+	A drawable rectangle: a :class:`pyTooling.Cartesian2D.Shapes.Rectangle` drawn with an outline and a fill.
+	"""
+
+	def __init__(
+		self,
+		p00:           Point2D[Coordinate],
+		p01:           Point2D[Coordinate],
+		p11:           Point2D[Coordinate],
+		p10:           Point2D[Coordinate],
+		*,
+		stroke:        Nullable[Stroke] = None,
+		fill:          Nullable[Fill] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a drawable rectangle with 4 corners and its styles.
+
+		:param p00:           First corner.
+		:param p01:           Second corner.
+		:param p11:           Third corner.
+		:param p10:           Fourth corner.
+		:param stroke:        Optional, style of the outline. Default: ``None``, no outline.
+		:param fill:          Optional, style of the area. Default: ``None``, transparent.
+		:param value:         Optional, value of the rectangle. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, the group or canvas the rectangle is added to. Default: ``None``, no parent.
+		:raises ValueError:   If parameter 'p00' is None.
+		:raises TypeError:    If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p01' is None.
+		:raises TypeError:    If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p11' is None.
+		:raises TypeError:    If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p10' is None.
+		:raises TypeError:    If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:    If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:    If parameter 'fill' is not of type :class:`Fill`.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:raises ValueError:   If opposite edges have different lengths.
+		:raises ValueError:   If two consecutive corners are the same point.
+		:raises ValueError:   If an inner angle isn't 90 |degree|.
+		"""
+		super().__init__(p00, p01, p11, p10, value=value, keyValuePairs=keyValuePairs)
+		StyleMixin.__init__(self, stroke=stroke, fill=fill)
+
+		self.Parent = parent
+
+	def Copy(self) -> Self:
+		"""
+		Create a new drawable rectangle as a copy of this rectangle.
+
+		The copy holds copies of the corners, shared by its edges, and the same stroke and fill. Its corners are checked
+		again. It references the same :attr:`Value` and holds a shallow copy of the key-value-pairs.
+
+		:returns: Copy of this rectangle.
+		"""
+		return self.__class__(
+			*self._points,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+
+@export
+class Square(Shapes.Square[Coordinate], StyleMixin, Generic[Coordinate]):
+	"""
+	A drawable square: a :class:`pyTooling.Cartesian2D.Shapes.Square` drawn with an outline and a fill.
+	"""
+
+	def __init__(
+		self,
+		p00:           Point2D[Coordinate],
+		p01:           Point2D[Coordinate],
+		p11:           Point2D[Coordinate],
+		p10:           Point2D[Coordinate],
+		*,
+		stroke:        Nullable[Stroke] = None,
+		fill:          Nullable[Fill] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a drawable square with 4 corners and its styles.
+
+		:param p00:           First corner.
+		:param p01:           Second corner.
+		:param p11:           Third corner.
+		:param p10:           Fourth corner.
+		:param stroke:        Optional, style of the outline. Default: ``None``, no outline.
+		:param fill:          Optional, style of the area. Default: ``None``, transparent.
+		:param value:         Optional, value of the square. Default: ``None``.
+		:param keyValuePairs: Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:        Optional, the group or canvas the square is added to. Default: ``None``, no parent.
+		:raises ValueError:   If parameter 'p00' is None.
+		:raises TypeError:    If parameter 'p00' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p01' is None.
+		:raises TypeError:    If parameter 'p01' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p11' is None.
+		:raises TypeError:    If parameter 'p11' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises ValueError:   If parameter 'p10' is None.
+		:raises TypeError:    If parameter 'p10' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises TypeError:    If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:    If parameter 'fill' is not of type :class:`Fill`.
+		:raises TypeError:    If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:    If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                      :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		:raises ValueError:   If opposite edges have different lengths.
+		:raises ValueError:   If two consecutive corners are the same point.
+		:raises ValueError:   If an inner angle isn't 90 |degree|.
+		:raises ValueError:   If adjacent edges have different lengths.
+		"""
+		super().__init__(p00, p01, p11, p10, value=value, keyValuePairs=keyValuePairs)
+		StyleMixin.__init__(self, stroke=stroke, fill=fill)
+
+		self.Parent = parent
+
+	def Copy(self) -> Self:
+		"""
+		Create a new drawable square as a copy of this square.
+
+		The copy holds copies of the corners, shared by its edges, and the same stroke and fill. Its corners are checked
+		again. It references the same :attr:`Value` and holds a shallow copy of the key-value-pairs.
+
+		:returns: Copy of this square.
+		"""
+		return self.__class__(
+			*self._points,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
+
+
+@export
+class Circle(Shapes.Circle[Coordinate], StyleMixin, Generic[Coordinate]):
+	"""
+	A drawable circle: a :class:`pyTooling.Cartesian2D.Shapes.Circle` drawn with an outline and a fill.
+	"""
+
+	def __init__(
+		self,
+		center:        Point2D[Coordinate],
+		radius:        Coordinate,
+		*,
+		copyPoints:    bool = True,
+		stroke:        Nullable[Stroke] = None,
+		fill:          Nullable[Fill] = None,
+		value:         Any = None,
+		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
+		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
+	) -> None:
+		"""
+		Initializes a drawable circle by its center, radius and styles.
+
+		:param center:             Center point of the circle.
+		:param radius:             Radius of the circle.
+		:param copyPoints:         Optional, if ``True``, the given center is copied instead of referenced. Default:
+		                           ``True``.
+		:param stroke:             Optional, style of the outline. Default: ``None``, no outline.
+		:param fill:               Optional, style of the area. Default: ``None``, transparent.
+		:param value:              Optional, value of the circle. Default: ``None``.
+		:param keyValuePairs:      Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
+		:param parent:             Optional, the group or canvas the circle is added to. Default: ``None``, no parent.
+		:raises ValueError:        If parameter 'center' is None.
+		:raises TypeError:         If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
+		:raises AlreadyOwnedError: If parameter 'center' is owned by another element, while 'copyPoints' is ``False``. |br|
+		                           Use ``copyPoints=True`` to copy the point.
+		:raises ValueError:        If parameter 'radius' is None.
+		:raises TypeError:         If parameter 'radius' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:        If parameter 'radius' isn't positive.
+		:raises ValueError:        If parameter 'copyPoints' is None.
+		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
+		:raises TypeError:         If parameter 'stroke' is not of type :class:`Stroke`.
+		:raises TypeError:         If parameter 'fill' is not of type :class:`Fill`.
+		:raises TypeError:         If parameter 'keyValuePairs' is not a mapping.
+		:raises TypeError:         If parameter 'parent' is not of type :class:`~pyTooling.Cartesian2D.Groups.Group2D` or
+		                           :class:`~pyTooling.Cartesian2D.Groups.Canvas2D`.
+		"""
+		super().__init__(center, radius, copyPoints=copyPoints, value=value, keyValuePairs=keyValuePairs)
+		StyleMixin.__init__(self, stroke=stroke, fill=fill)
+
+		self.Parent = parent
+
+	def Copy(self) -> Self:
+		"""
+		Create a new drawable circle as a copy of this circle.
+
+		The copy holds a copy of the center point, and the same stroke and fill. It references the same :attr:`Value` and
+		holds a shallow copy of the key-value-pairs.
+
+		:returns: Copy of this circle.
+		"""
+		return self.__class__(
+			self._center,
+			self._radius,
+			stroke=self._stroke,
+			fill=self._fill,
+			value=self._value,
+			keyValuePairs=self._dict
 		)

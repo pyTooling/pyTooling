@@ -29,10 +29,16 @@
 # ==================================================================================================================== #
 #
 """
-Unit tests for :mod:`pyTooling.Cartesian2D.Drawing` - colors, strokes, fills and fonts.
+Unit tests for :mod:`pyTooling.Cartesian2D.Drawing` - colors, strokes, fills, fonts and drawable shapes.
 """
-from pyTooling.Cartesian2D.Drawing import LineStyle, Color, RGBAColor, Stroke, Fill, FontStyle, Font
-from pyTooling.MetaClasses         import AbstractClassError
+from copy                          import copy
+
+from pyTooling.Cartesian2D         import Point2D, Offset2D, Shapes, AlreadyOwnedError, \
+                                          LineSegment2D as GeometricLineSegment2D
+from pyTooling.Cartesian2D.Groups  import Group2D, Canvas2D
+from pyTooling.Cartesian2D.Drawing import LineStyle, Color, RGBAColor, Stroke, Fill, FontStyle, Font, StrokeMixin, \
+                                          StyleMixin, LineSegment2D, Polygon, Trapezium, Rectangle, Square, Circle
+from pyTooling.MetaClasses         import ExtendedType, AbstractClassError
 from pyTooling.Testing             import Testcase
 
 
@@ -579,3 +585,571 @@ class Representation(Testcase):
 			"Font('monospace', 10, bold=True, smallCaps=False, fontStyle=FontStyle.Upright)",
 			repr(Font("monospace", 10, bold=True))
 		)
+
+
+STROKE = Stroke(1, RGBAColor(0, 0, 0))
+"""A black outline, shared by the tests."""
+
+FILL = Fill(RGBAColor(255, 128, 0))
+"""An orange area, shared by the tests."""
+
+
+class Drawables(Testcase):
+	def test_LineSegment(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6), stroke=STROKE)
+
+		self.assertIsInstance(line, GeometricLineSegment2D)
+		self.assertIsInstance(line, StrokeMixin)
+		self.assertNotIsInstance(line, StyleMixin)
+		self.assertIs(STROKE, line.Stroke)
+		self.assertEqual(5.0, line.Length)
+
+	def test_LineSegment_Default(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+
+		self.assertIsNone(line.Stroke)
+
+	def test_Polygon(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), stroke=STROKE, fill=FILL)
+
+		self.assertIsInstance(polygon, Shapes.Polygon)
+		self.assertIsInstance(polygon, StyleMixin)
+		self.assertIs(STROKE, polygon.Stroke)
+		self.assertIs(FILL, polygon.Fill)
+		self.assertEqual(3, len(polygon.Segments))
+
+	def test_Polygon_Default(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		self.assertIsNone(polygon.Stroke)
+		self.assertIsNone(polygon.Fill)
+
+	def test_Trapezium(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), stroke=STROKE, fill=FILL)
+
+		self.assertIsInstance(trapezium, Shapes.Trapezium)
+		self.assertIs(STROKE, trapezium.Stroke)
+		self.assertIs(FILL, trapezium.Fill)
+
+	def test_Rectangle(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), stroke=STROKE, fill=FILL)
+
+		self.assertIsInstance(rectangle, Shapes.Rectangle)
+		self.assertIs(STROKE, rectangle.Stroke)
+		self.assertIs(FILL, rectangle.Fill)
+
+	def test_Rectangle_Parallelogram(self) -> None:
+		"""The geometry is checked as for a geometric rectangle."""
+		with self.assertRaises(ValueError):
+			_ = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(5, 2), Point2D(1, 2), stroke=STROKE)
+
+	def test_Square(self) -> None:
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), stroke=STROKE, fill=FILL)
+
+		self.assertIsInstance(square, Shapes.Square)
+		self.assertNotIsInstance(square, Rectangle)
+		self.assertIs(STROKE, square.Stroke)
+		self.assertIs(FILL, square.Fill)
+
+	def test_Square_Rectangle(self) -> None:
+		with self.assertRaises(ValueError):
+			_ = Square(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+
+	def test_Circle(self) -> None:
+		circle = Circle(Point2D(1, 2), 3, stroke=STROKE, fill=FILL)
+
+		self.assertIsInstance(circle, Shapes.Circle)
+		self.assertIs(STROKE, circle.Stroke)
+		self.assertIs(FILL, circle.Fill)
+		self.assertEqual(6, circle.Diameter)
+
+	def test_Circle_copyPoints(self) -> None:
+		center = Point2D(1, 2)
+		circle = Circle(center, 3, copyPoints=False, fill=FILL)
+
+		self.assertIs(center, circle.Center)
+		self.assertIs(circle, center.Parent)
+
+	def test_Circle_Move(self) -> None:
+		"""A drawable shape moves like its geometry and keeps its styles."""
+		circle = Circle(Point2D(1, 2), 3, stroke=STROKE)
+
+		circle.Move(Offset2D(1, 1))
+
+		self.assertTupleEqual((2, 3), circle.Center.ToTuple())
+		self.assertIs(STROKE, circle.Stroke)
+
+	def test_Slots(self) -> None:
+		for drawableClass in (LineSegment2D, Polygon, Trapezium, Rectangle, Square, Circle):
+			self.assertIsInstance(drawableClass, ExtendedType)
+			self.assertNotIn("__dict__", dir(drawableClass))
+
+		self.assertTupleEqual(("_stroke", ), LineSegment2D.__slots__)
+		self.assertTupleEqual(("_stroke", "_fill"), Polygon.__slots__)
+
+
+class StyleParameters(Testcase):
+	def test_LineSegment_StrokeColor(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), stroke=RGBAColor(0, 0, 0))
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.RGBAColor'."], context.exception.__notes__)
+
+	def test_LineSegment_Fill(self) -> None:
+		"""A line has no area, so it has no parameter 'fill'."""
+		with self.assertRaises(TypeError):
+			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), fill=FILL)
+
+	def test_Polygon_StrokeFill(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), stroke=FILL)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.Fill'."], context.exception.__notes__)
+
+	def test_Polygon_FillColor(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), fill=RGBAColor(0, 0, 0))
+
+		self.assertEqual("Parameter 'fill' is not of type 'Fill'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.RGBAColor'."], context.exception.__notes__)
+
+	def test_Trapezium_FillStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), fill="#ff8000")
+
+		self.assertEqual("Parameter 'fill' is not of type 'Fill'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Rectangle_StrokeInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), stroke=1)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Square_FillInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), fill=1)
+
+		self.assertEqual("Parameter 'fill' is not of type 'Fill'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Circle_StrokeStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Circle(Point2D(1, 2), 3, stroke="black")
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+
+class StyleProperties(Testcase):
+	def test_Stroke(self) -> None:
+		line =   LineSegment2D(Point2D(1, 2), Point2D(4, 6))
+		dashed = Stroke(2, RGBAColor(0, 0, 255), LineStyle.Dashed)
+
+		line.Stroke = dashed
+
+		self.assertIs(dashed, line.Stroke)
+
+	def test_Stroke_None(self) -> None:
+		circle = Circle(Point2D(1, 2), 3, stroke=STROKE)
+
+		circle.Stroke = None
+
+		self.assertIsNone(circle.Stroke)
+
+	def test_Stroke_RGBAColor(self) -> None:
+		circle = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(TypeError) as context:
+			circle.Stroke = RGBAColor(0, 0, 0)
+
+		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.RGBAColor'."], context.exception.__notes__)
+		self.assertIsNone(circle.Stroke)
+
+	def test_Fill(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		polygon.Fill = FILL
+
+		self.assertIs(FILL, polygon.Fill)
+
+	def test_Fill_None(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), fill=FILL)
+
+		polygon.Fill = None
+
+		self.assertIsNone(polygon.Fill)
+
+	def test_Fill_Stroke(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), fill=FILL)
+
+		with self.assertRaises(TypeError) as context:
+			polygon.Fill = STROKE
+
+		self.assertEqual("Parameter 'fill' is not of type 'Fill'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.Stroke'."], context.exception.__notes__)
+		self.assertIs(FILL, polygon.Fill)
+
+	def test_Shared(self) -> None:
+		"""Styles are values, so elements share them."""
+		circle1 = Circle(Point2D(1, 2), 3, stroke=STROKE, fill=FILL)
+		circle2 = Circle(Point2D(9, 2), 3, stroke=STROKE, fill=FILL)
+
+		self.assertIs(circle1.Stroke, circle2.Stroke)
+		self.assertIs(circle1.Fill, circle2.Fill)
+
+
+class Parents(Testcase):
+	def test_LineSegment(self) -> None:
+		group = Group2D()
+		line =  LineSegment2D(Point2D(1, 2), Point2D(4, 6), stroke=STROKE, parent=group)
+
+		self.assertIs(group, line.Parent)
+		self.assertTupleEqual((line, ), group.Children)
+
+	def test_LineSegment_Shape(self) -> None:
+		"""A drawable line segment is no edge of a shape."""
+		triangle = Shapes.Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		with self.assertRaises(TypeError) as context:
+			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), parent=triangle)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Shapes.Polygon'."], context.exception.__notes__)
+
+	def test_Polygon(self) -> None:
+		canvas =  Canvas2D()
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), fill=FILL, parent=canvas)
+
+		self.assertIs(canvas, polygon.Parent)
+		self.assertTupleEqual((polygon, ), canvas.Children)
+
+	def test_Trapezium(self) -> None:
+		group =     Group2D()
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), parent=group)
+
+		self.assertTupleEqual((trapezium, ), group.Children)
+
+	def test_Rectangle(self) -> None:
+		group =     Group2D()
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), parent=group)
+
+		self.assertTupleEqual((rectangle, ), group.Children)
+
+	def test_Square(self) -> None:
+		group =  Group2D()
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), parent=group)
+
+		self.assertTupleEqual((square, ), group.Children)
+
+	def test_Circle(self) -> None:
+		group =  Group2D()
+		circle = Circle(Point2D(1, 2), 3, parent=group)
+
+		self.assertTupleEqual((circle, ), group.Children)
+
+	def test_Circle_Int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Circle(Point2D(1, 2), 3, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_FailingStyle(self) -> None:
+		"""A failing style check leaves nothing registered."""
+		group =  Group2D()
+		center = Point2D(1, 2)
+
+		with self.assertRaises(TypeError):
+			_ = Circle(center, 3, copyPoints=False, fill=1, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_FailingGeometry(self) -> None:
+		group = Group2D()
+		point = Point2D(0, 0)
+		_ =     Shapes.Circle(point, 1, copyPoints=False)
+
+		with self.assertRaises(AlreadyOwnedError):
+			_ = Polygon((point, Point2D(4, 0), Point2D(2, 3)), copyPoints=False, stroke=STROKE, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+
+class Copies(Testcase):
+	def test_LineSegment(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6), stroke=STROKE)
+
+		newLine = line.Copy()
+
+		self.assertIs(LineSegment2D, type(newLine))
+		self.assertIsNot(line.Start, newLine.Start)
+		self.assertIs(STROKE, newLine.Stroke)
+
+	def test_LineSegment_copy(self) -> None:
+		line = LineSegment2D(Point2D(1, 2), Point2D(4, 6), stroke=STROKE)
+
+		newLine = copy(line)
+
+		self.assertIs(LineSegment2D, type(newLine))
+		self.assertIs(STROKE, newLine.Stroke)
+
+	def test_Polygon(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), stroke=STROKE, fill=FILL)
+
+		newPolygon = polygon.Copy()
+
+		self.assertIs(Polygon, type(newPolygon))
+		self.assertIsNot(polygon.Points[0], newPolygon.Points[0])
+		self.assertIs(STROKE, newPolygon.Stroke)
+		self.assertIs(FILL, newPolygon.Fill)
+
+	def test_Polygon_copy(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), fill=FILL)
+
+		newPolygon = copy(polygon)
+
+		self.assertIs(Polygon, type(newPolygon))
+		self.assertIsNone(newPolygon.Stroke)
+		self.assertIs(FILL, newPolygon.Fill)
+
+	def test_Trapezium(self) -> None:
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), stroke=STROKE, fill=FILL)
+
+		newTrapezium = trapezium.Copy()
+
+		self.assertIs(Trapezium, type(newTrapezium))
+		self.assertIs(STROKE, newTrapezium.Stroke)
+		self.assertIs(FILL, newTrapezium.Fill)
+
+	def test_Rectangle(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), stroke=STROKE, fill=FILL)
+
+		newRectangle = copy(rectangle)
+
+		self.assertIs(Rectangle, type(newRectangle))
+		self.assertIs(STROKE, newRectangle.Stroke)
+		self.assertIs(FILL, newRectangle.Fill)
+
+	def test_Square(self) -> None:
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), stroke=STROKE, fill=FILL)
+
+		newSquare = square.Copy()
+
+		self.assertIs(Square, type(newSquare))
+		self.assertIs(STROKE, newSquare.Stroke)
+		self.assertIs(FILL, newSquare.Fill)
+
+	def test_Circle(self) -> None:
+		circle = Circle(Point2D(1, 2), 3, stroke=STROKE, fill=FILL)
+
+		newCircle = circle.Copy()
+
+		self.assertIs(Circle, type(newCircle))
+		self.assertIsNot(circle.Center, newCircle.Center)
+		self.assertIs(STROKE, newCircle.Stroke)
+		self.assertIs(FILL, newCircle.Fill)
+
+
+class ElementData(Testcase):
+	def test_LineSegment(self) -> None:
+		value = object()
+		pairs = {"layer": 1}
+		line =  LineSegment2D(Point2D(1, 2), Point2D(4, 6), stroke=STROKE, value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, line.Value)
+		self.assertEqual(1, line["layer"])
+		self.assertIsNot(pairs, line._dict)
+
+	def test_LineSegment_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_LineSegment_Copy(self) -> None:
+		value = [1, 2]
+		line =  LineSegment2D(Point2D(1, 2), Point2D(4, 6), stroke=STROKE, value=value, keyValuePairs={"layer": 1})
+
+		newLineSegment =          line.Copy()
+		newLineSegment["layer"] = 2
+
+		self.assertIs(LineSegment2D, type(newLineSegment))
+		self.assertIs(value, newLineSegment.Value)
+		self.assertEqual(1, line["layer"])
+		self.assertEqual(2, newLineSegment["layer"])
+
+	def test_Polygon(self) -> None:
+		value =   object()
+		pairs =   {"layer": 1}
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), fill=FILL, value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, polygon.Value)
+		self.assertEqual(1, polygon["layer"])
+		self.assertIsNot(pairs, polygon._dict)
+
+	def test_Polygon_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Polygon_Copy(self) -> None:
+		value =   [1, 2]
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), fill=FILL, value=value, keyValuePairs={"layer": 1})
+
+		newPolygon =          polygon.Copy()
+		newPolygon["layer"] = 2
+
+		self.assertIs(Polygon, type(newPolygon))
+		self.assertIs(value, newPolygon.Value)
+		self.assertEqual(1, polygon["layer"])
+		self.assertEqual(2, newPolygon["layer"])
+
+	def test_Trapezium(self) -> None:
+		value = object()
+		pairs = {"layer": 1}
+		trapezium = Trapezium(
+			Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3),
+			fill=FILL,
+			value=value,
+			keyValuePairs=pairs
+		)
+
+		self.assertIs(value, trapezium.Value)
+		self.assertEqual(1, trapezium["layer"])
+		self.assertIsNot(pairs, trapezium._dict)
+
+	def test_Trapezium_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Trapezium_Copy(self) -> None:
+		value =     [1, 2]
+		trapezium = Trapezium(
+			Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3),
+			fill=FILL,
+			value=value,
+			keyValuePairs={"layer": 1}
+		)
+
+		newTrapezium =          trapezium.Copy()
+		newTrapezium["layer"] = 2
+
+		self.assertIs(Trapezium, type(newTrapezium))
+		self.assertIs(value, newTrapezium.Value)
+		self.assertEqual(1, trapezium["layer"])
+		self.assertEqual(2, newTrapezium["layer"])
+
+	def test_Rectangle(self) -> None:
+		value = object()
+		pairs = {"layer": 1}
+		rectangle = Rectangle(
+			Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2),
+			fill=FILL,
+			value=value,
+			keyValuePairs=pairs
+		)
+
+		self.assertIs(value, rectangle.Value)
+		self.assertEqual(1, rectangle["layer"])
+		self.assertIsNot(pairs, rectangle._dict)
+
+	def test_Rectangle_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Rectangle_Copy(self) -> None:
+		value =     [1, 2]
+		rectangle = Rectangle(
+			Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2),
+			fill=FILL,
+			value=value,
+			keyValuePairs={"layer": 1}
+		)
+
+		newRectangle =          rectangle.Copy()
+		newRectangle["layer"] = 2
+
+		self.assertIs(Rectangle, type(newRectangle))
+		self.assertIs(value, newRectangle.Value)
+		self.assertEqual(1, rectangle["layer"])
+		self.assertEqual(2, newRectangle["layer"])
+
+	def test_Square(self) -> None:
+		value = object()
+		pairs = {"layer": 1}
+		square = Square(
+			Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2),
+			fill=FILL,
+			value=value,
+			keyValuePairs=pairs
+		)
+
+		self.assertIs(value, square.Value)
+		self.assertEqual(1, square["layer"])
+		self.assertIsNot(pairs, square._dict)
+
+	def test_Square_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Square_Copy(self) -> None:
+		value =  [1, 2]
+		square = Square(
+			Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2),
+			fill=FILL,
+			value=value,
+			keyValuePairs={"layer": 1}
+		)
+
+		newSquare =          square.Copy()
+		newSquare["layer"] = 2
+
+		self.assertIs(Square, type(newSquare))
+		self.assertIs(value, newSquare.Value)
+		self.assertEqual(1, square["layer"])
+		self.assertEqual(2, newSquare["layer"])
+
+	def test_Circle(self) -> None:
+		value =  object()
+		pairs =  {"layer": 1}
+		circle = Circle(Point2D(1, 2), 3, fill=FILL, value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, circle.Value)
+		self.assertEqual(1, circle["layer"])
+		self.assertIsNot(pairs, circle._dict)
+
+	def test_Circle_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Circle(Point2D(1, 2), 3, keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Circle_Copy(self) -> None:
+		value =  [1, 2]
+		circle = Circle(Point2D(1, 2), 3, fill=FILL, value=value, keyValuePairs={"layer": 1})
+
+		newCircle =          circle.Copy()
+		newCircle["layer"] = 2
+
+		self.assertIs(Circle, type(newCircle))
+		self.assertIs(value, newCircle.Value)
+		self.assertEqual(1, circle["layer"])
+		self.assertEqual(2, newCircle["layer"])

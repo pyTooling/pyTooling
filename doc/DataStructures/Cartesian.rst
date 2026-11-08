@@ -56,7 +56,8 @@ Features
   element knows the model object it draws.
 * **A canvas knowing its y-axis** - a :class:`~pyTooling.Cartesian2D.Groups.Canvas2D` is the root of a drawing, with
   the y-axis pointing up (mathematics) or down (screen, SVG), and flips a whole drawing to the other direction.
-* **Drawing styles** - colors, strokes, fills and fonts as values, which elements can share.
+* **Drawing styles** - colors, strokes, fills and fonts as values, which elements can share, and drawable shapes
+  carrying an outline and a fill.
 * **Independent copies** - ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy` return an object sharing no point
   with the original. A shape's copy is of the same class, and its edges share the copied corners.
 * Conversion to plain tuples through ``ToTuple``, for handing coordinates to a library that expects them.
@@ -1089,6 +1090,48 @@ Its style has three independent parts, as in CSS: the font is :attr:`~pyTooling.
 has :attr:`~pyTooling.Cartesian2D.Drawing.Font.SmallCaps` or not, and its letters have a posture, the
 :attr:`~pyTooling.Cartesian2D.Drawing.Font.FontStyle`: a :class:`~pyTooling.Cartesian2D.Drawing.FontStyle` of
 ``Upright`` (the default), ``Italic`` or ``Slanted``.
+
+
+.. _STRUCT/Cartesian2D/Drawables:
+
+Drawable Shapes
+===============
+
+A drawable shape is a geometry class with a style, and has **the same name**:
+:class:`pyTooling.Cartesian2D.Drawing.Rectangle` is a :class:`pyTooling.Cartesian2D.Shapes.Rectangle`, so it is
+checked, measured, moved, mirrored and grouped like one. :mod:`~pyTooling.Cartesian2D.Drawing` has a drawable
+:class:`~pyTooling.Cartesian2D.Drawing.Polygon`, :class:`~pyTooling.Cartesian2D.Drawing.Trapezium`,
+:class:`~pyTooling.Cartesian2D.Drawing.Rectangle`, :class:`~pyTooling.Cartesian2D.Drawing.Square`,
+:class:`~pyTooling.Cartesian2D.Drawing.Circle` and :class:`~pyTooling.Cartesian2D.Drawing.LineSegment2D`.
+
+The constructors take the geometry's parameters, the keyword-only parameters ``value`` and ``keyValuePairs`` of every
+:ref:`element <STRUCT/Cartesian2D/Element2D>`, and the keyword-only parameters ``stroke`` and ``fill``:
+
+* :attr:`~pyTooling.Cartesian2D.Drawing.StrokeMixin.Stroke` - the outline, or ``None`` for no outline;
+* :attr:`~pyTooling.Cartesian2D.Drawing.StyleMixin.Fill` - the area, or ``None`` for a transparent area.
+
+Both are properties with a setter; a value of another type raises :exc:`TypeError`. A line segment has no area, so it
+has a stroke only (:class:`~pyTooling.Cartesian2D.Drawing.StrokeMixin`); the shapes have both
+(:class:`~pyTooling.Cartesian2D.Drawing.StyleMixin`). ``Copy()`` and :func:`copy.copy` return a drawable shape of the
+same class with copied points, the same style objects and value, and a shallow copy of the key-value-pairs.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D         import Point2D
+   from pyTooling.Cartesian2D.Drawing import Circle, Fill, Rectangle, RGBAColor, Stroke
+   from pyTooling.Cartesian2D.Groups  import Canvas2D, YAxisDirection
+
+   outline = Stroke(1, RGBAColor(0, 0, 0))
+   canvas =  Canvas2D(YAxisDirection.Down)
+   box =     Rectangle(Point2D(0, 0), Point2D(40, 0), Point2D(40, 20), Point2D(0, 20), stroke=outline, parent=canvas)
+   dot =     Circle(Point2D(40, 10), 3, stroke=outline, fill=Fill(RGBAColor(255, 255, 255)), parent=canvas)
+
+   box.Fill = Fill(RGBAColor.Parse("#ffffe0"))
+   dot.BoundingBox                    # BoundingBox2D(37, 7, 43, 13)
+   len(canvas.Children)               # 2
+
+A drawable shape registers in its ``parent`` when its geometry and styles are checked, so a failing check leaves
+nothing in the group or canvas. A drawable line segment is no edge of a shape: its ``parent`` is a group or canvas.
 
 
 .. _STRUCT/Cartesian3D:
