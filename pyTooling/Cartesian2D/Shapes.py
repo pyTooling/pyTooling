@@ -1190,7 +1190,7 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 	The first axis points in the ellipse's :attr:`Direction`, the second axis is turned by +90 degrees (counterclockwise).
 	An ellipse with the default direction ``(1, 0)`` is axis-aligned. An ellipse with equal radii is a circle.
 	"""
-	_direction:    Offset2D[Coordinate]  #: Direction of the first axis, of length 1.
+	_direction:    Offset2D[Coordinate]  #: Unit direction of the first axis, first non-zero component positive.
 	_firstRadius:  Coordinate            #: Radius of the ellipse along its first axis.
 	_secondRadius: Coordinate            #: Radius of the ellipse along its second axis.
 
@@ -1209,9 +1209,9 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		Initializes an ellipse by its center, its two radii and the direction of its first axis.
 
-		A direction of another length than 1 is normalized. A direction of length 1, compared by :func:`math.isclose`,
-		keeps its values. The ellipse owns its center. A referenced center (``copyPoints=False``) must not be owned by
-		another element.
+		A direction of another length than 1, compared by :func:`math.isclose`, is normalized. If its first non-zero
+		component is negative, the direction is reversed: ``d`` and ``-d`` describe the same ellipse. The ellipse owns its
+		center. A referenced center (``copyPoints=False``) must not be owned by another element.
 
 		:param center:             Center point of the ellipse.
 		:param firstRadius:        Radius of the ellipse along its first axis.
@@ -1259,22 +1259,31 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 				raise ex
 
 		if direction is None:
-			direction = Offset2D(1, 0)
+			directionX = 1
+			directionY = 0
 		elif not isinstance(direction, Offset2D):
 			ex = TypeError("Parameter 'direction' is not of type 'Offset2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
 			raise ex
-		elif (squaredLength := direction._xOffset ** 2 + direction._yOffset ** 2) == 0:
+		elif direction._xOffset == 0 and direction._yOffset == 0:
 			ex = ValueError("Parameter 'direction' is a zero offset.")
 			ex.add_note(f"Got offset {direction}.")
 			ex.add_note("An ellipse needs a direction of its first axis.")
 			raise ex
-		elif isclose(squaredLength, 1):
-			direction = direction.Copy()
 		else:
-			direction = direction.Normalized()
+			directionX = direction._xOffset
+			directionY = direction._yOffset
 
-		self._direction =      direction
+		if not isclose(squaredLength := directionX ** 2 + directionY ** 2, 1):
+			length =     sqrt(squaredLength)
+			directionX = directionX / length
+			directionY = directionY / length
+
+		if directionX < 0 or (directionX == 0 and directionY < 0):
+			directionX = -directionX
+			directionY = -directionY
+
+		self._direction =      Offset2D(directionX + 0, directionY + 0)
 		self._firstRadius =    firstRadius
 		self._secondRadius =   secondRadius
 		self._center._parent = self
@@ -1331,7 +1340,7 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		Read-only property to access the direction of the ellipse's first axis (:attr:`_direction`).
 
-		:returns: Direction of the first axis, of length 1.
+		:returns: Direction of the first axis, of length 1, its first non-zero component is positive.
 		"""
 		return self._direction
 
@@ -1422,34 +1431,49 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		Mirror the ellipse at a horizontal axis by mirroring its center and its direction (inplace).
 
+		A direction with a non-zero x-component negates its y-component, a direction ``(0, 1)`` stays.
+
 		:param twiceAxis: Twice the y-coordinate of the axis.
 		"""
 		super()._MirrorY(twiceAxis)
-		self._direction._yOffset = -self._direction._yOffset
+		direction = self._direction
+		if direction._xOffset != 0:
+			direction._yOffset = -direction._yOffset + 0
 
 	def _MirrorX(self, twiceAxis: Coordinate) -> None:
 		"""
 		Mirror the ellipse at a vertical axis by mirroring its center and its direction (inplace).
 
+		A direction with a non-zero x-component negates its y-component, a direction ``(0, 1)`` stays.
+
 		:param twiceAxis: Twice the x-coordinate of the axis.
 		"""
 		super()._MirrorX(twiceAxis)
-		self._direction._xOffset = -self._direction._xOffset
+		direction = self._direction
+		if direction._xOffset != 0:
+			direction._yOffset = -direction._yOffset + 0
 
 	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
 		"""
 		Mirror the ellipse at a line by mirroring its center as a point and its direction as a vector (inplace).
 
-		The direction ``d`` becomes ``d - 2 * (nx * dx + ny * dy) * n``.
+		The direction ``d`` becomes ``d - 2 * (nx * dx + ny * dy) * n``, reversed if its first non-zero component is
+		negative.
 
 		:param normal:   The normal of the line, of length 1.
 		:param distance: The signed distance of the line from the frame's origin.
 		"""
 		super()._MirrorAt(normal, distance)
-		direction = self._direction
-		factor =    2 * normal.ScalarProduct(direction)
-		direction._xOffset -= factor * normal._xOffset
-		direction._yOffset -= factor * normal._yOffset
+		direction =  self._direction
+		factor =     2 * normal.ScalarProduct(direction)
+		directionX = direction._xOffset - factor * normal._xOffset
+		directionY = direction._yOffset - factor * normal._yOffset
+		if directionX < 0 or (directionX == 0 and directionY < 0):
+			directionX = -directionX
+			directionY = -directionY
+
+		direction._xOffset = directionX + 0
+		direction._yOffset = directionY + 0
 
 	def __repr__(self) -> str:
 		"""

@@ -1030,8 +1030,9 @@ is copied by default; ``copyPoints=False`` keeps the given point instead. The el
 
 Three read-only properties describe its axes:
 
-* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Direction` - the direction of the first axis, of length 1. A given
-  direction is normalized, unless its length is 1 already: ``(0, 1)`` stays an integer offset;
+* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Direction` - the direction of the first axis, of length 1, its first
+  non-zero component positive. A given direction is normalized, unless its length is 1 already: ``(0, 1)`` stays an
+  integer offset. As ``d`` and ``-d`` describe the same ellipse, ``(-3, 4)`` is stored as ``(0.6, -0.8)``;
 * :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.FirstAxis` - a new offset from the center to the end of the first axis,
   the direction scaled by the first radius;
 * :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.SecondAxis` - a new offset from the center to the end of the second
@@ -1065,14 +1066,14 @@ ellipse: with the semi-axes ``u`` and ``v``, it reaches ``sqrt(ux ** 2 + vx ** 2
    tilted.BoundingBox                 # BoundingBox2D(-2.408..., -2.683..., 2.408..., 2.683...)
 
 Moving an ellipse moves its center. Mirroring mirrors its center as a point and its direction as a vector, the radii
-stay: :meth:`~pyTooling.Cartesian2D.Element2D.MirrorX` negates the direction's x-component,
-:meth:`~pyTooling.Cartesian2D.Element2D.MirrorY` its y-component, and an oblique
+stay: :meth:`~pyTooling.Cartesian2D.Element2D.MirrorX` and :meth:`~pyTooling.Cartesian2D.Element2D.MirrorY` both
+negate the direction's y-component (a direction ``(0, 1)`` stays), and an oblique
 :ref:`line <STRUCT/Cartesian2D/Line2D>` rotates the ellipse.
 
 .. code-block:: Python
 
    tilted.MirrorX()
-   tilted.Direction                   # (-0.6, 0.8)
+   tilted.Direction                   # (0.6, -0.8)
 
 A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D`, a radius that isn't a number or a direction that isn't
 an :class:`~pyTooling.Cartesian2D.Offset2D` raises :exc:`TypeError`; a radius of 0 or below or a direction ``(0, 0)``
