@@ -1880,9 +1880,10 @@ class Ellipse(Shapes.Ellipse[Coordinate], StyleMixin, Generic[Coordinate]):
 	def __init__(
 		self,
 		center:        Point2D[Coordinate],
-		radiusX:       Coordinate,
-		radiusY:       Coordinate,
+		firstRadius:   Coordinate,
+		secondRadius:  Coordinate,
 		*,
+		direction:     Nullable[Offset2D[Coordinate]] = None,
 		copyPoints:    bool = True,
 		stroke:        Nullable[Stroke] = None,
 		fill:          Nullable[Fill] = None,
@@ -1891,11 +1892,12 @@ class Ellipse(Shapes.Ellipse[Coordinate], StyleMixin, Generic[Coordinate]):
 		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
-		Initializes a drawable ellipse by its center, its radii in x- and y-direction and its styles.
+		Initializes a drawable ellipse by its center, its two radii, the direction of its first axis and its styles.
 
 		:param center:             Center point of the ellipse.
-		:param radiusX:            Radius of the ellipse in x-direction.
-		:param radiusY:            Radius of the ellipse in y-direction.
+		:param firstRadius:        Radius of the ellipse along its first axis.
+		:param secondRadius:       Radius of the ellipse along its second axis.
+		:param direction:          Optional, direction of the first axis. Default: ``None``, the direction ``(1, 0)``.
 		:param copyPoints:         Optional, if ``True``, the given center is copied instead of referenced. Default:
 		                           ``True``.
 		:param stroke:             Optional, style of the outline. Default: ``None``, no outline.
@@ -1907,12 +1909,15 @@ class Ellipse(Shapes.Ellipse[Coordinate], StyleMixin, Generic[Coordinate]):
 		:raises TypeError:         If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises AlreadyOwnedError: If parameter 'center' is owned by another element, while 'copyPoints' is ``False``. |br|
 		                           Use ``copyPoints=True`` to copy the point.
-		:raises ValueError:        If parameter 'radiusX' is None.
-		:raises TypeError:         If parameter 'radiusX' is not of type :class:`float` or :class:`int`.
-		:raises ValueError:        If parameter 'radiusX' isn't positive.
-		:raises ValueError:        If parameter 'radiusY' is None.
-		:raises TypeError:         If parameter 'radiusY' is not of type :class:`float` or :class:`int`.
-		:raises ValueError:        If parameter 'radiusY' isn't positive.
+		:raises ValueError:        If parameter 'firstRadius' is None.
+		:raises TypeError:         If parameter 'firstRadius' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:        If parameter 'firstRadius' isn't positive.
+		:raises ValueError:        If parameter 'secondRadius' is None.
+		:raises TypeError:         If parameter 'secondRadius' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:        If parameter 'secondRadius' isn't positive.
+		:raises TypeError:         If parameter 'direction' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		:raises ValueError:        If parameter 'direction' is a zero offset. |br|
+		                           An ellipse needs a direction of its first axis.
 		:raises ValueError:        If parameter 'copyPoints' is None.
 		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
 		:raises TypeError:         If parameter 'stroke' is not of type :class:`Stroke`.
@@ -1923,8 +1928,9 @@ class Ellipse(Shapes.Ellipse[Coordinate], StyleMixin, Generic[Coordinate]):
 		"""
 		super().__init__(
 			center,
-			radiusX,
-			radiusY,
+			firstRadius,
+			secondRadius,
+			direction=direction,
 			copyPoints=copyPoints,
 			value=value,
 			keyValuePairs=keyValuePairs,
@@ -1944,15 +1950,16 @@ class Ellipse(Shapes.Ellipse[Coordinate], StyleMixin, Generic[Coordinate]):
 		"""
 		Create a new drawable ellipse as a copy of this ellipse.
 
-		The copy holds a copy of the center point, and the same stroke and fill. It references the same :attr:`Value` and
-		holds a shallow copy of the key-value-pairs.
+		The copy holds a copy of the center point and of the direction, and the same stroke and fill. It references the
+		same :attr:`Value` and holds a shallow copy of the key-value-pairs.
 
 		:returns: Copy of this ellipse.
 		"""
 		return self.__class__(
 			self._center,
-			self._radiusX,
-			self._radiusY,
+			self._firstRadius,
+			self._secondRadius,
+			direction=self._direction,
 			stroke=self._stroke,
 			fill=self._fill,
 			value=self._value,
@@ -1963,16 +1970,17 @@ class Ellipse(Shapes.Ellipse[Coordinate], StyleMixin, Generic[Coordinate]):
 		"""
 		Returns a copy of this ellipse for :func:`copy.deepcopy`.
 
-		The copy holds a copy of the center point, and the same stroke and fill. It holds deep copies of the
-		:attr:`Value` and the key-value-pairs.
+		The copy holds a copy of the center point and of the direction, and the same stroke and fill. It holds deep
+		copies of the :attr:`Value` and the key-value-pairs.
 
 		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
 		:returns:    Copy of this ellipse.
 		"""
 		return self.__class__(
 			self._center,
-			self._radiusX,
-			self._radiusY,
+			self._firstRadius,
+			self._secondRadius,
+			direction=self._direction,
 			stroke=self._stroke,
 			fill=self._fill,
 			value=deepcopy(self._value, memo),

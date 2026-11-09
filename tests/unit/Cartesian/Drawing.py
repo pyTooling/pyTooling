@@ -729,6 +729,24 @@ class Drawables(Testcase):
 		self.assertIs(FILL, ellipse.Fill)
 		self.assertEqual(BoundingBox2D(-2, 0, 4, 4), ellipse.BoundingBox)
 
+	def test_Ellipse_Direction(self) -> None:
+		"""A drawable ellipse takes the direction of its first axis."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(0, 2), stroke=STROKE)
+
+		self.assertTupleEqual((0.0, 1.0), ellipse.Direction.ToTuple())
+		self.assertIs(STROKE, ellipse.Stroke)
+		self.assertEqual(BoundingBox2D(-1, -1, 3, 5), ellipse.BoundingBox)
+
+	def test_Ellipse_DirectionZero(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(0, 0), fill=FILL)
+
+		self.assertEqual("Parameter 'direction' is a zero offset.", str(context.exception))
+		self.assertListEqual(
+			["Got offset (0, 0).", "An ellipse needs a direction of its first axis."],
+			context.exception.__notes__
+		)
+
 	def test_Ellipse_copyPoints(self) -> None:
 		center =  Point2D(1, 2)
 		ellipse = Ellipse(center, 3, 2, copyPoints=False, fill=FILL)
@@ -1751,10 +1769,19 @@ class Copies(Testcase):
 
 		self.assertIs(Ellipse, type(newEllipse))
 		self.assertIsNot(ellipse.Center, newEllipse.Center)
-		self.assertEqual(3, newEllipse.RadiusX)
-		self.assertEqual(2, newEllipse.RadiusY)
+		self.assertEqual(3, newEllipse.FirstRadius)
+		self.assertEqual(2, newEllipse.SecondRadius)
 		self.assertIs(STROKE, newEllipse.Stroke)
 		self.assertIs(FILL, newEllipse.Fill)
+
+	def test_Ellipse_Direction(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(1, 1), stroke=STROKE)
+
+		newEllipse = ellipse.Copy()
+
+		self.assertIsNot(ellipse.Direction, newEllipse.Direction)
+		self.assertEqual(ellipse.Direction, newEllipse.Direction)
+		self.assertIs(STROKE, newEllipse.Stroke)
 
 	def test_Ellipse_copy(self) -> None:
 		ellipse = Ellipse(Point2D(1, 2), 3, 2, fill=FILL)
@@ -1766,15 +1793,26 @@ class Copies(Testcase):
 
 	def test_Ellipse_deepcopy(self) -> None:
 		group =   Group2D()
-		ellipse = Ellipse(Point2D(1, 2), 3, 2, stroke=STROKE, fill=FILL, value=[1, 2], parent=group)
+		ellipse = Ellipse(
+			Point2D(1, 2),
+			3,
+			2,
+			direction=Offset2D(3, 4),
+			stroke=STROKE,
+			fill=FILL,
+			value=[1, 2],
+			parent=group
+		)
 
 		newEllipse = deepcopy(ellipse)
 
 		self.assertIs(Ellipse, type(newEllipse))
 		self.assertIsNone(newEllipse.Parent)
 		self.assertIs(newEllipse, newEllipse.Center.Parent)
-		self.assertEqual(3, newEllipse.RadiusX)
-		self.assertEqual(2, newEllipse.RadiusY)
+		self.assertEqual(3, newEllipse.FirstRadius)
+		self.assertEqual(2, newEllipse.SecondRadius)
+		self.assertIsNot(ellipse.Direction, newEllipse.Direction)
+		self.assertTupleEqual((0.6, 0.8), newEllipse.Direction.ToTuple())
 		self.assertIs(STROKE, newEllipse.Stroke)
 		self.assertIs(FILL, newEllipse.Fill)
 		self.assertIsNot(ellipse.Value, newEllipse.Value)

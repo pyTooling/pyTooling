@@ -1185,32 +1185,38 @@ class Circle(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 @export
 class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 	"""
-	An ellipse is a round shape, whose outline is stretched along the x-axis and the y-axis by two radii.
+	An ellipse is a round shape, whose outline is stretched along two perpendicular axes by two radii.
 
-	Its axes are parallel to the coordinate axes. An ellipse with equal radii is a circle.
+	The first axis points in the ellipse's :attr:`Direction`, the second axis is turned by +90 degrees (counterclockwise).
+	An ellipse with the default direction ``(1, 0)`` is axis-aligned. An ellipse with equal radii is a circle.
 	"""
-	_radiusX: Coordinate  #: Radius of the ellipse in x-direction.
-	_radiusY: Coordinate  #: Radius of the ellipse in y-direction.
+	_direction:    Offset2D[Coordinate]  #: Direction of the first axis, of length 1.
+	_firstRadius:  Coordinate            #: Radius of the ellipse along its first axis.
+	_secondRadius: Coordinate            #: Radius of the ellipse along its second axis.
 
 	def __init__(
 		self,
 		center:        Point2D[Coordinate],
-		radiusX:       Coordinate,
-		radiusY:       Coordinate,
+		firstRadius:   Coordinate,
+		secondRadius:  Coordinate,
 		*,
+		direction:     Nullable[Offset2D[Coordinate]] = None,
 		copyPoints:    bool = True,
 		value:         Any = None,
 		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
 		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
 	) -> None:
 		"""
-		Initializes an ellipse by its center and its radii in x- and y-direction.
+		Initializes an ellipse by its center, its two radii and the direction of its first axis.
 
-		The ellipse owns its center. A referenced center (``copyPoints=False``) must not be owned by another element.
+		A direction of another length than 1 is normalized. A direction of length 1, compared by :func:`math.isclose`,
+		keeps its values. The ellipse owns its center. A referenced center (``copyPoints=False``) must not be owned by
+		another element.
 
 		:param center:             Center point of the ellipse.
-		:param radiusX:            Radius of the ellipse in x-direction.
-		:param radiusY:            Radius of the ellipse in y-direction.
+		:param firstRadius:        Radius of the ellipse along its first axis.
+		:param secondRadius:       Radius of the ellipse along its second axis.
+		:param direction:          Optional, direction of the first axis. Default: ``None``, the direction ``(1, 0)``.
 		:param copyPoints:         Optional, if ``True``, the given center is copied instead of referenced. Default:
 		                           ``True``.
 		:param value:              Optional, value of the ellipse. Default: ``None``.
@@ -1220,12 +1226,15 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		:raises TypeError:         If parameter 'center' is not of type :class:`~pyTooling.Cartesian2D.Point2D`.
 		:raises AlreadyOwnedError: If parameter 'center' is owned by another element, while 'copyPoints' is ``False``. |br|
 		                           Use ``copyPoints=True`` to copy the point.
-		:raises ValueError:        If parameter 'radiusX' is None.
-		:raises TypeError:         If parameter 'radiusX' is not of type :class:`float` or :class:`int`.
-		:raises ValueError:        If parameter 'radiusX' isn't positive.
-		:raises ValueError:        If parameter 'radiusY' is None.
-		:raises TypeError:         If parameter 'radiusY' is not of type :class:`float` or :class:`int`.
-		:raises ValueError:        If parameter 'radiusY' isn't positive.
+		:raises ValueError:        If parameter 'firstRadius' is None.
+		:raises TypeError:         If parameter 'firstRadius' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:        If parameter 'firstRadius' isn't positive.
+		:raises ValueError:        If parameter 'secondRadius' is None.
+		:raises TypeError:         If parameter 'secondRadius' is not of type :class:`float` or :class:`int`.
+		:raises ValueError:        If parameter 'secondRadius' isn't positive.
+		:raises TypeError:         If parameter 'direction' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		:raises ValueError:        If parameter 'direction' is a zero offset. |br|
+		                           An ellipse needs a direction of its first axis.
 		:raises ValueError:        If parameter 'copyPoints' is None.
 		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
 		:raises TypeError:         If parameter 'keyValuePairs' is not a mapping.
@@ -1235,8 +1244,8 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		super().__init__(center, copyPoints=copyPoints, value=value, keyValuePairs=keyValuePairs, parent=parent)
 
 		for name, radius in (
-			("radiusX", radiusX),
-			("radiusY", radiusY)
+			("firstRadius",  firstRadius),
+			("secondRadius", secondRadius)
 		):
 			if radius is None:
 				raise ValueError(f"Parameter '{name}' is None.")
@@ -1249,8 +1258,25 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 				ex.add_note(f"Got value '{radius}'.")
 				raise ex
 
-		self._radiusX =        radiusX
-		self._radiusY =        radiusY
+		if direction is None:
+			direction = Offset2D(1, 0)
+		elif not isinstance(direction, Offset2D):
+			ex = TypeError("Parameter 'direction' is not of type 'Offset2D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
+			raise ex
+		elif (squaredLength := direction._xOffset ** 2 + direction._yOffset ** 2) == 0:
+			ex = ValueError("Parameter 'direction' is a zero offset.")
+			ex.add_note(f"Got offset {direction}.")
+			ex.add_note("An ellipse needs a direction of its first axis.")
+			raise ex
+		elif isclose(squaredLength, 1):
+			direction = direction.Copy()
+		else:
+			direction = direction.Normalized()
+
+		self._direction =      direction
+		self._firstRadius =    firstRadius
+		self._secondRadius =   secondRadius
 		self._center._parent = self
 
 		self.Parent = parent
@@ -1259,12 +1285,19 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		Create a new ellipse as a copy of this ellipse.
 
-		The copy holds a copy of the center point. It references the same :attr:`Value` and holds a shallow copy of the
-		key-value-pairs.
+		The copy holds a copy of the center point and of the direction. It references the same :attr:`Value` and holds a
+		shallow copy of the key-value-pairs.
 
 		:returns: Copy of this ellipse.
 		"""
-		return self.__class__(self._center, self._radiusX, self._radiusY, value=self._value, keyValuePairs=self._dict)
+		return self.__class__(
+			self._center,
+			self._firstRadius,
+			self._secondRadius,
+			direction=self._direction,
+			value=self._value,
+			keyValuePairs=self._dict
+		)
 
 	def __copy__(self) -> Self:
 		"""
@@ -1278,36 +1311,69 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		Returns a copy of this ellipse for :func:`copy.deepcopy`.
 
-		The copy holds a copy of the center point, and deep copies of the :attr:`Value` and the key-value-pairs.
+		The copy holds a copy of the center point and of the direction, and deep copies of the :attr:`Value` and the
+		key-value-pairs.
 
 		:param memo: Dictionary of objects already copied by :func:`copy.deepcopy`.
 		:returns:    Copy of this ellipse.
 		"""
 		return self.__class__(
 			self._center,
-			self._radiusX,
-			self._radiusY,
+			self._firstRadius,
+			self._secondRadius,
+			direction=self._direction,
 			value=deepcopy(self._value, memo),
 			keyValuePairs=deepcopy(self._dict, memo)
 		)
 
 	@readonly
-	def RadiusX(self) -> Coordinate:
+	def Direction(self) -> Offset2D[Coordinate]:
 		"""
-		Read-only property to access the ellipse's radius in x-direction (:attr:`_radiusX`).
+		Read-only property to access the direction of the ellipse's first axis (:attr:`_direction`).
 
-		:returns: Radius of the ellipse in x-direction.
+		:returns: Direction of the first axis, of length 1.
 		"""
-		return self._radiusX
+		return self._direction
 
 	@readonly
-	def RadiusY(self) -> Coordinate:
+	def FirstRadius(self) -> Coordinate:
 		"""
-		Read-only property to access the ellipse's radius in y-direction (:attr:`_radiusY`).
+		Read-only property to access the ellipse's radius along its first axis (:attr:`_firstRadius`).
 
-		:returns: Radius of the ellipse in y-direction.
+		:returns: Radius of the ellipse along its first axis.
 		"""
-		return self._radiusY
+		return self._firstRadius
+
+	@readonly
+	def SecondRadius(self) -> Coordinate:
+		"""
+		Read-only property to access the ellipse's radius along its second axis (:attr:`_secondRadius`).
+
+		:returns: Radius of the ellipse along its second axis.
+		"""
+		return self._secondRadius
+
+	@readonly
+	def FirstAxis(self) -> Offset2D[Coordinate]:
+		"""
+		Read-only property to return the ellipse's first semi-axis, the :attr:`Direction` scaled by :attr:`FirstRadius`.
+
+		:returns: A new 2D-offset from the center to the end of the first axis.
+		"""
+		direction = self._direction
+		return Offset2D(direction._xOffset * self._firstRadius, direction._yOffset * self._firstRadius)
+
+	@readonly
+	def SecondAxis(self) -> Offset2D[Coordinate]:
+		"""
+		Read-only property to return the ellipse's second semi-axis.
+
+		It is the :attr:`Direction` turned by +90 degrees (counterclockwise) and scaled by :attr:`SecondRadius`.
+
+		:returns: A new 2D-offset from the center to the end of the second axis.
+		"""
+		direction = self._direction
+		return Offset2D(-direction._yOffset * self._secondRadius, direction._xOffset * self._secondRadius)
 
 	@readonly
 	def Perimeter(self) -> float:
@@ -1319,10 +1385,10 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 
 		:returns: Perimeter of the ellipse.
 		"""
-		radiusX =      self._radiusX
-		radiusY =      self._radiusY
-		squaredRatio = ((radiusX - radiusY) / (radiusX + radiusY)) ** 2
-		return pi * (radiusX + radiusY) * (1 + 3 * squaredRatio / (10 + sqrt(4 - 3 * squaredRatio)))
+		firstRadius =  self._firstRadius
+		secondRadius = self._secondRadius
+		squaredRatio = ((firstRadius - secondRadius) / (firstRadius + secondRadius)) ** 2
+		return pi * (firstRadius + secondRadius) * (1 + 3 * squaredRatio / (10 + sqrt(4 - 3 * squaredRatio)))
 
 	@readonly
 	def Area(self) -> float:
@@ -1331,67 +1397,87 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 
 		:returns: Area of the ellipse.
 		"""
-		return pi * self._radiusX * self._radiusY
+		return pi * self._firstRadius * self._secondRadius
 
 	@readonly
-	def BoundingBox(self) -> BoundingBox2D[Coordinate]:
+	def BoundingBox(self) -> BoundingBox2D[float]:
 		"""
 		Read-only property to return the smallest axis-aligned bounding box enclosing the ellipse.
 
-		The box reaches :attr:`RadiusX` from the :attr:`Center` in x-direction and :attr:`RadiusY` in y-direction.
+		With the semi-axes :attr:`FirstAxis` ``u`` and :attr:`SecondAxis` ``v``, the box reaches
+		``sqrt(ux ** 2 + vx ** 2)`` from the :attr:`Center` in x-direction and ``sqrt(uy ** 2 + vy ** 2)`` in y-direction.
 
 		:returns: A new bounding box.
 		"""
-		center =  self._center
-		radiusX = self._radiusX
-		radiusY = self._radiusY
-		return BoundingBox2D(center._x - radiusX, center._y - radiusY, center._x + radiusX, center._y + radiusY)
+		center =       self._center
+		directionX =   self._direction._xOffset
+		directionY =   self._direction._yOffset
+		firstRadius =  self._firstRadius
+		secondRadius = self._secondRadius
+		halfWidth =    sqrt((directionX * firstRadius) ** 2 + (directionY * secondRadius) ** 2)
+		halfHeight =   sqrt((directionY * firstRadius) ** 2 + (directionX * secondRadius) ** 2)
+		return BoundingBox2D(center._x - halfWidth, center._y - halfHeight, center._x + halfWidth, center._y + halfHeight)
+
+	def _MirrorY(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the ellipse at a horizontal axis by mirroring its center and its direction (inplace).
+
+		:param twiceAxis: Twice the y-coordinate of the axis.
+		"""
+		super()._MirrorY(twiceAxis)
+		self._direction._yOffset = -self._direction._yOffset
+
+	def _MirrorX(self, twiceAxis: Coordinate) -> None:
+		"""
+		Mirror the ellipse at a vertical axis by mirroring its center and its direction (inplace).
+
+		:param twiceAxis: Twice the x-coordinate of the axis.
+		"""
+		super()._MirrorX(twiceAxis)
+		self._direction._xOffset = -self._direction._xOffset
 
 	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
 		"""
-		Mirror the ellipse at a vertical or horizontal line by mirroring its center (inplace).
+		Mirror the ellipse at a line by mirroring its center as a point and its direction as a vector (inplace).
 
-		A line with normal ``(1, 0)`` or ``(0, 1)`` mirrors the ellipse like :meth:`_MirrorX` or :meth:`_MirrorY`.
+		The direction ``d`` becomes ``d - 2 * (nx * dx + ny * dy) * n``.
 
-		:param normal:                 The normal of the line, of length 1.
-		:param distance:               The signed distance of the line from the frame's origin.
-		:raises InvalidOperationError: If the line is oblique. |br|
-		                               An ellipse is axis-aligned; mirror it at a vertical or horizontal line.
+		:param normal:   The normal of the line, of length 1.
+		:param distance: The signed distance of the line from the frame's origin.
 		"""
-		if normal._yOffset == 0:
-			self._MirrorX(2 * distance * normal._xOffset)
-		elif normal._xOffset == 0:
-			self._MirrorY(2 * distance * normal._yOffset)
-		else:
-			ex = InvalidOperationError("Mirroring an ellipse at an oblique line isn't supported.")
-			ex.add_note(f"Got ellipse {self!r} and a line with normal {normal} and distance {distance}.")
-			ex.add_note("An ellipse is axis-aligned; mirror it at a vertical or horizontal line.")
-			raise ex
-
-	@readonly
-	def _CanMirrorAtObliqueLine(self) -> bool:
-		"""
-		Read-only property to return, if the ellipse can be mirrored at an oblique line.
-
-		:returns: ``False``, as an ellipse is axis-aligned.
-		"""
-		return False
+		super()._MirrorAt(normal, distance)
+		direction = self._direction
+		factor =    2 * normal.ScalarProduct(direction)
+		direction._xOffset -= factor * normal._xOffset
+		direction._yOffset -= factor * normal._yOffset
 
 	def __repr__(self) -> str:
 		"""
 		Returns the ellipse's string representation.
 
+		The direction is given, if it isn't the default direction ``(1, 0)``.
+
 		:returns: The string representation of the ellipse.
 		"""
-		return f"Ellipse({self._center}, {self._radiusX}, {self._radiusY})"
+		direction = self._direction
+		if direction._xOffset == 1 and direction._yOffset == 0:
+			return f"Ellipse({self._center}, {self._firstRadius}, {self._secondRadius})"
+
+		return f"Ellipse({self._center}, {self._firstRadius}, {self._secondRadius}, direction={direction})"
 
 	def __str__(self) -> str:
 		"""
 		Returns the ellipse's string equivalent.
 
+		The direction is given, if it isn't the default direction ``(1, 0)``.
+
 		:returns: The string equivalent of the ellipse.
 		"""
-		return f"({self._center}, rx={self._radiusX}, ry={self._radiusY})"
+		direction = self._direction
+		if direction._xOffset == 1 and direction._yOffset == 0:
+			return f"({self._center}, r1={self._firstRadius}, r2={self._secondRadius})"
+
+		return f"({self._center}, r1={self._firstRadius}, r2={self._secondRadius}, direction={direction})"
 
 
 @export
