@@ -38,10 +38,10 @@ from pyTooling.CallGraph   import DuplicateFunctionError
 from pyTooling.CI          import NeedDependencyCycleError
 from pyTooling.ControlFlow import DuplicateBlockError, DuplicateEdgeError as ControlFlowDuplicateEdgeError
 from pyTooling.Dependency  import CircularRequirementsFileError
-from pyTooling.Exceptions  import AlreadyInHierarchyError, CycleError, DuplicateElementError, EmptyError, \
-                                  EnvironmentVariableError, ExceptionBase, InUseError, MissingDependencyError, \
-                                  NotAChildError, NotConfiguredError, NotInSameHierarchyError, \
-                                  PlatformNotSupportedError, ToolingException
+from pyTooling.Exceptions  import AlreadyInHierarchyError, AmbiguousError, CycleError, DuplicateElementError, \
+                                  EmptyError, EnvironmentVariableError, ExceptionBase, InUseError, \
+                                  MissingDependencyError, NotAChildError, NotConfiguredError, NotInSameHierarchyError, \
+                                  PlatformNotSupportedError, ToolingException, UnknownKindError
 from pyTooling.Graph       import CycleError as GraphCycleError, DuplicateEdgeError, DuplicateVertexError, \
                                   NotInSameGraph
 from pyTooling.LinkedList  import NotInSameListError
@@ -134,6 +134,28 @@ class CommonBases(Testcase):
 
 		self.assertIsInstance(context.exception, ToolingException)
 		self.assertEqual("Container 'a' has no elements.", str(context.exception))
+
+	def test_UnknownKindError(self) -> None:
+		"""A package's own error derives from its base-exception and 'UnknownKindError'; both catch it."""
+		class UnknownShapeKindError(ToolingException, UnknownKindError):
+			pass
+
+		with self.assertRaises(UnknownKindError) as context:
+			raise UnknownShapeKindError("Shape 'a' is of an unknown kind.")
+
+		self.assertIsInstance(context.exception, ToolingException)
+		self.assertEqual("Shape 'a' is of an unknown kind.", str(context.exception))
+
+	def test_AmbiguousError(self) -> None:
+		"""A package's own error derives from its base-exception and 'AmbiguousError'; both catch it."""
+		class AmbiguousRootError(ToolingException, AmbiguousError):
+			pass
+
+		with self.assertRaises(AmbiguousError) as context:
+			raise AmbiguousRootError("Found more than one root: 'a', 'b'.")
+
+		self.assertIsInstance(context.exception, ToolingException)
+		self.assertEqual("Found more than one root: 'a', 'b'.", str(context.exception))
 
 	def test_ToolingExceptionMessage(self) -> None:
 		"""A common base doesn't change how a 'ToolingException' stores its message."""

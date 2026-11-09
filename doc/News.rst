@@ -145,6 +145,9 @@ Version 10.x (2026)
      oblique line rotates it.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
+   * :mod:`pyTooling.Exceptions`: common bases :exc:`~pyTooling.Exceptions.UnknownKindError` (an element is of a kind,
+     which isn't expected at its place) and :exc:`~pyTooling.Exceptions.AmbiguousError` (several elements match, where
+     exactly one is expected).
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:
      an operation isn't valid for an object. Copying an origin (:class:`~pyTooling.Cartesian2D.Origin2D`,
      :class:`~pyTooling.Cartesian3D.Origin3D`) raises it (was a plain :exc:`RuntimeError`).
