@@ -1582,6 +1582,17 @@ class VectorArithmetic(Testcase):
 		self.assertIs(original, offset)
 		self.assertEqual(Offset3D(-1, -1, -1), offset)
 
+	def test_Length_Cached(self) -> None:
+		"""The length is computed on its first read and kept; a new vector computes its own."""
+		vector = Vector3D(2, 3, 6)
+		self.assertIsNone(vector._length)
+
+		self.assertEqual(7.0, vector.Length)
+		self.assertEqual(7.0, vector._length)
+		self.assertEqual(7.0, vector.Length)
+
+		self.assertIsNone((vector + Vector3D(0, 0, 1))._length)
+
 	def test_Normalized(self) -> None:
 		normalized = Vector3D(2, 3, 6).Normalized()
 

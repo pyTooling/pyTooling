@@ -1565,6 +1565,17 @@ class VectorArithmetic(Testcase):
 	def test_Length(self) -> None:
 		self.assertEqual(5.0, Vector2D(3, 4).Length)
 
+	def test_Length_Cached(self) -> None:
+		"""The length is computed on its first read and kept; a copy or a new vector computes its own."""
+		vector = Vector2D(3, 4)
+		self.assertIsNone(vector._length)
+
+		self.assertEqual(5.0, vector.Length)
+		self.assertEqual(5.0, vector._length)
+		self.assertEqual(5.0, vector.Length)
+
+		self.assertIsNone((vector + Vector2D(0, 1))._length)
+
 	def test_Normalized(self) -> None:
 		normalized = Vector2D(3, 4).Normalized()
 

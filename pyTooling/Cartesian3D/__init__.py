@@ -1144,7 +1144,7 @@ class BaseVector3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			ex.add_note("A zero vector has no direction.")
 			raise ex
 
-		length = sqrt(self._xOffset ** 2 + self._yOffset ** 2 + self._zOffset ** 2)
+		length = self.Length
 		return self.__class__(
 			self._xOffset / length,
 			self._yOffset / length,
@@ -1315,6 +1315,38 @@ class Vector3D(BaseVector3D[Coordinate], Generic[Coordinate]):
 	A vector is a value, like a direction or a normal: its components are read-only, and it is hashable, so it can be a
 	dictionary key or a set member. ``vector += other`` binds a new vector to the name.
 	"""
+
+	_length: Nullable[float]  #: The Euclidean length, or ``None`` until it is read the first time.
+
+	def __init__(self, xOffset: Coordinate, yOffset: Coordinate, zOffset: Coordinate) -> None:
+		"""
+		Initializes a 3-dimensional vector.
+
+		:param xOffset:     x-direction component.
+		:param yOffset:     y-direction component.
+		:param zOffset:     z-direction component.
+		:raises ValueError: If parameter 'xOffset' is None.
+		:raises TypeError:  If parameter 'xOffset' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'yOffset' is None.
+		:raises TypeError:  If parameter 'yOffset' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'zOffset' is None.
+		:raises TypeError:  If parameter 'zOffset' is not of type :class:`float` or :class:`int`.
+		"""
+		super().__init__(xOffset, yOffset, zOffset)
+
+		self._length = None
+
+	@readonly
+	def Length(self) -> float:
+		"""
+		Read-only property to return the Euclidean length of this 3D-vector.
+
+		:returns: The Euclidean length.
+		"""
+		if (length := self._length) is None:
+			self._length = length = sqrt(self._xOffset ** 2 + self._yOffset ** 2 + self._zOffset ** 2)
+
+		return length
 
 	def __hash__(self) -> int:
 		"""
