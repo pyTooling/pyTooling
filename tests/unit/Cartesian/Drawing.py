@@ -2563,7 +2563,7 @@ class TextTransformations(Testcase):
 		with self.assertRaises(TypeError) as context:
 			text.Move((1, 2))
 
-		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'offset' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 	def test_MirrorX(self) -> None:

@@ -52,9 +52,9 @@ from pyTooling.Decorators         import export, readonly
 from pyTooling.Exceptions         import EmptyError
 from pyTooling.MetaClasses        import ExtendedType
 from pyTooling.Common             import getFullyQualifiedName
-from pyTooling.Cartesian2D        import Coordinate, Base2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, Element2D, \
-                                         Segment2D, Cartesian2DError, AlreadyOwnedError, GroupCycleError, \
-                                         NotOwnedError, NotInSameFrameError
+from pyTooling.Cartesian2D        import Coordinate, Base2D, BaseVector2D, Offset2D, Size2D, BoundingBox2D, \
+                                         Alignment2D, Element2D, Segment2D, Cartesian2DError, AlreadyOwnedError, \
+                                         GroupCycleError, NotOwnedError, NotInSameFrameError
 from pyTooling.Cartesian2D.Shapes import Shape
 
 
@@ -433,20 +433,20 @@ class Group2D(Element2D[Coordinate], Container2DMixin, Generic[Coordinate]):
 		"""
 		return Container2DMixin.BoundingBox.fget(self) + self._offset
 
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
+	def Move(self, offset: BaseVector2D[Coordinate]) -> None:
 		"""
 		Move the group by changing its :attr:`Offset` (inplace).
 
 		The children keep their coordinates.
 
-		:param offset:      The 2D-offset to move by.
+		:param offset:      The 2D-vector or 2D-offset to move by.
 		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.BaseVector2D`.
 		"""
 		if offset is None:
 			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset2D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+		elif not isinstance(offset, BaseVector2D):
+			ex = TypeError("Parameter 'offset' is not of type 'BaseVector2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
 			raise ex
 

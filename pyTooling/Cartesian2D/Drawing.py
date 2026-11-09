@@ -55,8 +55,8 @@ from pyTooling                    import Cartesian2D
 from pyTooling.Decorators         import export, readonly
 from pyTooling.MetaClasses        import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Common             import getFullyQualifiedName
-from pyTooling.Cartesian2D        import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Segment2D, Shapes, \
-                                         AlreadyOwnedError, SweepDirection
+from pyTooling.Cartesian2D        import Coordinate, Point2D, BaseVector2D, Offset2D, BoundingBox2D, Element2D, \
+                                         Segment2D, Shapes, AlreadyOwnedError, SweepDirection
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, Container2DMixin, YAxisDirection
 
 
@@ -2546,18 +2546,18 @@ class Text(Element2D[Coordinate], StyleMixin, Generic[Coordinate]):
 
 		return BoundingBox2D(minX, y - above, minX + width, y - above + height)
 
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
+	def Move(self, offset: BaseVector2D[Coordinate]) -> None:
 		"""
 		Move the text by moving its position (inplace).
 
-		:param offset:      The 2D-offset to move by.
+		:param offset:      The 2D-vector or 2D-offset to move by.
 		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.BaseVector2D`.
 		"""
 		if offset is None:
 			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset2D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+		elif not isinstance(offset, BaseVector2D):
+			ex = TypeError("Parameter 'offset' is not of type 'BaseVector2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
 			raise ex
 

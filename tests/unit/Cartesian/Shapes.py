@@ -1903,7 +1903,7 @@ class Moving(Testcase):
 		with self.assertRaises(TypeError) as context:
 			polygon.Move((1, 2))
 
-		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'offset' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
 
@@ -1933,7 +1933,7 @@ class Moving(Testcase):
 		with self.assertRaises(TypeError) as context:
 			polyline.Move((1, 2))
 
-		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'offset' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 		self.assertTupleEqual(((0, 0), (4, 0)), tuple(point.ToTuple() for point in polyline.Points))
 
@@ -1968,7 +1968,7 @@ class Moving(Testcase):
 		with self.assertRaises(TypeError) as context:
 			trapezium.Move((1, 2))
 
-		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'offset' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 	def test_Square(self) -> None:
@@ -2002,7 +2002,7 @@ class Moving(Testcase):
 		with self.assertRaises(TypeError) as context:
 			circle.Move((1, 2))
 
-		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'offset' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
 
@@ -2032,7 +2032,7 @@ class Moving(Testcase):
 		with self.assertRaises(TypeError) as context:
 			ellipse.Move((1, 2))
 
-		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'offset' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
 
@@ -4265,7 +4265,7 @@ class PathMoving(Testcase):
 		with self.assertRaises(TypeError) as context:
 			path.Move((1, 1))
 
-		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'offset' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 

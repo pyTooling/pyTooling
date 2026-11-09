@@ -34,8 +34,8 @@ Unit tests for :mod:`pyTooling.Cartesian3D.Groups` - groups, frames, absolute co
 from copy                         import copy, deepcopy
 from math                         import isclose, pi
 
-from pyTooling.Cartesian3D        import Point3D, Offset3D, BoundingBox3D, Alignment3D, Plane3D, YZPlane3D, XZPlane3D, \
-                                         XYPlane3D, Element3D, Segment3D, LineSegment3D
+from pyTooling.Cartesian3D        import Point3D, Vector3D, Offset3D, BoundingBox3D, Alignment3D, Plane3D, YZPlane3D, \
+                                         XZPlane3D, XYPlane3D, Element3D, Segment3D, LineSegment3D
 from pyTooling.Cartesian3D.Groups import Group3D
 from pyTooling.Cartesian2D        import AlreadyOwnedError, NotOwnedError, DuplicatePointError, GroupCycleError, \
                                          NotInSameFrameError
@@ -620,8 +620,25 @@ class Moving(Testcase):
 		with self.assertRaises(TypeError) as context:
 			group.Move((1, 1, 1))
 
-		self.assertEqual("Parameter 'offset' is not of type 'Offset3D'.", str(context.exception))
+		self.assertEqual("Parameter 'offset' is not of type 'BaseVector3D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Move_Vector(self) -> None:
+		group = Group3D(Offset3D(10, 0, 0))
+
+		group.Move(Vector3D(1, 1, 1))
+
+		self.assertIs(Offset3D, type(group.Offset))
+		self.assertTupleEqual((11, 1, 1), group.Offset.ToTuple())
+
+	def test_Offset_Vector(self) -> None:
+		group = Group3D()
+
+		with self.assertRaises(TypeError) as context:
+			group.Offset = Vector3D(3, 4, 5)
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian3D.Vector3D'."], context.exception.__notes__)
 
 	def test_Offset(self) -> None:
 		group =  Group3D()

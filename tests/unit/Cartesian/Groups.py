@@ -34,10 +34,10 @@ Unit tests for :mod:`pyTooling.Cartesian2D.Groups` - groups, canvases, frames, a
 from copy                         import copy, deepcopy
 from math                         import isclose, pi
 
-from pyTooling.Cartesian2D        import Base2D, Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, Element2D, \
-                                         Line2D, VerticalLine2D, HorizontalLine2D, Segment2D, LineSegment2D, \
-                                         AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
-                                         NotInSameFrameError, GroupCycleError
+from pyTooling.Cartesian2D        import Base2D, Point2D, Vector2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, \
+                                         Element2D, Line2D, VerticalLine2D, HorizontalLine2D, Segment2D, \
+                                         LineSegment2D, AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, \
+                                         NotOwnedError, NotInSameFrameError, GroupCycleError
 from pyTooling.Cartesian2D.Shapes import Polygon, Polyline, Trapezium, Rectangle, Square, Circle, Ellipse
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection, EmptyGroupError
 from pyTooling.Exceptions         import EmptyError
@@ -893,8 +893,25 @@ class Moving(Testcase):
 		with self.assertRaises(TypeError) as context:
 			group.Move((1, 1))
 
-		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'offset' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Move_Vector(self) -> None:
+		group = Group2D(Offset2D(10, 0))
+
+		group.Move(Vector2D(1, 1))
+
+		self.assertIs(Offset2D, type(group.Offset))
+		self.assertTupleEqual((11, 1), group.Offset.ToTuple())
+
+	def test_Offset_Vector(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(TypeError) as context:
+			group.Offset = Vector2D(3, 4)
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Vector2D'."], context.exception.__notes__)
 
 	def test_Offset(self) -> None:
 		group =  Group2D()

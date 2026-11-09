@@ -35,9 +35,9 @@ arithmetic.
 from copy                         import copy, deepcopy
 from math                         import isclose, pi, sqrt
 
-from pyTooling.Cartesian3D        import Base3D, Element3D, Origin3D, Point3D, Offset3D, Size3D, BoundingBox3D, \
-                                         Segment3D, LineSegment3D, Alignment3D, Plane3D, YZPlane3D, XZPlane3D, \
-                                         XYPlane3D, Ray3D
+from pyTooling.Cartesian3D        import Base3D, Element3D, Origin3D, Point3D, BaseVector3D, Vector3D, Offset3D, \
+                                         Size3D, BoundingBox3D, Segment3D, LineSegment3D, Alignment3D, Plane3D, \
+                                         YZPlane3D, XZPlane3D, XYPlane3D, Ray3D
 from pyTooling.Cartesian3D.Groups import Group3D
 from pyTooling.Cartesian2D        import Point2D, Offset2D, Alignment2D, VerticalLine2D, Ray2D, AlreadyOwnedError, \
                                          DuplicatePointError
@@ -1250,7 +1250,7 @@ class OffsetVectors(Testcase):
 		with self.assertRaises(TypeError) as context:
 			Offset3D(1, 2, 3).ScalarProduct(Offset2D(1, 2))
 
-		self.assertEqual("Parameter 'other' is not of type 'Offset3D'.", str(context.exception))
+		self.assertEqual("Parameter 'other' is not of type 'BaseVector3D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Offset2D'."], context.exception.__notes__)
 
 	def test_VectorProduct(self) -> None:
@@ -1285,7 +1285,7 @@ class OffsetVectors(Testcase):
 		with self.assertRaises(TypeError) as context:
 			Offset3D(1, 2, 3).VectorProduct((4, 5, 6))
 
-		self.assertEqual("Parameter 'other' is not of type 'Offset3D'.", str(context.exception))
+		self.assertEqual("Parameter 'other' is not of type 'BaseVector3D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 	def test_Normalized(self) -> None:
@@ -1308,8 +1308,8 @@ class OffsetVectors(Testcase):
 		with self.assertRaises(InvalidOperationError) as context:
 			Offset3D(0, 0, 0).Normalized()
 
-		self.assertEqual("A zero offset can't be normalized.", str(context.exception))
-		self.assertListEqual(["Got offset (0, 0, 0).", "A zero offset has no direction."], context.exception.__notes__)
+		self.assertEqual("A zero vector can't be normalized.", str(context.exception))
+		self.assertListEqual(["Got vector (0, 0, 0).", "A zero vector has no direction."], context.exception.__notes__)
 
 	def test_Multiply_int(self) -> None:
 		offset = Offset3D(1, 2, 3)
@@ -1400,6 +1400,282 @@ class OffsetVectors(Testcase):
 			context.exception.__notes__
 		)
 		self.assertEqual(Offset3D(1, 2, 3), offset)
+
+
+class Vectors(Testcase):
+	def test_BaseVector(self) -> None:
+		with self.assertRaises(AbstractClassError) as context:
+			_ = BaseVector3D(1, 2, 3)
+
+		self.assertEqual("Class 'BaseVector3D' is abstract and needs to be derived.", str(context.exception))
+
+	def test_Vector_int(self) -> None:
+		vector = Vector3D(1, 2, 3)
+
+		self.assertIsInstance(vector, BaseVector3D)
+		self.assertNotIsInstance(vector, Offset3D)
+		self.assertEqual(1, vector.XOffset)
+		self.assertEqual(2, vector.YOffset)
+		self.assertEqual(3, vector.ZOffset)
+		self.assertTupleEqual((1, 2, 3), vector.ToTuple())
+
+	def test_Vector_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Vector3D(1, 2, None)
+
+		self.assertEqual("Parameter 'zOffset' is None.", str(context.exception))
+
+	def test_Vector_str(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Vector3D(1, 2, "3")
+
+		self.assertEqual("Parameter 'zOffset' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Offset(self) -> None:
+		self.assertIsInstance(Offset3D(1, 2, 3), BaseVector3D)
+		self.assertNotIsInstance(Offset3D(1, 2, 3), Vector3D)
+
+	def test_ReadOnly_XOffset(self) -> None:
+		vector = Vector3D(1, 2, 3)
+
+		with self.assertRaises(AttributeError):
+			vector.XOffset = 4
+
+		self.assertEqual(Vector3D(1, 2, 3), vector)
+
+	def test_ReadOnly_YOffset(self) -> None:
+		vector = Vector3D(1, 2, 3)
+
+		with self.assertRaises(AttributeError):
+			vector.YOffset = 4
+
+		self.assertEqual(Vector3D(1, 2, 3), vector)
+
+	def test_ReadOnly_ZOffset(self) -> None:
+		vector = Vector3D(1, 2, 3)
+
+		with self.assertRaises(AttributeError):
+			vector.ZOffset = 4
+
+		self.assertEqual(Vector3D(1, 2, 3), vector)
+
+	def test_Representation(self) -> None:
+		self.assertEqual("Vector3D(1, 2, 3)", repr(Vector3D(1, 2, 3)))
+		self.assertEqual("(1, 2, 3)", str(Vector3D(1, 2, 3)))
+		self.assertEqual("Offset3D(1, 2, 3)", repr(Offset3D(1, 2, 3)))
+
+	def test_Copy(self) -> None:
+		vector = Vector3D(1, 2, 3)
+
+		for newVector in (copy(vector), deepcopy(vector)):
+			self.assertIs(Vector3D, type(newVector))
+			self.assertEqual(vector, newVector)
+
+
+class VectorComparison(Testcase):
+	def test_Equal_Offset(self) -> None:
+		self.assertTrue(Vector3D(1, 2, 3) == Offset3D(1, 2, 3))
+		self.assertTrue(Offset3D(1, 2, 3) == Vector3D(1, 2, 3))
+		self.assertTrue(Vector3D(1, 2, 3) != Offset3D(1, 2, 4))
+
+	def test_Equal_Tuple(self) -> None:
+		self.assertTrue(Vector3D(1, 2, 3) == (1, 2, 3))
+
+	def test_Equal_int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Vector3D(1, 2, 3) == 2
+
+		self.assertEqual("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Hash(self) -> None:
+		self.assertEqual(hash(Vector3D(1, 2, 3)), hash(Vector3D(1.0, 2.0, 3.0)))
+		self.assertEqual(hash((1, 2, 3)), hash(Vector3D(1, 2, 3)))
+
+	def test_Hash_DictionaryKey(self) -> None:
+		names = {Vector3D(0, 0, 1): "up", Vector3D(1, 0, 0): "east"}
+
+		self.assertEqual("up", names[Vector3D(0.0, 0.0, 1.0)])
+		self.assertNotIn(Vector3D(0, 0, -1), names)
+
+	def test_Hash_Set(self) -> None:
+		vectors = {Vector3D(1, 2, 3), Vector3D(1.0, 2.0, 3.0), Vector3D(3, 2, 1)}
+
+		self.assertEqual(2, len(vectors))
+
+	def test_Hash_Offset(self) -> None:
+		self.assertIsNone(Offset3D.__hash__)
+
+		with self.assertRaises(TypeError) as context:
+			_ = hash(Offset3D(1, 2, 3))
+
+		self.assertEqual("unhashable type: 'Offset3D'", str(context.exception))
+
+
+class VectorArithmetic(Testcase):
+	def test_Negate(self) -> None:
+		negated = -Vector3D(1, -2, 3)
+
+		self.assertIs(Vector3D, type(negated))
+		self.assertEqual(Vector3D(-1, 2, -3), negated)
+
+	def test_Plus_Offset(self) -> None:
+		result = Vector3D(1, 2, 3) + Offset3D(2, 3, 4)
+
+		self.assertIs(Vector3D, type(result))
+		self.assertEqual(Vector3D(3, 5, 7), result)
+
+	def test_Plus_int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Vector3D(1, 2, 3) + 2
+
+		self.assertEqual("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Minus_Tuple(self) -> None:
+		result = Vector3D(1, 2, 3) - (2, 3, 4)
+
+		self.assertIs(Vector3D, type(result))
+		self.assertEqual(Vector3D(-1, -1, -1), result)
+
+	def test_Multiply(self) -> None:
+		vector = Vector3D(1, 2, 3)
+
+		for product in (vector * 2, 2 * vector):
+			self.assertIs(Vector3D, type(product))
+			self.assertEqual(Vector3D(2, 4, 6), product)
+
+	def test_InplacePlus(self) -> None:
+		vector =   Vector3D(1, 2, 3)
+		original = vector
+
+		vector += Offset3D(1, 1, 1)
+
+		self.assertIsNot(original, vector)
+		self.assertIs(Vector3D, type(vector))
+		self.assertEqual(Vector3D(2, 3, 4), vector)
+		self.assertEqual(Vector3D(1, 2, 3), original)
+
+	def test_InplaceMultiply(self) -> None:
+		vector =   Vector3D(1, 2, 3)
+		original = vector
+
+		vector *= 2
+
+		self.assertIsNot(original, vector)
+		self.assertEqual(Vector3D(2, 4, 6), vector)
+		self.assertEqual(Vector3D(1, 2, 3), original)
+
+	def test_Offset_Plus_Vector(self) -> None:
+		result = Offset3D(1, 2, 3) + Vector3D(2, 3, 4)
+
+		self.assertIs(Offset3D, type(result))
+		self.assertEqual(Offset3D(3, 5, 7), result)
+
+	def test_Offset_InplaceMinus_Vector(self) -> None:
+		offset =   Offset3D(1, 2, 3)
+		original = offset
+
+		offset -= Vector3D(2, 3, 4)
+
+		self.assertIs(original, offset)
+		self.assertEqual(Offset3D(-1, -1, -1), offset)
+
+	def test_Normalized(self) -> None:
+		normalized = Vector3D(2, 3, 6).Normalized()
+
+		self.assertIs(Vector3D, type(normalized))
+		self.assertEqual(Vector3D(2 / 7, 3 / 7, 6 / 7), normalized)
+
+	def test_Normalized_Zero(self) -> None:
+		with self.assertRaises(InvalidOperationError) as context:
+			Vector3D(0, 0, 0).Normalized()
+
+		self.assertEqual("A zero vector can't be normalized.", str(context.exception))
+		self.assertListEqual(["Got vector (0, 0, 0).", "A zero vector has no direction."], context.exception.__notes__)
+
+	def test_ScalarProduct_Offset(self) -> None:
+		self.assertEqual(20, Vector3D(1, 2, 3).ScalarProduct(Offset3D(2, 3, 4)))
+		self.assertEqual(20, Offset3D(1, 2, 3).ScalarProduct(Vector3D(2, 3, 4)))
+
+	def test_VectorProduct_Offset(self) -> None:
+		cross = Vector3D(1, 0, 0).VectorProduct(Offset3D(0, 1, 0))
+
+		self.assertIs(Vector3D, type(cross))
+		self.assertEqual(Vector3D(0, 0, 1), cross)
+
+	def test_VectorProduct_Vector(self) -> None:
+		cross = Offset3D(1, 0, 0).VectorProduct(Vector3D(0, 1, 0))
+
+		self.assertIs(Offset3D, type(cross))
+		self.assertEqual(Offset3D(0, 0, 1), cross)
+
+	def test_VectorProduct_Tuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			Vector3D(1, 0, 0).VectorProduct((0, 1, 0))
+
+		self.assertEqual("Parameter 'other' is not of type 'BaseVector3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Point_Plus_Vector(self) -> None:
+		newPoint = Point3D(1, 2, 3) + Vector3D(2, 3, 4)
+
+		self.assertIs(Point3D, type(newPoint))
+		self.assertTupleEqual((3, 5, 7), newPoint.ToTuple())
+
+	def test_Point_Minus_Vector(self) -> None:
+		point = Point3D(1, 2, 3)
+
+		newPoint = point - Vector3D(2, 3, 4)
+
+		self.assertIs(Point3D, type(newPoint))
+		self.assertTupleEqual((-1, -1, -1), newPoint.ToTuple())
+		self.assertTupleEqual((1, 2, 3), point.ToTuple())
+
+	def test_Point_Minus_Offset(self) -> None:
+		newPoint = Point3D(1, 2, 3) - Offset3D(2, 3, 4)
+
+		self.assertIs(Point3D, type(newPoint))
+		self.assertTupleEqual((-1, -1, -1), newPoint.ToTuple())
+
+	def test_Point_Minus_int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Point3D(1, 2, 3) - 2
+
+		self.assertEqual("Parameter 'other' is not of type 'Point3D' or 'BaseVector3D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Point_InplacePlus_Vector(self) -> None:
+		point =    Point3D(1, 2, 3)
+		original = point
+
+		point += Vector3D(2, 3, 4)
+
+		self.assertIs(original, point)
+		self.assertTupleEqual((3, 5, 7), point.ToTuple())
+
+	def test_Point_InplaceMinus_Vector(self) -> None:
+		point =    Point3D(1, 2, 3)
+		original = point
+
+		point -= Vector3D(2, 3, 4)
+
+		self.assertIs(original, point)
+		self.assertTupleEqual((-1, -1, -1), point.ToTuple())
+
+	def test_BoundingBox_Plus_Vector(self) -> None:
+		newBox = BoundingBox3D(1, 2, 3, 4, 6, 8) + Vector3D(10, -2, 1)
+
+		self.assertIs(BoundingBox3D, type(newBox))
+		self.assertTupleEqual((11, 0, 4, 14, 4, 9), newBox.ToTuple())
+
+	def test_LineSegment_Move_Vector(self) -> None:
+		line = LineSegment3D(Point3D(1, 2, 3), Point3D(4, 6, 8))
+
+		line.Move(Vector3D(1, -1, 2))
+
+		self.assertTupleEqual(((2, 1, 5), (5, 5, 10)), line.ToTuple())
 
 
 class Bounds(Testcase):
@@ -1717,7 +1993,7 @@ class Bounds(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = box + (10, -2, 1)
 
-		self.assertEqual("Parameter 'other' is not of type 'Offset3D'.", str(context.exception))
+		self.assertEqual("Parameter 'other' is not of type 'BaseVector3D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 	def test_Copy(self) -> None:
@@ -1779,7 +2055,7 @@ class Moving(Testcase):
 		with self.assertRaises(TypeError) as context:
 			line.Move((1, 1, 1))
 
-		self.assertEqual("Parameter 'offset' is not of type 'Offset3D'.", str(context.exception))
+		self.assertEqual("Parameter 'offset' is not of type 'BaseVector3D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 		self.assertTupleEqual(((1, 2, 3), (4, 6, 8)), line.ToTuple())
 
