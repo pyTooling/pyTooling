@@ -3012,18 +3012,18 @@ class Ray2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 	The ray is in absolute coordinates, relative to the origin. Its start point is a free copy, so it owns no point of an
 	element. Two rays are equal, if they start at the same point and their directions point the same way, whatever their
-	lengths. A ray is unhashable, as its start point and direction can be changed.
+	lengths. A ray is unhashable, as its start point can be changed.
 	"""
 
 	_start:     Point2D[Coordinate]   #: The start point of the ray, in absolute coordinates and without owner.
-	_direction: Offset2D[Coordinate]  #: The direction of the ray.
+	_direction: Vector2D[Coordinate]  #: The direction of the ray.
 
 	def __init__(self, start: Point2D[Coordinate], direction: BaseVector2D[Coordinate]) -> None:
 		"""
 		Initializes a 2D ray from its start point and its direction.
 
 		The start point is taken in absolute coordinates (a point inside a group is converted), and the direction is
-		copied into a new :class:`Offset2D`.
+		copied into a new :class:`Vector2D`.
 
 		:param start:       The start point of the ray.
 		:param direction:   The direction of the ray, a 2D-vector or 2D-offset.
@@ -3054,7 +3054,7 @@ class Ray2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._start =     start.Absolute
-		self._direction = Offset2D(direction._xOffset, direction._yOffset)
+		self._direction = Vector2D(direction._xOffset, direction._yOffset)
 
 	@readonly
 	def Start(self) -> Point2D[Coordinate]:
@@ -3066,7 +3066,7 @@ class Ray2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return self._start
 
 	@readonly
-	def Direction(self) -> Offset2D[Coordinate]:
+	def Direction(self) -> Vector2D[Coordinate]:
 		"""
 		Read-only property to access the direction of the ray (:attr:`_direction`).
 
@@ -3625,6 +3625,14 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		:returns: 2D-offset as :class:`Offset2D`
 		"""
 		return self._end - self._start
+
+	def ToVector(self) -> Vector2D[Coordinate]:
+		"""
+		Convert this 2D line segment to a 2D-vector from its start point to its end point.
+
+		:returns: 2D-vector as :class:`Vector2D`
+		"""
+		return Vector2D(self._end._x - self._start._x, self._end._y - self._start._y)
 
 	def ToTuple(self) -> tuple[tuple[Coordinate, Coordinate], tuple[Coordinate, Coordinate]]:
 		"""

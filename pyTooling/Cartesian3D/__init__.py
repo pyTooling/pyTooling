@@ -3447,18 +3447,18 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 	The ray is in absolute coordinates, relative to the origin. Its start point is a free copy, so it owns no point of an
 	element. Two rays are equal, if they start at the same point and their directions point the same way, whatever their
-	lengths. A ray is unhashable, as its start point and direction can be changed.
+	lengths. A ray is unhashable, as its start point can be changed.
 	"""
 
 	_start:     Point3D[Coordinate]   #: The start point of the ray, in absolute coordinates and without owner.
-	_direction: Offset3D[Coordinate]  #: The direction of the ray.
+	_direction: Vector3D[Coordinate]  #: The direction of the ray.
 
 	def __init__(self, start: Point3D[Coordinate], direction: BaseVector3D[Coordinate]) -> None:
 		"""
 		Initializes a 3D ray from its start point and its direction.
 
 		The start point is taken in absolute coordinates (a point inside a group is converted), and the direction is
-		copied into a new :class:`Offset3D`.
+		copied into a new :class:`Vector3D`.
 
 		:param start:       The start point of the ray.
 		:param direction:   The direction of the ray, a 3D-vector or 3D-offset.
@@ -3489,7 +3489,7 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		self._start =     start.Absolute
-		self._direction = Offset3D(direction._xOffset, direction._yOffset, direction._zOffset)
+		self._direction = Vector3D(direction._xOffset, direction._yOffset, direction._zOffset)
 
 	@readonly
 	def Start(self) -> Point3D[Coordinate]:
@@ -3501,7 +3501,7 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return self._start
 
 	@readonly
-	def Direction(self) -> Offset3D[Coordinate]:
+	def Direction(self) -> Vector3D[Coordinate]:
 		"""
 		Read-only property to access the direction of the ray (:attr:`_direction`).
 
@@ -3993,6 +3993,14 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 		:returns: 3D-offset as :class:`Offset3D`
 		"""
 		return self._end - self._start
+
+	def ToVector(self) -> Vector3D[Coordinate]:
+		"""
+		Convert this 3D line segment to a 3D-vector from its start point to its end point.
+
+		:returns: 3D-vector as :class:`Vector3D`
+		"""
+		return Vector3D(self._end._x - self._start._x, self._end._y - self._start._y, self._end._z - self._start._z)
 
 	def ToTuple(self) -> tuple[tuple[Coordinate, Coordinate, Coordinate], tuple[Coordinate, Coordinate, Coordinate]]:
 		"""

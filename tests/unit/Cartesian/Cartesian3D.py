@@ -210,6 +210,8 @@ class Instantiation(Testcase):
 
 		self.assertEqual(sqrt(3), line.Length)
 		self.assertEqual(offset, line.ToOffset())
+		self.assertIs(Vector3D, type(line.ToVector()))
+		self.assertEqual(Vector3D(1, 1, 1), line.ToVector())
 		self.assertTupleEqual(((1, 2, 3), (2, 3, 4)), line.ToTuple())
 
 	def test_Point_None1(self) -> None:
@@ -3813,11 +3815,16 @@ class PlaneVectors(Testcase):
 		self.assertEqual(YZPlane3D(5), plane)
 
 	def test_Ray_Vector(self) -> None:
-		"""A ray stores its direction as a new offset."""
-		ray = Ray3D(Point3D(0, 0, 0), Vector3D(1, 2, 3))
+		"""A ray stores its direction as a new, immutable vector."""
+		ray1 = Ray3D(Point3D(0, 0, 0), Vector3D(1, 2, 3))
+		ray2 = Ray3D(Point3D(0, 0, 0), Offset3D(1, 2, 3))
 
-		self.assertIs(Offset3D, type(ray.Direction))
-		self.assertEqual(Vector3D(1, 2, 3), ray.Direction)
+		self.assertIs(Vector3D, type(ray1.Direction))
+		self.assertEqual(Vector3D(1, 2, 3), ray1.Direction)
+		self.assertIs(Vector3D, type(ray2.Direction))
+		self.assertEqual(Vector3D(1, 2, 3), ray2.Direction)
+		with self.assertRaises(AttributeError):
+			ray2.Direction.XOffset = 7
 
 
 class YZPlaneClassmethods(Testcase):

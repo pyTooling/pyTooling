@@ -178,6 +178,8 @@ class Instantiation(Testcase):
 
 		self.assertEqual(sqrt(2), line.Length)
 		self.assertEqual(offset, line.ToOffset())
+		self.assertIs(Vector2D, type(line.ToVector()))
+		self.assertEqual(Vector2D(1, 1), line.ToVector())
 		self.assertTupleEqual(((1, 2), (2, 3)), line.ToTuple())
 
 	def test_Point_None1(self) -> None:
@@ -3088,13 +3090,18 @@ class LineVectors(Testcase):
 		self.assertEqual(HorizontalLine2D(5), line)
 
 	def test_Ray_Vector(self) -> None:
-		"""A ray stores its direction as a new offset."""
+		"""A ray stores its direction as a new, immutable vector."""
 		direction = Vector2D(1, 2)
 
-		ray = Ray2D(Point2D(0, 0), direction)
+		ray1 = Ray2D(Point2D(0, 0), direction)
+		ray2 = Ray2D(Point2D(0, 0), Offset2D(1, 2))
 
-		self.assertIs(Offset2D, type(ray.Direction))
-		self.assertEqual(direction, ray.Direction)
+		self.assertIs(Vector2D, type(ray1.Direction))
+		self.assertEqual(direction, ray1.Direction)
+		self.assertIs(Vector2D, type(ray2.Direction))
+		self.assertEqual(direction, ray2.Direction)
+		with self.assertRaises(AttributeError):
+			ray2.Direction.XOffset = 7
 
 	def test_Ray_ZeroVector(self) -> None:
 		with self.assertRaises(ValueError) as context:
