@@ -549,12 +549,12 @@ class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector2D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector2D):
-			return self.__class__(
+			return Point2D(
 				self._x + other._xOffset,
 				self._y + other._yOffset
 			)
 		elif isinstance(other, tuple):
-			return self.__class__(
+			return Point2D(
 				self._x + other[0],
 				self._y + other[1]
 			)

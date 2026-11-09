@@ -182,6 +182,9 @@ Version 10.x (2026)
      or square, which raised a :exc:`ValueError` for these corners before.
    * :mod:`pyTooling.Tracing`: an OTLP timestamp in the hour repeated at the end of daylight saving time was read
      back one hour early.
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: adding an offset or a tuple to an origin
+     (``Origin2D() + Offset2D(1, 1)``) raised :exc:`TypeError`, as the new point was created as an origin. It creates
+     a :class:`~pyTooling.Cartesian2D.Point2D`/:class:`~pyTooling.Cartesian3D.Point3D` now, like ``origin - offset``.
 
 
 .. topic:: :gh:`v10.1.1 - 29.10.2026 <pyTooling/pyTooling/releases/v10.1.1>`
