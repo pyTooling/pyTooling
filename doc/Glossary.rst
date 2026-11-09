@@ -230,8 +230,9 @@ Glossary
      vectors have a zero cross product. In 2D it is the number ``x1 * y2 - y1 * x2`` (the z-component of the 3D cross
      product): zero for parallel vectors, positive if the second vector points counterclockwise from the first.
 
-     In pyTooling an offset is a vector: :meth:`Offset2D.VectorProduct <pyTooling.Cartesian2D.Offset2D.VectorProduct>`
-     returns the number, :meth:`Offset3D.VectorProduct <pyTooling.Cartesian3D.Offset3D.VectorProduct>` a new offset.
+     In pyTooling, :meth:`BaseVector2D.VectorProduct <pyTooling.Cartesian2D.BaseVector2D.VectorProduct>` of a
+     :term:`vector` or an offset returns the number, :meth:`BaseVector3D.VectorProduct
+     <pyTooling.Cartesian3D.BaseVector3D.VectorProduct>` a new vector of the left operand's class.
 
      MathWorld: `Cross Product <https://mathworld.wolfram.com/CrossProduct.html>`__
 
@@ -290,8 +291,9 @@ Glossary
      ``x1 * x2 + y1 * y2`` (in 3D also ``+ z1 * z2``). It is the product of both lengths and the cosine of the angle
      between the vectors: zero for perpendicular vectors, positive if they point into the same half-space.
 
-     In pyTooling an offset is a vector: :meth:`Offset2D.ScalarProduct <pyTooling.Cartesian2D.Offset2D.ScalarProduct>`
-     and :meth:`Offset3D.ScalarProduct <pyTooling.Cartesian3D.Offset3D.ScalarProduct>`.
+     In pyTooling, a :term:`vector` or an offset computes it with
+     :meth:`BaseVector2D.ScalarProduct <pyTooling.Cartesian2D.BaseVector2D.ScalarProduct>` and
+     :meth:`BaseVector3D.ScalarProduct <pyTooling.Cartesian3D.BaseVector3D.ScalarProduct>`.
 
      MathWorld: `Dot Product <https://mathworld.wolfram.com/DotProduct.html>`__
 
@@ -1221,6 +1223,19 @@ Glossary
      resource persistently without saying where to get it - ``urn:isbn:0451450523`` is a book, not a download.
 
      Wikipedia: :wiki:`Uniform Resource Name <Uniform_Resource_Name>`
+
+   Vector
+     A *vector* has a length and a direction, but no position. In cartesian coordinates it is given by its components,
+     ``(x, y)`` in 2D: the difference of two points, or the displacement moving every point by the same amount.
+
+     In pyTooling, a :class:`~pyTooling.Cartesian2D.Vector2D` is an immutable vector, a value like a direction or a
+     normal, and an :class:`~pyTooling.Cartesian2D.Offset2D` a mutable one, a displacement. Both derive from
+     :class:`~pyTooling.Cartesian2D.BaseVector2D`; :mod:`pyTooling.Cartesian3D` has the same classes. See
+     :ref:`STRUCT/Cartesian2D/Vector2D`.
+
+     MathWorld: `Vector <https://mathworld.wolfram.com/Vector.html>`__
+
+     Wikipedia: :wiki:`Euclidean vector <Euclidean_vector>`
 
    Version Range
      A *version range* states which versions a requirement accepts - ``>=1.2.0,<2.0.0`` - as a set with a lower
