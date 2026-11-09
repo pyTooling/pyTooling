@@ -659,15 +659,28 @@ class Instantiation(Testcase):
 
 	def test_Ellipse_DirectionUnit(self) -> None:
 		"""A direction of length 1 keeps its values, but is copied."""
-		direction = Offset2D(0, -1)
+		direction = Offset2D(0, 1)
 
 		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=direction)
 
 		self.assertIsNot(direction, ellipse.Direction)
-		self.assertTupleEqual((0, -1), ellipse.Direction.ToTuple())
+		self.assertTupleEqual((0, 1), ellipse.Direction.ToTuple())
 		self.assertIs(int, type(ellipse.Direction.YOffset))
-		self.assertTupleEqual((0, -3), ellipse.FirstAxis.ToTuple())
-		self.assertTupleEqual((2, 0), ellipse.SecondAxis.ToTuple())
+		self.assertTupleEqual((0, 3), ellipse.FirstAxis.ToTuple())
+		self.assertTupleEqual((-2, 0), ellipse.SecondAxis.ToTuple())
+
+	def test_Ellipse_DirectionReversed(self) -> None:
+		"""A direction whose first non-zero component is negative is reversed."""
+		ellipse1 = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(0, -1))
+		ellipse2 = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(-3, 4))
+		ellipse3 = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(-2, 0))
+
+		self.assertTupleEqual((0, 1), ellipse1.Direction.ToTuple())
+		self.assertIs(int, type(ellipse1.Direction.XOffset))
+		self.assertIs(int, type(ellipse1.Direction.YOffset))
+		self.assertTupleEqual((0.6, -0.8), ellipse2.Direction.ToTuple())
+		self.assertTupleEqual((1.0, 0.0), ellipse3.Direction.ToTuple())
+		self.assertEqual("0.0", str(ellipse3.Direction.YOffset))
 
 	def test_Ellipse_DirectionTuple(self) -> None:
 		with self.assertRaises(TypeError) as context:
@@ -2291,10 +2304,10 @@ class Mirroring(Testcase):
 		self.assertTupleEqual((9, 2), ellipse.Center.ToTuple())
 		self.assertEqual(3, ellipse.FirstRadius)
 		self.assertEqual(2, ellipse.SecondRadius)
-		self.assertTupleEqual((-1, 0), ellipse.Direction.ToTuple())
+		self.assertTupleEqual((1, 0), ellipse.Direction.ToTuple())
 
 	def test_Ellipse_MirrorX_Rotated(self) -> None:
-		"""Mirrored at its right edge, a rotated ellipse starts there and negates the direction's x-component."""
+		"""Mirrored at its right edge, a rotated ellipse starts there and negates the direction's y-component."""
 		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(3, 4))
 		maxX =    ellipse.BoundingBox.MaxX
 
@@ -2302,7 +2315,7 @@ class Mirroring(Testcase):
 
 		self.assertAlmostEqual(maxX, ellipse.BoundingBox.MinX)
 		self.assertAlmostEqual(2, ellipse.Center.Y)
-		self.assertTupleEqual((-0.6, 0.8), ellipse.Direction.ToTuple())
+		self.assertTupleEqual((0.6, -0.8), ellipse.Direction.ToTuple())
 
 	def test_Ellipse_MirrorX_MinX(self) -> None:
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
@@ -3330,7 +3343,7 @@ class Representation(Testcase):
 	def test_Ellipse_str_Direction(self) -> None:
 		ellipse = Ellipse(Point2D(1.5, 2), 0.5, 1.25, direction=Offset2D(0, -1))
 
-		self.assertEqual("((1.5, 2), r1=0.5, r2=1.25, direction=(0, -1))", str(ellipse))
+		self.assertEqual("((1.5, 2), r1=0.5, r2=1.25, direction=(0, 1))", str(ellipse))
 
 
 class ElementData(Testcase):
@@ -4348,7 +4361,7 @@ class ObliqueMirroring(Testcase):
 		ellipse.MirrorAt(Line2D.FromPoints(Point2D(4, 0), Point2D(4, 1)))
 
 		self.assertTupleEqual((7.0, 8.0), ellipse.Center.ToTuple())
-		self.assertTupleEqual((-1, 0), ellipse.Direction.ToTuple())
+		self.assertTupleEqual((1, 0), ellipse.Direction.ToTuple())
 		self.assertEqual(3, ellipse.FirstRadius)
 
 	def test_Ellipse_MirrorAtHook(self) -> None:
@@ -4359,14 +4372,14 @@ class ObliqueMirroring(Testcase):
 		ellipse._MirrorAt(Offset2D(0, 1), -1)
 
 		self.assertTupleEqual((7, -4), ellipse.Center.ToTuple())
-		self.assertTupleEqual((-1, 0), ellipse.Direction.ToTuple())
+		self.assertTupleEqual((1, 0), ellipse.Direction.ToTuple())
 
 		ellipse._MirrorAt(Offset2D(0.6, 0.8), 2.0)
 
 		self.assertAlmostEqual(8.2, ellipse.Center.X)
 		self.assertAlmostEqual(-2.4, ellipse.Center.Y)
-		self.assertAlmostEqual(-0.28, ellipse.Direction.XOffset)
-		self.assertAlmostEqual(0.96, ellipse.Direction.YOffset)
+		self.assertAlmostEqual(0.28, ellipse.Direction.XOffset)
+		self.assertAlmostEqual(-0.96, ellipse.Direction.YOffset)
 
 	def test_Path(self) -> None:
 		"""Each joint is mirrored once; the arc reverses its direction, the control point is mirrored."""

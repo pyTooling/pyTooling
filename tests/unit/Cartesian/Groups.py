@@ -1512,7 +1512,7 @@ class Mirroring(Testcase):
 		self.assertTupleEqual((-1, 2), ellipse.Center.ToTuple())
 		self.assertEqual(3, ellipse.FirstRadius)
 		self.assertEqual(2, ellipse.SecondRadius)
-		self.assertTupleEqual((-1, 0), ellipse.Direction.ToTuple())
+		self.assertTupleEqual((1, 0), ellipse.Direction.ToTuple())
 		self.assertEqual(BoundingBox2D(2, 20, 8, 24), group.BoundingBox)
 
 	def test_MirrorX(self) -> None:
@@ -1705,7 +1705,7 @@ class Mirroring(Testcase):
 
 		self.assertTupleEqual((30.0, 20), group.Offset.ToTuple())
 		self.assertTupleEqual((-5, 6), ellipse.Center.ToTuple())
-		self.assertTupleEqual((-1, 0), ellipse.Direction.ToTuple())
+		self.assertTupleEqual((1, 0), ellipse.Direction.ToTuple())
 
 	def test_FromElement_Empty(self) -> None:
 		with self.assertRaises(EmptyGroupError) as context:
