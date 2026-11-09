@@ -492,15 +492,6 @@ class Group2D(Element2D[Coordinate], Container2DMixin, Generic[Coordinate]):
 		for child in self._children:
 			child._MirrorAt(normal, 0)
 
-	@readonly
-	def _CanMirrorAtObliqueLine(self) -> bool:
-		"""
-		Read-only property to return, if the group can be mirrored at an oblique line.
-
-		:returns: ``True``, if all its children can be mirrored at an oblique line.
-		"""
-		return all(child._CanMirrorAtObliqueLine for child in self._children)
-
 	def Copy(self) -> Self:
 		"""
 		Create a new group as a copy of this group.

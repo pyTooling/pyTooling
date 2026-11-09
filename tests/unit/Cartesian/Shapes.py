@@ -114,8 +114,8 @@ class Instantiation(Testcase):
 		self.assertNotIsInstance(Ellipse(Point2D(1, 2), 3, 3), Circle)
 		self.assertFalse(issubclass(Ellipse, Circle))
 		self.assertFalse(issubclass(Polygon, EllipticalGeometry2D))
-		self.assertFalse(hasattr(Circle, "RadiusX"))
-		self.assertFalse(hasattr(Circle, "RadiusY"))
+		self.assertFalse(hasattr(Circle, "FirstRadius"))
+		self.assertFalse(hasattr(Circle, "SecondRadius"))
 		self.assertFalse(hasattr(Ellipse, "Radius"))
 
 	def test_Polygon(self) -> None:
@@ -620,21 +620,91 @@ class Instantiation(Testcase):
 
 		self.assertIsInstance(ellipse, Shape)
 		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
-		self.assertEqual(3, ellipse.RadiusX)
-		self.assertEqual(2, ellipse.RadiusY)
+		self.assertEqual(3, ellipse.FirstRadius)
+		self.assertEqual(2, ellipse.SecondRadius)
+
+	def test_Ellipse_DefaultDirection(self) -> None:
+		"""Without a direction, the first axis points in x-direction; integer radii give integer axes."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+
+		self.assertIsInstance(ellipse.Direction, Offset2D)
+		self.assertTupleEqual((1, 0), ellipse.Direction.ToTuple())
+		self.assertIs(int, type(ellipse.Direction.XOffset))
+		self.assertIs(int, type(ellipse.Direction.YOffset))
+		self.assertTupleEqual((3, 0), ellipse.FirstAxis.ToTuple())
+		self.assertIs(int, type(ellipse.FirstAxis.XOffset))
+		self.assertTupleEqual((0, 2), ellipse.SecondAxis.ToTuple())
+		self.assertIs(int, type(ellipse.SecondAxis.YOffset))
+
+	def test_Ellipse_DirectionNone(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=None)
+
+		self.assertTupleEqual((1, 0), ellipse.Direction.ToTuple())
+
+	def test_Ellipse_Direction(self) -> None:
+		"""A direction of another length than 1 is normalized; the given offset isn't referenced."""
+		direction = Offset2D(3, 4)
+
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=direction)
+
+		self.assertIsNot(direction, ellipse.Direction)
+		self.assertTupleEqual((3, 4), direction.ToTuple())
+		self.assertTupleEqual((0.6, 0.8), ellipse.Direction.ToTuple())
+		self.assertAlmostEqual(1.8, ellipse.FirstAxis.XOffset)
+		self.assertAlmostEqual(2.4, ellipse.FirstAxis.YOffset)
+		self.assertAlmostEqual(-1.6, ellipse.SecondAxis.XOffset)
+		self.assertAlmostEqual(1.2, ellipse.SecondAxis.YOffset)
+		self.assertEqual(3, ellipse.FirstRadius)
+		self.assertEqual(2, ellipse.SecondRadius)
+
+	def test_Ellipse_DirectionUnit(self) -> None:
+		"""A direction of length 1 keeps its values, but is copied."""
+		direction = Offset2D(0, -1)
+
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=direction)
+
+		self.assertIsNot(direction, ellipse.Direction)
+		self.assertTupleEqual((0, -1), ellipse.Direction.ToTuple())
+		self.assertIs(int, type(ellipse.Direction.YOffset))
+		self.assertTupleEqual((0, -3), ellipse.FirstAxis.ToTuple())
+		self.assertTupleEqual((2, 0), ellipse.SecondAxis.ToTuple())
+
+	def test_Ellipse_DirectionTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Ellipse(Point2D(1, 2), 3, 2, direction=(1, 1))
+
+		self.assertEqual("Parameter 'direction' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Ellipse_DirectionZero(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(0, 0))
+
+		self.assertEqual("Parameter 'direction' is a zero offset.", str(context.exception))
+		self.assertListEqual(
+			["Got offset (0, 0).", "An ellipse needs a direction of its first axis."],
+			context.exception.__notes__
+		)
+
+	def test_Ellipse_DirectionAfterRadii(self) -> None:
+		"""The radii are checked before the direction, in parameter order."""
+		with self.assertRaises(ValueError) as context:
+			_ = Ellipse(Point2D(1, 2), 3, 0, direction=Offset2D(0, 0))
+
+		self.assertEqual("Parameter 'secondRadius' isn't positive.", str(context.exception))
 
 	def test_Ellipse_float(self) -> None:
 		ellipse = Ellipse(Point2D(1.5, 2.5), 0.5, 1.25)
 
 		self.assertTupleEqual((1.5, 2.5), ellipse.Center.ToTuple())
-		self.assertEqual(0.5, ellipse.RadiusX)
-		self.assertEqual(1.25, ellipse.RadiusY)
+		self.assertEqual(0.5, ellipse.FirstRadius)
+		self.assertEqual(1.25, ellipse.SecondRadius)
 
 	def test_Ellipse_EqualRadii(self) -> None:
 		"""An ellipse with equal radii is allowed, it is a circle."""
 		ellipse = Ellipse(Point2D(1, 2), 3, 3)
 
-		self.assertEqual(ellipse.RadiusX, ellipse.RadiusY)
+		self.assertEqual(ellipse.FirstRadius, ellipse.SecondRadius)
 
 	def test_Ellipse_CenterNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -649,44 +719,44 @@ class Instantiation(Testcase):
 		self.assertEqual("Parameter 'center' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
-	def test_Ellipse_RadiusXNone(self) -> None:
+	def test_Ellipse_FirstRadiusNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = Ellipse(Point2D(1, 2), None, 2)
 
-		self.assertEqual("Parameter 'radiusX' is None.", str(context.exception))
+		self.assertEqual("Parameter 'firstRadius' is None.", str(context.exception))
 
-	def test_Ellipse_RadiusXStr(self) -> None:
+	def test_Ellipse_FirstRadiusStr(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = Ellipse(Point2D(1, 2), "3", 2)
 
-		self.assertEqual("Parameter 'radiusX' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertEqual("Parameter 'firstRadius' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
-	def test_Ellipse_RadiusXZero(self) -> None:
+	def test_Ellipse_FirstRadiusZero(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = Ellipse(Point2D(1, 2), 0, 2)
 
-		self.assertEqual("Parameter 'radiusX' isn't positive.", str(context.exception))
+		self.assertEqual("Parameter 'firstRadius' isn't positive.", str(context.exception))
 		self.assertListEqual(["Got value '0'."], context.exception.__notes__)
 
-	def test_Ellipse_RadiusYNone(self) -> None:
+	def test_Ellipse_SecondRadiusNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = Ellipse(Point2D(1, 2), 3, None)
 
-		self.assertEqual("Parameter 'radiusY' is None.", str(context.exception))
+		self.assertEqual("Parameter 'secondRadius' is None.", str(context.exception))
 
-	def test_Ellipse_RadiusYStr(self) -> None:
+	def test_Ellipse_SecondRadiusStr(self) -> None:
 		with self.assertRaises(TypeError) as context:
 			_ = Ellipse(Point2D(1, 2), 3, "2")
 
-		self.assertEqual("Parameter 'radiusY' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertEqual("Parameter 'secondRadius' is not of type 'float' or 'int'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
-	def test_Ellipse_RadiusYNegative(self) -> None:
+	def test_Ellipse_SecondRadiusNegative(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = Ellipse(Point2D(1, 2), 3, -1.5)
 
-		self.assertEqual("Parameter 'radiusY' isn't positive.", str(context.exception))
+		self.assertEqual("Parameter 'secondRadius' isn't positive.", str(context.exception))
 		self.assertListEqual(["Got value '-1.5'."], context.exception.__notes__)
 
 	def test_Ellipse_copyPointsNone(self) -> None:
@@ -1033,10 +1103,10 @@ class Slots(Testcase):
 			self.assertNotIn("__dict__", dir(shapeClass))
 
 	def test_EllipticalGeometry2D(self) -> None:
-		"""The center is a slot of the base-class, the radii are slots of the derived classes."""
+		"""The center is a slot of the base-class, the radii and the direction are slots of the derived classes."""
 		self.assertTupleEqual(("_center", ), EllipticalGeometry2D.__slots__)
 		self.assertTupleEqual(("_radius", ), Circle.__slots__)
-		self.assertTupleEqual(("_radiusX", "_radiusY"), Ellipse.__slots__)
+		self.assertTupleEqual(("_direction", "_firstRadius", "_secondRadius"), Ellipse.__slots__)
 
 	def test_Polygon(self) -> None:
 		class LabeledPolygon(Polygon, metaclass=ExtendedType, slots=True):
@@ -1126,8 +1196,8 @@ class Slots(Testcase):
 		class LabeledEllipse(Ellipse, metaclass=ExtendedType, slots=True):
 			_label: str
 
-			def __init__(self, center: Point2D, radiusX: int, radiusY: int, label: str) -> None:
-				super().__init__(center, radiusX, radiusY)
+			def __init__(self, center: Point2D, firstRadius: int, secondRadius: int, label: str) -> None:
+				super().__init__(center, firstRadius, secondRadius)
 				self._label = label
 
 		ellipse = LabeledEllipse(Point2D(1, 2), 3, 2, "ellipse")
@@ -1417,13 +1487,32 @@ class Properties(Testcase):
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
 
 		with self.assertRaises(AttributeError):
-			ellipse.RadiusX = 4
+			ellipse.FirstRadius = 4
 
 		with self.assertRaises(AttributeError):
-			ellipse.RadiusY = 4
+			ellipse.SecondRadius = 4
 
-		self.assertEqual(3, ellipse.RadiusX)
-		self.assertEqual(2, ellipse.RadiusY)
+		self.assertEqual(3, ellipse.FirstRadius)
+		self.assertEqual(2, ellipse.SecondRadius)
+
+	def test_Ellipse_Direction(self) -> None:
+		"""The direction is the stored offset; the axes are new offsets."""
+		ellipse =   Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(3, 4))
+		direction = ellipse.Direction
+
+		with self.assertRaises(AttributeError):
+			ellipse.Direction = Offset2D(1, 0)
+
+		with self.assertRaises(AttributeError):
+			ellipse.FirstAxis = Offset2D(1, 0)
+
+		with self.assertRaises(AttributeError):
+			ellipse.SecondAxis = Offset2D(0, 1)
+
+		self.assertIs(direction, ellipse.Direction)
+		self.assertIsNot(ellipse.FirstAxis, ellipse.FirstAxis)
+		self.assertIsNot(ellipse.SecondAxis, ellipse.SecondAxis)
+		self.assertTupleEqual((0.6, 0.8), ellipse.Direction.ToTuple())
 
 
 class Aliases(Testcase):
@@ -1664,6 +1753,14 @@ class Measurements(Testcase):
 		self.assertLess(ellipse.Perimeter, 4.0)
 		self.assertTrue(isclose(4.0, ellipse.Perimeter, rel_tol=4.1e-4))
 
+	def test_Ellipse_Rotated(self) -> None:
+		"""A rotated ellipse has the area and perimeter of the axis-aligned one."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(1, 1))
+		aligned = Ellipse(Point2D(1, 2), 3, 2)
+
+		self.assertEqual(aligned.Area, ellipse.Area)
+		self.assertEqual(aligned.Perimeter, ellipse.Perimeter)
+
 	def test_Ellipse_Perimeter_Circle(self) -> None:
 		"""With equal radii, the approximation is the circle's perimeter."""
 		ellipse = Ellipse(Point2D(1, 2), 3, 3)
@@ -1722,9 +1819,42 @@ class Bounds(Testcase):
 		self.assertTupleEqual((-2, -1, 4, 5), circle.BoundingBox.ToTuple())
 
 	def test_Ellipse(self) -> None:
+		"""The default direction gives the exact values of the axis-aligned box, as floats."""
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
 
-		self.assertTupleEqual((-2, 0, 4, 4), ellipse.BoundingBox.ToTuple())
+		box = ellipse.BoundingBox
+
+		self.assertTupleEqual((-2, 0, 4, 4), box.ToTuple())
+		for value in box.ToTuple():
+			self.assertIs(float, type(value))
+
+	def test_Ellipse_Vertical(self) -> None:
+		"""With the direction (0, 1), the first radius reaches in y-direction."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(0, 1))
+
+		self.assertTupleEqual((-1, -1, 3, 5), ellipse.BoundingBox.ToTuple())
+
+	def test_Ellipse_Rotated(self) -> None:
+		"""Rotated by 45 degrees, the box reaches sqrt(2 ** 2 / 2 + 1 ** 2 / 2) in both directions."""
+		ellipse = Ellipse(Point2D(1, 2), 2, 1, direction=Offset2D(1, 1))
+
+		box = ellipse.BoundingBox
+
+		self.assertAlmostEqual(1 - sqrt(2.5), box.MinX)
+		self.assertAlmostEqual(2 - sqrt(2.5), box.MinY)
+		self.assertAlmostEqual(1 + sqrt(2.5), box.MaxX)
+		self.assertAlmostEqual(2 + sqrt(2.5), box.MaxY)
+
+	def test_Ellipse_Rotated_Asymmetric(self) -> None:
+		"""With the direction (3, 4), the box reaches sqrt(1.8 ** 2 + 1.6 ** 2) and sqrt(2.4 ** 2 + 1.2 ** 2)."""
+		ellipse = Ellipse(Point2D(0, 0), 3, 2, direction=Offset2D(3, 4))
+
+		box = ellipse.BoundingBox
+
+		self.assertAlmostEqual(-sqrt(5.8), box.MinX)
+		self.assertAlmostEqual(-sqrt(7.2), box.MinY)
+		self.assertAlmostEqual(sqrt(5.8), box.MaxX)
+		self.assertAlmostEqual(sqrt(7.2), box.MaxY)
 
 	def test_ReadOnly(self) -> None:
 		circle = Circle(Point2D(1, 2), 3)
@@ -1871,8 +2001,9 @@ class Moving(Testcase):
 
 		self.assertIs(center, ellipse.Center)
 		self.assertTupleEqual((3, 0), ellipse.Center.ToTuple())
-		self.assertEqual(3, ellipse.RadiusX)
-		self.assertEqual(2, ellipse.RadiusY)
+		self.assertEqual(3, ellipse.FirstRadius)
+		self.assertEqual(2, ellipse.SecondRadius)
+		self.assertTupleEqual((1, 0), ellipse.Direction.ToTuple())
 
 	def test_Ellipse_None(self) -> None:
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
@@ -2120,8 +2251,19 @@ class Mirroring(Testcase):
 		ellipse.MirrorY(Alignment2D.MaxY)
 
 		self.assertTupleEqual((1, 6), ellipse.Center.ToTuple())
-		self.assertEqual(3, ellipse.RadiusX)
-		self.assertEqual(2, ellipse.RadiusY)
+		self.assertEqual(3, ellipse.FirstRadius)
+		self.assertEqual(2, ellipse.SecondRadius)
+		self.assertTupleEqual((1, 0), ellipse.Direction.ToTuple())
+
+	def test_Ellipse_MirrorY_Rotated(self) -> None:
+		"""Mirrored at its center, a rotated ellipse keeps its center and negates the direction's y-component."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(3, 4))
+
+		ellipse.MirrorY()
+
+		self.assertAlmostEqual(1, ellipse.Center.X)
+		self.assertAlmostEqual(2, ellipse.Center.Y)
+		self.assertTupleEqual((0.6, -0.8), ellipse.Direction.ToTuple())
 
 	def test_Ellipse_MirrorY_Default(self) -> None:
 		"""An ellipse mirrored at its center stays in place."""
@@ -2147,8 +2289,20 @@ class Mirroring(Testcase):
 		ellipse.MirrorX(Alignment2D.MaxX, 1)
 
 		self.assertTupleEqual((9, 2), ellipse.Center.ToTuple())
-		self.assertEqual(3, ellipse.RadiusX)
-		self.assertEqual(2, ellipse.RadiusY)
+		self.assertEqual(3, ellipse.FirstRadius)
+		self.assertEqual(2, ellipse.SecondRadius)
+		self.assertTupleEqual((-1, 0), ellipse.Direction.ToTuple())
+
+	def test_Ellipse_MirrorX_Rotated(self) -> None:
+		"""Mirrored at its right edge, a rotated ellipse starts there and negates the direction's x-component."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(3, 4))
+		maxX =    ellipse.BoundingBox.MaxX
+
+		ellipse.MirrorX(Alignment2D.MaxX)
+
+		self.assertAlmostEqual(maxX, ellipse.BoundingBox.MinX)
+		self.assertAlmostEqual(2, ellipse.Center.Y)
+		self.assertTupleEqual((-0.6, 0.8), ellipse.Direction.ToTuple())
 
 	def test_Ellipse_MirrorX_MinX(self) -> None:
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
@@ -2462,7 +2616,7 @@ class Ownership(Testcase):
 		with self.assertRaises(ValueError) as context:
 			_ = Ellipse(center, 3, 0, copyPoints=False)
 
-		self.assertEqual("Parameter 'radiusY' isn't positive.", str(context.exception))
+		self.assertEqual("Parameter 'secondRadius' isn't positive.", str(context.exception))
 		self.assertListEqual(["Got value '0'."], context.exception.__notes__)
 		self.assertIsNone(center.Parent)
 
@@ -3044,10 +3198,21 @@ class Copy(Testcase):
 		self.assertIsNot(ellipse, newEllipse)
 		self.assertIsNot(ellipse.Center, newEllipse.Center)
 		self.assertIs(newEllipse, newEllipse.Center.Parent)
-		self.assertEqual(3, newEllipse.RadiusX)
-		self.assertEqual(2, newEllipse.RadiusY)
+		self.assertEqual(3, newEllipse.FirstRadius)
+		self.assertEqual(2, newEllipse.SecondRadius)
 		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
 		self.assertTupleEqual((2, 3), newEllipse.Center.ToTuple())
+		self.assertTupleEqual((1, 0), newEllipse.Direction.ToTuple())
+		self.assertIs(int, type(newEllipse.Direction.XOffset))
+
+	def test_Ellipse_Direction(self) -> None:
+		"""The copy holds a copy of the direction with the same values."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(1, 2))
+
+		newEllipse = ellipse.Copy()
+
+		self.assertIsNot(ellipse.Direction, newEllipse.Direction)
+		self.assertEqual(ellipse.Direction, newEllipse.Direction)
 
 	def test_Ellipse_copy(self) -> None:
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
@@ -3056,9 +3221,17 @@ class Copy(Testcase):
 
 		self.assertIs(Ellipse, type(newEllipse))
 		self.assertIsNot(ellipse.Center, newEllipse.Center)
-		self.assertEqual(3, newEllipse.RadiusX)
-		self.assertEqual(2, newEllipse.RadiusY)
+		self.assertEqual(3, newEllipse.FirstRadius)
+		self.assertEqual(2, newEllipse.SecondRadius)
 		self.assertTupleEqual((1, 2), newEllipse.Center.ToTuple())
+
+	def test_Ellipse_copy_Direction(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(1, 1))
+
+		newEllipse = copy(ellipse)
+
+		self.assertIsNot(ellipse.Direction, newEllipse.Direction)
+		self.assertEqual(ellipse.Direction, newEllipse.Direction)
 
 	def test_Ellipse_deepcopy(self) -> None:
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
@@ -3067,9 +3240,17 @@ class Copy(Testcase):
 
 		self.assertIs(Ellipse, type(newEllipse))
 		self.assertIsNot(ellipse.Center, newEllipse.Center)
-		self.assertEqual(3, newEllipse.RadiusX)
-		self.assertEqual(2, newEllipse.RadiusY)
+		self.assertEqual(3, newEllipse.FirstRadius)
+		self.assertEqual(2, newEllipse.SecondRadius)
 		self.assertTupleEqual((1, 2), newEllipse.Center.ToTuple())
+
+	def test_Ellipse_deepcopy_Direction(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(-7, 1))
+
+		newEllipse = deepcopy(ellipse)
+
+		self.assertIsNot(ellipse.Direction, newEllipse.Direction)
+		self.assertEqual(ellipse.Direction, newEllipse.Direction)
 
 	def test_Ellipse_deepcopy_Group(self) -> None:
 		"""A deep copy owns its center and isn't in the group of the original."""
@@ -3130,10 +3311,26 @@ class Representation(Testcase):
 
 		self.assertEqual("Ellipse((1, 2), 3, 2)", repr(ellipse))
 
+	def test_Ellipse_repr_Direction(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(3, 4))
+
+		self.assertEqual("Ellipse((1, 2), 3, 2, direction=(0.6, 0.8))", repr(ellipse))
+
+	def test_Ellipse_repr_DefaultDirection(self) -> None:
+		"""A given direction equal to the default isn't shown."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(2, 0))
+
+		self.assertEqual("Ellipse((1, 2), 3, 2)", repr(ellipse))
+
 	def test_Ellipse_str(self) -> None:
 		ellipse = Ellipse(Point2D(1.5, 2), 0.5, 1.25)
 
-		self.assertEqual("((1.5, 2), rx=0.5, ry=1.25)", str(ellipse))
+		self.assertEqual("((1.5, 2), r1=0.5, r2=1.25)", str(ellipse))
+
+	def test_Ellipse_str_Direction(self) -> None:
+		ellipse = Ellipse(Point2D(1.5, 2), 0.5, 1.25, direction=Offset2D(0, -1))
+
+		self.assertEqual("((1.5, 2), r1=0.5, r2=1.25, direction=(0, -1))", str(ellipse))
 
 
 class ElementData(Testcase):
@@ -4114,51 +4311,62 @@ class ObliqueMirroring(Testcase):
 		self.assertEqual(2, circle.Radius)
 
 	def test_Ellipse(self) -> None:
-		"""An ellipse is axis-aligned by definition, an oblique line would rotate it."""
+		"""Mirroring at the diagonal x = y swaps the center's coordinates and turns the direction (1, 0) into (0, 1)."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+		swapped = Ellipse(Point2D(2, 1), 3, 2, direction=Offset2D(0, 1))
+
+		ellipse.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertAlmostEqual(2, ellipse.Center.X)
+		self.assertAlmostEqual(1, ellipse.Center.Y)
+		self.assertAlmostEqual(0, ellipse.Direction.XOffset)
+		self.assertAlmostEqual(1, ellipse.Direction.YOffset)
+		self.assertEqual(3, ellipse.FirstRadius)
+		self.assertEqual(2, ellipse.SecondRadius)
+		for value, expected in zip(ellipse.BoundingBox.ToTuple(), swapped.BoundingBox.ToTuple()):
+			self.assertAlmostEqual(expected, value)
+
+	def test_Ellipse_Oblique(self) -> None:
+		"""The center is mirrored as a point, the direction as a vector."""
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
 
-		with self.assertRaises(InvalidOperationError) as context:
-			ellipse.MirrorAt(Line2D(Offset2D(3, 4), 10))
+		ellipse.MirrorAt(Line2D(Offset2D(3, 4), 10))
 
-		self.assertEqual("Mirroring an axis-aligned shape at an oblique line isn't supported.", str(context.exception))
-		self.assertListEqual(
-			[
-				"Got element Ellipse((1, 2), 3, 2) and line Line2D((0.6, 0.8), 2.0).",
-				"An ellipse is axis-aligned; mirror it at a vertical or horizontal line."
-			],
-			context.exception.__notes__
-		)
-		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
+		self.assertAlmostEqual(0.76, ellipse.Center.X)
+		self.assertAlmostEqual(1.68, ellipse.Center.Y)
+		self.assertAlmostEqual(0.28, ellipse.Direction.XOffset)
+		self.assertAlmostEqual(-0.96, ellipse.Direction.YOffset)
+		self.assertAlmostEqual(1, ellipse.Direction.Length)
+		self.assertEqual(3, ellipse.FirstRadius)
+		self.assertEqual(2, ellipse.SecondRadius)
 
 	def test_Ellipse_Line2D(self) -> None:
-		"""A general line with normal (1, 0) or (0, 1) mirrors an ellipse."""
+		"""A general line with normal (1, 0) or (0, 1) mirrors an ellipse like a vertical or horizontal line."""
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
 
 		ellipse.MirrorAt(Line2D(Offset2D(0, -2), -10))
 		ellipse.MirrorAt(Line2D.FromPoints(Point2D(4, 0), Point2D(4, 1)))
 
 		self.assertTupleEqual((7.0, 8.0), ellipse.Center.ToTuple())
-		self.assertEqual(3, ellipse.RadiusX)
+		self.assertTupleEqual((-1, 0), ellipse.Direction.ToTuple())
+		self.assertEqual(3, ellipse.FirstRadius)
 
 	def test_Ellipse_MirrorAtHook(self) -> None:
-		"""The hook delegates a vertical or horizontal line to the axis mirrors and raises for an oblique line."""
+		"""The hook mirrors the center and the direction at any line in the ellipse's frame."""
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
 
 		ellipse._MirrorAt(Offset2D(1, 0), 4)
 		ellipse._MirrorAt(Offset2D(0, 1), -1)
 
 		self.assertTupleEqual((7, -4), ellipse.Center.ToTuple())
-		with self.assertRaises(InvalidOperationError) as context:
-			ellipse._MirrorAt(Offset2D(0.6, 0.8), 2.0)
+		self.assertTupleEqual((-1, 0), ellipse.Direction.ToTuple())
 
-		self.assertEqual("Mirroring an ellipse at an oblique line isn't supported.", str(context.exception))
-		self.assertListEqual(
-			[
-				"Got ellipse Ellipse((7, -4), 3, 2) and a line with normal (0.6, 0.8) and distance 2.0.",
-				"An ellipse is axis-aligned; mirror it at a vertical or horizontal line."
-			],
-			context.exception.__notes__
-		)
+		ellipse._MirrorAt(Offset2D(0.6, 0.8), 2.0)
+
+		self.assertAlmostEqual(8.2, ellipse.Center.X)
+		self.assertAlmostEqual(-2.4, ellipse.Center.Y)
+		self.assertAlmostEqual(-0.28, ellipse.Direction.XOffset)
+		self.assertAlmostEqual(0.96, ellipse.Direction.YOffset)
 
 	def test_Path(self) -> None:
 		"""Each joint is mirrored once; the arc reverses its direction, the control point is mirrored."""

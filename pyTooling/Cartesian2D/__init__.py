@@ -950,17 +950,6 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		:param distance: The signed distance of the line from the frame's origin.
 		"""
 
-	@readonly
-	def _CanMirrorAtObliqueLine(self) -> bool:
-		"""
-		Read-only property to return, if the element can be mirrored at an oblique line.
-
-		An axis-aligned shape, like an ellipse, can't: it wouldn't stay axis-aligned.
-
-		:returns: ``True``, if the element can be mirrored at an oblique line.
-		"""
-		return True
-
 	def MirrorAt(self, line: Line2D[Coordinate]) -> None:
 		r"""
 		Mirror the element at a line (inplace).
@@ -985,11 +974,9 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		                       |
 		        before                   after
 
-		:param line:                   The line to mirror at, like a :class:`VerticalLine2D` or a :class:`HorizontalLine2D`.
-		:raises ValueError:            If parameter 'line' is None.
-		:raises TypeError:             If parameter 'line' is not of type :class:`Line2D`.
-		:raises InvalidOperationError: If parameter 'line' is oblique and the element is or holds an ellipse. |br|
-		                               An ellipse is axis-aligned; mirror it at a vertical or horizontal line.
+		:param line:        The line to mirror at, like a :class:`VerticalLine2D` or a :class:`HorizontalLine2D`.
+		:raises ValueError: If parameter 'line' is None.
+		:raises TypeError:  If parameter 'line' is not of type :class:`Line2D`.
 		"""
 		if line is None:
 			raise ValueError("Parameter 'line' is None.")
@@ -2361,9 +2348,7 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		A line with normal ``(1, 0)`` or ``(0, 1)`` mirrors an element like a :class:`VerticalLine2D` or a
 		:class:`HorizontalLine2D`, so integer coordinates stay integers.
 
-		:param element:                The element to mirror.
-		:raises InvalidOperationError: If the line is oblique and the element is or holds an ellipse. |br|
-		                               An ellipse is axis-aligned; mirror it at a vertical or horizontal line.
+		:param element: The element to mirror.
 		"""
 		normal = self._normal
 		frame =  element.Frame
@@ -2373,11 +2358,6 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		elif normal._xOffset == 0:
 			y = self._distance if frame is None else self._distance - frame.AbsoluteOffset._yOffset
 			element._MirrorY(2 * y)
-		elif not element._CanMirrorAtObliqueLine:
-			ex = InvalidOperationError("Mirroring an axis-aligned shape at an oblique line isn't supported.")
-			ex.add_note(f"Got element {element!r} and line {self!r}.")
-			ex.add_note("An ellipse is axis-aligned; mirror it at a vertical or horizontal line.")
-			raise ex
 		else:
 			distance = self._distance if frame is None else self._distance - normal.ScalarProduct(frame.AbsoluteOffset)
 			element._MirrorAt(normal, distance)

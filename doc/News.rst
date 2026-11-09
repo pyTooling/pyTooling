@@ -22,9 +22,10 @@ Version 10.x (2026)
      trapezium compute both from their corners.
    * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.PolyLine` is a path of line
      segments, built from two or more points, open or closed.
-   * :mod:`pyTooling.Cartesian2D.Shapes`: an axis-aligned :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` by center and
-     two radii, a :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` with its area and its perimeter (Ramanujan's
-     approximation).
+   * :mod:`pyTooling.Cartesian2D.Shapes`: an :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` by center, two radii and
+     the direction of its first axis (default ``(1, 0)``, axis-aligned), a
+     :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` with its area, its perimeter (Ramanujan's approximation) and the
+     bounding box of the rotated ellipse.
    * :mod:`pyTooling.Cartesian2D.Shapes`: a circle and an ellipse derive from the abstract
      :class:`~pyTooling.Cartesian2D.Shapes.EllipticalGeometry2D`, which owns, moves and mirrors their center; neither
      derives from the other.
@@ -129,8 +130,8 @@ Version 10.x (2026)
      :class:`~pyTooling.Cartesian3D.Ray3D`.
    * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: every element mirrors at an oblique line or plane
      with :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt` (reflection in Hesse normal form; a group mirrors its offset
-     and its children). An :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` stays axis-aligned: an oblique line raises
-     :exc:`~pyTooling.Exceptions.InvalidOperationError`.
+     and its children). An :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` mirrors its center and its direction, so an
+     oblique line rotates it.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
      element, but a data structure has none.
    * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:

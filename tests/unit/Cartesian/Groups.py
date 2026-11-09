@@ -40,7 +40,7 @@ from pyTooling.Cartesian2D        import Base2D, Point2D, Offset2D, Size2D, Boun
                                          NotInSameFrameError, GroupCycleError
 from pyTooling.Cartesian2D.Shapes import Polygon, PolyLine, Trapezium, Rectangle, Square, Circle, Ellipse
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection, EmptyGroupError
-from pyTooling.Exceptions         import EmptyError, InvalidOperationError
+from pyTooling.Exceptions         import EmptyError
 from pyTooling.MetaClasses        import AbstractClassError
 from pyTooling.Testing            import Testcase
 
@@ -1510,8 +1510,9 @@ class Mirroring(Testcase):
 
 		self.assertTupleEqual((6, 20), group.Offset.ToTuple())
 		self.assertTupleEqual((-1, 2), ellipse.Center.ToTuple())
-		self.assertEqual(3, ellipse.RadiusX)
-		self.assertEqual(2, ellipse.RadiusY)
+		self.assertEqual(3, ellipse.FirstRadius)
+		self.assertEqual(2, ellipse.SecondRadius)
+		self.assertTupleEqual((-1, 0), ellipse.Direction.ToTuple())
 		self.assertEqual(BoundingBox2D(2, 20, 8, 24), group.BoundingBox)
 
 	def test_MirrorX(self) -> None:
@@ -1673,27 +1674,27 @@ class Mirroring(Testcase):
 		self.assertAlmostEqual(free.End.Y, line.End.Absolute.Y)
 
 	def test_MirrorAt_Oblique_Ellipse(self) -> None:
-		"""A group holding an ellipse raises before anything is mirrored."""
+		"""A group holding an ellipse mirrors it like the same ellipse without groups."""
 		circle =  Circle(Point2D(1, 2), 1)
 		ellipse = Ellipse(Point2D(5, 6), 3, 2)
+		free =    Ellipse(Point2D(18, 30), 3, 2)
 		inner =   Group2D(Offset2D(3, 4), (ellipse, ))
 		outer =   Group2D(Offset2D(10, 20), (circle, inner))
+		mirror =  Line2D(Offset2D(3, 4), 10)
 
-		with self.assertRaises(InvalidOperationError) as context:
-			outer.MirrorAt(Line2D(Offset2D(3, 4), 10))
+		outer.MirrorAt(mirror)
+		free.MirrorAt(mirror)
 
-		self.assertEqual("Mirroring an axis-aligned shape at an oblique line isn't supported.", str(context.exception))
-		self.assertListEqual(
-			[
-				"Got element Group2D((10, 20), children=2) and line Line2D((0.6, 0.8), 2.0).",
-				"An ellipse is axis-aligned; mirror it at a vertical or horizontal line."
-			],
-			context.exception.__notes__
-		)
-		self.assertTupleEqual((10, 20), outer.Offset.ToTuple())
-		self.assertTupleEqual((3, 4), inner.Offset.ToTuple())
-		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
-		self.assertTupleEqual((5, 6), ellipse.Center.ToTuple())
+		self.assertAlmostEqual(-14, outer.Offset.XOffset)
+		self.assertAlmostEqual(-12, outer.Offset.YOffset)
+		self.assertAlmostEqual(free.Center.X, ellipse.Center.Absolute.X)
+		self.assertAlmostEqual(free.Center.Y, ellipse.Center.Absolute.Y)
+		self.assertAlmostEqual(free.Direction.XOffset, ellipse.Direction.XOffset)
+		self.assertAlmostEqual(free.Direction.YOffset, ellipse.Direction.YOffset)
+		self.assertAlmostEqual(0.28, ellipse.Direction.XOffset)
+		self.assertAlmostEqual(-0.96, ellipse.Direction.YOffset)
+		self.assertAlmostEqual(-1.64, circle.Center.X)
+		self.assertAlmostEqual(-1.52, circle.Center.Y)
 
 	def test_MirrorAt_Vertical_Ellipse(self) -> None:
 		"""A general line with normal (1, 0) mirrors a group holding an ellipse."""
@@ -1704,6 +1705,7 @@ class Mirroring(Testcase):
 
 		self.assertTupleEqual((30.0, 20), group.Offset.ToTuple())
 		self.assertTupleEqual((-5, 6), ellipse.Center.ToTuple())
+		self.assertTupleEqual((-1, 0), ellipse.Direction.ToTuple())
 
 	def test_FromElement_Empty(self) -> None:
 		with self.assertRaises(EmptyGroupError) as context:
