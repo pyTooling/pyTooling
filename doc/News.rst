@@ -10,7 +10,7 @@ release.
 Version 10.x (2026)
 *******************
 
-.. topic:: :gh:`v10.2.0 - unreleased <pyTooling/pyTooling/releases/v10.2.0>`
+.. topic:: :gh:`v10.2.0 - 09.11.2026 <pyTooling/pyTooling/releases/v10.2.0>`
 
    .. rubric:: New Features
 
