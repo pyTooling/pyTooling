@@ -366,7 +366,7 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 		"""
 		return self._x, self._y, self._z
 
-	def _MirrorAt(self, normal: Offset3D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector3D[float], distance: float) -> None:
 		"""
 		Mirror the point at the plane ``nx * x + ny * y + nz * z = distance`` in the point's frame (inplace).
 
@@ -861,7 +861,7 @@ class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		"""
 
 	@abstractmethod
-	def _MirrorAt(self, normal: Offset3D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector3D[float], distance: float) -> None:
 		"""
 		Mirror the element at the plane ``nx * x + ny * y + nz * z = distance`` in the element's frame (inplace).
 
@@ -2185,10 +2185,10 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	equal, if they have the same normal and distance, whatever class or constructor created them.
 	"""
 
-	_normal:   Offset3D[float]  #: The normal of length 1, its first non-zero component is positive.
+	_normal:   Vector3D[float]  #: The normal of length 1, its first non-zero component is positive.
 	_distance: float            #: The signed distance of the plane from the origin, in direction of the normal.
 
-	def __init__(self, normal: Offset3D[Coordinate], distance: Coordinate) -> None:
+	def __init__(self, normal: BaseVector3D[Coordinate], distance: Coordinate) -> None:
 		"""
 		Initializes a 3D plane from a normal and a distance, the plane ``nx * x + ny * y + nz * z = distance``.
 
@@ -2201,21 +2201,21 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:param distance:    The right-hand side of the plane's equation; for a normal of length 1, the signed distance of
 		                    the plane from the origin.
 		:raises ValueError: If parameter 'normal' is None.
-		:raises TypeError:  If parameter 'normal' is not of type :class:`Offset3D`.
-		:raises ValueError: If parameter 'normal' is a zero offset. |br|
+		:raises TypeError:  If parameter 'normal' is not of type :class:`BaseVector3D`.
+		:raises ValueError: If parameter 'normal' is a zero vector. |br|
 		                    A plane needs a normal direction.
 		:raises ValueError: If parameter 'distance' is None.
 		:raises TypeError:  If parameter 'distance' is not of type :class:`float` or :class:`int`.
 		"""
 		if normal is None:
 			raise ValueError("Parameter 'normal' is None.")
-		elif not isinstance(normal, Offset3D):
-			ex = TypeError("Parameter 'normal' is not of type 'Offset3D'.")
+		elif not isinstance(normal, BaseVector3D):
+			ex = TypeError("Parameter 'normal' is not of type 'BaseVector3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
 			raise ex
 		elif normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
-			ex = ValueError("Parameter 'normal' is a zero offset.")
-			ex.add_note(f"Got offset {normal}.")
+			ex = ValueError("Parameter 'normal' is a zero vector.")
+			ex.add_note(f"Got vector {normal}.")
 			ex.add_note("A plane needs a normal direction.")
 			raise ex
 
@@ -2242,7 +2242,7 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			normalZ =  -normalZ
 			distance = -distance
 
-		self._normal =   Offset3D(normalX + 0, normalY + 0, normalZ + 0)
+		self._normal =   Vector3D(normalX + 0, normalY + 0, normalZ + 0)
 		self._distance = distance + 0
 
 	@classmethod
@@ -2261,7 +2261,7 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:param first:       A first point of the plane.
 		:param second:      A second point of the plane.
 		:param third:       A third point of the plane.
-		:returns:           A new plane, a :class:`Plane3D` also if called on a derived class.
+		:returns:           A new plane, a :class:`Plane3D`.
 		:raises ValueError: If parameter 'first' is None.
 		:raises TypeError:  If parameter 'first' is not of type :class:`Point3D`.
 		:raises ValueError: If parameter 'second' is None.
@@ -2296,28 +2296,29 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	@classmethod
 	def FromPointAndSpanningVectors(
 		cls,
-		point: Point3D[Coordinate],
-		u:     Offset3D[Coordinate],
-		v:     Offset3D[Coordinate]
+		point:                Point3D[Coordinate],
+		firstSpanningVector:  BaseVector3D[Coordinate],
+		secondSpanningVector: BaseVector3D[Coordinate]
 	) -> Plane3D[float]:
 		"""
-		Create the plane through a point, spanned by two vectors, the plane ``point + s * u + t * v``.
+		Create the plane through a point, spanned by two vectors.
 
-		The point is taken in absolute coordinates: a point inside a group is converted. The normal is the cross product of
-		the spanning vectors.
+		The plane is all points ``point + s * firstSpanningVector + t * secondSpanningVector``. The point is taken in
+		absolute coordinates: a point inside a group is converted. The normal is the cross product of the spanning vectors.
 
-		:param point:       A point of the plane.
-		:param u:           A first spanning vector.
-		:param v:           A second spanning vector.
-		:returns:           A new plane, a :class:`Plane3D` also if called on a derived class.
-		:raises ValueError: If parameter 'point' is None.
-		:raises TypeError:  If parameter 'point' is not of type :class:`Point3D`.
-		:raises ValueError: If parameter 'u' is None.
-		:raises TypeError:  If parameter 'u' is not of type :class:`Offset3D`.
-		:raises ValueError: If parameter 'v' is None.
-		:raises TypeError:  If parameter 'v' is not of type :class:`Offset3D`.
-		:raises ValueError: If parameters 'u' and 'v' are parallel, or one of them is a zero offset. |br|
-		                    Two parallel vectors don't span a plane.
+		:param point:                A point of the plane.
+		:param firstSpanningVector:  A first spanning vector.
+		:param secondSpanningVector: A second spanning vector.
+		:returns:                    A new :class:`Plane3D`.
+		:raises ValueError:          If parameter 'point' is None.
+		:raises TypeError:           If parameter 'point' is not of type :class:`Point3D`.
+		:raises ValueError:          If parameter 'firstSpanningVector' is None.
+		:raises TypeError:           If parameter 'firstSpanningVector' is not of type :class:`BaseVector3D`.
+		:raises ValueError:          If parameter 'secondSpanningVector' is None.
+		:raises TypeError:           If parameter 'secondSpanningVector' is not of type :class:`BaseVector3D`.
+		:raises ValueError:          If parameters 'firstSpanningVector' and 'secondSpanningVector' are parallel, or one of
+		                             them is a zero vector. |br|
+		                             Two parallel vectors don't span a plane.
 		"""
 		if point is None:
 			raise ValueError("Parameter 'point' is None.")
@@ -2327,20 +2328,20 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		for name, vector in (
-			("u", u),
-			("v", v)
+			("firstSpanningVector",  firstSpanningVector),
+			("secondSpanningVector", secondSpanningVector)
 		):
 			if vector is None:
 				raise ValueError(f"Parameter '{name}' is None.")
-			elif not isinstance(vector, Offset3D):
-				ex = TypeError(f"Parameter '{name}' is not of type 'Offset3D'.")
+			elif not isinstance(vector, BaseVector3D):
+				ex = TypeError(f"Parameter '{name}' is not of type 'BaseVector3D'.")
 				ex.add_note(f"Got type '{getFullyQualifiedName(vector)}'.")
 				raise ex
 
-		normal = u.VectorProduct(v)
+		normal = firstSpanningVector.VectorProduct(secondSpanningVector)
 		if normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
-			ex = ValueError("Parameters 'u' and 'v' are parallel.")
-			ex.add_note(f"Got offsets {u} and {v}.")
+			ex = ValueError("Parameters 'firstSpanningVector' and 'secondSpanningVector' are parallel.")
+			ex.add_note(f"Got vectors {firstSpanningVector} and {secondSpanningVector}.")
 			ex.add_note("Two parallel vectors don't span a plane.")
 			raise ex
 
@@ -2351,7 +2352,7 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		)
 
 	@classmethod
-	def FromPointAndNormal(cls, point: Point3D[Coordinate], normal: Offset3D[Coordinate]) -> Plane3D[float]:
+	def FromPointAndNormal(cls, point: Point3D[Coordinate], normal: BaseVector3D[Coordinate]) -> Plane3D[float]:
 		"""
 		Create the plane through a point, perpendicular to a normal.
 
@@ -2359,12 +2360,12 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param point:       A point of the plane.
 		:param normal:      A normal of the plane, perpendicular to it.
-		:returns:           A new plane, a :class:`Plane3D` also if called on a derived class.
+		:returns:           A new plane, a :class:`Plane3D`.
 		:raises ValueError: If parameter 'point' is None.
 		:raises TypeError:  If parameter 'point' is not of type :class:`Point3D`.
 		:raises ValueError: If parameter 'normal' is None.
-		:raises TypeError:  If parameter 'normal' is not of type :class:`Offset3D`.
-		:raises ValueError: If parameter 'normal' is a zero offset. |br|
+		:raises TypeError:  If parameter 'normal' is not of type :class:`BaseVector3D`.
+		:raises ValueError: If parameter 'normal' is a zero vector. |br|
 		                    A plane needs a normal direction.
 		"""
 		if point is None:
@@ -2376,13 +2377,13 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		if normal is None:
 			raise ValueError("Parameter 'normal' is None.")
-		elif not isinstance(normal, Offset3D):
-			ex = TypeError("Parameter 'normal' is not of type 'Offset3D'.")
+		elif not isinstance(normal, BaseVector3D):
+			ex = TypeError("Parameter 'normal' is not of type 'BaseVector3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
 			raise ex
 		elif normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
-			ex = ValueError("Parameter 'normal' is a zero offset.")
-			ex.add_note(f"Got offset {normal}.")
+			ex = ValueError("Parameter 'normal' is a zero vector.")
+			ex.add_note(f"Got vector {normal}.")
 			ex.add_note("A plane needs a normal direction.")
 			raise ex
 
@@ -2393,7 +2394,7 @@ class Plane3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		)
 
 	@readonly
-	def Normal(self) -> Offset3D[float]:
+	def Normal(self) -> Vector3D[float]:
 		"""
 		Read-only property to access the normal of the plane (:attr:`_normal`).
 
@@ -2660,7 +2661,7 @@ class YZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'x' is None.
 		:raises TypeError:  If parameter 'x' is not of type :class:`float` or :class:`int`.
 		"""
-		super().__init__(Offset3D(1, 0, 0), 0)
+		super().__init__(Vector3D(1, 0, 0), 0)
 
 		if x is None:
 			raise ValueError("Parameter 'x' is None.")
@@ -2670,6 +2671,171 @@ class YZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 			raise ex
 
 		self._distance = x + 0
+
+	@classmethod
+	def FromPoints(
+		cls,
+		first:  Point3D[Coordinate],
+		second: Point3D[Coordinate],
+		third:  Point3D[Coordinate]
+	) -> Self:
+		"""
+		Create the plane parallel to the yz-plane through three points with the same x-coordinate.
+
+		The points are taken in absolute coordinates: a point inside a group is converted. The plane keeps the
+		x-coordinate as given, so an integer stays an integer.
+
+		:param first:       A first point of the plane.
+		:param second:      A second point of the plane.
+		:param third:       A third point of the plane.
+		:returns:           A new plane parallel to the yz-plane.
+		:raises ValueError: If parameter 'first' is None.
+		:raises TypeError:  If parameter 'first' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'second' is None.
+		:raises TypeError:  If parameter 'second' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'third' is None.
+		:raises TypeError:  If parameter 'third' is not of type :class:`Point3D`.
+		:raises ValueError: If parameters 'first', 'second' and 'third' are on one line. |br|
+		                    Three points on one line don't define a plane.
+		:raises ValueError: If parameters 'first', 'second' and 'third' have different x-coordinates. |br|
+		                    Use :meth:`Plane3D.FromPoints` for a plane in any direction.
+		"""
+		for name, point in (
+			("first",  first),
+			("second", second),
+			("third",  third)
+		):
+			if point is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(point, Point3D):
+				ex = TypeError(f"Parameter '{name}' is not of type 'Point3D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+				raise ex
+
+		start =  first.Absolute
+		middle = second.Absolute
+		end =    third.Absolute
+		normal = (middle - start).VectorProduct(end - start)
+		if normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameters 'first', 'second' and 'third' are on one line.")
+			ex.add_note(f"Got points {first}, {second} and {third}.")
+			ex.add_note("Three points on one line don't define a plane.")
+			raise ex
+		elif start._x != middle._x or start._x != end._x:
+			ex = ValueError("Parameters 'first', 'second' and 'third' have different x-coordinates.")
+			ex.add_note(f"Got points {first}, {second} and {third}, at {start}, {middle} and {end} in absolute coordinates.")
+			ex.add_note("Use 'Plane3D.FromPoints' for a plane in any direction.")
+			raise ex
+
+		return cls(start._x)
+
+	@classmethod
+	def FromPointAndSpanningVectors(
+		cls,
+		point:                Point3D[Coordinate],
+		firstSpanningVector:  BaseVector3D[Coordinate],
+		secondSpanningVector: BaseVector3D[Coordinate]
+	) -> Self:
+		"""
+		Create the plane parallel to the yz-plane through a point, spanned by two vectors parallel to the yz-plane.
+
+		The point is taken in absolute coordinates: a point inside a group is converted. The plane keeps the point's
+		x-coordinate as given, so an integer stays an integer.
+
+		:param point:                A point of the plane.
+		:param firstSpanningVector:  A first spanning vector, like ``(0, y, z)``.
+		:param secondSpanningVector: A second spanning vector, like ``(0, y, z)``.
+		:returns:                    A new plane parallel to the yz-plane.
+		:raises ValueError:          If parameter 'point' is None.
+		:raises TypeError:           If parameter 'point' is not of type :class:`Point3D`.
+		:raises ValueError:          If parameter 'firstSpanningVector' is None.
+		:raises TypeError:           If parameter 'firstSpanningVector' is not of type :class:`BaseVector3D`.
+		:raises ValueError:          If parameter 'secondSpanningVector' is None.
+		:raises TypeError:           If parameter 'secondSpanningVector' is not of type :class:`BaseVector3D`.
+		:raises ValueError:          If parameters 'firstSpanningVector' and 'secondSpanningVector' are parallel, or one of
+		                             them is a zero vector. |br|
+		                             Two parallel vectors don't span a plane.
+		:raises ValueError:          If parameters 'firstSpanningVector' and 'secondSpanningVector' aren't parallel to the
+		                             yz-plane. |br|
+		                             Use :meth:`Plane3D.FromPointAndSpanningVectors` for a plane in any direction.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point3D):
+			ex = TypeError("Parameter 'point' is not of type 'Point3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		for name, vector in (
+			("firstSpanningVector",  firstSpanningVector),
+			("secondSpanningVector", secondSpanningVector)
+		):
+			if vector is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(vector, BaseVector3D):
+				ex = TypeError(f"Parameter '{name}' is not of type 'BaseVector3D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(vector)}'.")
+				raise ex
+
+		normal = firstSpanningVector.VectorProduct(secondSpanningVector)
+		if normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameters 'firstSpanningVector' and 'secondSpanningVector' are parallel.")
+			ex.add_note(f"Got vectors {firstSpanningVector} and {secondSpanningVector}.")
+			ex.add_note("Two parallel vectors don't span a plane.")
+			raise ex
+		elif firstSpanningVector._xOffset != 0 or secondSpanningVector._xOffset != 0:
+			ex = ValueError("Parameters 'firstSpanningVector' and 'secondSpanningVector' aren't parallel to the yz-plane.")
+			ex.add_note(f"Got vectors {firstSpanningVector} and {secondSpanningVector}.")
+			ex.add_note("Use 'Plane3D.FromPointAndSpanningVectors' for a plane in any direction.")
+			raise ex
+
+		return cls(point.Absolute._x)
+
+	@classmethod
+	def FromPointAndNormal(cls, point: Point3D[Coordinate], normal: BaseVector3D[Coordinate]) -> Self:
+		"""
+		Create the plane parallel to the yz-plane through a point, perpendicular to a normal parallel to the x-axis.
+
+		The point is taken in absolute coordinates: a point inside a group is converted. The plane keeps the point's
+		x-coordinate as given, so an integer stays an integer.
+
+		:param point:       A point of the plane.
+		:param normal:      A normal of the plane, like ``(1, 0, 0)``.
+		:returns:           A new plane parallel to the yz-plane.
+		:raises ValueError: If parameter 'point' is None.
+		:raises TypeError:  If parameter 'point' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'normal' is None.
+		:raises TypeError:  If parameter 'normal' is not of type :class:`BaseVector3D`.
+		:raises ValueError: If parameter 'normal' is a zero vector. |br|
+		                    A plane needs a normal direction.
+		:raises ValueError: If parameter 'normal' isn't parallel to the x-axis. |br|
+		                    Use :meth:`Plane3D.FromPointAndNormal` for a plane in any direction.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point3D):
+			ex = TypeError("Parameter 'point' is not of type 'Point3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		if normal is None:
+			raise ValueError("Parameter 'normal' is None.")
+		elif not isinstance(normal, BaseVector3D):
+			ex = TypeError("Parameter 'normal' is not of type 'BaseVector3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
+			raise ex
+		elif normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameter 'normal' is a zero vector.")
+			ex.add_note(f"Got vector {normal}.")
+			ex.add_note("A plane needs a normal direction.")
+			raise ex
+		elif normal._yOffset != 0 or normal._zOffset != 0:
+			ex = ValueError("Parameter 'normal' isn't parallel to the x-axis.")
+			ex.add_note(f"Got vector {normal}.")
+			ex.add_note("Use 'Plane3D.FromPointAndNormal' for a plane in any direction.")
+			raise ex
+
+		return cls(point.Absolute._x)
 
 	@classmethod
 	def FromElement(cls, element: Element3D[Coordinate], alignment: Alignment3D) -> Self:
@@ -2760,7 +2926,7 @@ class XZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'y' is None.
 		:raises TypeError:  If parameter 'y' is not of type :class:`float` or :class:`int`.
 		"""
-		super().__init__(Offset3D(0, 1, 0), 0)
+		super().__init__(Vector3D(0, 1, 0), 0)
 
 		if y is None:
 			raise ValueError("Parameter 'y' is None.")
@@ -2770,6 +2936,171 @@ class XZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 			raise ex
 
 		self._distance = y + 0
+
+	@classmethod
+	def FromPoints(
+		cls,
+		first:  Point3D[Coordinate],
+		second: Point3D[Coordinate],
+		third:  Point3D[Coordinate]
+	) -> Self:
+		"""
+		Create the plane parallel to the xz-plane through three points with the same y-coordinate.
+
+		The points are taken in absolute coordinates: a point inside a group is converted. The plane keeps the
+		y-coordinate as given, so an integer stays an integer.
+
+		:param first:       A first point of the plane.
+		:param second:      A second point of the plane.
+		:param third:       A third point of the plane.
+		:returns:           A new plane parallel to the xz-plane.
+		:raises ValueError: If parameter 'first' is None.
+		:raises TypeError:  If parameter 'first' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'second' is None.
+		:raises TypeError:  If parameter 'second' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'third' is None.
+		:raises TypeError:  If parameter 'third' is not of type :class:`Point3D`.
+		:raises ValueError: If parameters 'first', 'second' and 'third' are on one line. |br|
+		                    Three points on one line don't define a plane.
+		:raises ValueError: If parameters 'first', 'second' and 'third' have different y-coordinates. |br|
+		                    Use :meth:`Plane3D.FromPoints` for a plane in any direction.
+		"""
+		for name, point in (
+			("first",  first),
+			("second", second),
+			("third",  third)
+		):
+			if point is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(point, Point3D):
+				ex = TypeError(f"Parameter '{name}' is not of type 'Point3D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+				raise ex
+
+		start =  first.Absolute
+		middle = second.Absolute
+		end =    third.Absolute
+		normal = (middle - start).VectorProduct(end - start)
+		if normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameters 'first', 'second' and 'third' are on one line.")
+			ex.add_note(f"Got points {first}, {second} and {third}.")
+			ex.add_note("Three points on one line don't define a plane.")
+			raise ex
+		elif start._y != middle._y or start._y != end._y:
+			ex = ValueError("Parameters 'first', 'second' and 'third' have different y-coordinates.")
+			ex.add_note(f"Got points {first}, {second} and {third}, at {start}, {middle} and {end} in absolute coordinates.")
+			ex.add_note("Use 'Plane3D.FromPoints' for a plane in any direction.")
+			raise ex
+
+		return cls(start._y)
+
+	@classmethod
+	def FromPointAndSpanningVectors(
+		cls,
+		point:                Point3D[Coordinate],
+		firstSpanningVector:  BaseVector3D[Coordinate],
+		secondSpanningVector: BaseVector3D[Coordinate]
+	) -> Self:
+		"""
+		Create the plane parallel to the xz-plane through a point, spanned by two vectors parallel to the xz-plane.
+
+		The point is taken in absolute coordinates: a point inside a group is converted. The plane keeps the point's
+		y-coordinate as given, so an integer stays an integer.
+
+		:param point:                A point of the plane.
+		:param firstSpanningVector:  A first spanning vector, like ``(x, 0, z)``.
+		:param secondSpanningVector: A second spanning vector, like ``(x, 0, z)``.
+		:returns:                    A new plane parallel to the xz-plane.
+		:raises ValueError:          If parameter 'point' is None.
+		:raises TypeError:           If parameter 'point' is not of type :class:`Point3D`.
+		:raises ValueError:          If parameter 'firstSpanningVector' is None.
+		:raises TypeError:           If parameter 'firstSpanningVector' is not of type :class:`BaseVector3D`.
+		:raises ValueError:          If parameter 'secondSpanningVector' is None.
+		:raises TypeError:           If parameter 'secondSpanningVector' is not of type :class:`BaseVector3D`.
+		:raises ValueError:          If parameters 'firstSpanningVector' and 'secondSpanningVector' are parallel, or one of
+		                             them is a zero vector. |br|
+		                             Two parallel vectors don't span a plane.
+		:raises ValueError:          If parameters 'firstSpanningVector' and 'secondSpanningVector' aren't parallel to the
+		                             xz-plane. |br|
+		                             Use :meth:`Plane3D.FromPointAndSpanningVectors` for a plane in any direction.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point3D):
+			ex = TypeError("Parameter 'point' is not of type 'Point3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		for name, vector in (
+			("firstSpanningVector",  firstSpanningVector),
+			("secondSpanningVector", secondSpanningVector)
+		):
+			if vector is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(vector, BaseVector3D):
+				ex = TypeError(f"Parameter '{name}' is not of type 'BaseVector3D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(vector)}'.")
+				raise ex
+
+		normal = firstSpanningVector.VectorProduct(secondSpanningVector)
+		if normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameters 'firstSpanningVector' and 'secondSpanningVector' are parallel.")
+			ex.add_note(f"Got vectors {firstSpanningVector} and {secondSpanningVector}.")
+			ex.add_note("Two parallel vectors don't span a plane.")
+			raise ex
+		elif firstSpanningVector._yOffset != 0 or secondSpanningVector._yOffset != 0:
+			ex = ValueError("Parameters 'firstSpanningVector' and 'secondSpanningVector' aren't parallel to the xz-plane.")
+			ex.add_note(f"Got vectors {firstSpanningVector} and {secondSpanningVector}.")
+			ex.add_note("Use 'Plane3D.FromPointAndSpanningVectors' for a plane in any direction.")
+			raise ex
+
+		return cls(point.Absolute._y)
+
+	@classmethod
+	def FromPointAndNormal(cls, point: Point3D[Coordinate], normal: BaseVector3D[Coordinate]) -> Self:
+		"""
+		Create the plane parallel to the xz-plane through a point, perpendicular to a normal parallel to the y-axis.
+
+		The point is taken in absolute coordinates: a point inside a group is converted. The plane keeps the point's
+		y-coordinate as given, so an integer stays an integer.
+
+		:param point:       A point of the plane.
+		:param normal:      A normal of the plane, like ``(0, 1, 0)``.
+		:returns:           A new plane parallel to the xz-plane.
+		:raises ValueError: If parameter 'point' is None.
+		:raises TypeError:  If parameter 'point' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'normal' is None.
+		:raises TypeError:  If parameter 'normal' is not of type :class:`BaseVector3D`.
+		:raises ValueError: If parameter 'normal' is a zero vector. |br|
+		                    A plane needs a normal direction.
+		:raises ValueError: If parameter 'normal' isn't parallel to the y-axis. |br|
+		                    Use :meth:`Plane3D.FromPointAndNormal` for a plane in any direction.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point3D):
+			ex = TypeError("Parameter 'point' is not of type 'Point3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		if normal is None:
+			raise ValueError("Parameter 'normal' is None.")
+		elif not isinstance(normal, BaseVector3D):
+			ex = TypeError("Parameter 'normal' is not of type 'BaseVector3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
+			raise ex
+		elif normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameter 'normal' is a zero vector.")
+			ex.add_note(f"Got vector {normal}.")
+			ex.add_note("A plane needs a normal direction.")
+			raise ex
+		elif normal._xOffset != 0 or normal._zOffset != 0:
+			ex = ValueError("Parameter 'normal' isn't parallel to the y-axis.")
+			ex.add_note(f"Got vector {normal}.")
+			ex.add_note("Use 'Plane3D.FromPointAndNormal' for a plane in any direction.")
+			raise ex
+
+		return cls(point.Absolute._y)
 
 	@classmethod
 	def FromElement(cls, element: Element3D[Coordinate], alignment: Alignment3D) -> Self:
@@ -2860,7 +3191,7 @@ class XYPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'z' is None.
 		:raises TypeError:  If parameter 'z' is not of type :class:`float` or :class:`int`.
 		"""
-		super().__init__(Offset3D(0, 0, 1), 0)
+		super().__init__(Vector3D(0, 0, 1), 0)
 
 		if z is None:
 			raise ValueError("Parameter 'z' is None.")
@@ -2870,6 +3201,171 @@ class XYPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 			raise ex
 
 		self._distance = z + 0
+
+	@classmethod
+	def FromPoints(
+		cls,
+		first:  Point3D[Coordinate],
+		second: Point3D[Coordinate],
+		third:  Point3D[Coordinate]
+	) -> Self:
+		"""
+		Create the plane parallel to the xy-plane through three points with the same z-coordinate.
+
+		The points are taken in absolute coordinates: a point inside a group is converted. The plane keeps the
+		z-coordinate as given, so an integer stays an integer.
+
+		:param first:       A first point of the plane.
+		:param second:      A second point of the plane.
+		:param third:       A third point of the plane.
+		:returns:           A new plane parallel to the xy-plane.
+		:raises ValueError: If parameter 'first' is None.
+		:raises TypeError:  If parameter 'first' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'second' is None.
+		:raises TypeError:  If parameter 'second' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'third' is None.
+		:raises TypeError:  If parameter 'third' is not of type :class:`Point3D`.
+		:raises ValueError: If parameters 'first', 'second' and 'third' are on one line. |br|
+		                    Three points on one line don't define a plane.
+		:raises ValueError: If parameters 'first', 'second' and 'third' have different z-coordinates. |br|
+		                    Use :meth:`Plane3D.FromPoints` for a plane in any direction.
+		"""
+		for name, point in (
+			("first",  first),
+			("second", second),
+			("third",  third)
+		):
+			if point is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(point, Point3D):
+				ex = TypeError(f"Parameter '{name}' is not of type 'Point3D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+				raise ex
+
+		start =  first.Absolute
+		middle = second.Absolute
+		end =    third.Absolute
+		normal = (middle - start).VectorProduct(end - start)
+		if normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameters 'first', 'second' and 'third' are on one line.")
+			ex.add_note(f"Got points {first}, {second} and {third}.")
+			ex.add_note("Three points on one line don't define a plane.")
+			raise ex
+		elif start._z != middle._z or start._z != end._z:
+			ex = ValueError("Parameters 'first', 'second' and 'third' have different z-coordinates.")
+			ex.add_note(f"Got points {first}, {second} and {third}, at {start}, {middle} and {end} in absolute coordinates.")
+			ex.add_note("Use 'Plane3D.FromPoints' for a plane in any direction.")
+			raise ex
+
+		return cls(start._z)
+
+	@classmethod
+	def FromPointAndSpanningVectors(
+		cls,
+		point:                Point3D[Coordinate],
+		firstSpanningVector:  BaseVector3D[Coordinate],
+		secondSpanningVector: BaseVector3D[Coordinate]
+	) -> Self:
+		"""
+		Create the plane parallel to the xy-plane through a point, spanned by two vectors parallel to the xy-plane.
+
+		The point is taken in absolute coordinates: a point inside a group is converted. The plane keeps the point's
+		z-coordinate as given, so an integer stays an integer.
+
+		:param point:                A point of the plane.
+		:param firstSpanningVector:  A first spanning vector, like ``(x, y, 0)``.
+		:param secondSpanningVector: A second spanning vector, like ``(x, y, 0)``.
+		:returns:                    A new plane parallel to the xy-plane.
+		:raises ValueError:          If parameter 'point' is None.
+		:raises TypeError:           If parameter 'point' is not of type :class:`Point3D`.
+		:raises ValueError:          If parameter 'firstSpanningVector' is None.
+		:raises TypeError:           If parameter 'firstSpanningVector' is not of type :class:`BaseVector3D`.
+		:raises ValueError:          If parameter 'secondSpanningVector' is None.
+		:raises TypeError:           If parameter 'secondSpanningVector' is not of type :class:`BaseVector3D`.
+		:raises ValueError:          If parameters 'firstSpanningVector' and 'secondSpanningVector' are parallel, or one of
+		                             them is a zero vector. |br|
+		                             Two parallel vectors don't span a plane.
+		:raises ValueError:          If parameters 'firstSpanningVector' and 'secondSpanningVector' aren't parallel to the
+		                             xy-plane. |br|
+		                             Use :meth:`Plane3D.FromPointAndSpanningVectors` for a plane in any direction.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point3D):
+			ex = TypeError("Parameter 'point' is not of type 'Point3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		for name, vector in (
+			("firstSpanningVector",  firstSpanningVector),
+			("secondSpanningVector", secondSpanningVector)
+		):
+			if vector is None:
+				raise ValueError(f"Parameter '{name}' is None.")
+			elif not isinstance(vector, BaseVector3D):
+				ex = TypeError(f"Parameter '{name}' is not of type 'BaseVector3D'.")
+				ex.add_note(f"Got type '{getFullyQualifiedName(vector)}'.")
+				raise ex
+
+		normal = firstSpanningVector.VectorProduct(secondSpanningVector)
+		if normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameters 'firstSpanningVector' and 'secondSpanningVector' are parallel.")
+			ex.add_note(f"Got vectors {firstSpanningVector} and {secondSpanningVector}.")
+			ex.add_note("Two parallel vectors don't span a plane.")
+			raise ex
+		elif firstSpanningVector._zOffset != 0 or secondSpanningVector._zOffset != 0:
+			ex = ValueError("Parameters 'firstSpanningVector' and 'secondSpanningVector' aren't parallel to the xy-plane.")
+			ex.add_note(f"Got vectors {firstSpanningVector} and {secondSpanningVector}.")
+			ex.add_note("Use 'Plane3D.FromPointAndSpanningVectors' for a plane in any direction.")
+			raise ex
+
+		return cls(point.Absolute._z)
+
+	@classmethod
+	def FromPointAndNormal(cls, point: Point3D[Coordinate], normal: BaseVector3D[Coordinate]) -> Self:
+		"""
+		Create the plane parallel to the xy-plane through a point, perpendicular to a normal parallel to the z-axis.
+
+		The point is taken in absolute coordinates: a point inside a group is converted. The plane keeps the point's
+		z-coordinate as given, so an integer stays an integer.
+
+		:param point:       A point of the plane.
+		:param normal:      A normal of the plane, like ``(0, 0, 1)``.
+		:returns:           A new plane parallel to the xy-plane.
+		:raises ValueError: If parameter 'point' is None.
+		:raises TypeError:  If parameter 'point' is not of type :class:`Point3D`.
+		:raises ValueError: If parameter 'normal' is None.
+		:raises TypeError:  If parameter 'normal' is not of type :class:`BaseVector3D`.
+		:raises ValueError: If parameter 'normal' is a zero vector. |br|
+		                    A plane needs a normal direction.
+		:raises ValueError: If parameter 'normal' isn't parallel to the z-axis. |br|
+		                    Use :meth:`Plane3D.FromPointAndNormal` for a plane in any direction.
+		"""
+		if point is None:
+			raise ValueError("Parameter 'point' is None.")
+		elif not isinstance(point, Point3D):
+			ex = TypeError("Parameter 'point' is not of type 'Point3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
+			raise ex
+
+		if normal is None:
+			raise ValueError("Parameter 'normal' is None.")
+		elif not isinstance(normal, BaseVector3D):
+			ex = TypeError("Parameter 'normal' is not of type 'BaseVector3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
+			raise ex
+		elif normal._xOffset == 0 and normal._yOffset == 0 and normal._zOffset == 0:
+			ex = ValueError("Parameter 'normal' is a zero vector.")
+			ex.add_note(f"Got vector {normal}.")
+			ex.add_note("A plane needs a normal direction.")
+			raise ex
+		elif normal._xOffset != 0 or normal._yOffset != 0:
+			ex = ValueError("Parameter 'normal' isn't parallel to the z-axis.")
+			ex.add_note(f"Got vector {normal}.")
+			ex.add_note("Use 'Plane3D.FromPointAndNormal' for a plane in any direction.")
+			raise ex
+
+		return cls(point.Absolute._z)
 
 	@classmethod
 	def FromElement(cls, element: Element3D[Coordinate], alignment: Alignment3D) -> Self:
@@ -2951,26 +3447,26 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 	The ray is in absolute coordinates, relative to the origin. Its start point is a free copy, so it owns no point of an
 	element. Two rays are equal, if they start at the same point and their directions point the same way, whatever their
-	lengths. A ray is unhashable, as its start point and direction can be changed.
+	lengths. A ray is unhashable, as its start point can be changed.
 	"""
 
 	_start:     Point3D[Coordinate]   #: The start point of the ray, in absolute coordinates and without owner.
-	_direction: Offset3D[Coordinate]  #: The direction of the ray.
+	_direction: Vector3D[Coordinate]  #: The direction of the ray.
 
-	def __init__(self, start: Point3D[Coordinate], direction: Offset3D[Coordinate]) -> None:
+	def __init__(self, start: Point3D[Coordinate], direction: BaseVector3D[Coordinate]) -> None:
 		"""
 		Initializes a 3D ray from its start point and its direction.
 
 		The start point is taken in absolute coordinates (a point inside a group is converted), and the direction is
-		copied.
+		copied into a new :class:`Vector3D`.
 
 		:param start:       The start point of the ray.
-		:param direction:   The direction of the ray.
+		:param direction:   The direction of the ray, a 3D-vector or 3D-offset.
 		:raises ValueError: If parameter 'start' is None.
 		:raises TypeError:  If parameter 'start' is not of type :class:`Point3D`.
 		:raises ValueError: If parameter 'direction' is None.
-		:raises TypeError:  If parameter 'direction' is not of type :class:`Offset3D`.
-		:raises ValueError: If parameter 'direction' is a zero offset. |br|
+		:raises TypeError:  If parameter 'direction' is not of type :class:`BaseVector3D`.
+		:raises ValueError: If parameter 'direction' is a zero vector. |br|
 		                    A ray needs a direction.
 		"""
 		if start is None:
@@ -2982,18 +3478,18 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		if direction is None:
 			raise ValueError("Parameter 'direction' is None.")
-		elif not isinstance(direction, Offset3D):
-			ex = TypeError("Parameter 'direction' is not of type 'Offset3D'.")
+		elif not isinstance(direction, BaseVector3D):
+			ex = TypeError("Parameter 'direction' is not of type 'BaseVector3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
 			raise ex
 		elif direction._xOffset == 0 and direction._yOffset == 0 and direction._zOffset == 0:
-			ex = ValueError("Parameter 'direction' is a zero offset.")
-			ex.add_note(f"Got offset {direction}.")
+			ex = ValueError("Parameter 'direction' is a zero vector.")
+			ex.add_note(f"Got vector {direction}.")
 			ex.add_note("A ray needs a direction.")
 			raise ex
 
 		self._start =     start.Absolute
-		self._direction = direction.Copy()
+		self._direction = Vector3D(direction._xOffset, direction._yOffset, direction._zOffset)
 
 	@readonly
 	def Start(self) -> Point3D[Coordinate]:
@@ -3005,7 +3501,7 @@ class Ray3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return self._start
 
 	@readonly
-	def Direction(self) -> Offset3D[Coordinate]:
+	def Direction(self) -> Vector3D[Coordinate]:
 		"""
 		Read-only property to access the direction of the ray (:attr:`_direction`).
 
@@ -3379,7 +3875,7 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 		self._start._z = twiceAxis - self._start._z
 		self._end._z =   twiceAxis - self._end._z
 
-	def _MirrorAt(self, normal: Offset3D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector3D[float], distance: float) -> None:
 		"""
 		Mirror the segment at a plane by mirroring its start and end point (inplace).
 
@@ -3497,6 +3993,14 @@ class LineSegment3D(Segment3D[Coordinate], Generic[Coordinate]):
 		:returns: 3D-offset as :class:`Offset3D`
 		"""
 		return self._end - self._start
+
+	def ToVector(self) -> Vector3D[Coordinate]:
+		"""
+		Convert this 3D line segment to a 3D-vector from its start point to its end point.
+
+		:returns: 3D-vector as :class:`Vector3D`
+		"""
+		return Vector3D(self._end._x - self._start._x, self._end._y - self._start._y, self._end._z - self._start._z)
 
 	def ToTuple(self) -> tuple[tuple[Coordinate, Coordinate, Coordinate], tuple[Coordinate, Coordinate, Coordinate]]:
 		"""

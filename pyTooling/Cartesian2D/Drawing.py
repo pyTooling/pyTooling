@@ -55,7 +55,7 @@ from pyTooling                    import Cartesian2D
 from pyTooling.Decorators         import export, readonly
 from pyTooling.MetaClasses        import ExtendedType, abstractclass, abstractmethod
 from pyTooling.Common             import getFullyQualifiedName
-from pyTooling.Cartesian2D        import Coordinate, Point2D, BaseVector2D, Offset2D, BoundingBox2D, Element2D, \
+from pyTooling.Cartesian2D        import Coordinate, Point2D, BaseVector2D, Vector2D, BoundingBox2D, Element2D, \
                                          Segment2D, Shapes, AlreadyOwnedError, SweepDirection
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, Container2DMixin, YAxisDirection
 
@@ -1883,7 +1883,7 @@ class Ellipse(Shapes.Ellipse[Coordinate], StyleMixin, Generic[Coordinate]):
 		firstRadius:   Coordinate,
 		secondRadius:  Coordinate,
 		*,
-		direction:     Nullable[Offset2D[Coordinate]] = None,
+		direction:     Nullable[BaseVector2D[Coordinate]] = None,
 		copyPoints:    bool = True,
 		stroke:        Nullable[Stroke] = None,
 		fill:          Nullable[Fill] = None,
@@ -1915,8 +1915,8 @@ class Ellipse(Shapes.Ellipse[Coordinate], StyleMixin, Generic[Coordinate]):
 		:raises ValueError:        If parameter 'secondRadius' is None.
 		:raises TypeError:         If parameter 'secondRadius' is not of type :class:`float` or :class:`int`.
 		:raises ValueError:        If parameter 'secondRadius' isn't positive.
-		:raises TypeError:         If parameter 'direction' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
-		:raises ValueError:        If parameter 'direction' is a zero offset. |br|
+		:raises TypeError:         If parameter 'direction' is not of type :class:`~pyTooling.Cartesian2D.BaseVector2D`.
+		:raises ValueError:        If parameter 'direction' is a zero vector. |br|
 		                           An ellipse needs a direction of its first axis.
 		:raises ValueError:        If parameter 'copyPoints' is None.
 		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
@@ -2654,7 +2654,7 @@ class Text(Element2D[Coordinate], StyleMixin, Generic[Coordinate]):
 		"""
 		self._position._x = twiceAxis - self._position._x
 
-	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector2D[float], distance: float) -> None:
 		"""
 		Mirror the text at a line by mirroring its position (inplace).
 

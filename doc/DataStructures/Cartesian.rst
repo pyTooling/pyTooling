@@ -420,7 +420,9 @@ component of the normal is positive, so every line has exactly one form.
 ``Line2D(normal, distance)`` takes any non-zero normal: a normal of another length than 1 is normalized, and the
 distance is divided by the normal's length, so ``Line2D(Offset2D(3, 4), 10)`` is the line ``3x + 4y = 10``, stored as
 normal ``(0.6, 0.8)`` and distance ``2.0``. A normal of length 1, like ``(1, 0)``, keeps its values, so integers stay
-integers. A zero normal raises :exc:`ValueError`. The classmethods create a line from what is at hand:
+integers. A zero normal raises :exc:`ValueError`. The normal can be a :ref:`vector <STRUCT/Cartesian2D/Vector2D>` or an
+offset; the line stores it as a :class:`~pyTooling.Cartesian2D.Vector2D`, which is immutable like the line itself.
+The classmethods create a line from what is at hand:
 
 .. list-table::
    :header-rows: 1
@@ -551,10 +553,11 @@ Ray2D
 =====
 
 A :class:`~pyTooling.Cartesian2D.Ray2D` is a half-line: it starts at a point and is infinite in one direction. It is
-built from a start point and a direction, an :class:`~pyTooling.Cartesian2D.Offset2D`; it copies both, so it owns no
+built from a start point and a direction, a :class:`~pyTooling.Cartesian2D.Vector2D` or an
+:class:`~pyTooling.Cartesian2D.Offset2D`; it copies both, the direction into a new immutable vector, so it owns no
 point of an element. The start point is taken in absolute coordinates: a point inside a group is converted. A zero
 direction raises :exc:`ValueError`. :attr:`~pyTooling.Cartesian2D.Ray2D.Start` and
-:attr:`~pyTooling.Cartesian2D.Ray2D.Direction` return the stored point and offset.
+:attr:`~pyTooling.Cartesian2D.Ray2D.Direction` return the stored point and vector.
 :meth:`~pyTooling.Cartesian2D.Ray2D.PointAt` returns the point at a distance from the start point, whatever the length
 of the direction; a negative distance raises :exc:`ValueError`.
 
@@ -567,8 +570,8 @@ of the direction; a negative distance raises :exc:`ValueError`.
    str(ray)                           # '(1, 2) + t * (3, 4), t >= 0'
    ray.PointAt(5)                     # (4.0, 6.0)
 
-Like a line, a ray is in absolute coordinates and compares by value; as its start point and direction can be changed, it
-is unhashable (like an :class:`~pyTooling.Cartesian2D.Offset2D`). Two rays are equal (``==``), if they start at the same
+Like a line, a ray is in absolute coordinates and compares by value; as its start point can be changed, it is
+unhashable (like an :class:`~pyTooling.Cartesian2D.Offset2D`). Two rays are equal (``==``), if they start at the same
 point and their directions point the same way - the cross product of the directions is zero and their dot product is
 positive. The lengths of the directions don't matter, and integer coordinates compare exactly:
 
@@ -619,7 +622,9 @@ measurements:
   even for integer coordinates;
 * :meth:`~pyTooling.Cartesian2D.LineSegment2D.AngleTo` - the angle to another line segment's direction, from 0 to
   :data:`math.pi`; a line segment of length 0 has no direction and raises :exc:`ValueError`;
-* :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToOffset` - the segment as the displacement from start to end.
+* :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToOffset` - the segment as the displacement from start to end;
+* :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToVector` - the same as an immutable
+  :class:`~pyTooling.Cartesian2D.Vector2D`.
 
 .. seealso::
 
@@ -1104,19 +1109,21 @@ An :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` is placed by its
 :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Center`, a :class:`~pyTooling.Cartesian2D.Point2D`, and sized by two
 radii along two perpendicular axes: :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.FirstRadius` and
 :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.SecondRadius`, each a positive :class:`int` or :class:`float`. The
-keyword-only parameter ``direction``, an :class:`~pyTooling.Cartesian2D.Offset2D` of any length but 0, points along the
-first axis; the second axis is turned by +90 degrees (counterclockwise). Without a direction, the first axis points in
-x-direction, ``(1, 0)``, and the ellipse is axis-aligned, like SVG's ``<ellipse>`` with ``rx`` and ``ry``. The center
-is copied by default; ``copyPoints=False`` keeps the given point instead. The ellipse owns its center.
+keyword-only parameter ``direction``, a :class:`~pyTooling.Cartesian2D.Vector2D` or an
+:class:`~pyTooling.Cartesian2D.Offset2D` of any length but 0, points along the first axis; the second axis is turned
+by +90 degrees (counterclockwise). Without a direction, the first axis points in x-direction, ``(1, 0)``, and the
+ellipse is axis-aligned, like SVG's ``<ellipse>`` with ``rx`` and ``ry``. The center is copied by default;
+``copyPoints=False`` keeps the given point instead. The ellipse owns its center.
 
 Three read-only properties describe its axes:
 
-* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Direction` - the direction of the first axis, of length 1, its first
-  non-zero component positive. A given direction is normalized, unless its length is 1 already: ``(0, 1)`` stays an
-  integer offset. As ``d`` and ``-d`` describe the same ellipse, ``(-3, 4)`` is stored as ``(0.6, -0.8)``;
-* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.FirstAxis` - a new offset from the center to the end of the first axis,
+* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Direction` - the direction of the first axis, an immutable
+  :class:`~pyTooling.Cartesian2D.Vector2D` of length 1, its first non-zero component positive. A given direction is
+  normalized, unless its length is 1 already: ``(0, 1)`` stays an integer vector. As ``d`` and ``-d`` describe the same
+  ellipse, ``(-3, 4)`` is stored as ``(0.6, -0.8)``;
+* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.FirstAxis` - a new vector from the center to the end of the first axis,
   the direction scaled by the first radius;
-* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.SecondAxis` - a new offset from the center to the end of the second
+* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.SecondAxis` - a new vector from the center to the end of the second
   axis, the direction turned by +90 degrees and scaled by the second radius.
 
 An ellipse is a closed shape, an :ref:`EllipticalGeometry2D <STRUCT/Cartesian2D/EllipticalGeometry2D>` like a
@@ -1149,7 +1156,8 @@ ellipse: with the semi-axes ``u`` and ``v``, it reaches ``sqrt(ux ** 2 + vx ** 2
 Moving an ellipse moves its center. Mirroring mirrors its center as a point and its direction as a vector, the radii
 stay: :meth:`~pyTooling.Cartesian2D.Element2D.MirrorX` and :meth:`~pyTooling.Cartesian2D.Element2D.MirrorY` both
 negate the direction's y-component (a direction ``(0, 1)`` stays), and an oblique
-:ref:`line <STRUCT/Cartesian2D/Line2D>` rotates the ellipse.
+:ref:`line <STRUCT/Cartesian2D/Line2D>` rotates the ellipse. The ellipse gets a new direction vector; a direction read
+before stays as it was.
 
 .. code-block:: Python
 
@@ -1157,7 +1165,7 @@ negate the direction's y-component (a direction ``(0, 1)`` stays), and an obliqu
    tilted.Direction                   # (0.6, -0.8)
 
 A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D`, a radius that isn't a number or a direction that isn't
-an :class:`~pyTooling.Cartesian2D.Offset2D` raises :exc:`TypeError`; a radius of 0 or below or a direction ``(0, 0)``
+a vector raises :exc:`TypeError`; a radius of 0 or below or a direction ``(0, 0)``
 raises :exc:`ValueError`. Equal radii are accepted: such an ellipse is a
 circle, but not a :class:`~pyTooling.Cartesian2D.Shapes.Circle` object.
 
@@ -1820,7 +1828,8 @@ A :class:`~pyTooling.Cartesian3D.Plane3D` is a plane, infinite in all directions
 :attr:`~pyTooling.Cartesian3D.Plane3D.Normal` ``(nx, ny, nz)`` of length 1, whose first non-zero component is
 positive, and the signed :attr:`~pyTooling.Cartesian3D.Plane3D.Distance` ``d`` from the origin; the plane is all points
 ``(x, y, z)`` with ``nx * x + ny * y + nz * z = d``. ``Plane3D(normal, distance)`` normalizes the normal and scales the
-distance the same way as ``Line2D(normal, distance)``.
+distance the same way as ``Line2D(normal, distance)``, and stores the normal as a
+:class:`~pyTooling.Cartesian3D.Vector3D`.
 
 .. list-table::
    :header-rows: 1
@@ -1831,8 +1840,10 @@ distance the same way as ``Line2D(normal, distance)``.
    * - :meth:`FromPoints(first, second, third) <pyTooling.Cartesian3D.Plane3D.FromPoints>`
      - Through three points; the normal is the cross product of the offsets from the first point to the others. Three
        points on one line raise :exc:`ValueError`.
-   * - :meth:`FromPointAndSpanningVectors(point, u, v) <pyTooling.Cartesian3D.Plane3D.FromPointAndSpanningVectors>`
-     - Through a point, spanned by two vectors: the plane ``point + s * u + t * v``. Parallel spanning vectors raise
+   * - :meth:`FromPointAndSpanningVectors(point, firstSpanningVector, secondSpanningVector)
+       <pyTooling.Cartesian3D.Plane3D.FromPointAndSpanningVectors>`
+     - Through a point, spanned by two vectors: the plane
+       ``point + s * firstSpanningVector + t * secondSpanningVector``. Parallel spanning vectors raise
        :exc:`ValueError`.
    * - :meth:`FromPointAndNormal(point, normal) <pyTooling.Cartesian3D.Plane3D.FromPointAndNormal>`
      - Through a point, perpendicular to a normal; a zero normal raises :exc:`ValueError`.
@@ -1861,6 +1872,10 @@ keep their coordinate as given:
   :attr:`~pyTooling.Cartesian3D.XZPlane3D.Y`;
 * :class:`~pyTooling.Cartesian3D.XYPlane3D` - the plane ``z = c``, normal ``(0, 0, 1)``, with
   :attr:`~pyTooling.Cartesian3D.XYPlane3D.Z`.
+
+Called on one of them, the classmethods ``FromPoints``, ``FromPointAndSpanningVectors`` and ``FromPointAndNormal``
+return that class and keep the coordinate as given; input that doesn't fit the plane raises :exc:`ValueError`:
+``YZPlane3D.FromPointAndNormal(Point3D(5, 1, 2), Vector3D(-1, 0, 0))`` is ``YZPlane3D(5)``.
 
 Like the 2D line, a plane is a value in absolute coordinates, compared geometrically and hashable:
 :meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt` mirrors an element of any group at any plane - a plane parallel to a
@@ -1897,7 +1912,7 @@ Ray3D
 
 A :class:`~pyTooling.Cartesian3D.Ray3D` is the 3D counterpart of a :ref:`Ray2D <STRUCT/Cartesian2D/Ray2D>`: a
 half-line from a start point (:attr:`~pyTooling.Cartesian3D.Ray3D.Start`) in a direction
-(:attr:`~pyTooling.Cartesian3D.Ray3D.Direction`, an :class:`~pyTooling.Cartesian3D.Offset3D`), a value in absolute
+(:attr:`~pyTooling.Cartesian3D.Ray3D.Direction`, a :class:`~pyTooling.Cartesian3D.Vector3D`), a value in absolute
 coordinates. :meth:`~pyTooling.Cartesian3D.Ray3D.PointAt` returns the point at a distance from the start point. Two
 rays are equal, if they start at the same point and their directions point the same way: all three components of the
 cross product are zero and the dot product is positive.
@@ -1937,7 +1952,7 @@ LineSegment3D
 =============
 
 :class:`~pyTooling.Cartesian3D.LineSegment3D` adds the measurements - length in three dimensions, the angle to
-another line segment, and conversion to an offset.
+another line segment, and conversion to an offset or a vector.
 
 .. seealso::
 

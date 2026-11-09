@@ -178,6 +178,8 @@ class Instantiation(Testcase):
 
 		self.assertEqual(sqrt(2), line.Length)
 		self.assertEqual(offset, line.ToOffset())
+		self.assertIs(Vector2D, type(line.ToVector()))
+		self.assertEqual(Vector2D(1, 1), line.ToVector())
 		self.assertTupleEqual(((1, 2), (2, 3)), line.ToTuple())
 
 	def test_Point_None1(self) -> None:
@@ -2354,15 +2356,15 @@ class Lines(Testcase):
 		with self.assertRaises(TypeError) as context:
 			Line2D((1, 0), 1)
 
-		self.assertEqual("Parameter 'normal' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'normal' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 	def test_NormalZero(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			Line2D(Offset2D(0, 0), 1)
 
-		self.assertEqual("Parameter 'normal' is a zero offset.", str(context.exception))
-		self.assertListEqual(["Got offset (0, 0).", "A line needs a normal direction."], context.exception.__notes__)
+		self.assertEqual("Parameter 'normal' is a zero vector.", str(context.exception))
+		self.assertListEqual(["Got vector (0, 0).", "A line needs a normal direction."], context.exception.__notes__)
 
 	def test_DistanceNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -2488,15 +2490,15 @@ class Lines(Testcase):
 		with self.assertRaises(TypeError) as context:
 			Line2D.FromPointAndDirection(Point2D(1, 2), Point2D(1, 0))
 
-		self.assertEqual("Parameter 'direction' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'direction' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
 
 	def test_FromPointAndDirection_DirectionZero(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			Line2D.FromPointAndDirection(Point2D(1, 2), Offset2D(0, 0))
 
-		self.assertEqual("Parameter 'direction' is a zero offset.", str(context.exception))
-		self.assertListEqual(["Got offset (0, 0).", "A line needs a direction."], context.exception.__notes__)
+		self.assertEqual("Parameter 'direction' is a zero vector.", str(context.exception))
+		self.assertListEqual(["Got vector (0, 0).", "A line needs a direction."], context.exception.__notes__)
 
 	def test_FromPointAndNormal(self) -> None:
 		line = Line2D.FromPointAndNormal(Point2D(6, 8), Offset2D(-3, -4))
@@ -2536,15 +2538,15 @@ class Lines(Testcase):
 		with self.assertRaises(TypeError) as context:
 			Line2D.FromPointAndNormal(Point2D(1, 2), (1, 0))
 
-		self.assertEqual("Parameter 'normal' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'normal' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 	def test_FromPointAndNormal_NormalZero(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			Line2D.FromPointAndNormal(Point2D(1, 2), Offset2D(0, 0))
 
-		self.assertEqual("Parameter 'normal' is a zero offset.", str(context.exception))
-		self.assertListEqual(["Got offset (0, 0).", "A line needs a normal direction."], context.exception.__notes__)
+		self.assertEqual("Parameter 'normal' is a zero vector.", str(context.exception))
+		self.assertListEqual(["Got vector (0, 0).", "A line needs a normal direction."], context.exception.__notes__)
 
 	def test_SignedDistance(self) -> None:
 		line = Line2D(Offset2D(3, 4), 10)
@@ -3050,6 +3052,64 @@ class HorizontalLines(Testcase):
 		)
 
 
+class LineVectors(Testcase):
+	def test_Normal(self) -> None:
+		line = Line2D(Offset2D(3, 4), 10)
+
+		self.assertIs(Vector2D, type(line.Normal))
+		self.assertIs(line.Normal, line.Normal)
+		self.assertEqual(Vector2D(0.6, 0.8), line.Normal)
+
+	def test_Normal_Vector(self) -> None:
+		line = Line2D(Vector2D(3, 4), 10)
+
+		self.assertEqual(Line2D(Offset2D(3, 4), 10), line)
+
+	def test_Normal_ReadOnly(self) -> None:
+		"""The normal can't be changed, so the line keeps its hash and its Hesse normal form."""
+		line =  Line2D(Vector2D(0, 1), 5)
+		lines = {line: "top"}
+
+		with self.assertRaises(AttributeError):
+			line.Normal.XOffset = 1
+
+		self.assertEqual(Vector2D(0, 1), line.Normal)
+		self.assertEqual("top", lines[HorizontalLine2D(5)])
+
+	def test_FromPointAndDirection_Vector(self) -> None:
+		line = Line2D.FromPointAndDirection(Point2D(5, 0), Vector2D(0, 2))
+
+		self.assertIs(Line2D, type(line))
+		self.assertEqual(VerticalLine2D(5), line)
+
+	def test_FromPointAndNormal_Vector(self) -> None:
+		line = Line2D.FromPointAndNormal(Point2D(0, 5), Vector2D(0, -1))
+
+		self.assertIs(Line2D, type(line))
+		self.assertEqual(HorizontalLine2D(5), line)
+
+	def test_Ray_Vector(self) -> None:
+		"""A ray stores its direction as a new, immutable vector."""
+		direction = Vector2D(1, 2)
+
+		ray1 = Ray2D(Point2D(0, 0), direction)
+		ray2 = Ray2D(Point2D(0, 0), Offset2D(1, 2))
+
+		self.assertIs(Vector2D, type(ray1.Direction))
+		self.assertEqual(direction, ray1.Direction)
+		self.assertIs(Vector2D, type(ray2.Direction))
+		self.assertEqual(direction, ray2.Direction)
+		with self.assertRaises(AttributeError):
+			ray2.Direction.XOffset = 7
+
+	def test_Ray_ZeroVector(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			Ray2D(Point2D(0, 0), Vector2D(0, 0))
+
+		self.assertEqual("Parameter 'direction' is a zero vector.", str(context.exception))
+		self.assertListEqual(["Got vector (0, 0).", "A ray needs a direction."], context.exception.__notes__)
+
+
 class Rays(Testcase):
 	def test_Ray2D(self) -> None:
 		ray = Ray2D(Point2D(1, 2), Offset2D(3, 4))
@@ -3112,15 +3172,15 @@ class Rays(Testcase):
 		with self.assertRaises(TypeError) as context:
 			Ray2D(Point2D(1, 2), Offset3D(3, 4, 0))
 
-		self.assertEqual("Parameter 'direction' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'direction' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian3D.Offset3D'."], context.exception.__notes__)
 
 	def test_DirectionZero(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			Ray2D(Point2D(1, 2), Offset2D(0, 0))
 
-		self.assertEqual("Parameter 'direction' is a zero offset.", str(context.exception))
-		self.assertListEqual(["Got offset (0, 0).", "A ray needs a direction."], context.exception.__notes__)
+		self.assertEqual("Parameter 'direction' is a zero vector.", str(context.exception))
+		self.assertListEqual(["Got vector (0, 0).", "A ray needs a direction."], context.exception.__notes__)
 
 	def test_Immutable(self) -> None:
 		ray = Ray2D(Point2D(1, 2), Offset2D(3, 4))

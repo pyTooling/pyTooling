@@ -527,7 +527,7 @@ class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 		"""
 		return self._x, self._y
 
-	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector2D[float], distance: float) -> None:
 		"""
 		Mirror the point at the line ``nx * x + ny * y = distance`` in the point's frame (inplace).
 
@@ -949,7 +949,7 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		"""
 
 	@abstractmethod
-	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector2D[float], distance: float) -> None:
 		"""
 		Mirror the element at the line ``nx * x + ny * y = distance`` in the element's frame (inplace).
 
@@ -2115,10 +2115,10 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 	equal, if they have the same normal and distance, whatever class or constructor created them.
 	"""
 
-	_normal:   Offset2D[float]  #: The normal of length 1, its first non-zero component is positive.
+	_normal:   Vector2D[float]  #: The normal of length 1, its first non-zero component is positive.
 	_distance: float            #: The signed distance of the line from the origin, in direction of the normal.
 
-	def __init__(self, normal: Offset2D[Coordinate], distance: Coordinate) -> None:
+	def __init__(self, normal: BaseVector2D[Coordinate], distance: Coordinate) -> None:
 		"""
 		Initializes a 2D line from a normal and a distance, the line ``nx * x + ny * y = distance``.
 
@@ -2131,21 +2131,21 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:param distance:    The right-hand side of the line's equation; for a normal of length 1, the signed distance of the
 		                    line from the origin.
 		:raises ValueError: If parameter 'normal' is None.
-		:raises TypeError:  If parameter 'normal' is not of type :class:`Offset2D`.
-		:raises ValueError: If parameter 'normal' is a zero offset. |br|
+		:raises TypeError:  If parameter 'normal' is not of type :class:`BaseVector2D`.
+		:raises ValueError: If parameter 'normal' is a zero vector. |br|
 		                    A line needs a normal direction.
 		:raises ValueError: If parameter 'distance' is None.
 		:raises TypeError:  If parameter 'distance' is not of type :class:`float` or :class:`int`.
 		"""
 		if normal is None:
 			raise ValueError("Parameter 'normal' is None.")
-		elif not isinstance(normal, Offset2D):
-			ex = TypeError("Parameter 'normal' is not of type 'Offset2D'.")
+		elif not isinstance(normal, BaseVector2D):
+			ex = TypeError("Parameter 'normal' is not of type 'BaseVector2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
 			raise ex
 		elif normal._xOffset == 0 and normal._yOffset == 0:
-			ex = ValueError("Parameter 'normal' is a zero offset.")
-			ex.add_note(f"Got offset {normal}.")
+			ex = ValueError("Parameter 'normal' is a zero vector.")
+			ex.add_note(f"Got vector {normal}.")
 			ex.add_note("A line needs a normal direction.")
 			raise ex
 
@@ -2169,7 +2169,7 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			normalY =  -normalY
 			distance = -distance
 
-		self._normal =   Offset2D(normalX + 0, normalY + 0)
+		self._normal =   Vector2D(normalX + 0, normalY + 0)
 		self._distance = distance + 0
 
 	@classmethod
@@ -2209,12 +2209,12 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			raise ex
 
 		return Line2D(
-			Offset2D(-direction._yOffset, direction._xOffset),
+			Vector2D(-direction._yOffset, direction._xOffset),
 			direction._xOffset * start._y - direction._yOffset * start._x
 		)
 
 	@classmethod
-	def FromPointAndDirection(cls, point: Point2D[Coordinate], direction: Offset2D[Coordinate]) -> Line2D[float]:
+	def FromPointAndDirection(cls, point: Point2D[Coordinate], direction: BaseVector2D[Coordinate]) -> Line2D[float]:
 		"""
 		Create the line through a point in a direction.
 
@@ -2226,8 +2226,8 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'point' is None.
 		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
 		:raises ValueError: If parameter 'direction' is None.
-		:raises TypeError:  If parameter 'direction' is not of type :class:`Offset2D`.
-		:raises ValueError: If parameter 'direction' is a zero offset. |br|
+		:raises TypeError:  If parameter 'direction' is not of type :class:`BaseVector2D`.
+		:raises ValueError: If parameter 'direction' is a zero vector. |br|
 		                    A line needs a direction.
 		"""
 		if point is None:
@@ -2239,24 +2239,24 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		if direction is None:
 			raise ValueError("Parameter 'direction' is None.")
-		elif not isinstance(direction, Offset2D):
-			ex = TypeError("Parameter 'direction' is not of type 'Offset2D'.")
+		elif not isinstance(direction, BaseVector2D):
+			ex = TypeError("Parameter 'direction' is not of type 'BaseVector2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
 			raise ex
 		elif direction._xOffset == 0 and direction._yOffset == 0:
-			ex = ValueError("Parameter 'direction' is a zero offset.")
-			ex.add_note(f"Got offset {direction}.")
+			ex = ValueError("Parameter 'direction' is a zero vector.")
+			ex.add_note(f"Got vector {direction}.")
 			ex.add_note("A line needs a direction.")
 			raise ex
 
 		absolute = point.Absolute
 		return Line2D(
-			Offset2D(-direction._yOffset, direction._xOffset),
+			Vector2D(-direction._yOffset, direction._xOffset),
 			direction._xOffset * absolute._y - direction._yOffset * absolute._x
 		)
 
 	@classmethod
-	def FromPointAndNormal(cls, point: Point2D[Coordinate], normal: Offset2D[Coordinate]) -> Line2D[float]:
+	def FromPointAndNormal(cls, point: Point2D[Coordinate], normal: BaseVector2D[Coordinate]) -> Line2D[float]:
 		"""
 		Create the line through a point, perpendicular to a normal.
 
@@ -2268,8 +2268,8 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		:raises ValueError: If parameter 'point' is None.
 		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
 		:raises ValueError: If parameter 'normal' is None.
-		:raises TypeError:  If parameter 'normal' is not of type :class:`Offset2D`.
-		:raises ValueError: If parameter 'normal' is a zero offset. |br|
+		:raises TypeError:  If parameter 'normal' is not of type :class:`BaseVector2D`.
+		:raises ValueError: If parameter 'normal' is a zero vector. |br|
 		                    A line needs a normal direction.
 		"""
 		if point is None:
@@ -2281,13 +2281,13 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		if normal is None:
 			raise ValueError("Parameter 'normal' is None.")
-		elif not isinstance(normal, Offset2D):
-			ex = TypeError("Parameter 'normal' is not of type 'Offset2D'.")
+		elif not isinstance(normal, BaseVector2D):
+			ex = TypeError("Parameter 'normal' is not of type 'BaseVector2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
 			raise ex
 		elif normal._xOffset == 0 and normal._yOffset == 0:
-			ex = ValueError("Parameter 'normal' is a zero offset.")
-			ex.add_note(f"Got offset {normal}.")
+			ex = ValueError("Parameter 'normal' is a zero vector.")
+			ex.add_note(f"Got vector {normal}.")
 			ex.add_note("A line needs a normal direction.")
 			raise ex
 
@@ -2295,7 +2295,7 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return Line2D(normal, normal._xOffset * absolute._x + normal._yOffset * absolute._y)
 
 	@readonly
-	def Normal(self) -> Offset2D[float]:
+	def Normal(self) -> Vector2D[float]:
 		"""
 		Read-only property to access the normal of the line (:attr:`_normal`).
 
@@ -2545,7 +2545,7 @@ class VerticalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'x' is None.
 		:raises TypeError:  If parameter 'x' is not of type :class:`float` or :class:`int`.
 		"""
-		super().__init__(Offset2D(1, 0), 0)
+		super().__init__(Vector2D(1, 0), 0)
 
 		if x is None:
 			raise ValueError("Parameter 'x' is None.")
@@ -2645,7 +2645,7 @@ class HorizontalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 		:raises ValueError: If parameter 'y' is None.
 		:raises TypeError:  If parameter 'y' is not of type :class:`float` or :class:`int`.
 		"""
-		super().__init__(Offset2D(0, 1), 0)
+		super().__init__(Vector2D(0, 1), 0)
 
 		if y is None:
 			raise ValueError("Parameter 'y' is None.")
@@ -2736,26 +2736,26 @@ class Ray2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 	The ray is in absolute coordinates, relative to the origin. Its start point is a free copy, so it owns no point of an
 	element. Two rays are equal, if they start at the same point and their directions point the same way, whatever their
-	lengths. A ray is unhashable, as its start point and direction can be changed.
+	lengths. A ray is unhashable, as its start point can be changed.
 	"""
 
 	_start:     Point2D[Coordinate]   #: The start point of the ray, in absolute coordinates and without owner.
-	_direction: Offset2D[Coordinate]  #: The direction of the ray.
+	_direction: Vector2D[Coordinate]  #: The direction of the ray.
 
-	def __init__(self, start: Point2D[Coordinate], direction: Offset2D[Coordinate]) -> None:
+	def __init__(self, start: Point2D[Coordinate], direction: BaseVector2D[Coordinate]) -> None:
 		"""
 		Initializes a 2D ray from its start point and its direction.
 
 		The start point is taken in absolute coordinates (a point inside a group is converted), and the direction is
-		copied.
+		copied into a new :class:`Vector2D`.
 
 		:param start:       The start point of the ray.
-		:param direction:   The direction of the ray.
+		:param direction:   The direction of the ray, a 2D-vector or 2D-offset.
 		:raises ValueError: If parameter 'start' is None.
 		:raises TypeError:  If parameter 'start' is not of type :class:`Point2D`.
 		:raises ValueError: If parameter 'direction' is None.
-		:raises TypeError:  If parameter 'direction' is not of type :class:`Offset2D`.
-		:raises ValueError: If parameter 'direction' is a zero offset. |br|
+		:raises TypeError:  If parameter 'direction' is not of type :class:`BaseVector2D`.
+		:raises ValueError: If parameter 'direction' is a zero vector. |br|
 		                    A ray needs a direction.
 		"""
 		if start is None:
@@ -2767,18 +2767,18 @@ class Ray2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		if direction is None:
 			raise ValueError("Parameter 'direction' is None.")
-		elif not isinstance(direction, Offset2D):
-			ex = TypeError("Parameter 'direction' is not of type 'Offset2D'.")
+		elif not isinstance(direction, BaseVector2D):
+			ex = TypeError("Parameter 'direction' is not of type 'BaseVector2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
 			raise ex
 		elif direction._xOffset == 0 and direction._yOffset == 0:
-			ex = ValueError("Parameter 'direction' is a zero offset.")
-			ex.add_note(f"Got offset {direction}.")
+			ex = ValueError("Parameter 'direction' is a zero vector.")
+			ex.add_note(f"Got vector {direction}.")
 			ex.add_note("A ray needs a direction.")
 			raise ex
 
 		self._start =     start.Absolute
-		self._direction = direction.Copy()
+		self._direction = Vector2D(direction._xOffset, direction._yOffset)
 
 	@readonly
 	def Start(self) -> Point2D[Coordinate]:
@@ -2790,7 +2790,7 @@ class Ray2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		return self._start
 
 	@readonly
-	def Direction(self) -> Offset2D[Coordinate]:
+	def Direction(self) -> Vector2D[Coordinate]:
 		"""
 		Read-only property to access the direction of the ray (:attr:`_direction`).
 
@@ -3208,7 +3208,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		:param twiceAxis: Twice the x-coordinate of the axis.
 		"""
 
-	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector2D[float], distance: float) -> None:
 		"""
 		Mirror the segment at a line by mirroring its start and end point and its other points (inplace).
 
@@ -3221,7 +3221,7 @@ class Segment2D(Element2D[Coordinate], Generic[Coordinate]):
 		self._end._MirrorAt(normal, distance)
 		self._MirrorInnerAt(normal, distance)
 
-	def _MirrorInnerAt(self, normal: Offset2D[float], distance: float) -> None:
+	def _MirrorInnerAt(self, normal: Vector2D[float], distance: float) -> None:
 		"""
 		Mirror the segment's points other than its start and end point at a line (inplace).
 
@@ -3349,6 +3349,14 @@ class LineSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		:returns: 2D-offset as :class:`Offset2D`
 		"""
 		return self._end - self._start
+
+	def ToVector(self) -> Vector2D[Coordinate]:
+		"""
+		Convert this 2D line segment to a 2D-vector from its start point to its end point.
+
+		:returns: 2D-vector as :class:`Vector2D`
+		"""
+		return Vector2D(self._end._x - self._start._x, self._end._y - self._start._y)
 
 	def ToTuple(self) -> tuple[tuple[Coordinate, Coordinate], tuple[Coordinate, Coordinate]]:
 		"""
@@ -3861,7 +3869,7 @@ class ArcSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		"""
 		self._height = -self._height
 
-	def _MirrorInnerAt(self, normal: Offset2D[float], distance: float) -> None:
+	def _MirrorInnerAt(self, normal: Vector2D[float], distance: float) -> None:
 		"""
 		Reverse the arc's direction by negating its height, as its end points are mirrored at a line (inplace).
 
@@ -4113,7 +4121,7 @@ class BezierSegment2D(Segment2D[Coordinate], Generic[Coordinate]):
 		for controlPoint in self._controlPoints:
 			controlPoint._x = twiceAxis - controlPoint._x
 
-	def _MirrorInnerAt(self, normal: Offset2D[float], distance: float) -> None:
+	def _MirrorInnerAt(self, normal: Vector2D[float], distance: float) -> None:
 		"""
 		Mirror the curve's control points at a line (inplace).
 

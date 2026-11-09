@@ -23,9 +23,9 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Polyline` is a path of line
      segments, built from two or more points, open or closed.
    * :mod:`pyTooling.Cartesian2D.Shapes`: an :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` by center, two radii and
-     the direction of its first axis (default ``(1, 0)``, axis-aligned), a
-     :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` with its area, its perimeter (Ramanujan's approximation) and the
-     bounding box of the rotated ellipse.
+     the direction of its first axis (an immutable :class:`~pyTooling.Cartesian2D.Vector2D`; default ``(1, 0)``,
+     axis-aligned), a :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` with its area, its perimeter (Ramanujan's
+     approximation) and the bounding box of the rotated ellipse.
    * :mod:`pyTooling.Cartesian2D.Shapes`: a circle and an ellipse derive from the abstract
      :class:`~pyTooling.Cartesian2D.Shapes.EllipticalGeometry2D`, which owns, moves and mirrors their center; neither
      derives from the other.
@@ -108,7 +108,7 @@ Version 10.x (2026)
      :class:`~pyTooling.Cartesian2D.VerticalLine2D` ``x = c`` and :class:`~pyTooling.Cartesian2D.HorizontalLine2D`
      ``y = c``. Every element mirrors at a line with :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`, so elements of
      different groups mirror at the same line. A :class:`~pyTooling.Cartesian2D.Ray2D` is a half-line from a start point
-     in a direction.
+     in a direction, an immutable :class:`~pyTooling.Cartesian2D.Vector2D`.
    * :mod:`pyTooling.Cartesian3D`: planes (:class:`~pyTooling.Cartesian3D.Plane3D`) as values in absolute
      coordinates, :class:`~pyTooling.Cartesian3D.YZPlane3D` ``x = c``, :class:`~pyTooling.Cartesian3D.XZPlane3D`
      ``y = c`` and :class:`~pyTooling.Cartesian3D.XYPlane3D` ``z = c``. Every element mirrors at a plane with
@@ -123,18 +123,22 @@ Version 10.x (2026)
      vector in 3D), :meth:`~pyTooling.Cartesian2D.BaseVector2D.Normalized` and multiplication by a number
      (``vector * 2``, ``2 * vector``, ``offset *= 2``). An operator returns a vector of its left operand's class; a
      vector and an offset with equal components are equal. Points, bounding boxes and ``Move()`` take either;
-     ``point - vector`` is a new point.
+     ``point - vector`` is a new point. :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToVector` beside
+     :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToOffset`.
    * :mod:`pyTooling.Cartesian2D`: a general :class:`~pyTooling.Cartesian2D.Line2D` in Hesse normal form (unit normal
      and signed distance from the origin), created from a normal and a distance or by
      :meth:`~pyTooling.Cartesian2D.Line2D.FromPoints`, :meth:`~pyTooling.Cartesian2D.Line2D.FromPointAndDirection` and
      :meth:`~pyTooling.Cartesian2D.Line2D.FromPointAndNormal`. It computes the signed distance of a point, projects a
      point onto the line and intersects a :class:`~pyTooling.Cartesian2D.Ray2D`. Lines compare geometrically:
-     ``VerticalLine2D(5) == Line2D(Offset2D(1, 0), 5)``.
+     ``VerticalLine2D(5) == Line2D(Offset2D(1, 0), 5)``. The normal is an immutable
+     :class:`~pyTooling.Cartesian2D.Vector2D`.
    * :mod:`pyTooling.Cartesian3D`: a general :class:`~pyTooling.Cartesian3D.Plane3D` in Hesse normal form, created from
      a normal and a distance or by :meth:`~pyTooling.Cartesian3D.Plane3D.FromPoints`,
      :meth:`~pyTooling.Cartesian3D.Plane3D.FromPointAndSpanningVectors` and
      :meth:`~pyTooling.Cartesian3D.Plane3D.FromPointAndNormal`, with the operations of a line and intersections with a
-     :class:`~pyTooling.Cartesian3D.Ray3D`.
+     :class:`~pyTooling.Cartesian3D.Ray3D`. The normal is an immutable :class:`~pyTooling.Cartesian3D.Vector3D`. Called
+     on :class:`~pyTooling.Cartesian3D.YZPlane3D`, :class:`~pyTooling.Cartesian3D.XZPlane3D` or
+     :class:`~pyTooling.Cartesian3D.XYPlane3D`, the classmethods return that class with the coordinate as given.
    * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: every element mirrors at an oblique line or plane
      with :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt` (reflection in Hesse normal form; a group mirrors its offset
      and its children). An :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` mirrors its center and its direction, so an

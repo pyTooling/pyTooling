@@ -50,7 +50,7 @@ from pyTooling.MetaClasses        import ExtendedType
 from pyTooling.Common             import getFullyQualifiedName
 from pyTooling.Cartesian2D        import Coordinate, AlreadyOwnedError, NotOwnedError, GroupCycleError
 from pyTooling.Cartesian2D.Groups import EmptyGroupError
-from pyTooling.Cartesian3D        import BaseVector3D, Offset3D, BoundingBox3D, Element3D
+from pyTooling.Cartesian3D        import BaseVector3D, Vector3D, Offset3D, BoundingBox3D, Element3D
 
 
 @export
@@ -502,7 +502,7 @@ class Group3D(Element3D[Coordinate], Container3DMixin, Generic[Coordinate]):
 		for child in self._children:
 			child._MirrorZ(0)
 
-	def _MirrorAt(self, normal: Offset3D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector3D[float], distance: float) -> None:
 		"""
 		Mirror the group at a plane by mirroring its :attr:`Offset` like a point (inplace).
 

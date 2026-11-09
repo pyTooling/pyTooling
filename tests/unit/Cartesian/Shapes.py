@@ -35,9 +35,9 @@ and path.
 from copy                         import copy, deepcopy
 from math                         import cos, isclose, pi, radians, sin, sqrt
 
-from pyTooling.Cartesian2D        import Point2D, Offset2D, Size2D, BoundingBox2D, LineSegment2D, ArcSegment2D, \
-                                         QuadraticBezierSegment2D, CubicBezierSegment2D, Alignment2D, SweepDirection, \
-                                         Line2D, VerticalLine2D, HorizontalLine2D, \
+from pyTooling.Cartesian2D        import Point2D, Vector2D, Offset2D, Size2D, BoundingBox2D, LineSegment2D, \
+                                         ArcSegment2D, QuadraticBezierSegment2D, CubicBezierSegment2D, Alignment2D, \
+                                         SweepDirection, Line2D, VerticalLine2D, HorizontalLine2D, \
                                          AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
                                          NotInSameFrameError, CrossingEdgesError, Cartesian2DError
 from pyTooling.Cartesian2D.Shapes import Shape, Geometry2D, EllipticalGeometry2D, Polygon, Polyline, Trapezium, \
@@ -627,10 +627,12 @@ class Instantiation(Testcase):
 		"""Without a direction, the first axis points in x-direction; integer radii give integer axes."""
 		ellipse = Ellipse(Point2D(1, 2), 3, 2)
 
-		self.assertIsInstance(ellipse.Direction, Offset2D)
+		self.assertIs(Vector2D, type(ellipse.Direction))
 		self.assertTupleEqual((1, 0), ellipse.Direction.ToTuple())
 		self.assertIs(int, type(ellipse.Direction.XOffset))
 		self.assertIs(int, type(ellipse.Direction.YOffset))
+		self.assertIs(Vector2D, type(ellipse.FirstAxis))
+		self.assertIs(Vector2D, type(ellipse.SecondAxis))
 		self.assertTupleEqual((3, 0), ellipse.FirstAxis.ToTuple())
 		self.assertIs(int, type(ellipse.FirstAxis.XOffset))
 		self.assertTupleEqual((0, 2), ellipse.SecondAxis.ToTuple())
@@ -686,16 +688,16 @@ class Instantiation(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Ellipse(Point2D(1, 2), 3, 2, direction=(1, 1))
 
-		self.assertEqual("Parameter 'direction' is not of type 'Offset2D'.", str(context.exception))
+		self.assertEqual("Parameter 'direction' is not of type 'BaseVector2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 
 	def test_Ellipse_DirectionZero(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(0, 0))
 
-		self.assertEqual("Parameter 'direction' is a zero offset.", str(context.exception))
+		self.assertEqual("Parameter 'direction' is a zero vector.", str(context.exception))
 		self.assertListEqual(
-			["Got offset (0, 0).", "An ellipse needs a direction of its first axis."],
+			["Got vector (0, 0).", "An ellipse needs a direction of its first axis."],
 			context.exception.__notes__
 		)
 
@@ -2332,6 +2334,64 @@ class Mirroring(Testcase):
 
 		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
 		self.assertTupleEqual((1, 2), ellipse.Center.ToTuple())
+
+
+class EllipseVectors(Testcase):
+	def test_Direction_Vector(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Vector2D(3, 4))
+
+		self.assertIs(Vector2D, type(ellipse.Direction))
+		self.assertEqual(Vector2D(0.6, 0.8), ellipse.Direction)
+
+	def test_Direction_ReadOnly(self) -> None:
+		"""The direction can't be changed, so it keeps length 1 and its sign rule."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(0, 1))
+
+		with self.assertRaises(AttributeError):
+			ellipse.Direction.YOffset = -1
+
+		self.assertEqual(Vector2D(0, 1), ellipse.Direction)
+
+	def test_MirrorX_NewDirection(self) -> None:
+		"""Mirroring replaces the direction; a direction taken before stays unchanged."""
+		ellipse =   Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(3, 4))
+		direction = ellipse.Direction
+
+		ellipse.MirrorX()
+
+		self.assertIsNot(direction, ellipse.Direction)
+		self.assertIs(Vector2D, type(ellipse.Direction))
+		self.assertEqual(Vector2D(0.6, 0.8), direction)
+		self.assertEqual(Vector2D(0.6, -0.8), ellipse.Direction)
+
+	def test_MirrorY_NewDirection(self) -> None:
+		ellipse =   Ellipse(Point2D(1, 2), 3, 2, direction=Vector2D(3, 4))
+		direction = ellipse.Direction
+
+		ellipse.MirrorY()
+
+		self.assertIsNot(direction, ellipse.Direction)
+		self.assertEqual(Vector2D(0.6, 0.8), direction)
+		self.assertEqual(Vector2D(0.6, -0.8), ellipse.Direction)
+
+	def test_MirrorAt_NewDirection(self) -> None:
+		ellipse =   Ellipse(Point2D(1, 2), 3, 2)
+		direction = ellipse.Direction
+
+		ellipse.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertIsNot(direction, ellipse.Direction)
+		self.assertIs(Vector2D, type(ellipse.Direction))
+		self.assertEqual(Vector2D(1, 0), direction)
+		self.assertTrue(isclose(0, ellipse.Direction.XOffset, abs_tol=1e-15))
+		self.assertTrue(isclose(1, ellipse.Direction.YOffset))
+
+	def test_Copy_SharesDirection(self) -> None:
+		"""An immutable direction can be shared by a copy."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Vector2D(0, 1))
+
+		for newEllipse in (ellipse.Copy(), copy(ellipse), deepcopy(ellipse)):
+			self.assertEqual(ellipse.Direction, newEllipse.Direction)
 
 
 class Ownership(Testcase):

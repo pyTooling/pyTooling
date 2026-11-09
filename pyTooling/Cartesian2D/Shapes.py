@@ -40,8 +40,8 @@ from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import InvalidOperationError
 from pyTooling.MetaClasses import abstractclass, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Cartesian2D import Coordinate, Point2D, BaseVector2D, Offset2D, BoundingBox2D, Element2D, Segment2D, \
-                                  LineSegment2D, ArcSegment2D, AlreadyOwnedError, DuplicatePointError, \
+from pyTooling.Cartesian2D import Coordinate, Point2D, BaseVector2D, Vector2D, BoundingBox2D, Element2D, \
+                                  Segment2D, LineSegment2D, ArcSegment2D, AlreadyOwnedError, DuplicatePointError, \
                                   NotEnoughCornersError, CrossingEdgesError, chordPoint, circumcenter
 
 if TYPE_CHECKING:
@@ -394,7 +394,7 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 		for point in self._points:
 			point._x = twiceAxis - point._x
 
-	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector2D[float], distance: float) -> None:
 		"""
 		Mirror the polygon at a line by mirroring all its corners (inplace).
 
@@ -824,7 +824,7 @@ class EllipticalGeometry2D(Geometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		self._center._x = twiceAxis - self._center._x
 
-	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector2D[float], distance: float) -> None:
 		"""
 		Mirror the shape at a line by mirroring its center (inplace).
 
@@ -1190,7 +1190,7 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 	The first axis points in the ellipse's :attr:`Direction`, the second axis is turned by +90 degrees (counterclockwise).
 	An ellipse with the default direction ``(1, 0)`` is axis-aligned. An ellipse with equal radii is a circle.
 	"""
-	_direction:    Offset2D[Coordinate]  #: Unit direction of the first axis, first non-zero component positive.
+	_direction:    Vector2D[Coordinate]  #: Unit direction of the first axis, first non-zero component positive.
 	_firstRadius:  Coordinate            #: Radius of the ellipse along its first axis.
 	_secondRadius: Coordinate            #: Radius of the ellipse along its second axis.
 
@@ -1200,7 +1200,7 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		firstRadius:   Coordinate,
 		secondRadius:  Coordinate,
 		*,
-		direction:     Nullable[Offset2D[Coordinate]] = None,
+		direction:     Nullable[BaseVector2D[Coordinate]] = None,
 		copyPoints:    bool = True,
 		value:         Any = None,
 		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
@@ -1232,8 +1232,8 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		:raises ValueError:        If parameter 'secondRadius' is None.
 		:raises TypeError:         If parameter 'secondRadius' is not of type :class:`float` or :class:`int`.
 		:raises ValueError:        If parameter 'secondRadius' isn't positive.
-		:raises TypeError:         If parameter 'direction' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
-		:raises ValueError:        If parameter 'direction' is a zero offset. |br|
+		:raises TypeError:         If parameter 'direction' is not of type :class:`~pyTooling.Cartesian2D.BaseVector2D`.
+		:raises ValueError:        If parameter 'direction' is a zero vector. |br|
 		                           An ellipse needs a direction of its first axis.
 		:raises ValueError:        If parameter 'copyPoints' is None.
 		:raises TypeError:         If parameter 'copyPoints' is not of type :class:`bool`.
@@ -1261,13 +1261,13 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		if direction is None:
 			directionX = 1
 			directionY = 0
-		elif not isinstance(direction, Offset2D):
-			ex = TypeError("Parameter 'direction' is not of type 'Offset2D'.")
+		elif not isinstance(direction, BaseVector2D):
+			ex = TypeError("Parameter 'direction' is not of type 'BaseVector2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
 			raise ex
 		elif direction._xOffset == 0 and direction._yOffset == 0:
-			ex = ValueError("Parameter 'direction' is a zero offset.")
-			ex.add_note(f"Got offset {direction}.")
+			ex = ValueError("Parameter 'direction' is a zero vector.")
+			ex.add_note(f"Got vector {direction}.")
 			ex.add_note("An ellipse needs a direction of its first axis.")
 			raise ex
 		else:
@@ -1283,7 +1283,7 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 			directionX = -directionX
 			directionY = -directionY
 
-		self._direction =      Offset2D(directionX + 0, directionY + 0)
+		self._direction =      Vector2D(directionX + 0, directionY + 0)
 		self._firstRadius =    firstRadius
 		self._secondRadius =   secondRadius
 		self._center._parent = self
@@ -1336,7 +1336,7 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		)
 
 	@readonly
-	def Direction(self) -> Offset2D[Coordinate]:
+	def Direction(self) -> Vector2D[Coordinate]:
 		"""
 		Read-only property to access the direction of the ellipse's first axis (:attr:`_direction`).
 
@@ -1363,26 +1363,26 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		return self._secondRadius
 
 	@readonly
-	def FirstAxis(self) -> Offset2D[Coordinate]:
+	def FirstAxis(self) -> Vector2D[Coordinate]:
 		"""
 		Read-only property to return the ellipse's first semi-axis, the :attr:`Direction` scaled by :attr:`FirstRadius`.
 
-		:returns: A new 2D-offset from the center to the end of the first axis.
+		:returns: A new 2D-vector from the center to the end of the first axis.
 		"""
 		direction = self._direction
-		return Offset2D(direction._xOffset * self._firstRadius, direction._yOffset * self._firstRadius)
+		return Vector2D(direction._xOffset * self._firstRadius, direction._yOffset * self._firstRadius)
 
 	@readonly
-	def SecondAxis(self) -> Offset2D[Coordinate]:
+	def SecondAxis(self) -> Vector2D[Coordinate]:
 		"""
 		Read-only property to return the ellipse's second semi-axis.
 
 		It is the :attr:`Direction` turned by +90 degrees (counterclockwise) and scaled by :attr:`SecondRadius`.
 
-		:returns: A new 2D-offset from the center to the end of the second axis.
+		:returns: A new 2D-vector from the center to the end of the second axis.
 		"""
 		direction = self._direction
-		return Offset2D(-direction._yOffset * self._secondRadius, direction._xOffset * self._secondRadius)
+		return Vector2D(-direction._yOffset * self._secondRadius, direction._xOffset * self._secondRadius)
 
 	@readonly
 	def Perimeter(self) -> float:
@@ -1438,7 +1438,7 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		super()._MirrorY(twiceAxis)
 		direction = self._direction
 		if direction._xOffset != 0:
-			direction._yOffset = -direction._yOffset + 0
+			self._direction = Vector2D(direction._xOffset, -direction._yOffset + 0)
 
 	def _MirrorX(self, twiceAxis: Coordinate) -> None:
 		"""
@@ -1451,9 +1451,9 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 		super()._MirrorX(twiceAxis)
 		direction = self._direction
 		if direction._xOffset != 0:
-			direction._yOffset = -direction._yOffset + 0
+			self._direction = Vector2D(direction._xOffset, -direction._yOffset + 0)
 
-	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector2D[float], distance: float) -> None:
 		"""
 		Mirror the ellipse at a line by mirroring its center as a point and its direction as a vector (inplace).
 
@@ -1472,8 +1472,7 @@ class Ellipse(EllipticalGeometry2D[Coordinate], Generic[Coordinate]):
 			directionX = -directionX
 			directionY = -directionY
 
-		direction._xOffset = directionX + 0
-		direction._yOffset = directionY + 0
+		self._direction = Vector2D(directionX + 0, directionY + 0)
 
 	def __repr__(self) -> str:
 		"""
@@ -1828,7 +1827,7 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 		for segment in self._segments:
 			segment._MirrorInnerX(twiceAxis)
 
-	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector2D[float], distance: float) -> None:
 		"""
 		Mirror the path at a line by mirroring all its points (inplace).
 
