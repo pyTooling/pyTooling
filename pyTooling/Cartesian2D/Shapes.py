@@ -40,9 +40,9 @@ from pyTooling.Decorators  import export, readonly
 from pyTooling.Exceptions  import InvalidOperationError
 from pyTooling.MetaClasses import abstractclass, abstractmethod
 from pyTooling.Common      import getFullyQualifiedName
-from pyTooling.Cartesian2D import Coordinate, Point2D, Offset2D, BoundingBox2D, Element2D, Segment2D, LineSegment2D, \
-                                  ArcSegment2D, AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, \
-                                  CrossingEdgesError, chordPoint, circumcenter
+from pyTooling.Cartesian2D import Coordinate, Point2D, BaseVector2D, Offset2D, BoundingBox2D, Element2D, Segment2D, \
+                                  LineSegment2D, ArcSegment2D, AlreadyOwnedError, DuplicatePointError, \
+                                  NotEnoughCornersError, CrossingEdgesError, chordPoint, circumcenter
 
 if TYPE_CHECKING:
 	from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D
@@ -352,20 +352,20 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		return BoundingBox2D.FromPoints(self._points)
 
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
+	def Move(self, offset: BaseVector2D[Coordinate]) -> None:
 		"""
 		Move the polygon by moving all its corners (inplace).
 
 		Its edges share the corners, so they move along.
 
-		:param offset:      The 2D-offset to move by.
+		:param offset:      The 2D-vector or 2D-offset to move by.
 		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.BaseVector2D`.
 		"""
 		if offset is None:
 			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset2D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+		elif not isinstance(offset, BaseVector2D):
+			ex = TypeError("Parameter 'offset' is not of type 'BaseVector2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
 			raise ex
 
@@ -791,18 +791,18 @@ class EllipticalGeometry2D(Geometry2D[Coordinate], Generic[Coordinate]):
 		"""
 		return self._center
 
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
+	def Move(self, offset: BaseVector2D[Coordinate]) -> None:
 		"""
 		Move the shape by moving its center (inplace).
 
-		:param offset:      The 2D-offset to move by.
+		:param offset:      The 2D-vector or 2D-offset to move by.
 		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.BaseVector2D`.
 		"""
 		if offset is None:
 			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset2D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+		elif not isinstance(offset, BaseVector2D):
+			ex = TypeError("Parameter 'offset' is not of type 'BaseVector2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
 			raise ex
 
@@ -1777,20 +1777,20 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 		self._points =   (start, ) + self._points
 		self._segments = (edge, ) + self._segments
 
-	def Move(self, offset: Offset2D[Coordinate]) -> None:
+	def Move(self, offset: BaseVector2D[Coordinate]) -> None:
 		"""
 		Move the path by moving all its points (inplace).
 
 		Each joint moves once, and each edge moves its other points, like a Bezier curve's control points.
 
-		:param offset:      The 2D-offset to move by.
+		:param offset:      The 2D-vector or 2D-offset to move by.
 		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.Offset2D`.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian2D.BaseVector2D`.
 		"""
 		if offset is None:
 			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset2D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset2D'.")
+		elif not isinstance(offset, BaseVector2D):
+			ex = TypeError("Parameter 'offset' is not of type 'BaseVector2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
 			raise ex
 

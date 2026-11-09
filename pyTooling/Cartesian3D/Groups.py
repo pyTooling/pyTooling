@@ -50,7 +50,7 @@ from pyTooling.MetaClasses        import ExtendedType
 from pyTooling.Common             import getFullyQualifiedName
 from pyTooling.Cartesian2D        import Coordinate, AlreadyOwnedError, NotOwnedError, GroupCycleError
 from pyTooling.Cartesian2D.Groups import EmptyGroupError
-from pyTooling.Cartesian3D        import Offset3D, BoundingBox3D, Element3D
+from pyTooling.Cartesian3D        import BaseVector3D, Offset3D, BoundingBox3D, Element3D
 
 
 @export
@@ -447,20 +447,20 @@ class Group3D(Element3D[Coordinate], Container3DMixin, Generic[Coordinate]):
 		"""
 		return Container3DMixin.BoundingBox.fget(self) + self._offset
 
-	def Move(self, offset: Offset3D[Coordinate]) -> None:
+	def Move(self, offset: BaseVector3D[Coordinate]) -> None:
 		"""
 		Move the group by changing its :attr:`Offset` (inplace).
 
 		The children keep their coordinates.
 
-		:param offset:      The 3D-offset to move by.
+		:param offset:      The 3D-vector or 3D-offset to move by.
 		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian3D.Offset3D`.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`~pyTooling.Cartesian3D.BaseVector3D`.
 		"""
 		if offset is None:
 			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset3D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset3D'.")
+		elif not isinstance(offset, BaseVector3D):
+			ex = TypeError("Parameter 'offset' is not of type 'BaseVector3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
 			raise ex
 

@@ -113,11 +113,17 @@ Version 10.x (2026)
      coordinates, :class:`~pyTooling.Cartesian3D.YZPlane3D` ``x = c``, :class:`~pyTooling.Cartesian3D.XZPlane3D`
      ``y = c`` and :class:`~pyTooling.Cartesian3D.XYPlane3D` ``z = c``. Every element mirrors at a plane with
      :meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt`. A :class:`~pyTooling.Cartesian3D.Ray3D` is a half-line.
-   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: offsets are vectors:
-     :attr:`~pyTooling.Cartesian2D.Offset2D.Length`, :meth:`~pyTooling.Cartesian2D.Offset2D.ScalarProduct` (dot
-     product), :meth:`~pyTooling.Cartesian2D.Offset2D.VectorProduct` (cross product; a number in 2D, a new
-     :class:`~pyTooling.Cartesian3D.Offset3D` in 3D), :meth:`~pyTooling.Cartesian2D.Offset2D.Normalized` and
-     multiplication by a number (``offset * 2``, ``2 * offset``, ``offset *= 2``).
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: an immutable, hashable
+     :class:`~pyTooling.Cartesian2D.Vector2D` (a value: direction, normal) beside the mutable
+     :class:`~pyTooling.Cartesian2D.Offset2D` (a displacement), both derived from the abstract
+     :class:`~pyTooling.Cartesian2D.BaseVector2D`; :class:`~pyTooling.Cartesian3D.Vector3D` and
+     :class:`~pyTooling.Cartesian3D.Offset3D` in 3D. Vector operations:
+     :attr:`~pyTooling.Cartesian2D.BaseVector2D.Length`, :meth:`~pyTooling.Cartesian2D.BaseVector2D.ScalarProduct`
+     (dot product), :meth:`~pyTooling.Cartesian2D.BaseVector2D.VectorProduct` (cross product; a number in 2D, a new
+     vector in 3D), :meth:`~pyTooling.Cartesian2D.BaseVector2D.Normalized` and multiplication by a number
+     (``vector * 2``, ``2 * vector``, ``offset *= 2``). An operator returns a vector of its left operand's class; a
+     vector and an offset with equal components are equal. Points, bounding boxes and ``Move()`` take either;
+     ``point - vector`` is a new point.
    * :mod:`pyTooling.Cartesian2D`: a general :class:`~pyTooling.Cartesian2D.Line2D` in Hesse normal form (unit normal
      and signed distance from the origin), created from a normal and a distance or by
      :meth:`~pyTooling.Cartesian2D.Line2D.FromPoints`, :meth:`~pyTooling.Cartesian2D.Line2D.FromPointAndDirection` and

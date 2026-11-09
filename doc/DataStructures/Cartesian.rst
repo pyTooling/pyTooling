@@ -20,6 +20,7 @@ cartesian coordinate system, plus the shapes built from them.
 * Coordinates as ``int`` or ``float``.
 * Every class is generic in its coordinate type, so a grid of integers and a drawing of floats use the same classes.
 * A point and an offset are **different types**, which is what makes the arithmetic below unambiguous.
+* A vector is an immutable **value** (a direction, a normal), an offset a **mutable displacement**.
 
 .. _STRUCT/Cartesian2D/Features:
 
@@ -145,14 +146,16 @@ A :class:`~pyTooling.Cartesian2D.Point2D` is a **position**: properties :attr:`~
 
    * - Expression
      - Result
-   * - ``point + offset``
+   * - ``point + vector``
      - A new :class:`~pyTooling.Cartesian2D.Point2D`, shifted.
-   * - ``point - offset``
+   * - ``point - vector``
      - A new :class:`~pyTooling.Cartesian2D.Point2D`, shifted back.
    * - ``point - point``
      - An :class:`~pyTooling.Cartesian2D.Offset2D` - the displacement between them.
-   * - ``point += offset``
+   * - ``point += vector``
      - The **same** point, moved in place.
+
+A vector is a :class:`~pyTooling.Cartesian2D.Vector2D` or an :class:`~pyTooling.Cartesian2D.Offset2D`.
 
 .. code-block:: Python
 
@@ -216,7 +219,8 @@ subtract with each other, and negate:
 
 Unlike a point, an offset compares with ``==`` and ``!=`` - two displacements are equal when their components are.
 
-An offset is also a **vector**, with the vector operations:
+An offset is also a **vector**, with the vector operations of its base-class
+:class:`~pyTooling.Cartesian2D.BaseVector2D`, shared with the immutable :ref:`Vector2D <STRUCT/Cartesian2D/Vector2D>`:
 
 .. list-table::
    :header-rows: 1
@@ -251,15 +255,92 @@ An offset is also a **vector**, with the vector operations:
    2 * direction                              # Offset2D(6, 8)
 
 ``ScalarProduct()`` (the :term:`dot product <Dot Product>`) and ``VectorProduct()`` (the
-:term:`cross product <Cross Product>`) take an :class:`~pyTooling.Cartesian2D.Offset2D` only; ``None`` raises
-:exc:`ValueError`, another type :exc:`TypeError`. A factor other than an :class:`int` or :class:`float` raises
-:exc:`TypeError`, and normalizing a zero offset raises :exc:`~pyTooling.Exceptions.InvalidOperationError`, as it has no
-direction.
+:term:`cross product <Cross Product>`) take a :class:`~pyTooling.Cartesian2D.Vector2D` or an
+:class:`~pyTooling.Cartesian2D.Offset2D`; ``None`` raises :exc:`ValueError`, another type :exc:`TypeError`. A factor
+other than an :class:`int` or :class:`float` raises :exc:`TypeError`, and normalizing a zero vector raises
+:exc:`~pyTooling.Exceptions.InvalidOperationError`, as it has no direction.
+
+An offset is mutable: :attr:`~pyTooling.Cartesian2D.Offset2D.XOffset` and
+:attr:`~pyTooling.Cartesian2D.Offset2D.YOffset` can be assigned, and ``+=``, ``-=`` and ``*=`` change the offset in
+place. Therefore, it isn't hashable. A :ref:`group's <STRUCT/Cartesian2D/Group2D>`
+:attr:`~pyTooling.Cartesian2D.Groups.Group2D.Offset` is an offset.
 
 .. seealso::
 
+   :ref:`STRUCT/Cartesian2D/Vector2D`
+      |rarr| Its sibling, the immutable vector.
    :ref:`STRUCT/Cartesian3D/Offset3D`
       |rarr| Its counterpart, the offset with a ``ZOffset``.
+
+
+.. _STRUCT/Cartesian2D/Vector2D:
+
+Vector2D
+========
+
+A :class:`~pyTooling.Cartesian2D.Vector2D` is an **immutable vector**, the sibling of
+:class:`~pyTooling.Cartesian2D.Offset2D`. Both derive from the abstract :class:`~pyTooling.Cartesian2D.BaseVector2D`,
+which holds the components, the read-only properties :attr:`~pyTooling.Cartesian2D.BaseVector2D.XOffset` and
+:attr:`~pyTooling.Cartesian2D.BaseVector2D.YOffset`, the vector operations and the operators creating a new vector.
+
+.. rubric:: Inheritance diagram:
+
+.. inheritance-diagram:: pyTooling.Cartesian2D.Vector2D pyTooling.Cartesian2D.Offset2D
+   :parts: 1
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40 40
+
+   * -
+     - :class:`~pyTooling.Cartesian2D.Vector2D`
+     - :class:`~pyTooling.Cartesian2D.Offset2D`
+   * - Use it for
+     - A value: a direction, a normal.
+     - A displacement that changes: a group's offset, a move.
+   * - Components
+     - Read-only.
+     - Assignable.
+   * - ``+=``, ``-=``, ``*=``
+     - Bind a new vector to the name.
+     - Change the offset in place.
+   * - Hashable
+     - Yes: a dictionary key or a set member.
+     - No.
+   * - Copy
+     - Not needed; :func:`copy.copy` and :func:`copy.deepcopy` work.
+     - ``Copy()``, :func:`copy.copy` and :func:`copy.deepcopy`.
+
+An operator creating a new vector returns a vector of its **left operand's class**; the right operand can be a vector
+of either class or a tuple. A vector and an offset compare equal, if their components are equal. Points, bounding boxes
+and every ``Move()`` take a vector of either class.
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D import Point2D, Vector2D, Offset2D
+
+   up =    Vector2D(0, 1)
+   shift = Offset2D(2, 0)
+
+   up + shift                         # Vector2D(2, 1)
+   shift + up                         # Offset2D(2, 1)
+   up == Offset2D(0, 1)               # True
+   Point2D(3, 4) - up                 # Point2D(3, 3)
+
+   names = {up: "up", Vector2D(1, 0): "right"}
+   names[Vector2D(0.0, 1.0)]          # 'up'
+
+   shift += up                        # the same offset, now Offset2D(2, 1)
+
+Assigning ``up.XOffset`` raises :exc:`AttributeError`. Assigning a vector to a group's ``Offset`` raises
+:exc:`TypeError`; convert it by ``Offset2D(*vector.ToTuple())``.
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian2D/Offset2D`
+      |rarr| Its sibling, the mutable offset.
+   :ref:`STRUCT/Cartesian3D/Vector3D`
+      |rarr| Its counterpart, the vector with a ``ZOffset``.
 
 
 .. _STRUCT/Cartesian2D/Size2D:
@@ -1593,7 +1674,8 @@ Point3D
 
 A :class:`~pyTooling.Cartesian3D.Point3D` has :attr:`~pyTooling.Cartesian3D.Point3D.X`,
 :attr:`~pyTooling.Cartesian3D.Point3D.Y` and :attr:`~pyTooling.Cartesian3D.Point3D.Z`, and the same arithmetic against
-an :class:`~pyTooling.Cartesian3D.Offset3D`. A plain 3-tuple is accepted wherever an offset is.
+a :class:`~pyTooling.Cartesian3D.Vector3D` or an :class:`~pyTooling.Cartesian3D.Offset3D`. A plain 3-tuple is accepted
+wherever an offset is.
 
 .. seealso::
 
@@ -1625,10 +1707,10 @@ Offset3D
 :attr:`~pyTooling.Cartesian3D.Offset3D.YOffset` and :attr:`~pyTooling.Cartesian3D.Offset3D.ZOffset`, and negates, adds,
 subtracts and compares as its 2D counterpart does.
 
-The vector operations are the same too, except for the :term:`cross product <Cross Product>`:
-:meth:`~pyTooling.Cartesian3D.Offset3D.VectorProduct` returns a new :class:`~pyTooling.Cartesian3D.Offset3D`,
-perpendicular to both offsets. The offsets and their cross product form a right-handed system, and the cross product of
-parallel offsets is a zero offset.
+The vector operations of :class:`~pyTooling.Cartesian3D.BaseVector3D` are the same too, except for the
+:term:`cross product <Cross Product>`: :meth:`~pyTooling.Cartesian3D.BaseVector3D.VectorProduct` returns a new vector
+of the left operand's class, perpendicular to both vectors. The vectors and their cross product form a right-handed
+system, and the cross product of parallel vectors is a zero vector.
 
 .. code-block:: Python
 
@@ -1644,8 +1726,43 @@ parallel offsets is a zero offset.
 
 .. seealso::
 
+   :ref:`STRUCT/Cartesian3D/Vector3D`
+      |rarr| Its sibling, the immutable vector.
    :ref:`STRUCT/Cartesian2D/Offset2D`
       |rarr| Its counterpart, the 2-dimensional offset.
+
+
+.. _STRUCT/Cartesian3D/Vector3D:
+
+Vector3D
+========
+
+A :class:`~pyTooling.Cartesian3D.Vector3D` is the immutable, hashable sibling of
+:class:`~pyTooling.Cartesian3D.Offset3D`, as :ref:`Vector2D <STRUCT/Cartesian2D/Vector2D>` is in 2D. Both derive from
+the abstract :class:`~pyTooling.Cartesian3D.BaseVector3D`, and an operator returns a vector of its left operand's
+class.
+
+.. rubric:: Inheritance diagram:
+
+.. inheritance-diagram:: pyTooling.Cartesian3D.Vector3D pyTooling.Cartesian3D.Offset3D
+   :parts: 1
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian3D import Vector3D, Offset3D
+
+   xAxis = Vector3D(1, 0, 0)
+
+   xAxis.VectorProduct(Offset3D(0, 1, 0))     # Vector3D(0, 0, 1)
+   Offset3D(0, 1, 0).VectorProduct(xAxis)     # Offset3D(0, 0, -1)
+   {xAxis: "east"}[Vector3D(1.0, 0.0, 0.0)]   # 'east'
+
+.. seealso::
+
+   :ref:`STRUCT/Cartesian3D/Offset3D`
+      |rarr| Its sibling, the mutable offset.
+   :ref:`STRUCT/Cartesian2D/Vector2D`
+      |rarr| Its counterpart, the 2-dimensional vector.
 
 
 .. _STRUCT/Cartesian3D/Size3D:

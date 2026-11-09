@@ -382,13 +382,13 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 
 	def __add__(self, other: Any) -> Point3D[Coordinate]:
 		"""
-		Adds a 3D-offset to this 3D-point and creates a new 3D-point.
+		Adds a 3D-vector to this 3D-point and creates a new 3D-point.
 
-		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
-		:returns:          A new 3D-point shifted by the 3D-offset.
-		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
+		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
+		:returns:          A new 3D-point shifted by the 3D-vector.
+		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
-		if isinstance(other, Offset3D):
+		if isinstance(other, BaseVector3D):
 			return self.__class__(
 				self._x + other._xOffset,
 				self._y + other._yOffset,
@@ -401,19 +401,19 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 				self._z + other[2]
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
+			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 	def __iadd__(self, other: Any) -> Self:
 		"""
-		Adds a 3D-offset to this 3D-point (inplace).
+		Adds a 3D-vector to this 3D-point (inplace).
 
-		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
+		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
 		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
-		if isinstance(other, Offset3D):
+		if isinstance(other, BaseVector3D):
 			self._x += other._xOffset
 			self._y += other._yOffset
 			self._z += other._zOffset
@@ -422,7 +422,7 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 			self.Y += other[1]
 			self.Z += other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
+			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -430,11 +430,13 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 
 	def __sub__(self, other: Any) -> Union[Offset3D[Coordinate], Point3D[Coordinate]]:
 		"""
-		Subtract two 3D-Points from each other and create a new 3D-offset.
+		Subtract a 3D-point from this 3D-point and create a new 3D-offset, or a 3D-vector and create a new 3D-point.
 
-		:param other:                The second 3D-point as :class:`Point3D`.
-		:returns:                    A new 3D-offset representing the distance between these two points.
-		:raises TypeError:           If parameter 'other' is not of type :class:`Point3D`.
+		:param other:                The second 3D-point as :class:`Point3D`, or a 3D-vector as :class:`Vector3D` or
+		                             :class:`Offset3D`.
+		:returns:                    A new 3D-offset representing the distance between these two points, or a new 3D-point
+		                             shifted back by the 3D-vector.
+		:raises TypeError:           If parameter 'other' is not of type :class:`Point3D` or :class:`BaseVector3D`.
 		:raises NotInSameFrameError: If parameter 'other' is in another frame than this point. |br|
 		                             Subtract the points' :attr:`Absolute` positions instead.
 		"""
@@ -450,20 +452,26 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 				self._y - other._y,
 				self._z - other._z
 			)
+		elif isinstance(other, BaseVector3D):
+			return Point3D(
+				self._x - other._xOffset,
+				self._y - other._yOffset,
+				self._z - other._zOffset
+			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'Point3D'.")
+			ex = TypeError("Parameter 'other' is not of type 'Point3D' or 'BaseVector3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 	def __isub__(self, other: Any) -> Self:
 		"""
-		Subtracts a 3D-offset to this 3D-point (inplace).
+		Subtracts a 3D-vector from this 3D-point (inplace).
 
-		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
+		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
 		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
+		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
-		if isinstance(other, Offset3D):
+		if isinstance(other, BaseVector3D):
 			self._x -= other._xOffset
 			self._y -= other._yOffset
 			self._z -= other._zOffset
@@ -472,7 +480,7 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 			self.Y -= other[1]
 			self.Z -= other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
+			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -642,11 +650,11 @@ class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 		return self.BoundingBox if frame is None else self.BoundingBox + frame.AbsoluteOffset
 
 	@abstractmethod
-	def Move(self, offset: Offset3D[Coordinate]) -> None:
+	def Move(self, offset: BaseVector3D[Coordinate]) -> None:
 		"""
 		Move the element by an offset in its frame (inplace).
 
-		:param offset: The 3D-offset to move by.
+		:param offset: The 3D-vector or 3D-offset to move by.
 		"""
 
 	def MirrorX(self, plane: Alignment3D = Alignment3D.CenterX, offset: Coordinate = 0) -> None:
@@ -988,20 +996,26 @@ Point3D._PARENT_TYPE = (Element3D, )
 
 
 @export
-class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
-	"""An implementation of a 3D cartesian offset."""
+@abstractclass
+class BaseVector3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
+	"""
+	Abstract base-class of 3D cartesian vectors: the immutable :class:`Vector3D` and the mutable :class:`Offset3D`.
 
-	_xOffset: Coordinate  #: The x-direction offset
-	_yOffset: Coordinate  #: The y-direction offset
-	_zOffset: Coordinate  #: The z-direction offset
+	An operator creating a new vector returns a vector of its left operand's class; the right operand can be a vector of
+	either class or a tuple. Vectors of both classes compare equal, if their components are equal.
+	"""
+
+	_xOffset: Coordinate  #: The x-direction component.
+	_yOffset: Coordinate  #: The y-direction component.
+	_zOffset: Coordinate  #: The z-direction component.
 
 	def __init__(self, xOffset: Coordinate, yOffset: Coordinate, zOffset: Coordinate) -> None:
 		"""
-		Initializes a 3-dimensional offset.
+		Initializes a 3-dimensional vector.
 
-		:param xOffset:     x-direction offset.
-		:param yOffset:     y-direction offset.
-		:param zOffset:     z-direction offset.
+		:param xOffset:     x-direction component.
+		:param yOffset:     y-direction component.
+		:param zOffset:     z-direction component.
 		:raises ValueError: If parameter 'xOffset' is None.
 		:raises TypeError:  If parameter 'xOffset' is not of type :class:`float` or :class:`int`.
 		:raises ValueError: If parameter 'yOffset' is None.
@@ -1033,6 +1047,326 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._xOffset = xOffset
 		self._yOffset = yOffset
 		self._zOffset = zOffset
+
+	@readonly
+	def XOffset(self) -> Coordinate:
+		"""
+		Read-only property to access the x-direction component (:attr:`_xOffset`).
+
+		:returns: The x-direction component.
+		"""
+		return self._xOffset
+
+	@readonly
+	def YOffset(self) -> Coordinate:
+		"""
+		Read-only property to access the y-direction component (:attr:`_yOffset`).
+
+		:returns: The y-direction component.
+		"""
+		return self._yOffset
+
+	@readonly
+	def ZOffset(self) -> Coordinate:
+		"""
+		Read-only property to access the z-direction component (:attr:`_zOffset`).
+
+		:returns: The z-direction component.
+		"""
+		return self._zOffset
+
+	@readonly
+	def Length(self) -> float:
+		"""
+		Read-only property to return the Euclidean length of this 3D-vector.
+
+		:returns: The Euclidean length.
+		"""
+		return sqrt(self._xOffset ** 2 + self._yOffset ** 2 + self._zOffset ** 2)
+
+	def ScalarProduct(self, other: BaseVector3D[Coordinate]) -> Coordinate:
+		"""
+		Compute the :term:`dot product <Dot Product>` of this 3D-vector and another 3D-vector.
+
+		The dot product ``x1 * x2 + y1 * y2 + z1 * z2`` is zero for perpendicular vectors.
+
+		:param other:       The second 3D-vector.
+		:returns:           The dot product.
+		:raises ValueError: If parameter 'other' is None.
+		:raises TypeError:  If parameter 'other' is not of type :class:`BaseVector3D`.
+		"""
+		if other is None:
+			raise ValueError("Parameter 'other' is None.")
+		elif not isinstance(other, BaseVector3D):
+			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self._xOffset * other._xOffset + self._yOffset * other._yOffset + self._zOffset * other._zOffset
+
+	def VectorProduct(self, other: BaseVector3D[Coordinate]) -> Self:
+		"""
+		Compute the :term:`cross product <Cross Product>` of this 3D-vector and another 3D-vector as a new 3D-vector.
+
+		The cross product is perpendicular to both vectors, its length is the area of the parallelogram they span, and it
+		is a zero vector for parallel vectors. The vectors and the cross product form a right-handed system: the cross
+		product of ``(1, 0, 0)`` and ``(0, 1, 0)`` is ``(0, 0, 1)``.
+
+		:param other:       The second 3D-vector.
+		:returns:           A new 3D-vector, of this vector's class.
+		:raises ValueError: If parameter 'other' is None.
+		:raises TypeError:  If parameter 'other' is not of type :class:`BaseVector3D`.
+		"""
+		if other is None:
+			raise ValueError("Parameter 'other' is None.")
+		elif not isinstance(other, BaseVector3D):
+			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+		return self.__class__(
+			self._yOffset * other._zOffset - self._zOffset * other._yOffset,
+			self._zOffset * other._xOffset - self._xOffset * other._zOffset,
+			self._xOffset * other._yOffset - self._yOffset * other._xOffset
+		)
+
+	def Normalized(self) -> Self:
+		"""
+		Create a new 3D-vector of length 1 in the direction of this 3D-vector.
+
+		:returns:                      A new 3D-vector of length 1, of this vector's class.
+		:raises InvalidOperationError: If this 3D-vector is a zero vector. |br|
+		                               A zero vector has no direction.
+		"""
+		if self._xOffset == 0 and self._yOffset == 0 and self._zOffset == 0:
+			ex = InvalidOperationError("A zero vector can't be normalized.")
+			ex.add_note(f"Got vector {self}.")
+			ex.add_note("A zero vector has no direction.")
+			raise ex
+
+		length = self.Length
+		return self.__class__(
+			self._xOffset / length,
+			self._yOffset / length,
+			self._zOffset / length
+		)
+
+	def ToTuple(self) -> tuple[Coordinate, Coordinate, Coordinate]:
+		"""
+		Convert this 3D-vector to a simple 3-element tuple.
+
+		:returns: ``(x, y, z)`` tuple.
+		"""
+		return self._xOffset, self._yOffset, self._zOffset
+
+	def __eq__(self, other: Any) -> bool:
+		"""
+		Compare two 3D-vectors for equality.
+
+		A :class:`Vector3D` and an :class:`Offset3D` are equal, if their components are equal.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if both 3D-vectors are equal.
+		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		"""
+		if isinstance(other, BaseVector3D):
+			return self._xOffset == other._xOffset and self._yOffset == other._yOffset and self._zOffset == other._zOffset
+		elif isinstance(other, tuple):
+			return self._xOffset == other[0] and self._yOffset == other[1] and self._zOffset == other[2]
+		else:
+			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+	def __ne__(self, other: Any) -> bool:
+		"""
+		Compare two 3D-vectors for inequality.
+
+		:param other:      Parameter to compare against.
+		:returns:          ``True``, if both 3D-vectors are unequal.
+		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		"""
+		return not self.__eq__(other)
+
+	def __neg__(self) -> Self:
+		"""
+		Negate all components of this 3D-vector and create a new 3D-vector.
+
+		:returns: A new 3D-vector with negated components, of this vector's class.
+		"""
+		return self.__class__(
+			-self._xOffset,
+			-self._yOffset,
+			-self._zOffset
+		)
+
+	def __add__(self, other: Any) -> Self:
+		"""
+		Adds a 3D-vector to this 3D-vector and creates a new 3D-vector.
+
+		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
+		:returns:          A new 3D-vector extended by the 3D-vector, of this vector's class.
+		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		"""
+		if isinstance(other, BaseVector3D):
+			return self.__class__(
+				self._xOffset + other._xOffset,
+				self._yOffset + other._yOffset,
+				self._zOffset + other._zOffset
+			)
+		elif isinstance(other, tuple):
+			return self.__class__(
+				self._xOffset + other[0],
+				self._yOffset + other[1],
+				self._zOffset + other[2]
+			)
+		else:
+			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+	def __sub__(self, other: Any) -> Self:
+		"""
+		Subtracts a 3D-vector from this 3D-vector and creates a new 3D-vector.
+
+		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
+		:returns:          A new 3D-vector reduced by the 3D-vector, of this vector's class.
+		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		"""
+		if isinstance(other, BaseVector3D):
+			return self.__class__(
+				self._xOffset - other._xOffset,
+				self._yOffset - other._yOffset,
+				self._zOffset - other._zOffset
+			)
+		elif isinstance(other, tuple):
+			return self.__class__(
+				self._xOffset - other[0],
+				self._yOffset - other[1],
+				self._zOffset - other[2]
+			)
+		else:
+			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			raise ex
+
+	def __mul__(self, other: Any) -> Self:
+		"""
+		Multiplies this 3D-vector by a number and creates a new 3D-vector (``vector * number``).
+
+		:param other:      The factor.
+		:returns:          A new 3D-vector scaled by the factor, of this vector's class.
+		:raises TypeError: If the second operand is not of type :class:`float` or :class:`int`.
+		"""
+		if not isinstance(other, (int, float)):
+			ex = TypeError("Second operand is not supported by * operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: float, int")
+			raise ex
+
+		return self.__class__(
+			self._xOffset * other,
+			self._yOffset * other,
+			self._zOffset * other
+		)
+
+	def __rmul__(self, other: Any) -> Self:
+		"""
+		Multiplies a number by this 3D-vector and creates a new 3D-vector (``number * vector``).
+
+		:param other:      The factor.
+		:returns:          A new 3D-vector scaled by the factor, of this vector's class.
+		:raises TypeError: If the first operand is not of type :class:`float` or :class:`int`.
+		"""
+		if not isinstance(other, (int, float)):
+			ex = TypeError("First operand is not supported by * operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for first operand: float, int")
+			raise ex
+
+		return self.__class__(
+			other * self._xOffset,
+			other * self._yOffset,
+			other * self._zOffset
+		)
+
+	def __repr__(self) -> str:
+		"""
+		Returns the 3D vector's string representation.
+
+		:returns: The string representation of the 3D vector.
+		"""
+		return f"{self.__class__.__name__}({self._xOffset}, {self._yOffset}, {self._zOffset})"
+
+	def __str__(self) -> str:
+		"""
+		Returns the 3D vector's string equivalent.
+
+		:returns: The string equivalent of the 3D vector.
+		"""
+		return f"({self._xOffset}, {self._yOffset}, {self._zOffset})"
+
+
+@export
+class Vector3D(BaseVector3D[Coordinate], Generic[Coordinate]):
+	"""
+	An implementation of an immutable 3D cartesian vector.
+
+	A vector is a value, like a direction or a normal: its components are read-only, and it is hashable, so it can be a
+	dictionary key or a set member. ``vector += other`` binds a new vector to the name.
+	"""
+
+	_length: Nullable[float]  #: The Euclidean length, or ``None`` until it is read the first time.
+
+	def __init__(self, xOffset: Coordinate, yOffset: Coordinate, zOffset: Coordinate) -> None:
+		"""
+		Initializes a 3-dimensional vector.
+
+		:param xOffset:     x-direction component.
+		:param yOffset:     y-direction component.
+		:param zOffset:     z-direction component.
+		:raises ValueError: If parameter 'xOffset' is None.
+		:raises TypeError:  If parameter 'xOffset' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'yOffset' is None.
+		:raises TypeError:  If parameter 'yOffset' is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If parameter 'zOffset' is None.
+		:raises TypeError:  If parameter 'zOffset' is not of type :class:`float` or :class:`int`.
+		"""
+		super().__init__(xOffset, yOffset, zOffset)
+
+		self._length = None
+
+	@readonly
+	def Length(self) -> float:
+		"""
+		Read-only property to return the Euclidean length of this 3D-vector.
+
+		:returns: The Euclidean length.
+		"""
+		if (length := self._length) is None:
+			self._length = length = sqrt(self._xOffset ** 2 + self._yOffset ** 2 + self._zOffset ** 2)
+
+		return length
+
+	def __hash__(self) -> int:
+		"""
+		Returns the hash of the 3D-vector's components.
+
+		A vector equal to a tuple has the tuple's hash.
+
+		:returns: The hash value.
+		"""
+		return hash((self._xOffset, self._yOffset, self._zOffset))
+
+
+@export
+class Offset3D(BaseVector3D[Coordinate], Generic[Coordinate]):
+	"""
+	An implementation of a mutable 3D cartesian offset.
+
+	An offset is a displacement, like a group's offset: its components can be assigned, and it changes in place with
+	``+=``, ``-=`` and ``*=``. It isn't hashable.
+	"""
 
 	@property
 	def XOffset(self) -> Coordinate:
@@ -1112,82 +1446,6 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 	zOffset = ZOffset
 
-	@readonly
-	def Length(self) -> float:
-		"""
-		Read-only property to return the Euclidean length of this 3D-offset.
-
-		:returns: The Euclidean length.
-		"""
-		return sqrt(self._xOffset ** 2 + self._yOffset ** 2 + self._zOffset ** 2)
-
-	def ScalarProduct(self, other: Offset3D[Coordinate]) -> Coordinate:
-		"""
-		Compute the :term:`dot product <Dot Product>` of this 3D-offset and another 3D-offset.
-
-		The dot product ``x1 * x2 + y1 * y2 + z1 * z2`` is zero for perpendicular offsets.
-
-		:param other:       The second 3D-offset.
-		:returns:           The dot product.
-		:raises ValueError: If parameter 'other' is None.
-		:raises TypeError:  If parameter 'other' is not of type :class:`Offset3D`.
-		"""
-		if other is None:
-			raise ValueError("Parameter 'other' is None.")
-		elif not isinstance(other, Offset3D):
-			ex = TypeError("Parameter 'other' is not of type 'Offset3D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
-
-		return self._xOffset * other._xOffset + self._yOffset * other._yOffset + self._zOffset * other._zOffset
-
-	def VectorProduct(self, other: Offset3D[Coordinate]) -> Offset3D[Coordinate]:
-		"""
-		Compute the :term:`cross product <Cross Product>` of this 3D-offset and another 3D-offset as a new 3D-offset.
-
-		The cross product is perpendicular to both offsets, its length is the area of the parallelogram they span, and it
-		is a zero offset for parallel offsets. The offsets and the cross product form a right-handed system: the cross
-		product of ``(1, 0, 0)`` and ``(0, 1, 0)`` is ``(0, 0, 1)``.
-
-		:param other:       The second 3D-offset.
-		:returns:           A new 3D-offset.
-		:raises ValueError: If parameter 'other' is None.
-		:raises TypeError:  If parameter 'other' is not of type :class:`Offset3D`.
-		"""
-		if other is None:
-			raise ValueError("Parameter 'other' is None.")
-		elif not isinstance(other, Offset3D):
-			ex = TypeError("Parameter 'other' is not of type 'Offset3D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
-
-		return self.__class__(
-			self._yOffset * other._zOffset - self._zOffset * other._yOffset,
-			self._zOffset * other._xOffset - self._xOffset * other._zOffset,
-			self._xOffset * other._yOffset - self._yOffset * other._xOffset
-		)
-
-	def Normalized(self) -> Offset3D[float]:
-		"""
-		Create a new 3D-offset of length 1 in the direction of this 3D-offset.
-
-		:returns:                      A new 3D-offset of length 1.
-		:raises InvalidOperationError: If this 3D-offset is a zero offset. |br|
-		                               A zero offset has no direction.
-		"""
-		if self._xOffset == 0 and self._yOffset == 0 and self._zOffset == 0:
-			ex = InvalidOperationError("A zero offset can't be normalized.")
-			ex.add_note(f"Got offset {self}.")
-			ex.add_note("A zero offset has no direction.")
-			raise ex
-
-		length = sqrt(self._xOffset ** 2 + self._yOffset ** 2 + self._zOffset ** 2)
-		return self.__class__(
-			self._xOffset / length,
-			self._yOffset / length,
-			self._zOffset / length
-		)
-
 	def Copy(self) -> Self:
 		"""
 		Create a new 3D-offset as a copy of this 3D-offset.
@@ -1220,87 +1478,15 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		"""
 		return self.Copy()
 
-	def ToTuple(self) -> tuple[Coordinate, Coordinate, Coordinate]:
-		"""
-		Convert this 3D-offset to a simple 3-element tuple.
-
-		:returns: ``(x, y, z)`` tuple.
-		"""
-		return self._xOffset, self._yOffset, self._zOffset
-
-	def __eq__(self, other: Any) -> bool:
-		"""
-		Compare two 3D-offsets for equality.
-
-		:param other:      Parameter to compare against.
-		:returns:          ``True``, if both 3D-offsets are equal.
-		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
-		"""
-		if isinstance(other, Offset3D):
-			return self._xOffset == other._xOffset and self._yOffset == other._yOffset and self._zOffset == other._zOffset
-		elif isinstance(other, tuple):
-			return self._xOffset == other[0] and self._yOffset == other[1] and self._zOffset == other[2]
-		else:
-			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
-
-	def __ne__(self, other: Any) -> bool:
-		"""
-		Compare two 3D-offsets for inequality.
-
-		:param other:      Parameter to compare against.
-		:returns:          ``True``, if both 3D-offsets are unequal.
-		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
-		"""
-		return not self.__eq__(other)
-
-	def __neg__(self) -> Offset3D[Coordinate]:
-		"""
-		Negate all components of this 3D-offset and create a new 3D-offset.
-
-		:returns: 3D-offset with negated offset components.
-		"""
-		return self.__class__(
-			-self._xOffset,
-			-self._yOffset,
-			-self._zOffset
-		)
-
-	def __add__(self, other: Any) -> Offset3D[Coordinate]:
-		"""
-		Adds a 3D-offset to this 3D-offset and creates a new 3D-offset.
-
-		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
-		:returns:          A new 3D-offset extended by the 3D-offset.
-		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
-		"""
-		if isinstance(other, Offset3D):
-			return self.__class__(
-				self._xOffset + other._xOffset,
-				self._yOffset + other._yOffset,
-				self._zOffset + other._zOffset
-			)
-		elif isinstance(other, tuple):
-			return self.__class__(
-				self._xOffset + other[0],
-				self._yOffset + other[1],
-				self._zOffset + other[2]
-			)
-		else:
-			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
-
 	def __iadd__(self, other: Any) -> Self:
 		"""
-		Adds a 3D-offset to this 3D-offset (inplace).
+		Adds a 3D-vector to this 3D-offset (inplace).
 
-		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
-		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
+		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
+		:returns:          This 3D-offset.
+		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
-		if isinstance(other, Offset3D):
+		if isinstance(other, BaseVector3D):
 			self._xOffset += other._xOffset
 			self._yOffset += other._yOffset
 			self._zOffset += other._zOffset
@@ -1309,46 +1495,21 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self.YOffset += other[1]
 			self.ZOffset += other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
+			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		return self
 
-	def __sub__(self, other: Any) -> Offset3D[Coordinate]:
-		"""
-		Subtracts a 3D-offset from this 3D-offset and creates a new 3D-offset.
-
-		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
-		:returns:          A new 3D-offset reduced by the 3D-offset.
-		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
-		"""
-		if isinstance(other, Offset3D):
-			return self.__class__(
-				self._xOffset - other._xOffset,
-				self._yOffset - other._yOffset,
-				self._zOffset - other._zOffset
-			)
-		elif isinstance(other, tuple):
-			return self.__class__(
-				self._xOffset - other[0],
-				self._yOffset - other[1],
-				self._zOffset - other[2]
-			)
-		else:
-			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			raise ex
-
 	def __isub__(self, other: Any) -> Self:
 		"""
-		Subtracts a 3D-offset from this 3D-offset (inplace).
+		Subtracts a 3D-vector from this 3D-offset (inplace).
 
-		:param other:      A 3D-offset as :class:`Offset3D` or tuple.
-		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D` or :class:`tuple`.
+		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
+		:returns:          This 3D-offset.
+		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
-		if isinstance(other, Offset3D):
+		if isinstance(other, BaseVector3D):
 			self._xOffset -= other._xOffset
 			self._yOffset -= other._yOffset
 			self._zOffset -= other._zOffset
@@ -1357,51 +1518,11 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 			self.YOffset -= other[1]
 			self.ZOffset -= other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'Offset3D' or 'tuple'.")
+			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
 		return self
-
-	def __mul__(self, other: Any) -> Offset3D[Coordinate]:
-		"""
-		Multiplies this 3D-offset by a number and creates a new 3D-offset (``offset * number``).
-
-		:param other:      The factor.
-		:returns:          A new 3D-offset scaled by the factor.
-		:raises TypeError: If the second operand is not of type :class:`float` or :class:`int`.
-		"""
-		if not isinstance(other, (int, float)):
-			ex = TypeError("Second operand is not supported by * operator.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for second operand: float, int")
-			raise ex
-
-		return self.__class__(
-			self._xOffset * other,
-			self._yOffset * other,
-			self._zOffset * other
-		)
-
-	def __rmul__(self, other: Any) -> Offset3D[Coordinate]:
-		"""
-		Multiplies a number by this 3D-offset and creates a new 3D-offset (``number * offset``).
-
-		:param other:      The factor.
-		:returns:          A new 3D-offset scaled by the factor.
-		:raises TypeError: If the first operand is not of type :class:`float` or :class:`int`.
-		"""
-		if not isinstance(other, (int, float)):
-			ex = TypeError("First operand is not supported by * operator.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
-			ex.add_note("Supported types for first operand: float, int")
-			raise ex
-
-		return self.__class__(
-			other * self._xOffset,
-			other * self._yOffset,
-			other * self._zOffset
-		)
 
 	def __imul__(self, other: Any) -> Self:
 		"""
@@ -1422,22 +1543,6 @@ class Offset3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 		self._zOffset *= other
 
 		return self
-
-	def __repr__(self) -> str:
-		"""
-		Returns the 3D offset's string representation.
-
-		:returns: The string representation of the 3D offset.
-		"""
-		return f"Offset3D({self._xOffset}, {self._yOffset}, {self._zOffset})"
-
-	def __str__(self) -> str:
-		"""
-		Returns the 3D offset's string equivalent.
-
-		:returns: The string equivalent of the 3D offset.
-		"""
-		return f"({self._xOffset}, {self._yOffset}, {self._zOffset})"
 
 
 @export
@@ -1958,14 +2063,14 @@ class BoundingBox3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 	def __add__(self, other: Any) -> BoundingBox3D[Coordinate]:
 		"""
-		Adds a 3D-offset to this bounding box and creates a new, shifted bounding box.
+		Adds a 3D-vector to this bounding box and creates a new, shifted bounding box.
 
-		:param other:      A 3D-offset as :class:`Offset3D`.
-		:returns:          A new bounding box shifted by the 3D-offset.
-		:raises TypeError: If parameter 'other' is not of type :class:`Offset3D`.
+		:param other:      A 3D-vector as :class:`Vector3D` or :class:`Offset3D`.
+		:returns:          A new bounding box shifted by the 3D-vector.
+		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D`.
 		"""
-		if not isinstance(other, Offset3D):
-			ex = TypeError("Parameter 'other' is not of type 'Offset3D'.")
+		if not isinstance(other, BaseVector3D):
+			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
 			raise ex
 
@@ -3229,18 +3334,18 @@ class Segment3D(Element3D[Coordinate], Generic[Coordinate]):
 			max(start._z, end._z)
 		)
 
-	def Move(self, offset: Offset3D[Coordinate]) -> None:
+	def Move(self, offset: BaseVector3D[Coordinate]) -> None:
 		"""
 		Move the segment by moving its start and end point (inplace).
 
-		:param offset:      The 3D-offset to move by.
+		:param offset:      The 3D-vector or 3D-offset to move by.
 		:raises ValueError: If parameter 'offset' is None.
-		:raises TypeError:  If parameter 'offset' is not of type :class:`Offset3D`.
+		:raises TypeError:  If parameter 'offset' is not of type :class:`BaseVector3D`.
 		"""
 		if offset is None:
 			raise ValueError("Parameter 'offset' is None.")
-		elif not isinstance(offset, Offset3D):
-			ex = TypeError("Parameter 'offset' is not of type 'Offset3D'.")
+		elif not isinstance(offset, BaseVector3D):
+			ex = TypeError("Parameter 'offset' is not of type 'BaseVector3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(offset)}'.")
 			raise ex
 
