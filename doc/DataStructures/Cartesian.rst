@@ -570,10 +570,10 @@ Ray2D
 
 A :class:`~pyTooling.Cartesian2D.Ray2D` is a half-line: it starts at a point and is infinite in one direction. It is
 built from a start point and a direction, a :class:`~pyTooling.Cartesian2D.Vector2D` or an
-:class:`~pyTooling.Cartesian2D.Offset2D`; it copies both, the direction into a new offset, so it owns no point of an
-element. The start point is taken in absolute coordinates: a point inside a group is converted. A zero
+:class:`~pyTooling.Cartesian2D.Offset2D`; it copies both, the direction into a new immutable vector, so it owns no
+point of an element. The start point is taken in absolute coordinates: a point inside a group is converted. A zero
 direction raises :exc:`ValueError`. :attr:`~pyTooling.Cartesian2D.Ray2D.Start` and
-:attr:`~pyTooling.Cartesian2D.Ray2D.Direction` return the stored point and offset.
+:attr:`~pyTooling.Cartesian2D.Ray2D.Direction` return the stored point and vector.
 :meth:`~pyTooling.Cartesian2D.Ray2D.PointAt` returns the point at a distance from the start point, whatever the length
 of the direction; a negative distance raises :exc:`ValueError`.
 
@@ -586,8 +586,8 @@ of the direction; a negative distance raises :exc:`ValueError`.
    str(ray)                           # '(1, 2) + t * (3, 4), t >= 0'
    ray.PointAt(5)                     # (4.0, 6.0)
 
-Like a line, a ray is in absolute coordinates and compares by value; as its start point and direction can be changed, it
-is unhashable (like an :class:`~pyTooling.Cartesian2D.Offset2D`). Two rays are equal (``==``), if they start at the same
+Like a line, a ray is in absolute coordinates and compares by value; as its start point can be changed, it is
+unhashable (like an :class:`~pyTooling.Cartesian2D.Offset2D`). Two rays are equal (``==``), if they start at the same
 point and their directions point the same way - the cross product of the directions is zero and their dot product is
 positive. The lengths of the directions don't matter, and integer coordinates compare exactly:
 
@@ -638,7 +638,9 @@ measurements:
   even for integer coordinates;
 * :meth:`~pyTooling.Cartesian2D.LineSegment2D.AngleTo` - the angle to another line segment's direction, from 0 to
   :data:`math.pi`; a line segment of length 0 has no direction and raises :exc:`ValueError`;
-* :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToOffset` - the segment as the displacement from start to end.
+* :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToOffset` - the segment as the displacement from start to end;
+* :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToVector` - the same as an immutable
+  :class:`~pyTooling.Cartesian2D.Vector2D`.
 
 .. seealso::
 
@@ -1912,7 +1914,7 @@ Ray3D
 
 A :class:`~pyTooling.Cartesian3D.Ray3D` is the 3D counterpart of a :ref:`Ray2D <STRUCT/Cartesian2D/Ray2D>`: a
 half-line from a start point (:attr:`~pyTooling.Cartesian3D.Ray3D.Start`) in a direction
-(:attr:`~pyTooling.Cartesian3D.Ray3D.Direction`, an :class:`~pyTooling.Cartesian3D.Offset3D`), a value in absolute
+(:attr:`~pyTooling.Cartesian3D.Ray3D.Direction`, a :class:`~pyTooling.Cartesian3D.Vector3D`), a value in absolute
 coordinates. :meth:`~pyTooling.Cartesian3D.Ray3D.PointAt` returns the point at a distance from the start point. Two
 rays are equal, if they start at the same point and their directions point the same way: all three components of the
 cross product are zero and the dot product is positive.
@@ -1952,7 +1954,7 @@ LineSegment3D
 =============
 
 :class:`~pyTooling.Cartesian3D.LineSegment3D` adds the measurements - length in three dimensions, the angle to
-another line segment, and conversion to an offset.
+another line segment, and conversion to an offset or a vector.
 
 .. seealso::
 

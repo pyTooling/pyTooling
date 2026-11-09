@@ -107,7 +107,7 @@ Version 10.x (2026)
      :class:`~pyTooling.Cartesian2D.VerticalLine2D` ``x = c`` and :class:`~pyTooling.Cartesian2D.HorizontalLine2D`
      ``y = c``. Every element mirrors at a line with :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`, so elements of
      different groups mirror at the same line. A :class:`~pyTooling.Cartesian2D.Ray2D` is a half-line from a start point
-     in a direction.
+     in a direction, an immutable :class:`~pyTooling.Cartesian2D.Vector2D`.
    * :mod:`pyTooling.Cartesian3D`: planes (:class:`~pyTooling.Cartesian3D.Plane3D`) as values in absolute
      coordinates, :class:`~pyTooling.Cartesian3D.YZPlane3D` ``x = c``, :class:`~pyTooling.Cartesian3D.XZPlane3D`
      ``y = c`` and :class:`~pyTooling.Cartesian3D.XYPlane3D` ``z = c``. Every element mirrors at a plane with
@@ -122,7 +122,8 @@ Version 10.x (2026)
      vector in 3D), :meth:`~pyTooling.Cartesian2D.BaseVector2D.Normalized` and multiplication by a number
      (``vector * 2``, ``2 * vector``, ``offset *= 2``). An operator returns a vector of its left operand's class; a
      vector and an offset with equal components are equal. Points, bounding boxes and ``Move()`` take either;
-     ``point - vector`` is a new point.
+     ``point - vector`` is a new point. :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToVector` beside
+     :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToOffset`.
    * :mod:`pyTooling.Cartesian2D`: a general :class:`~pyTooling.Cartesian2D.Line2D` in Hesse normal form (unit normal
      and signed distance from the origin), created from a normal and a distance or by
      :meth:`~pyTooling.Cartesian2D.Line2D.FromPoints`, :meth:`~pyTooling.Cartesian2D.Line2D.FromPointAndDirection` and
