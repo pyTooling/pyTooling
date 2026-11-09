@@ -69,10 +69,10 @@ Common Bases
 
 Some errors occur in every data structure: an element is added twice, an element is added to a hierarchy while it's
 already part of one, an element is used together with an element of another data structure, an element isn't a
-direct child of the element it's removed from, or an element is removed while other elements still use it. A package
-raises its own exception for each - derived from its base-exception - and adds a common base as a second base-class.
-So a caller catches all duplicates of all packages by one clause, all errors of one package by its base-exception, or
-one error by its own class.
+direct child of the element it's removed from, an element is removed while other elements still use it, an element is
+of an unexpected kind, or several elements match where one is expected. A package raises its own exception for each -
+derived from its base-exception - and adds a common base as a second base-class. So a caller catches all duplicates of
+all packages by one clause, all errors of one package by its base-exception, or one error by its own class.
 
 .. list-table::
    :header-rows: 1
@@ -99,6 +99,19 @@ one error by its own class.
    * - :exc:`InUseError`
      - an element is removed from a data structure, but other elements still use it.
      - none yet (pyVHDLModel: ``LibraryInUseError``)
+   * - :exc:`EmptyError`
+     - an operation needs at least one element, but a data structure has none.
+     - :exc:`~pyTooling.Cartesian2D.Groups.EmptyGroupError`
+   * - :exc:`UnknownKindError`
+     - an element is of a kind, which a data structure or an operation doesn't expect at its place.
+     - none yet (pyVHDLModel: ``UnknownSymbolKindError``, ``UnknownSecondaryUnitKindError``)
+   * - :exc:`AmbiguousError`
+     - several elements match, where exactly one is expected.
+     - none yet (pyVHDLModel: ``AmbiguousTopLevelError``)
+   * - :exc:`InvalidOperationError`
+     - an operation isn't valid for an object, e.g. copying an origin. It's a :exc:`RuntimeError`.
+     - raised directly by :meth:`Origin2D.Copy() <pyTooling.Cartesian2D.Origin2D.Copy>` and
+       :meth:`Origin3D.Copy() <pyTooling.Cartesian3D.Origin3D.Copy>`
 
 .. code-block:: Python
 

@@ -1,0 +1,2045 @@
+# ==================================================================================================================== #
+#             _____           _ _               ____           _            _             ____  ____                   #
+#  _ __  _   |_   _|__   ___ | (_)_ __   __ _  / ___|__ _ _ __| |_ ___  ___(_) __ _ _ __ |___ \|  _ \                  #
+# | '_ \| | | || |/ _ \ / _ \| | | '_ \ / _` || |   / _` | '__| __/ _ \/ __| |/ _` | '_ \  __) | | | |                 #
+# | |_) | |_| || | (_) | (_) | | | | | | (_| || |__| (_| | |  | ||  __/\__ \ | (_| | | | |/ __/| |_| |                 #
+# | .__/ \__, ||_|\___/ \___/|_|_|_| |_|\__, (_)____\__,_|_|   \__\___||___/_|\__,_|_| |_|_____|____/                  #
+# |_|    |___/                          |___/                                                                          #
+# ==================================================================================================================== #
+# Authors:                                                                                                             #
+#   Patrick Lehmann                                                                                                    #
+#                                                                                                                      #
+# License:                                                                                                             #
+# ==================================================================================================================== #
+# Copyright 2026-2026 Patrick Lehmann - Boetzingen, Germany                                                            #
+#                                                                                                                      #
+# Licensed under the Apache License, Version 2.0 (the "License");                                                      #
+# you may not use this file except in compliance with the License.                                                     #
+# You may obtain a copy of the License at                                                                              #
+#                                                                                                                      #
+#   http://www.apache.org/licenses/LICENSE-2.0                                                                         #
+#                                                                                                                      #
+# Unless required by applicable law or agreed to in writing, software                                                  #
+# distributed under the License is distributed on an "AS IS" BASIS,                                                    #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.                                             #
+# See the License for the specific language governing permissions and                                                  #
+# limitations under the License.                                                                                       #
+#                                                                                                                      #
+# SPDX-License-Identifier: Apache-2.0                                                                                  #
+# ==================================================================================================================== #
+#
+"""
+Unit tests for :mod:`pyTooling.Cartesian2D.Groups` - groups, canvases, frames, absolute coordinates and mirroring.
+"""
+from copy                         import copy, deepcopy
+from math                         import isclose, pi
+
+from pyTooling.Cartesian2D        import Base2D, Point2D, Vector2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, \
+                                         Element2D, Line2D, VerticalLine2D, HorizontalLine2D, Segment2D, \
+                                         LineSegment2D, AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, \
+                                         NotOwnedError, NotInSameFrameError, GroupCycleError
+from pyTooling.Cartesian2D.Shapes import Polygon, Polyline, Trapezium, Rectangle, Square, Circle, Ellipse
+from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection, EmptyGroupError
+from pyTooling.Exceptions         import EmptyError
+from pyTooling.MetaClasses        import AbstractClassError
+from pyTooling.Testing            import Testcase
+
+
+if __name__ == "__main__":  # pragma: no cover
+	print("ERROR: you called a testcase declaration file as an executable module.")
+	print("Use: 'python -m unittest <testcase module>'")
+	exit(1)
+
+
+class Instantiation(Testcase):
+	def test_Element(self) -> None:
+		with self.assertRaises(AbstractClassError):
+			_ = Element2D()
+
+	def test_Group(self) -> None:
+		group = Group2D()
+
+		self.assertIsInstance(group, Element2D)
+		self.assertTupleEqual((0, 0), group.Offset.ToTuple())
+		self.assertTupleEqual((), group.Children)
+		self.assertIsNone(group.Parent)
+		self.assertIsNone(group.Frame)
+
+	def test_Group_Offset(self) -> None:
+		"""The offset is copied."""
+		offset = Offset2D(3, 4)
+
+		group = Group2D(offset)
+
+		self.assertIsNot(offset, group.Offset)
+		self.assertTupleEqual((3, 4), group.Offset.ToTuple())
+
+	def test_Group_Children(self) -> None:
+		circle =   Circle(Point2D(1, 1), 1)
+		line =     LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+		subgroup = Group2D()
+
+		group = Group2D(Offset2D(5, 5), (circle, line, subgroup))
+
+		self.assertEqual(3, len(group.Children))
+		self.assertIs(circle, group.Children[0])
+		self.assertIs(line, group.Children[1])
+		self.assertIs(subgroup, group.Children[2])
+		self.assertIs(group, circle.Parent)
+		self.assertIs(group, line.Parent)
+		self.assertIs(group, subgroup.Parent)
+
+	def test_Group_Generator(self) -> None:
+		group = Group2D(children=(Circle(Point2D(x, 0), 1) for x in range(3)))
+
+		self.assertEqual(3, len(group.Children))
+		for child in group.Children:
+			self.assertIs(group, child.Parent)
+
+	def test_Group_OffsetTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Group2D((3, 4))
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Group_ChildrenInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Group2D(children=3)
+
+		self.assertEqual("Parameter 'children' is not iterable.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Group_ChildNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Group2D(children=(Circle(Point2D(1, 1), 1), None))
+
+		self.assertEqual("An element of parameter 'children' is None.", str(context.exception))
+
+	def test_Group_ChildPoint(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Group2D(children=(Point2D(1, 1), ))
+
+		self.assertEqual("An element of parameter 'children' is not of type 'Element2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
+	def test_Group_ChildOwned(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+		group1 = Group2D(children=(circle, ))
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			_ = Group2D(children=(circle, ))
+
+		self.assertEqual("Element is owned by another element already.", str(context.exception))
+		self.assertListEqual(
+			["Got Circle((1, 1), 1) owned by Group2D((0, 0), children=1)."],
+			context.exception.__notes__
+		)
+		self.assertIsInstance(context.exception.__cause__, ValueError)
+		self.assertEqual(
+			"An element of parameter 'children' belongs to another element.",
+			str(context.exception.__cause__)
+		)
+		self.assertIs(group1, circle.Parent)
+
+	def test_Group_ChildEdge(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		with self.assertRaises(AlreadyOwnedError):
+			_ = Group2D(children=(polygon.Segments[0], ))
+
+		self.assertIs(polygon, polygon.Segments[0].Parent)
+
+	def test_Group_ChildTwice(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+		line =   LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+
+		with self.assertRaises(ValueError) as context:
+			_ = Group2D(children=(line, circle, circle))
+
+		self.assertEqual("An element of parameter 'children' is given twice.", str(context.exception))
+		self.assertListEqual(["Got Circle((1, 1), 1)."], context.exception.__notes__)
+		self.assertIsNone(circle.Parent)
+		self.assertIsNone(line.Parent)
+
+	def test_repr(self) -> None:
+		group = Group2D(Offset2D(1, 2), (Circle(Point2D(1, 1), 1), ))
+
+		self.assertEqual("Group2D((1, 2), children=1)", repr(group))
+
+
+class Hashing(Testcase):
+	def test_Group(self) -> None:
+		"""A group defines no ``__eq__``: it hashes by identity."""
+		self.assertEqual(2, len({Group2D(), Group2D()}))
+
+
+class Membership(Testcase):
+	def test_AddChild(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+		line =   LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+		group =  Group2D(children=(circle, ))
+
+		group.AddChild(line)
+
+		self.assertIs(group, line.Parent)
+		self.assertTupleEqual((circle, line), group.Children)
+		self.assertTupleEqual(((0, 0), (2, 0)), line.ToTuple())
+
+	def test_AddChild_None(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(ValueError) as context:
+			group.AddChild(None)
+
+		self.assertEqual("Parameter 'child' is None.", str(context.exception))
+
+	def test_AddChild_Point(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(TypeError) as context:
+			group.AddChild(Point2D(1, 1))
+
+		self.assertEqual("Parameter 'child' is not of type 'Element2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
+	def test_AddChild_Owned(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+		group1 = Group2D(children=(circle, ))
+		group2 = Group2D()
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			group2.AddChild(circle)
+
+		self.assertEqual("Element is owned by another element already.", str(context.exception))
+		self.assertListEqual(
+			["Got Circle((1, 1), 1) owned by Group2D((0, 0), children=1).", "Use 'MoveTo' to move it between groups."],
+			context.exception.__notes__
+		)
+		self.assertEqual("Parameter 'child' belongs to another element.", str(context.exception.__cause__))
+		self.assertIs(group1, circle.Parent)
+		self.assertTupleEqual((), group2.Children)
+
+	def test_AddChild_Itself(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(GroupCycleError) as context:
+			group.AddChild(group)
+
+		self.assertEqual("Group2D would contain itself.", str(context.exception))
+		self.assertListEqual(
+			["Got Group2D((0, 0), children=0) as parent of Group2D((0, 0), children=0)."],
+			context.exception.__notes__
+		)
+		self.assertEqual(
+			"Parameter 'parent' is this element or one of its descendants.",
+			str(context.exception.__cause__)
+		)
+		self.assertIsNone(group.Parent)
+
+	def test_AddChild_Ancestor(self) -> None:
+		inner = Group2D()
+		outer = Group2D(children=(Group2D(children=(inner, )), ))
+
+		with self.assertRaises(GroupCycleError):
+			inner.AddChild(outer)
+
+		self.assertIsNone(outer.Parent)
+		self.assertTupleEqual((), inner.Children)
+
+	def test_RemoveChild(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+		group =  Group2D(Offset2D(5, 5), (circle, ))
+
+		group.RemoveChild(circle)
+
+		self.assertIsNone(circle.Parent)
+		self.assertTupleEqual((), group.Children)
+		self.assertTupleEqual((1, 1), circle.Center.ToTuple())
+
+	def test_RemoveChild_None(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(ValueError) as context:
+			group.RemoveChild(None)
+
+		self.assertEqual("Parameter 'child' is None.", str(context.exception))
+
+	def test_RemoveChild_Point(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(TypeError) as context:
+			group.RemoveChild(Point2D(1, 1))
+
+		self.assertEqual("Parameter 'child' is not of type 'Element2D'.", str(context.exception))
+
+	def test_RemoveChild_NotAChild(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+		group1 = Group2D(children=(circle, ))
+		group2 = Group2D()
+
+		with self.assertRaises(NotOwnedError) as context:
+			group2.RemoveChild(circle)
+
+		self.assertEqual("Element isn't a child of this Group2D.", str(context.exception))
+		self.assertListEqual(["Got Circle((1, 1), 1) owned by Group2D((0, 0), children=1)."], context.exception.__notes__)
+		self.assertEqual("Parameter 'child' isn't a child of this Group2D.", str(context.exception.__cause__))
+		self.assertIs(group1, circle.Parent)
+
+	def test_Parent(self) -> None:
+		"""Assigning a parent moves the element and keeps its local coordinates."""
+		circle = Circle(Point2D(1, 1), 1)
+		group1 = Group2D(Offset2D(5, 0), (circle, ))
+		group2 = Group2D(Offset2D(0, 5))
+
+		circle.Parent = group2
+
+		self.assertIs(group2, circle.Parent)
+		self.assertTupleEqual((), group1.Children)
+		self.assertTupleEqual((circle, ), group2.Children)
+		self.assertTupleEqual((1, 1), circle.Center.ToTuple())
+		self.assertTupleEqual((1, 6), circle.Center.Absolute.ToTuple())
+
+	def test_Parent_None(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+		group =  Group2D(Offset2D(5, 0), (circle, ))
+
+		circle.Parent = None
+
+		self.assertIsNone(circle.Parent)
+		self.assertTupleEqual((), group.Children)
+
+	def test_Parent_Same(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+		line =   LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+		group =  Group2D(children=(circle, line))
+
+		circle.Parent = group
+
+		self.assertTupleEqual((circle, line), group.Children)
+
+	def test_Parent_int(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+
+		with self.assertRaises(TypeError) as context:
+			circle.Parent = 1
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(circle.Parent)
+
+	def test_Parent_Edge(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		edge =    polygon.Segments[0]
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			edge.Parent = Group2D()
+
+		self.assertEqual("Element is owned by another element already.", str(context.exception))
+		self.assertListEqual(
+			["Got LineSegment2D((0, 0), (4, 0)) owned by Polygon((0, 0), (4, 0), (2, 3))."],
+			context.exception.__notes__
+		)
+		self.assertEqual("Parameter 'parent' can't replace the shape of an edge.", str(context.exception.__cause__))
+		self.assertIs(polygon, edge.Parent)
+
+	def test_Polygon(self) -> None:
+		"""A polygon in a group: its corners and edges are in the group's frame."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		group =   Group2D(children=(polygon, ))
+
+		self.assertIs(group, polygon.Frame)
+		for corner in polygon.Points:
+			self.assertIs(group, corner.Frame)
+
+		for edge in polygon.Segments:
+			self.assertIs(polygon, edge.Parent)
+			self.assertIs(group, edge.Frame)
+
+	def test_Polyline(self) -> None:
+		"""A polyline in a group: its points and edges are in the group's frame."""
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		group =    Group2D(children=(polyline, ))
+
+		self.assertIs(group, polyline.Frame)
+		for vertex in polyline.Points:
+			self.assertIs(group, vertex.Frame)
+
+		for edge in polyline.Segments:
+			self.assertIs(polyline, edge.Parent)
+			self.assertIs(group, edge.Frame)
+
+	def test_Polyline_Edge(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		edge =     polyline.Segments[1]
+
+		with self.assertRaises(AlreadyOwnedError) as context:
+			edge.Parent = Group2D()
+
+		self.assertEqual("Element is owned by another element already.", str(context.exception))
+		self.assertListEqual(
+			["Got LineSegment2D((4, 0), (2, 3)) owned by Polyline((0, 0), (4, 0), (2, 3))."],
+			context.exception.__notes__
+		)
+		self.assertEqual("Parameter 'parent' can't replace the shape of an edge.", str(context.exception.__cause__))
+		self.assertIs(polyline, edge.Parent)
+
+
+class ParentParameter(Testcase):
+	"""Parameter 'parent' registers the new element in the group, as ``AddChild`` does."""
+
+	def test_Segment(self) -> None:
+		group = Group2D()
+
+		segment = LineSegment2D(Point2D(1, 2), Point2D(4, 6), parent=group)
+
+		self.assertIs(group, segment.Parent)
+		self.assertTupleEqual((segment, ), group.Children)
+		self.assertIs(segment, segment.Start.Parent)
+		self.assertIs(segment, segment.End.Parent)
+		self.assertIs(group, segment.Start.Frame)
+
+	def test_LineSegment(self) -> None:
+		group = Group2D()
+
+		segment = LineSegment2D(Point2D(1, 2), Point2D(4, 6), parent=group)
+
+		self.assertIs(group, segment.Parent)
+		self.assertTupleEqual((segment, ), group.Children)
+		self.assertIs(group, segment.Frame)
+
+	def test_LineSegment_Reference(self) -> None:
+		"""A segment in a group owns its points, as a standalone one."""
+		group = Group2D()
+		start = Point2D(1, 2)
+		end =   Point2D(4, 6)
+
+		segment = LineSegment2D(start, end, copyPoints=False, parent=group)
+
+		self.assertIs(start, segment.Start)
+		self.assertIs(end, segment.End)
+		self.assertIs(segment, start.Parent)
+		self.assertIs(segment, end.Parent)
+
+		replacement = Point2D(7, 8)
+		segment.Start = replacement
+
+		self.assertIs(segment, replacement.Parent)
+		self.assertIsNone(start.Parent)
+
+	def test_LineSegment_Shape(self) -> None:
+		"""A segment with a shape as parent is an edge, not a child of a group."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		edge = LineSegment2D(polygon.Points[0], polygon.Points[2], copyPoints=False, parent=polygon)
+
+		self.assertIs(polygon, edge.Parent)
+		self.assertIs(polygon, edge.Start.Parent)
+
+	def test_LineSegment_Int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Shape' or 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_LineSegment_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = LineSegment2D(Point2D(1, 2), Point2D(4, 6), Group2D())
+
+	def test_LineSegment_Failing(self) -> None:
+		group = Group2D()
+		point = Point2D(1, 2)
+
+		with self.assertRaises(DuplicatePointError):
+			_ = LineSegment2D(point, point, copyPoints=False, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Polygon(self) -> None:
+		group = Group2D()
+
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=group)
+
+		self.assertIs(group, polygon.Parent)
+		self.assertTupleEqual((polygon, ), group.Children)
+		self.assertIs(group, polygon.Points[0].Frame)
+		self.assertIs(group, polygon.Segments[0].Frame)
+
+	def test_Polygon_Int(self) -> None:
+		"""A wrong parent is found before the polygon takes the given points."""
+		points = (Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))
+
+		with self.assertRaises(TypeError) as context:
+			_ = Polygon(points, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(points[0].Parent)
+
+	def test_Polygon_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), Group2D())
+
+	def test_Polygon_Failing(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(NotEnoughCornersError):
+			_ = Polygon((Point2D(0, 0), Point2D(4, 0)), parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Polyline(self) -> None:
+		group = Group2D()
+
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=group)
+
+		self.assertIs(group, polyline.Parent)
+		self.assertTupleEqual((polyline, ), group.Children)
+		self.assertIs(group, polyline.Points[0].Frame)
+		self.assertIs(group, polyline.Segments[0].Frame)
+
+	def test_Polyline_Int(self) -> None:
+		"""A wrong parent is found before the polyline takes the given points."""
+		points = (Point2D(0, 0), Point2D(4, 0))
+
+		with self.assertRaises(TypeError) as context:
+			_ = Polyline(points, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(points[0].Parent)
+
+	def test_Polyline_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Polyline((Point2D(0, 0), Point2D(4, 0)), Group2D())
+
+	def test_Polyline_Failing(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(NotEnoughCornersError):
+			_ = Polyline((Point2D(0, 0), ), parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Trapezium(self) -> None:
+		group = Group2D()
+
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), parent=group)
+
+		self.assertIs(group, trapezium.Parent)
+		self.assertTupleEqual((trapezium, ), group.Children)
+		self.assertIs(group, trapezium.Points[0].Frame)
+
+	def test_Trapezium_Int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Trapezium_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), Group2D())
+
+	def test_Trapezium_Failing(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(ValueError):
+			_ = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), None, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Rectangle(self) -> None:
+		group = Group2D()
+
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), parent=group)
+
+		self.assertIs(group, rectangle.Parent)
+		self.assertTupleEqual((rectangle, ), group.Children)
+
+	def test_Rectangle_Int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Rectangle_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), Group2D())
+
+	def test_Rectangle_Failing(self) -> None:
+		"""The rectangle's own checks run before it registers: a parallelogram leaves no child in the group."""
+		group = Group2D()
+
+		with self.assertRaises(ValueError):
+			_ = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(5, 2), Point2D(1, 2), parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Square(self) -> None:
+		group = Group2D()
+
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), parent=group)
+
+		self.assertIs(group, square.Parent)
+		self.assertTupleEqual((square, ), group.Children)
+
+	def test_Square_Int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Square_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), Group2D())
+
+	def test_Square_Failing(self) -> None:
+		"""The square's own checks run before it registers: a rectangle leaves no child in the group."""
+		group = Group2D()
+
+		with self.assertRaises(ValueError):
+			_ = Square(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Circle(self) -> None:
+		group = Group2D()
+
+		circle = Circle(Point2D(1, 2), 3, parent=group)
+
+		self.assertIs(group, circle.Parent)
+		self.assertTupleEqual((circle, ), group.Children)
+		self.assertIs(group, circle.Center.Frame)
+
+	def test_Circle_Int(self) -> None:
+		"""A wrong parent is found before the circle takes the given center."""
+		center = Point2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Circle(center, 3, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(center.Parent)
+
+	def test_Circle_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Circle(Point2D(1, 2), 3, Group2D())
+
+	def test_Circle_Failing(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(ValueError):
+			_ = Circle(Point2D(1, 2), 0, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Ellipse(self) -> None:
+		group = Group2D()
+
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, parent=group)
+
+		self.assertIs(group, ellipse.Parent)
+		self.assertTupleEqual((ellipse, ), group.Children)
+		self.assertIs(group, ellipse.Center.Frame)
+
+	def test_Ellipse_Int(self) -> None:
+		"""A wrong parent is found before the ellipse takes the given center."""
+		center = Point2D(1, 2)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Ellipse(center, 3, 2, copyPoints=False, parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(center.Parent)
+
+	def test_Ellipse_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Ellipse(Point2D(1, 2), 3, 2, Group2D())
+
+	def test_Ellipse_Failing(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(ValueError):
+			_ = Ellipse(Point2D(1, 2), 3, 0, parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Group(self) -> None:
+		parent = Group2D()
+		child =  Circle(Point2D(1, 2), 3)
+
+		group = Group2D(Offset2D(1, 1), (child, ), parent=parent)
+
+		self.assertIs(parent, group.Parent)
+		self.assertTupleEqual((group, ), parent.Children)
+		self.assertIs(group, child.Parent)
+		self.assertTupleEqual((2, 3), child.Center.Absolute.ToTuple())
+
+	def test_Group_Int(self) -> None:
+		"""A wrong parent is found before the group takes the given children."""
+		child = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(TypeError) as context:
+			_ = Group2D(children=(child, ), parent=1)
+
+		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertIsNone(child.Parent)
+
+	def test_Group_Positional(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Group2D(None, None, Group2D())
+
+	def test_Group_Failing(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(TypeError):
+			_ = Group2D(offset=(1, 1), parent=group)
+
+		self.assertTupleEqual((), group.Children)
+
+	def test_Group_ParentIsChild(self) -> None:
+		"""The new group can't be a child of its own child. The child stays free."""
+		child = Group2D()
+
+		with self.assertRaises(GroupCycleError) as context:
+			_ = Group2D(children=(child, ), parent=child)
+
+		self.assertEqual("Group2D would contain itself.", str(context.exception))
+		self.assertEqual("Parameter 'parent' is this element or one of its descendants.", str(context.exception.__cause__))
+		self.assertIsNone(child.Parent)
+		self.assertTupleEqual((), child.Children)
+
+	def test_Group_ParentInsideChild(self) -> None:
+		inner = Group2D()
+		child = Group2D(children=(inner, ))
+
+		with self.assertRaises(GroupCycleError):
+			_ = Group2D(children=(child, ), parent=inner)
+
+		self.assertIsNone(child.Parent)
+		self.assertTupleEqual((), inner.Children)
+
+	def test_Point(self) -> None:
+		"""A point's parent sets the owner only: the group's children don't change."""
+		group = Group2D()
+
+		point = Point2D(1, 2, parent=group)
+
+		self.assertIs(group, point.Parent)
+		self.assertIs(group, point.Frame)
+		self.assertTupleEqual((), group.Children)
+
+
+class Frames(Testcase):
+	def test_Frame(self) -> None:
+		line =  LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+		inner = Group2D(children=(line, ))
+		outer = Group2D(children=(inner, ))
+
+		self.assertIs(inner, line.Frame)
+		self.assertIs(inner, line.Start.Frame)
+		self.assertIs(outer, inner.Frame)
+		self.assertIsNone(outer.Frame)
+
+	def test_Point_Minus_Point(self) -> None:
+		circle1 = Circle(Point2D(1, 1), 1)
+		circle2 = Circle(Point2D(4, 5), 1)
+		_ =       Group2D(Offset2D(10, 10), (circle1, circle2))
+
+		offset = circle2.Center - circle1.Center
+
+		self.assertTupleEqual((3, 4), offset.ToTuple())
+
+	def test_Point_Minus_Point_OtherGroup(self) -> None:
+		circle1 = Circle(Point2D(1, 1), 1)
+		circle2 = Circle(Point2D(4, 5), 1)
+		_ =       Group2D(Offset2D(10, 10), (circle1, ))
+		_ =       Group2D(Offset2D(20, 20), (circle2, ))
+
+		with self.assertRaises(NotInSameFrameError) as context:
+			_ = circle2.Center - circle1.Center
+
+		self.assertEqual("Points are in different frames.", str(context.exception))
+
+	def test_Point_Minus_Point_Absolute(self) -> None:
+		circle1 = Circle(Point2D(1, 1), 1)
+		circle2 = Circle(Point2D(4, 5), 1)
+		_ =       Group2D(Offset2D(10, 10), (circle1, ))
+		_ =       Group2D(Offset2D(20, 20), (circle2, ))
+
+		offset = circle2.Center.Absolute - circle1.Center.Absolute
+
+		self.assertTupleEqual((13, 14), offset.ToTuple())
+
+	def test_AngleTo_OtherGroup(self) -> None:
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(1, 0))
+		line2 = LineSegment2D(Point2D(0, 0), Point2D(0, 1))
+		_ =     Group2D(children=(line1, ))
+
+		with self.assertRaises(NotInSameFrameError):
+			_ = line1.AngleTo(line2)
+
+	def test_AngleTo_SameGroup(self) -> None:
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(1, 0))
+		line2 = LineSegment2D(Point2D(0, 0), Point2D(0, 1))
+		_ =     Group2D(children=(line1, line2))
+
+		self.assertTrue(isclose(pi / 2, line1.AngleTo(line2)))
+
+
+class Absolute(Testcase):
+	def test_Point(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		inner =  Group2D(Offset2D(10, 0), (circle, ))
+		_ =      Group2D(Offset2D(0, 20), (inner, ))
+
+		point = circle.Center.Absolute
+
+		self.assertIs(Point2D, type(point))
+		self.assertIsNone(point.Parent)
+		self.assertTupleEqual((11, 22), point.ToTuple())
+		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
+
+	def test_Point_NoFrame(self) -> None:
+		point = Point2D(1, 2)
+
+		absolute = point.Absolute
+
+		self.assertIsNot(point, absolute)
+		self.assertTupleEqual((1, 2), absolute.ToTuple())
+
+	def test_AbsoluteOffset(self) -> None:
+		inner = Group2D(Offset2D(10, 0))
+		outer = Group2D(Offset2D(0, 20), (inner, ))
+
+		self.assertTupleEqual((10, 20), inner.AbsoluteOffset.ToTuple())
+		self.assertTupleEqual((0, 20), outer.AbsoluteOffset.ToTuple())
+		self.assertIsNot(outer.Offset, outer.AbsoluteOffset)
+
+	def test_AbsoluteBoundingBox(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		line =   LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+		inner =  Group2D(Offset2D(10, 0), (circle, line))
+		outer =  Group2D(Offset2D(0, 20), (inner, ))
+
+		self.assertEqual(BoundingBox2D(10, 21, 12, 23), circle.AbsoluteBoundingBox)
+		self.assertEqual(BoundingBox2D(10, 20, 12, 20), line.AbsoluteBoundingBox)
+		self.assertEqual(BoundingBox2D(10, 20, 12, 23), inner.AbsoluteBoundingBox)
+		self.assertEqual(BoundingBox2D(10, 20, 12, 23), outer.AbsoluteBoundingBox)
+
+
+class Bounds(Testcase):
+	def test_Group(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		line =   LineSegment2D(Point2D(-3, 0), Point2D(0, 0))
+		group =  Group2D(Offset2D(10, 0), (circle, line))
+
+		self.assertEqual(BoundingBox2D(7, 0, 12, 3), group.BoundingBox)
+
+	def test_Group_Nested(self) -> None:
+		inner = Group2D(Offset2D(5, 5), (Circle(Point2D(0, 0), 1), ))
+		outer = Group2D(Offset2D(100, 0), (inner, LineSegment2D(Point2D(0, 0), Point2D(1, 1))))
+
+		self.assertEqual(BoundingBox2D(4, 4, 6, 6), inner.BoundingBox)
+		self.assertEqual(BoundingBox2D(100, 0, 106, 6), outer.BoundingBox)
+
+	def test_Group_Empty(self) -> None:
+		group = Group2D(Offset2D(1, 2))
+
+		with self.assertRaises(EmptyGroupError) as context:
+			_ = group.BoundingBox
+
+		self.assertIsInstance(context.exception, EmptyError)
+		self.assertEqual("Group2D has no children.", str(context.exception))
+		self.assertListEqual(["Got Group2D((1, 2), children=0)."], context.exception.__notes__)
+
+	def test_Group_NestedEmpty(self) -> None:
+		group = Group2D(children=(Circle(Point2D(0, 0), 1), Group2D()))
+
+		with self.assertRaises(EmptyGroupError):
+			_ = group.BoundingBox
+
+
+class Moving(Testcase):
+	def test_Move(self) -> None:
+		"""Moving a group changes its offset only."""
+		circle = Circle(Point2D(1, 2), 1)
+		group =  Group2D(Offset2D(10, 0), (circle, ))
+
+		group.Move(Offset2D(1, 1))
+
+		self.assertTupleEqual((11, 1), group.Offset.ToTuple())
+		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
+		self.assertTupleEqual((12, 3), circle.Center.Absolute.ToTuple())
+
+	def test_Move_None(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(ValueError) as context:
+			group.Move(None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+
+	def test_Move_tuple(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(TypeError) as context:
+			group.Move((1, 1))
+
+		self.assertEqual("Parameter 'offset' is not of type 'BaseVector2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Move_Vector(self) -> None:
+		group = Group2D(Offset2D(10, 0))
+
+		group.Move(Vector2D(1, 1))
+
+		self.assertIs(Offset2D, type(group.Offset))
+		self.assertTupleEqual((11, 1), group.Offset.ToTuple())
+
+	def test_Offset_Vector(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(TypeError) as context:
+			group.Offset = Vector2D(3, 4)
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Vector2D'."], context.exception.__notes__)
+
+	def test_Offset(self) -> None:
+		group =  Group2D()
+		offset = Offset2D(3, 4)
+
+		group.Offset = offset
+
+		self.assertIsNot(offset, group.Offset)
+		self.assertTupleEqual((3, 4), group.Offset.ToTuple())
+
+	def test_Offset_None(self) -> None:
+		group = Group2D(Offset2D(1, 2))
+
+		with self.assertRaises(ValueError) as context:
+			group.Offset = None
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+		self.assertTupleEqual((1, 2), group.Offset.ToTuple())
+
+	def test_Offset_tuple(self) -> None:
+		group = Group2D(Offset2D(1, 2))
+
+		with self.assertRaises(TypeError) as context:
+			group.Offset = (3, 4)
+
+		self.assertEqual("Parameter 'offset' is not of type 'Offset2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_MoveTo(self) -> None:
+		"""Moving a shape to another group keeps its absolute position."""
+		circle = Circle(Point2D(1, 2), 1)
+		_ =      Group2D(Offset2D(10, 0), (circle, ))
+		target = Group2D(Offset2D(0, 20))
+
+		circle.MoveTo(target)
+
+		self.assertIs(target, circle.Parent)
+		self.assertTupleEqual((11, -18), circle.Center.ToTuple())
+		self.assertTupleEqual((11, 2), circle.Center.Absolute.ToTuple())
+
+	def test_MoveTo_LocalPosition(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		_ =      Group2D(Offset2D(10, 0), (circle, ))
+		target = Group2D(Offset2D(0, 20))
+
+		circle.MoveTo(target, keepPosition=False)
+
+		self.assertIs(target, circle.Parent)
+		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
+		self.assertTupleEqual((1, 22), circle.Center.Absolute.ToTuple())
+
+	def test_MoveTo_None(self) -> None:
+		line = LineSegment2D(Point2D(0, 0), Point2D(2, 0))
+		_ =    Group2D(Offset2D(10, 5), (line, ))
+
+		line.MoveTo(None)
+
+		self.assertIsNone(line.Parent)
+		self.assertTupleEqual(((10, 5), (12, 5)), line.ToTuple())
+
+	def test_MoveTo_Group(self) -> None:
+		"""Moving a group changes its offset only: its children keep their local coordinates."""
+		circle = Circle(Point2D(1, 2), 1)
+		inner =  Group2D(Offset2D(3, 3), (circle, ))
+		_ =      Group2D(Offset2D(10, 0), (inner, ))
+		target = Group2D(Offset2D(0, 20))
+
+		inner.MoveTo(target)
+
+		self.assertTupleEqual((13, -17), inner.Offset.ToTuple())
+		self.assertTupleEqual((1, 2), circle.Center.ToTuple())
+		self.assertTupleEqual((14, 5), circle.Center.Absolute.ToTuple())
+
+	def test_MoveTo_keepPositionNone(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+
+		with self.assertRaises(ValueError) as context:
+			circle.MoveTo(Group2D(), keepPosition=None)
+
+		self.assertEqual("Parameter 'keepPosition' is None.", str(context.exception))
+		self.assertIsNone(circle.Parent)
+
+	def test_MoveTo_keepPositionInt(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+
+		with self.assertRaises(TypeError) as context:
+			circle.MoveTo(Group2D(), keepPosition=1)
+
+		self.assertEqual("Parameter 'keepPosition' is not of type 'bool'.", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_MoveTo_Edge(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+
+		with self.assertRaises(AlreadyOwnedError):
+			polygon.Segments[0].MoveTo(Group2D(Offset2D(5, 5)))
+
+		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
+
+	def test_MoveTo_Cycle(self) -> None:
+		inner = Group2D(Offset2D(1, 1))
+		outer = Group2D(children=(inner, ))
+
+		with self.assertRaises(GroupCycleError):
+			outer.MoveTo(inner)
+
+		self.assertTupleEqual((0, 0), outer.Offset.ToTuple())
+		self.assertIsNone(outer.Parent)
+
+
+class Distributing(Testcase):
+	def test_X(self) -> None:
+		circle1 = Circle(Point2D(0, 0), 1)
+		circle2 = Circle(Point2D(3, 0), 2)
+		circle3 = Circle(Point2D(4, 5), 1)
+		circle4 = Circle(Point2D(20, 0), 1)
+		group =   Group2D(children=(circle4, circle2, circle1, circle3))
+
+		group.DistributeX()
+
+		self.assertEqual(BoundingBox2D(-1, -1, 1, 1), circle1.BoundingBox)
+		self.assertEqual(BoundingBox2D(5, -2, 9, 2), circle2.BoundingBox)
+		self.assertEqual(BoundingBox2D(13, 4, 15, 6), circle3.BoundingBox)
+		self.assertEqual(BoundingBox2D(19, -1, 21, 1), circle4.BoundingBox)
+
+	def test_Y(self) -> None:
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(0, 2))
+		line2 = LineSegment2D(Point2D(5, 3), Point2D(5, 4))
+		line3 = LineSegment2D(Point2D(1, 9), Point2D(1, 12))
+		group = Group2D(children=(line1, line2, line3))
+
+		group.DistributeY()
+
+		self.assertEqual(BoundingBox2D(5, 5, 5, 6), line2.BoundingBox)
+		self.assertEqual(BoundingBox2D(1, 9, 1, 12), line3.BoundingBox)
+
+	def test_TwoChildren(self) -> None:
+		circle1 = Circle(Point2D(0, 0), 1)
+		circle2 = Circle(Point2D(3, 0), 1)
+		group =   Group2D(children=(circle1, circle2))
+
+		group.DistributeX()
+
+		self.assertTupleEqual((0, 0), circle1.Center.ToTuple())
+		self.assertTupleEqual((3, 0), circle2.Center.ToTuple())
+
+	def test_Gap_X(self) -> None:
+		circle1 = Circle(Point2D(0, 0), 1)
+		circle2 = Circle(Point2D(3, 0), 2)
+		circle3 = Circle(Point2D(20, 5), 1)
+		group =   Group2D(children=(circle3, circle2, circle1))
+
+		group.DistributeX(3)
+
+		self.assertEqual(BoundingBox2D(-1, -1, 1, 1), circle1.BoundingBox)
+		self.assertEqual(BoundingBox2D(4, -2, 8, 2), circle2.BoundingBox)
+		self.assertEqual(BoundingBox2D(11, 4, 13, 6), circle3.BoundingBox)
+
+	def test_Gap_Y(self) -> None:
+		line1 = LineSegment2D(Point2D(0, 0), Point2D(0, 2))
+		line2 = LineSegment2D(Point2D(5, 3), Point2D(5, 4))
+		group = Group2D(children=(line1, line2))
+
+		group.DistributeY(0.5)
+
+		self.assertEqual(BoundingBox2D(0, 0, 0, 2), line1.BoundingBox)
+		self.assertEqual(BoundingBox2D(5, 2.5, 5, 3.5), line2.BoundingBox)
+
+	def test_Gap_Zero(self) -> None:
+		circle1 = Circle(Point2D(0, 0), 1)
+		circle2 = Circle(Point2D(5, 0), 1)
+		group =   Group2D(children=(circle1, circle2))
+
+		group.DistributeX(0)
+
+		self.assertTupleEqual((2, 0), circle2.Center.ToTuple())
+
+	def test_Gap_OneChild(self) -> None:
+		circle = Circle(Point2D(3, 0), 1)
+		group =  Group2D(children=(circle, ))
+
+		group.DistributeX(1)
+
+		self.assertTupleEqual((3, 0), circle.Center.ToTuple())
+
+	def test_Gap_Str(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(TypeError) as context:
+			group.DistributeX("1")
+
+		self.assertEqual("Parameter 'gap' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Gap_Negative(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(ValueError) as context:
+			group.DistributeX(-1)
+
+		self.assertEqual("Parameter 'gap' is negative.", str(context.exception))
+		self.assertListEqual(["Got value '-1'."], context.exception.__notes__)
+
+	def test_Gap_Y_Str(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(TypeError) as context:
+			group.DistributeY("1")
+
+		self.assertEqual("Parameter 'gap' is not of type 'float' or 'int'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Gap_Y_Negative(self) -> None:
+		group = Group2D()
+
+		with self.assertRaises(ValueError) as context:
+			group.DistributeY(-1)
+
+		self.assertEqual("Parameter 'gap' is negative.", str(context.exception))
+		self.assertListEqual(["Got value '-1'."], context.exception.__notes__)
+
+
+class CanvasInstantiation(Testcase):
+	def test_Canvas(self) -> None:
+		canvas = Canvas2D()
+
+		self.assertIs(YAxisDirection.Up, canvas.Direction)
+		self.assertIsNone(canvas.Size)
+		self.assertIsNone(canvas.Frame)
+		self.assertTupleEqual((), canvas.Children)
+		self.assertTupleEqual((0, 0), canvas.AbsoluteOffset.ToTuple())
+
+	def test_Canvas_Size(self) -> None:
+		size = Size2D(400, 300)
+
+		canvas = Canvas2D(YAxisDirection.Down, size)
+
+		self.assertIs(YAxisDirection.Down, canvas.Direction)
+		self.assertIsNot(size, canvas.Size)
+		self.assertTupleEqual((400, 300), canvas.Size.ToTuple())
+
+	def test_Canvas_Children(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+		group =  Group2D(Offset2D(5, 5), (LineSegment2D(Point2D(0, 0), Point2D(2, 0)), ))
+
+		canvas = Canvas2D(children=(circle, group))
+
+		self.assertTupleEqual((circle, group), canvas.Children)
+		self.assertIs(canvas, circle.Parent)
+		self.assertIs(canvas, group.Parent)
+		self.assertIs(canvas, circle.Frame)
+		self.assertIs(canvas, circle.Center.Frame)
+		self.assertIs(canvas, group.Frame)
+
+	def test_Canvas_Base(self) -> None:
+		"""A canvas is a frame like a group, and the root: it never has a parent."""
+		canvas = Canvas2D()
+
+		self.assertIsInstance(canvas, Base2D)
+		self.assertNotIsInstance(canvas, Element2D)
+		self.assertIsNone(canvas.Parent)
+		self.assertIsNone(canvas.Frame)
+
+		with self.assertRaises(TypeError):
+			canvas.Parent = Group2D()
+
+		self.assertIsNone(canvas.Parent)
+
+	def test_Canvas_ParentParameter(self) -> None:
+		with self.assertRaises(TypeError):
+			_ = Canvas2D(parent=Group2D())
+
+	def test_Canvas_Slots(self) -> None:
+		self.assertFalse(hasattr(Canvas2D(), "__dict__"))
+		self.assertFalse(hasattr(Group2D(), "__dict__"))
+
+	def test_Canvas_Hash(self) -> None:
+		"""A canvas defines no ``__eq__``: it hashes by identity."""
+		self.assertEqual(2, len({Canvas2D(), Canvas2D()}))
+
+	def test_Canvas_DirectionNone(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			_ = Canvas2D(None)
+
+		self.assertEqual("Parameter 'direction' is None.", str(context.exception))
+
+	def test_Canvas_DirectionStr(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Canvas2D("Up")
+
+		self.assertEqual("Parameter 'direction' is not of type 'YAxisDirection'.", str(context.exception))
+		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
+
+	def test_Canvas_SizeTuple(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Canvas2D(size=(400, 300))
+
+		self.assertEqual("Parameter 'size' is not of type 'Size2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+
+	def test_Canvas_ChildOwned(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+		group =  Group2D(children=(circle, ))
+
+		with self.assertRaises(AlreadyOwnedError):
+			_ = Canvas2D(children=(circle, ))
+
+		self.assertIs(group, circle.Parent)
+
+	def test_repr(self) -> None:
+		canvas = Canvas2D(YAxisDirection.Down, Size2D(400, 300), (Circle(Point2D(1, 1), 1), ))
+
+		self.assertEqual("Canvas2D(Down, (400, 300), children=1)", repr(canvas))
+
+
+class CanvasFailing(Testcase):
+	def test_Parent_Assign(self) -> None:
+		canvas = Canvas2D()
+
+		with self.assertRaises(TypeError) as context:
+			canvas.Parent = Group2D()
+
+		self.assertEqual("A 'pyTooling.Cartesian2D.Groups.Canvas2D' has no parent.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Groups.Group2D'."], context.exception.__notes__)
+		self.assertIsNone(canvas.Parent)
+
+	"""A failing check of a canvas or group leaves the given children free."""
+
+	def test_Canvas_Direction(self) -> None:
+		child = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(TypeError):
+			_ = Canvas2D("up", children=(child, ))
+
+		self.assertIsNone(child.Parent)
+
+	def test_Canvas_Size(self) -> None:
+		child = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(TypeError):
+			_ = Canvas2D(size=(10, 10), children=(child, ))
+
+		self.assertIsNone(child.Parent)
+
+	def test_Group_Offset(self) -> None:
+		child = Circle(Point2D(1, 2), 3)
+
+		with self.assertRaises(TypeError):
+			_ = Group2D((1, 1), (child, ))
+
+		self.assertIsNone(child.Parent)
+
+
+class CanvasParentParameter(Testcase):
+	"""Parameter 'parent' registers the new element in the canvas, as ``AddChild`` does."""
+
+	def test_Segment(self) -> None:
+		canvas = Canvas2D()
+
+		segment = LineSegment2D(Point2D(1, 2), Point2D(4, 6), parent=canvas)
+
+		self.assertIs(canvas, segment.Parent)
+		self.assertTupleEqual((segment, ), canvas.Children)
+		self.assertIs(canvas, segment.Start.Frame)
+
+	def test_LineSegment(self) -> None:
+		canvas = Canvas2D()
+
+		segment = LineSegment2D(Point2D(1, 2), Point2D(4, 6), parent=canvas)
+
+		self.assertIs(canvas, segment.Parent)
+		self.assertTupleEqual((segment, ), canvas.Children)
+		self.assertIs(segment, segment.Start.Parent)
+
+	def test_Polygon(self) -> None:
+		canvas = Canvas2D()
+
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=canvas)
+
+		self.assertIs(canvas, polygon.Parent)
+		self.assertTupleEqual((polygon, ), canvas.Children)
+		self.assertIs(canvas, polygon.Points[0].Frame)
+
+	def test_Polyline(self) -> None:
+		canvas = Canvas2D()
+
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=canvas)
+
+		self.assertIs(canvas, polyline.Parent)
+		self.assertTupleEqual((polyline, ), canvas.Children)
+		self.assertIs(canvas, polyline.Segments[0].Frame)
+
+	def test_Trapezium(self) -> None:
+		canvas = Canvas2D()
+
+		trapezium = Trapezium(Point2D(1, 1), Point2D(3, 1), Point2D(4, 3), Point2D(0, 3), parent=canvas)
+
+		self.assertIs(canvas, trapezium.Parent)
+		self.assertTupleEqual((trapezium, ), canvas.Children)
+
+	def test_Rectangle(self) -> None:
+		canvas = Canvas2D()
+
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2), parent=canvas)
+
+		self.assertIs(canvas, rectangle.Parent)
+		self.assertTupleEqual((rectangle, ), canvas.Children)
+
+	def test_Rectangle_Failing(self) -> None:
+		canvas = Canvas2D()
+
+		with self.assertRaises(ValueError):
+			_ = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(5, 2), Point2D(1, 2), parent=canvas)
+
+		self.assertTupleEqual((), canvas.Children)
+
+	def test_Square(self) -> None:
+		canvas = Canvas2D()
+
+		square = Square(Point2D(0, 0), Point2D(2, 0), Point2D(2, 2), Point2D(0, 2), parent=canvas)
+
+		self.assertIs(canvas, square.Parent)
+		self.assertTupleEqual((square, ), canvas.Children)
+
+	def test_Circle(self) -> None:
+		canvas = Canvas2D()
+
+		circle = Circle(Point2D(1, 2), 3, parent=canvas)
+
+		self.assertIs(canvas, circle.Parent)
+		self.assertTupleEqual((circle, ), canvas.Children)
+		self.assertIs(canvas, circle.Center.Frame)
+
+	def test_Ellipse(self) -> None:
+		canvas = Canvas2D()
+
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, parent=canvas)
+
+		self.assertIs(canvas, ellipse.Parent)
+		self.assertTupleEqual((ellipse, ), canvas.Children)
+		self.assertIs(canvas, ellipse.Center.Frame)
+
+	def test_Group(self) -> None:
+		canvas = Canvas2D()
+
+		group = Group2D(Offset2D(1, 1), parent=canvas)
+
+		self.assertIs(canvas, group.Parent)
+		self.assertTupleEqual((group, ), canvas.Children)
+		self.assertIs(canvas, group.Frame)
+		self.assertTupleEqual((1, 1), group.AbsoluteOffset.ToTuple())
+
+	def test_Point(self) -> None:
+		"""A point's owner is an element, a canvas isn't one."""
+		with self.assertRaises(TypeError) as context:
+			_ = Point2D(1, 2, parent=Canvas2D())
+
+		self.assertEqual("Parameter 'parent' is not of type 'Element2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Groups.Canvas2D'."], context.exception.__notes__)
+
+
+class CanvasMembership(Testcase):
+	def test_AddChild(self) -> None:
+		canvas = Canvas2D()
+		group =  Group2D()
+
+		canvas.AddChild(group)
+
+		self.assertIs(canvas, group.Parent)
+		self.assertTupleEqual((group, ), canvas.Children)
+
+	def test_RemoveChild(self) -> None:
+		circle = Circle(Point2D(1, 1), 1)
+		canvas = Canvas2D(children=(circle, ))
+
+		canvas.RemoveChild(circle)
+
+		self.assertIsNone(circle.Parent)
+		self.assertTupleEqual((), canvas.Children)
+
+	def test_RemoveChild_NotAChild(self) -> None:
+		canvas = Canvas2D()
+
+		with self.assertRaises(NotOwnedError) as context:
+			canvas.RemoveChild(Circle(Point2D(1, 1), 1))
+
+		self.assertEqual("Element isn't a child of this Canvas2D.", str(context.exception))
+		self.assertEqual("Parameter 'child' isn't a child of this Canvas2D.", str(context.exception.__cause__))
+
+	def test_MoveTo(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		_ =      Group2D(Offset2D(10, 0), (circle, ))
+		canvas = Canvas2D()
+
+		circle.MoveTo(canvas)
+
+		self.assertIs(canvas, circle.Parent)
+		self.assertTupleEqual((11, 2), circle.Center.ToTuple())
+
+	def test_Cycle(self) -> None:
+		"""A group on a canvas can't contain its parent group."""
+		inner =  Group2D()
+		outer =  Group2D(children=(inner, ))
+		canvas = Canvas2D(children=(outer, ))
+
+		with self.assertRaises(GroupCycleError):
+			outer.Parent = inner
+
+		self.assertIs(canvas, outer.Parent)
+
+	def test_BoundingBox(self) -> None:
+		canvas = Canvas2D(children=(Circle(Point2D(1, 1), 1), Group2D(Offset2D(10, 10), (Circle(Point2D(0, 0), 2), ))))
+
+		self.assertEqual(BoundingBox2D(0, 0, 12, 12), canvas.BoundingBox)
+
+	def test_BoundingBox_Empty(self) -> None:
+		canvas = Canvas2D()
+
+		with self.assertRaises(EmptyGroupError) as context:
+			_ = canvas.BoundingBox
+
+		self.assertEqual("Canvas2D has no children.", str(context.exception))
+		self.assertListEqual(["Got Canvas2D(Up, None, children=0)."], context.exception.__notes__)
+
+	def test_Distribute(self) -> None:
+		circle1 = Circle(Point2D(0, 0), 1)
+		circle2 = Circle(Point2D(1, 0), 1)
+		circle3 = Circle(Point2D(10, 0), 1)
+		canvas =  Canvas2D(children=(circle1, circle2, circle3))
+
+		canvas.DistributeX()
+
+		self.assertTupleEqual((5, 0), circle2.Center.ToTuple())
+
+
+class Mirroring(Testcase):
+	def test_MirrorY(self) -> None:
+		"""A group mirrors its offset at the axis, its children are mirrored at the group's origin."""
+		circle = Circle(Point2D(1, 2), 1)
+		inner =  Group2D(Offset2D(3, 4), (circle, ))
+		outer =  Group2D(Offset2D(10, 20), (inner, ))
+
+		outer.MirrorY(Alignment2D.MinY, 10)
+
+		self.assertTupleEqual((10, 50), outer.Offset.ToTuple())
+		self.assertTupleEqual((3, -4), inner.Offset.ToTuple())
+		self.assertTupleEqual((1, -2), circle.Center.ToTuple())
+		self.assertTupleEqual((14, 44), circle.Center.Absolute.ToTuple())
+		self.assertEqual(BoundingBox2D(13, 43, 15, 45), outer.BoundingBox)
+
+	def test_MirrorY_Default(self) -> None:
+		"""A group mirrored at its center keeps its bounding box."""
+		line =  LineSegment2D(Point2D(0, 0), Point2D(4, 2))
+		inner = Group2D(Offset2D(1, 1), (line, ))
+		outer = Group2D(Offset2D(10, 20), (inner, ))
+
+		outer.MirrorY()
+
+		self.assertTupleEqual((10, 24), outer.Offset.ToTuple())
+		self.assertTupleEqual((1, -1), inner.Offset.ToTuple())
+		self.assertTupleEqual(((0, 0), (4, -2)), line.ToTuple())
+		self.assertEqual(BoundingBox2D(11, 21, 15, 23), outer.BoundingBox)
+
+	def test_MirrorY_MaxY(self) -> None:
+		line =  LineSegment2D(Point2D(0, 0), Point2D(4, 2))
+		group = Group2D(Offset2D(10, 20), (line, ))
+
+		group.MirrorY(Alignment2D.MaxY)
+
+		self.assertTupleEqual((10, 24), group.Offset.ToTuple())
+		self.assertEqual(BoundingBox2D(10, 22, 14, 24), group.BoundingBox)
+
+	def test_MirrorY_AxisMaxX(self) -> None:
+		group = Group2D(Offset2D(1, 2))
+
+		with self.assertRaises(ValueError) as context:
+			group.MirrorY(Alignment2D.MaxX)
+
+		self.assertEqual(
+			"Parameter 'axis' is not Alignment2D.MinY, Alignment2D.CenterY or Alignment2D.MaxY.",
+			str(context.exception)
+		)
+		self.assertListEqual(["Got value 'Alignment2D.MaxX'."], context.exception.__notes__)
+		self.assertTupleEqual((1, 2), group.Offset.ToTuple())
+
+	def test_MirrorY_Empty(self) -> None:
+		group = Group2D(Offset2D(1, 2))
+
+		with self.assertRaises(EmptyGroupError) as context:
+			group.MirrorY()
+
+		self.assertEqual("Group2D has no children.", str(context.exception))
+		self.assertTupleEqual((1, 2), group.Offset.ToTuple())
+
+	def test_MirrorY_Polyline(self) -> None:
+		"""A polyline in a group is mirrored at the group's origin, its edges along."""
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+		group =    Group2D(Offset2D(10, 20), (polyline, ))
+
+		group.MirrorY(Alignment2D.MinY)
+
+		self.assertTupleEqual((10, 20), group.Offset.ToTuple())
+		self.assertTupleEqual(((0, 0), (4, -1), (2, -3)), tuple(point.ToTuple() for point in polyline.Points))
+		self.assertTupleEqual(((4, -1), (2, -3)), polyline.Segments[1].ToTuple())
+		self.assertEqual(BoundingBox2D(10, 17, 14, 20), group.BoundingBox)
+
+	def test_MirrorX_Ellipse(self) -> None:
+		"""An ellipse in a group is mirrored at the group's origin, its radii stay."""
+		ellipse = Ellipse(Point2D(1, 2), 3, 2)
+		group =   Group2D(Offset2D(10, 20), (ellipse, ))
+
+		group.MirrorX(Alignment2D.MinX)
+
+		self.assertTupleEqual((6, 20), group.Offset.ToTuple())
+		self.assertTupleEqual((-1, 2), ellipse.Center.ToTuple())
+		self.assertEqual(3, ellipse.FirstRadius)
+		self.assertEqual(2, ellipse.SecondRadius)
+		self.assertTupleEqual((1, 0), ellipse.Direction.ToTuple())
+		self.assertEqual(BoundingBox2D(2, 20, 8, 24), group.BoundingBox)
+
+	def test_MirrorX(self) -> None:
+		"""A group mirrors its offset at the axis, its children are mirrored at the group's origin."""
+		circle = Circle(Point2D(1, 2), 1)
+		inner =  Group2D(Offset2D(3, 4), (circle, ))
+		outer =  Group2D(Offset2D(10, 20), (inner, ))
+
+		outer.MirrorX(Alignment2D.MaxX, 5)
+
+		self.assertTupleEqual((30, 20), outer.Offset.ToTuple())
+		self.assertTupleEqual((-3, 4), inner.Offset.ToTuple())
+		self.assertTupleEqual((-1, 2), circle.Center.ToTuple())
+		self.assertTupleEqual((26, 26), circle.Center.Absolute.ToTuple())
+		self.assertEqual(BoundingBox2D(25, 25, 27, 27), outer.BoundingBox)
+
+	def test_MirrorX_Default(self) -> None:
+		"""A group mirrored at its center keeps its bounding box."""
+		line =  LineSegment2D(Point2D(0, 0), Point2D(4, 2))
+		inner = Group2D(Offset2D(1, 1), (line, ))
+		outer = Group2D(Offset2D(10, 20), (inner, ))
+
+		outer.MirrorX()
+
+		self.assertTupleEqual((16, 20), outer.Offset.ToTuple())
+		self.assertTupleEqual((-1, 1), inner.Offset.ToTuple())
+		self.assertTupleEqual(((0, 0), (-4, 2)), line.ToTuple())
+		self.assertEqual(BoundingBox2D(11, 21, 15, 23), outer.BoundingBox)
+
+	def test_MirrorX_MinX(self) -> None:
+		line =  LineSegment2D(Point2D(0, 0), Point2D(4, 2))
+		group = Group2D(Offset2D(10, 20), (line, ))
+
+		group.MirrorX(Alignment2D.MinX)
+
+		self.assertTupleEqual((10, 20), group.Offset.ToTuple())
+		self.assertTupleEqual(((0, 0), (-4, 2)), line.ToTuple())
+		self.assertEqual(BoundingBox2D(6, 20, 10, 22), group.BoundingBox)
+
+	def test_MirrorX_OffsetNone(self) -> None:
+		group = Group2D(Offset2D(1, 2))
+
+		with self.assertRaises(ValueError) as context:
+			group.MirrorX(Alignment2D.MinX, None)
+
+		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
+		self.assertTupleEqual((1, 2), group.Offset.ToTuple())
+
+	def test_MirrorAt_Group(self) -> None:
+		"""A group mirrors its offset at the line, its children are mirrored at the group's origin."""
+		circle = Circle(Point2D(1, 2), 1)
+		inner =  Group2D(Offset2D(3, 4), (circle, ))
+		outer =  Group2D(Offset2D(10, 20), (inner, ))
+
+		outer.MirrorAt(VerticalLine2D(20))
+
+		self.assertTupleEqual((30, 20), outer.Offset.ToTuple())
+		self.assertTupleEqual((-3, 4), inner.Offset.ToTuple())
+		self.assertTupleEqual((-1, 2), circle.Center.ToTuple())
+		self.assertTupleEqual((26, 26), circle.Center.Absolute.ToTuple())
+
+	def test_MirrorAt_Child(self) -> None:
+		"""The line is in absolute coordinates: a child is mirrored in its group's frame, the groups stay."""
+		circle = Circle(Point2D(1, 2), 1)
+		inner =  Group2D(Offset2D(3, 4), (circle, ))
+		outer =  Group2D(Offset2D(10, 20), (inner, ))
+
+		circle.MirrorAt(HorizontalLine2D(0))
+
+		self.assertTupleEqual((10, 20), outer.Offset.ToTuple())
+		self.assertTupleEqual((3, 4), inner.Offset.ToTuple())
+		self.assertTupleEqual((1, -50), circle.Center.ToTuple())
+		self.assertTupleEqual((14, -26), circle.Center.Absolute.ToTuple())
+
+	def test_MirrorAt_Groups(self) -> None:
+		"""Elements of different groups are mirrored at the same line."""
+		line1 =  LineSegment2D(Point2D(0, 0), Point2D(1, 1))
+		line2 =  LineSegment2D(Point2D(0, 0), Point2D(1, 1))
+		_ =      Group2D(Offset2D(10, 0), (line1, ))
+		_ =      Group2D(Offset2D(0, 5), (line2, ))
+		mirror = VerticalLine2D(0)
+
+		line1.MirrorAt(mirror)
+		line2.MirrorAt(mirror)
+
+		self.assertEqual(BoundingBox2D(-11, 0, -10, 1), line1.AbsoluteBoundingBox)
+		self.assertEqual(BoundingBox2D(-1, 5, 0, 6), line2.AbsoluteBoundingBox)
+
+	def test_MirrorAt_Edge(self) -> None:
+		"""An edge is in the frame of its shape."""
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+		_ =       Group2D(Offset2D(10, 0), (polygon, ))
+
+		polygon.Segments[0].MirrorAt(VerticalLine2D(12))
+
+		self.assertTupleEqual(((4, 0), (0, 1), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
+
+	def test_MirrorAt_Empty(self) -> None:
+		"""A group without children mirrors its offset: the line needs no bounding box."""
+		group = Group2D(Offset2D(1, 2))
+
+		group.MirrorAt(VerticalLine2D(5))
+
+		self.assertTupleEqual((9, 2), group.Offset.ToTuple())
+
+	def test_MirrorAt_Canvas(self) -> None:
+		"""Mirroring an element on a canvas keeps the canvas' direction."""
+		circle = Circle(Point2D(1, 2), 1)
+		group =  Group2D(Offset2D(10, 20), (circle, ))
+		canvas = Canvas2D(YAxisDirection.Down, Size2D(400, 300), (group, ))
+
+		circle.MirrorAt(HorizontalLine2D(150))
+
+		self.assertIs(YAxisDirection.Down, canvas.Direction)
+		self.assertTupleEqual((10, 20), group.Offset.ToTuple())
+		self.assertTupleEqual((1, 258), circle.Center.ToTuple())
+		self.assertTupleEqual((11, 278), circle.Center.Absolute.ToTuple())
+
+	def test_MirrorAt_Oblique(self) -> None:
+		"""At the line x = y, a group swaps its offset's components and its children are mirrored at x = y too."""
+		circle = Circle(Point2D(1, 2), 1)
+		inner =  Group2D(Offset2D(3, 4), (circle, ))
+		outer =  Group2D(Offset2D(10, 20), (inner, ))
+
+		outer.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertTupleEqual((20, 10), tuple(round(value, 9) for value in outer.Offset.ToTuple()))
+		self.assertTupleEqual((4, 3), tuple(round(value, 9) for value in inner.Offset.ToTuple()))
+		self.assertTupleEqual((2, 1), tuple(round(value, 9) for value in circle.Center.ToTuple()))
+		self.assertTupleEqual((26, 14), tuple(round(value, 9) for value in circle.Center.Absolute.ToTuple()))
+
+	def test_MirrorAt_Oblique_Child(self) -> None:
+		"""The line is in absolute coordinates: a child is mirrored in its group's frame, the groups stay."""
+		circle = Circle(Point2D(1, 2), 1)
+		inner =  Group2D(Offset2D(3, 4), (circle, ))
+		outer =  Group2D(Offset2D(10, 20), (inner, ))
+
+		circle.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
+
+		self.assertTupleEqual((10, 20), outer.Offset.ToTuple())
+		self.assertTupleEqual((3, 4), inner.Offset.ToTuple())
+		self.assertTupleEqual((13, -10), tuple(round(value, 9) for value in circle.Center.ToTuple()))
+		self.assertTupleEqual((26, 14), tuple(round(value, 9) for value in circle.Center.Absolute.ToTuple()))
+
+	def test_MirrorAt_Oblique_Nested(self) -> None:
+		"""Mirroring nested groups equals mirroring the same element without groups, at a line not through the origin."""
+		line =   LineSegment2D(Point2D(1, 2), Point2D(4, -3))
+		free =   LineSegment2D(Point2D(15, 27), Point2D(18, 22))
+		inner =  Group2D(Offset2D(3, 4), (line, ))
+		outer =  Group2D(Offset2D(11, 21), (inner, ))
+		mirror = Line2D(Offset2D(1, 2), 7)
+
+		outer.MirrorAt(mirror)
+		free.MirrorAt(mirror)
+
+		self.assertAlmostEqual(free.Start.X, line.Start.Absolute.X)
+		self.assertAlmostEqual(free.Start.Y, line.Start.Absolute.Y)
+		self.assertAlmostEqual(free.End.X, line.End.Absolute.X)
+		self.assertAlmostEqual(free.End.Y, line.End.Absolute.Y)
+
+	def test_MirrorAt_Oblique_Ellipse(self) -> None:
+		"""A group holding an ellipse mirrors it like the same ellipse without groups."""
+		circle =  Circle(Point2D(1, 2), 1)
+		ellipse = Ellipse(Point2D(5, 6), 3, 2)
+		free =    Ellipse(Point2D(18, 30), 3, 2)
+		inner =   Group2D(Offset2D(3, 4), (ellipse, ))
+		outer =   Group2D(Offset2D(10, 20), (circle, inner))
+		mirror =  Line2D(Offset2D(3, 4), 10)
+
+		outer.MirrorAt(mirror)
+		free.MirrorAt(mirror)
+
+		self.assertAlmostEqual(-14, outer.Offset.XOffset)
+		self.assertAlmostEqual(-12, outer.Offset.YOffset)
+		self.assertAlmostEqual(free.Center.X, ellipse.Center.Absolute.X)
+		self.assertAlmostEqual(free.Center.Y, ellipse.Center.Absolute.Y)
+		self.assertAlmostEqual(free.Direction.XOffset, ellipse.Direction.XOffset)
+		self.assertAlmostEqual(free.Direction.YOffset, ellipse.Direction.YOffset)
+		self.assertAlmostEqual(0.28, ellipse.Direction.XOffset)
+		self.assertAlmostEqual(-0.96, ellipse.Direction.YOffset)
+		self.assertAlmostEqual(-1.64, circle.Center.X)
+		self.assertAlmostEqual(-1.52, circle.Center.Y)
+
+	def test_MirrorAt_Vertical_Ellipse(self) -> None:
+		"""A general line with normal (1, 0) mirrors a group holding an ellipse."""
+		ellipse = Ellipse(Point2D(5, 6), 3, 2)
+		group =   Group2D(Offset2D(10, 20), (ellipse, ))
+
+		group.MirrorAt(Line2D(Offset2D(-2, 0), -40))
+
+		self.assertTupleEqual((30.0, 20), group.Offset.ToTuple())
+		self.assertTupleEqual((-5, 6), ellipse.Center.ToTuple())
+		self.assertTupleEqual((1, 0), ellipse.Direction.ToTuple())
+
+	def test_FromElement_Empty(self) -> None:
+		with self.assertRaises(EmptyGroupError) as context:
+			VerticalLine2D.FromElement(Group2D(Offset2D(1, 2)), Alignment2D.MinX)
+
+		self.assertEqual("Group2D has no children.", str(context.exception))
+		self.assertListEqual(["Got Group2D((1, 2), children=0)."], context.exception.__notes__)
+
+	def test_Canvas_Open(self) -> None:
+		"""Without a size, every level negates its y-coordinates."""
+		circle = Circle(Point2D(1, 2), 1)
+		line =   LineSegment2D(Point2D(0, 5), Point2D(3, 7))
+		group =  Group2D(Offset2D(10, 20), (circle, ))
+		canvas = Canvas2D(YAxisDirection.Down, children=(group, line))
+
+		canvas.Mirror()
+
+		self.assertIs(YAxisDirection.Up, canvas.Direction)
+		self.assertTupleEqual((10, -20), group.Offset.ToTuple())
+		self.assertTupleEqual((1, -2), circle.Center.ToTuple())
+		self.assertTupleEqual(((0, -5), (3, -7)), line.ToTuple())
+		self.assertTupleEqual((11, -22), circle.Center.Absolute.ToTuple())
+
+	def test_Canvas_Bounded(self) -> None:
+		"""With a size, the top level uses height - y, deeper levels negate their y-coordinates."""
+		circle = Circle(Point2D(1, 2), 1)
+		line =   LineSegment2D(Point2D(0, 5), Point2D(3, 7))
+		group =  Group2D(Offset2D(10, 20), (circle, ))
+		canvas = Canvas2D(YAxisDirection.Down, Size2D(400, 300), (group, line))
+
+		canvas.Mirror()
+
+		self.assertTupleEqual((10, 280), group.Offset.ToTuple())
+		self.assertTupleEqual((1, -2), circle.Center.ToTuple())
+		self.assertTupleEqual(((0, 295), (3, 293)), line.ToTuple())
+		self.assertTupleEqual((11, 278), circle.Center.Absolute.ToTuple())
+
+	def test_Canvas_Twice(self) -> None:
+		polygon = Polygon((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+		group =   Group2D(Offset2D(10, 20), (polygon, ))
+		canvas =  Canvas2D(YAxisDirection.Up, Size2D(400, 300), (group, ))
+
+		canvas.Mirror()
+		canvas.Mirror()
+
+		self.assertIs(YAxisDirection.Up, canvas.Direction)
+		self.assertTupleEqual((10, 20), group.Offset.ToTuple())
+		self.assertTupleEqual(((0, 0), (4, 1), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
+
+	def test_Canvas_Top(self) -> None:
+		"""The top edge of an element stays at the same distance from the canvas' visual top edge."""
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		group =     Group2D(Offset2D(10, 20), (rectangle, ))
+		canvas =    Canvas2D(YAxisDirection.Down, Size2D(400, 300), (group, ))
+
+		self.assertEqual(20, canvas.Top(rectangle))
+
+		canvas.Mirror()
+
+		self.assertEqual(280, canvas.Top(rectangle))
+		self.assertEqual(BoundingBox2D(10, 278, 14, 280), rectangle.AbsoluteBoundingBox)
+
+
+class CanvasEdges(Testcase):
+	def test_Top_Up(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		canvas = Canvas2D(YAxisDirection.Up, children=(Group2D(Offset2D(10, 10), (circle, )), ))
+
+		self.assertEqual(13, canvas.Top(circle))
+		self.assertEqual(11, canvas.Bottom(circle))
+		self.assertIs(Alignment2D.MaxY, canvas.TopAlignment)
+		self.assertIs(Alignment2D.MinY, canvas.BottomAlignment)
+
+	def test_Top_Down(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		canvas = Canvas2D(YAxisDirection.Down, children=(Group2D(Offset2D(10, 10), (circle, )), ))
+
+		self.assertEqual(11, canvas.Top(circle))
+		self.assertEqual(13, canvas.Bottom(circle))
+		self.assertIs(Alignment2D.MinY, canvas.TopAlignment)
+		self.assertIs(Alignment2D.MaxY, canvas.BottomAlignment)
+
+	def test_AlignTop(self) -> None:
+		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
+		circle =    Circle(Point2D(10, 10), 1)
+		canvas =    Canvas2D(YAxisDirection.Down, children=(rectangle, circle))
+
+		circle.AlignTo(rectangle, canvas.TopAlignment)
+
+		self.assertEqual(canvas.Top(rectangle), canvas.Top(circle))
+		self.assertEqual(BoundingBox2D(9, 0, 11, 2), circle.BoundingBox)
+
+	def test_Top_OtherCanvas(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		_ =      Canvas2D(children=(circle, ))
+		canvas = Canvas2D()
+
+		with self.assertRaises(NotInSameFrameError) as context:
+			_ = canvas.Top(circle)
+
+		self.assertEqual("Element isn't on this canvas.", str(context.exception))
+		self.assertListEqual(["Got Circle((1, 2), 1)."], context.exception.__notes__)
+		self.assertEqual("Parameter 'element' isn't on this canvas.", str(context.exception.__cause__))
+
+	def test_Bottom_NoCanvas(self) -> None:
+		canvas = Canvas2D()
+
+		with self.assertRaises(NotInSameFrameError):
+			_ = canvas.Bottom(Circle(Point2D(1, 2), 1))
+
+	def test_Top_None(self) -> None:
+		canvas = Canvas2D()
+
+		with self.assertRaises(ValueError) as context:
+			_ = canvas.Top(None)
+
+		self.assertEqual("Parameter 'element' is None.", str(context.exception))
+
+	def test_Bottom_Point(self) -> None:
+		canvas = Canvas2D()
+
+		with self.assertRaises(TypeError) as context:
+			_ = canvas.Bottom(Point2D(1, 2))
+
+		self.assertEqual("Parameter 'element' is not of type 'Element2D'.", str(context.exception))
+		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Point2D'."], context.exception.__notes__)
+
+
+class Copy(Testcase):
+	def test_Group_Copy(self) -> None:
+		"""A copy holds copies of the children and isn't in the canvas of the original."""
+		value =  [1, 2]
+		circle = Circle(Point2D(1, 2), 1)
+		line =   LineSegment2D(Point2D(0, 0), Point2D(4, 0))
+		canvas = Canvas2D()
+		group =  Group2D(Offset2D(1, 2), (circle, line), value=value, keyValuePairs={"layer": 1}, parent=canvas)
+
+		newGroup = group.Copy()
+
+		self.assertIs(Group2D, type(newGroup))
+		self.assertIsNone(newGroup.Parent)
+		self.assertIsNot(group.Offset, newGroup.Offset)
+		self.assertTupleEqual((1, 2), newGroup.Offset.ToTuple())
+		self.assertEqual(2, len(newGroup.Children))
+		for child, newChild in zip(group.Children, newGroup.Children):
+			self.assertIs(type(child), type(newChild))
+			self.assertIsNot(child, newChild)
+			self.assertIs(newGroup, newChild.Parent)
+			self.assertIs(group, child.Parent)
+
+		self.assertIs(newGroup.Children[0], newGroup.Children[0].Center.Parent)
+		self.assertIs(value, newGroup.Value)
+		self.assertEqual(1, newGroup["layer"])
+		self.assertTupleEqual((group, ), canvas.Children)
+
+	def test_Group_Copy_Nested(self) -> None:
+		inner = Group2D(Offset2D(1, 1), (Circle(Point2D(1, 2), 1), ))
+		outer = Group2D(Offset2D(10, 0), (inner, ))
+
+		newOuter = outer.Copy()
+		newInner = newOuter.Children[0]
+
+		self.assertIs(Group2D, type(newInner))
+		self.assertIsNot(inner, newInner)
+		self.assertIs(newOuter, newInner.Parent)
+		self.assertIs(newInner, newInner.Children[0].Parent)
+		self.assertEqual(BoundingBox2D(11, 2, 13, 4), newOuter.BoundingBox)
+
+	def test_Group_copy(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		group =  Group2D(Offset2D(1, 2), (circle, ))
+
+		newGroup = copy(group)
+
+		self.assertIs(Group2D, type(newGroup))
+		self.assertIsNot(circle, newGroup.Children[0])
+		self.assertIs(newGroup, newGroup.Children[0].Parent)
+		self.assertTupleEqual((circle, ), group.Children)
+
+	def test_Canvas_Copy(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		canvas = Canvas2D(YAxisDirection.Down, Size2D(400, 300), (Group2D(Offset2D(10, 10), (circle, )), ))
+
+		newCanvas = canvas.Copy()
+		newGroup =  newCanvas.Children[0]
+
+		self.assertIs(Canvas2D, type(newCanvas))
+		self.assertIs(YAxisDirection.Down, newCanvas.Direction)
+		self.assertIsNot(canvas.Size, newCanvas.Size)
+		self.assertTupleEqual((400, 300), newCanvas.Size.ToTuple())
+		self.assertIsNot(canvas.Children[0], newGroup)
+		self.assertIs(newCanvas, newGroup.Parent)
+		self.assertIs(newGroup, newGroup.Children[0].Parent)
+		self.assertEqual(11, newCanvas.Top(newGroup.Children[0]))
+
+	def test_Canvas_copy(self) -> None:
+		canvas = Canvas2D(children=(Circle(Point2D(1, 2), 1), ))
+
+		newCanvas = copy(canvas)
+
+		self.assertIs(Canvas2D, type(newCanvas))
+		self.assertIsNot(canvas.Children[0], newCanvas.Children[0])
+		self.assertIs(newCanvas, newCanvas.Children[0].Parent)
+
+	def test_Group_deepcopy(self) -> None:
+		"""A deep copy holds copies of the children and isn't in the canvas of the original."""
+		circle = Circle(Point2D(1, 2), 1)
+		line =   LineSegment2D(Point2D(0, 0), Point2D(4, 0))
+		canvas = Canvas2D()
+		group =  Group2D(Offset2D(1, 2), (circle, line), parent=canvas)
+
+		newGroup = deepcopy(group)
+
+		self.assertIs(Group2D, type(newGroup))
+		self.assertIsNone(newGroup.Parent)
+		self.assertIsNot(group.Offset, newGroup.Offset)
+		self.assertTupleEqual((1, 2), newGroup.Offset.ToTuple())
+		self.assertEqual(2, len(newGroup.Children))
+		for child, newChild in zip(group.Children, newGroup.Children):
+			self.assertIs(type(child), type(newChild))
+			self.assertIsNot(child, newChild)
+			self.assertIs(newGroup, newChild.Parent)
+			self.assertIs(group, child.Parent)
+
+		self.assertIs(newGroup.Children[0], newGroup.Children[0].Center.Parent)
+		self.assertTupleEqual((group, ), canvas.Children)
+
+	def test_Group_deepcopy_Nested(self) -> None:
+		inner = Group2D(Offset2D(1, 1), (Circle(Point2D(1, 2), 1), ))
+		outer = Group2D(Offset2D(10, 0), (inner, ))
+
+		newOuter = deepcopy(outer)
+		newInner = newOuter.Children[0]
+
+		self.assertIs(Group2D, type(newInner))
+		self.assertIsNot(inner, newInner)
+		self.assertIs(newOuter, newInner.Parent)
+		self.assertIs(newInner, newInner.Children[0].Parent)
+		self.assertEqual(BoundingBox2D(11, 2, 13, 4), newOuter.BoundingBox)
+
+	def test_Canvas_deepcopy(self) -> None:
+		circle = Circle(Point2D(1, 2), 1)
+		canvas = Canvas2D(YAxisDirection.Down, Size2D(400, 300), (Group2D(Offset2D(10, 10), (circle, )), ))
+
+		newCanvas = deepcopy(canvas)
+		newGroup =  newCanvas.Children[0]
+
+		self.assertIs(Canvas2D, type(newCanvas))
+		self.assertIs(YAxisDirection.Down, newCanvas.Direction)
+		self.assertIsNot(canvas.Size, newCanvas.Size)
+		self.assertTupleEqual((400, 300), newCanvas.Size.ToTuple())
+		self.assertIsNot(canvas.Children[0], newGroup)
+		self.assertIs(newCanvas, newGroup.Parent)
+		self.assertIs(newGroup, newGroup.Children[0].Parent)
+		self.assertEqual(11, newCanvas.Top(newGroup.Children[0]))
+
+
+class ElementData(Testcase):
+	def test_Group(self) -> None:
+		value = object()
+		pairs = {"layer": 1}
+		group = Group2D(Offset2D(1, 2), value=value, keyValuePairs=pairs)
+
+		self.assertIs(value, group.Value)
+		self.assertEqual(1, group["layer"])
+		self.assertIsNot(pairs, group._dict)
+
+	def test_Group_Default(self) -> None:
+		group = Group2D()
+
+		self.assertIsNone(group.Value)
+		self.assertEqual(0, len(group))
+
+	def test_Group_keyValuePairsInt(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Group2D(keyValuePairs=1)
+
+		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
+		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Group_Value(self) -> None:
+		group = Group2D(value=1)
+
+		group.Value = "layer"
+
+		self.assertEqual("layer", group.Value)
+
+	def test_Group_Pairs(self) -> None:
+		"""The dictionary syntax addresses the key-value-pairs, not the children."""
+		group = Group2D(children=(Circle(Point2D(1, 2), 1), ))
+
+		group["layer"] = 1
+
+		self.assertEqual(1, len(group))
+		self.assertIn("layer", group)
+		self.assertListEqual(["layer"], list(group))
+		self.assertEqual(1, len(group.Children))
+
+		del group["layer"]
+
+		self.assertEqual(0, len(group))
+
+	def test_Group_deepcopy(self) -> None:
+		value = [1, 2]
+		group = Group2D(value=value, keyValuePairs={"nets": ["a"]})
+
+		newGroup = deepcopy(group)
+
+		self.assertIsNot(value, newGroup.Value)
+		self.assertListEqual([1, 2], newGroup.Value)
+		self.assertIsNot(group["nets"], newGroup["nets"])
+		self.assertListEqual(["a"], newGroup["nets"])
+
+	def test_Group_Parent(self) -> None:
+		"""A child with a value and key-value-pairs registers in its parent like any other."""
+		canvas = Canvas2D()
+		group =  Group2D(value=1, keyValuePairs={"layer": 1}, parent=canvas)
+
+		self.assertIs(canvas, group.Parent)
+		self.assertTupleEqual((group, ), canvas.Children)

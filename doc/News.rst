@@ -10,6 +10,187 @@ release.
 Version 10.x (2026)
 *******************
 
+.. topic:: :gh:`v10.2.0 - 09.11.2026 <pyTooling/pyTooling/releases/v10.2.0>`
+
+   .. rubric:: New Features
+
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with three or more
+     corners, whose edges don't cross (:exc:`~pyTooling.Cartesian2D.CrossingEdgesError`), and a
+     :class:`~pyTooling.Cartesian2D.Shapes.Circle` by center and radius, measuring its diameter, perimeter and area.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: closed shapes derive from the abstract
+     :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` and report their ``Area`` and ``Perimeter``; a polygon and a
+     trapezium compute both from their corners.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Polyline` is a path of line
+     segments, built from two or more points, open or closed.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: an :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` by center, two radii and
+     the direction of its first axis (an immutable :class:`~pyTooling.Cartesian2D.Vector2D`; default ``(1, 0)``,
+     axis-aligned), a :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` with its area, its perimeter (Ramanujan's
+     approximation) and the bounding box of the rotated ellipse.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a circle and an ellipse derive from the abstract
+     :class:`~pyTooling.Cartesian2D.Shapes.EllipticalGeometry2D`, which owns, moves and mirrors their center; neither
+     derives from the other.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: conversions without approximation:
+     :meth:`Path.ToPolyline() <pyTooling.Cartesian2D.Shapes.Path.ToPolyline>` and
+     :meth:`Path.ToPolygon() <pyTooling.Cartesian2D.Shapes.Path.ToPolygon>` for a path of line segments (a polyline
+     too), :meth:`Polygon.ToPolyline() <pyTooling.Cartesian2D.Shapes.Polygon.ToPolyline>` for a polygon and its
+     derived shapes.
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: points, offsets, sizes, segments and shapes support
+     :func:`copy.copy` and :func:`copy.deepcopy`, and segments and shapes have a ``Copy()`` method. A copy shares no
+     point with the original.
+   * :mod:`pyTooling.Cartesian2D`: a :class:`~pyTooling.Cartesian2D.BoundingBox2D` value (union, intersection, point
+     containment). Every shape and segment returns its ``BoundingBox`` and moves in place with ``Move(offset)``.
+   * :mod:`pyTooling.Cartesian2D`: shapes and segments own their points (:attr:`Base2D.Parent
+     <pyTooling.Cartesian2D.Base2D.Parent>`). A point owned by another element raises
+     :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError` instead of being shared; points and line segments of different
+     frames raise :exc:`~pyTooling.Cartesian2D.NotInSameFrameError` when combined.
+   * :mod:`pyTooling.Cartesian2D.Groups`: a :class:`~pyTooling.Cartesian2D.Groups.Group2D` holds shapes, segments and
+     groups at an offset, with coordinates relative to the group. Elements report absolute positions and bounding
+     boxes, move between groups keeping their position, align to each other and are distributed along an axis.
+   * :mod:`pyTooling.Cartesian2D.Groups`: a :class:`~pyTooling.Cartesian2D.Groups.Canvas2D` is the root of a drawing,
+     with the y-axis pointing up or down and an optional size. :meth:`~pyTooling.Cartesian2D.Groups.Canvas2D.Mirror`
+     flips a drawing to the other direction. Every element mirrors at an axis through an edge or the center of its
+     bounding box with ``MirrorX(axis, offset)`` and ``MirrorY(axis, offset)``.
+   * :mod:`pyTooling.Cartesian2D`: every shape, segment and group carries a
+     :attr:`~pyTooling.Cartesian2D.Element2D.Value` and key-value-pairs
+     (:class:`~pyTooling.DataModel.KeyValuePairsMixin`), given by the keyword-only parameters ``value`` and
+     ``keyValuePairs``. ``Copy()`` keeps the value and copies the pairs.
+   * :mod:`pyTooling.Cartesian2D`: a circular :class:`~pyTooling.Cartesian2D.ArcSegment2D` from a start to an end point,
+     given by its center and :class:`~pyTooling.Cartesian2D.SweepDirection`, a third point of the arc, or its height
+     over the chord. It stores its height relative to the chord, so it keeps its shape when an end point moves, and
+     reports its center, radius, angles, length, exact bounding box and its chord.
+   * :mod:`pyTooling.Cartesian2D`: a :class:`~pyTooling.Cartesian2D.QuadraticBezierSegment2D` with one and a
+     :class:`~pyTooling.Cartesian2D.CubicBezierSegment2D` with two control points, a point at a curve parameter with
+     :meth:`~pyTooling.Cartesian2D.BezierSegment2D.PointAt`, and an exact bounding box.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: :meth:`Circle.FromPoints() <pyTooling.Cartesian2D.Shapes.Circle.FromPoints>`
+     creates the circle through three or more points,
+     :meth:`Circle.FromChord() <pyTooling.Cartesian2D.Shapes.Circle.FromChord>`
+     the circle through a chord's end points and a point at a height over the chord.
+   * :mod:`pyTooling.Cartesian2D`: :func:`~pyTooling.Cartesian2D.chordPoint` computes the point at a height over a
+     chord, :func:`~pyTooling.Cartesian2D.circumcenter` the center of the circle through three points.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Path` chains line segments, arcs and
+     Bezier curves, open or closed; consecutive edges share their joint. An open path grows at both ends with
+     :meth:`~pyTooling.Cartesian2D.Shapes.Path.AppendSegment` and
+     :meth:`~pyTooling.Cartesian2D.Shapes.Path.PrependSegment`.
+   * :mod:`pyTooling.Cartesian3D`: a :class:`~pyTooling.Cartesian3D.BoundingBox3D` value (union, overlap, point
+     containment). Every segment returns its ``BoundingBox`` and moves in place with ``Move(offset)``.
+   * :mod:`pyTooling.Cartesian3D`: segments own their points (:attr:`Base3D.Parent
+     <pyTooling.Cartesian3D.Base3D.Parent>`). A point owned by another segment raises
+     :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError` instead of being shared; points and line segments of different
+     frames raise :exc:`~pyTooling.Cartesian2D.NotInSameFrameError` when combined.
+   * :mod:`pyTooling.Cartesian3D.Groups`: a :class:`~pyTooling.Cartesian3D.Groups.Group3D` holds segments and groups at
+     an offset, with coordinates relative to the group. Elements report absolute positions and bounding boxes, move
+     between groups keeping their position, align to each other at an :class:`~pyTooling.Cartesian3D.Alignment3D` and
+     are distributed along an axis.
+   * :mod:`pyTooling.Cartesian2D.Drawing`: drawing styles as values - colors derived from the abstract
+     :class:`~pyTooling.Cartesian2D.Drawing.Color`, converting to RGBA by ``ToRGBA()``, as
+     :class:`~pyTooling.Cartesian2D.Drawing.RGBAColor` (RGB and opacity, parsed from ``#rrggbb``/``#rrggbbaa``),
+     :class:`~pyTooling.Cartesian2D.Drawing.Stroke`, :class:`~pyTooling.Cartesian2D.Drawing.Fill` and
+     :class:`~pyTooling.Cartesian2D.Drawing.Font` (bold, small caps and a
+     :class:`~pyTooling.Cartesian2D.Drawing.FontStyle`: upright, italic or slanted).
+   * :mod:`pyTooling.Cartesian2D.Drawing`: drawable shapes with the names of their geometry classes (``Polygon``,
+     ``Trapezium``, ``Rectangle``, ``Square``, ``Circle``, ``LineSegment2D``), drawn with a ``Stroke`` and a ``Fill``.
+   * :mod:`pyTooling.Cartesian2D.Drawing`: a drawable :class:`~pyTooling.Cartesian2D.Drawing.Ellipse`,
+     :class:`~pyTooling.Cartesian2D.Drawing.Path` and :class:`~pyTooling.Cartesian2D.Drawing.Polyline`; an open path or
+     polyline has a stroke only, a closed one a fill too.
+   * :mod:`pyTooling.Cartesian2D.Drawing`: drawable segments :class:`~pyTooling.Cartesian2D.Drawing.ArcSegment2D`,
+     :class:`~pyTooling.Cartesian2D.Drawing.QuadraticBezierSegment2D` and
+     :class:`~pyTooling.Cartesian2D.Drawing.CubicBezierSegment2D`, drawn with a ``Stroke``.
+   * :mod:`pyTooling.Cartesian2D.Drawing`: a :class:`~pyTooling.Cartesian2D.Drawing.Text` of one or more lines, aligned
+     horizontally and anchored vertically at its position, with an estimated bounding box. Its content, font,
+     alignment, anchor and line height are assignable; its glyphs are black by default.
+   * :mod:`pyTooling.Cartesian3D`: every element mirrors at a plane through an edge or the center of its bounding box
+     with ``MirrorX(plane, offset)``, ``MirrorY(plane, offset)`` and ``MirrorZ(plane, offset)``, named by the
+     coordinate they flip.
+   * :mod:`pyTooling.Cartesian3D`: every segment and group carries a :attr:`~pyTooling.Cartesian3D.Element3D.Value` and
+     key-value-pairs (:class:`~pyTooling.DataModel.KeyValuePairsMixin`), given by the keyword-only parameters ``value``
+     and ``keyValuePairs``. ``Copy()`` keeps the value and copies the pairs.
+   * :mod:`pyTooling.Cartesian2D`: lines (:class:`~pyTooling.Cartesian2D.Line2D`) as values in absolute coordinates,
+     :class:`~pyTooling.Cartesian2D.VerticalLine2D` ``x = c`` and :class:`~pyTooling.Cartesian2D.HorizontalLine2D`
+     ``y = c``. Every element mirrors at a line with :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt`, so elements of
+     different groups mirror at the same line. A :class:`~pyTooling.Cartesian2D.Ray2D` is a half-line from a start point
+     in a direction, an immutable :class:`~pyTooling.Cartesian2D.Vector2D`.
+   * :mod:`pyTooling.Cartesian3D`: planes (:class:`~pyTooling.Cartesian3D.Plane3D`) as values in absolute
+     coordinates, :class:`~pyTooling.Cartesian3D.YZPlane3D` ``x = c``, :class:`~pyTooling.Cartesian3D.XZPlane3D`
+     ``y = c`` and :class:`~pyTooling.Cartesian3D.XYPlane3D` ``z = c``. Every element mirrors at a plane with
+     :meth:`~pyTooling.Cartesian3D.Element3D.MirrorAt`. A :class:`~pyTooling.Cartesian3D.Ray3D` is a half-line.
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: an immutable, hashable
+     :class:`~pyTooling.Cartesian2D.Vector2D` (a value: direction, normal) beside the mutable
+     :class:`~pyTooling.Cartesian2D.Offset2D` (a displacement), both derived from the abstract
+     :class:`~pyTooling.Cartesian2D.BaseVector2D`; :class:`~pyTooling.Cartesian3D.Vector3D` and
+     :class:`~pyTooling.Cartesian3D.Offset3D` in 3D. Vector operations:
+     :attr:`~pyTooling.Cartesian2D.BaseVector2D.Length`, :meth:`~pyTooling.Cartesian2D.BaseVector2D.ScalarProduct`
+     (dot product), :meth:`~pyTooling.Cartesian2D.BaseVector2D.VectorProduct` (cross product; a number in 2D, a new
+     vector in 3D), :meth:`~pyTooling.Cartesian2D.BaseVector2D.Normalized` and multiplication by a number
+     (``vector * 2``, ``2 * vector``, ``offset *= 2``). An operator returns a vector of its left operand's class; a
+     vector and an offset with equal components are equal. Points, bounding boxes and ``Move()`` take either;
+     ``point - vector`` is a new point. :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToVector` beside
+     :meth:`~pyTooling.Cartesian2D.LineSegment2D.ToOffset`.
+   * :mod:`pyTooling.Cartesian2D`: a general :class:`~pyTooling.Cartesian2D.Line2D` in Hesse normal form (unit normal
+     and signed distance from the origin), created from a normal and a distance or by
+     :meth:`~pyTooling.Cartesian2D.Line2D.FromPoints`, :meth:`~pyTooling.Cartesian2D.Line2D.FromPointAndDirection` and
+     :meth:`~pyTooling.Cartesian2D.Line2D.FromPointAndNormal`. It computes the signed distance of a point, projects a
+     point onto the line and intersects a :class:`~pyTooling.Cartesian2D.Ray2D`. Lines compare geometrically:
+     ``VerticalLine2D(5) == Line2D(Offset2D(1, 0), 5)``. The normal is an immutable
+     :class:`~pyTooling.Cartesian2D.Vector2D`. Called on :class:`~pyTooling.Cartesian2D.VerticalLine2D` or
+     :class:`~pyTooling.Cartesian2D.HorizontalLine2D`, the classmethods return that class with the coordinate as given.
+   * :mod:`pyTooling.Cartesian3D`: a general :class:`~pyTooling.Cartesian3D.Plane3D` in Hesse normal form, created from
+     a normal and a distance or by :meth:`~pyTooling.Cartesian3D.Plane3D.FromPoints`,
+     :meth:`~pyTooling.Cartesian3D.Plane3D.FromPointAndSpanningVectors` and
+     :meth:`~pyTooling.Cartesian3D.Plane3D.FromPointAndNormal`, with the operations of a line and intersections with a
+     :class:`~pyTooling.Cartesian3D.Ray3D`. The normal is an immutable :class:`~pyTooling.Cartesian3D.Vector3D`. Called
+     on :class:`~pyTooling.Cartesian3D.YZPlane3D`, :class:`~pyTooling.Cartesian3D.XZPlane3D` or
+     :class:`~pyTooling.Cartesian3D.XYPlane3D`, the classmethods return that class with the coordinate as given.
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: every element mirrors at an oblique line or plane
+     with :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt` (reflection in Hesse normal form; a group mirrors its offset
+     and its children). An :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` mirrors its center and its direction, so an
+     oblique line rotates it.
+   * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.EmptyError`: an operation needs at least one
+     element, but a data structure has none.
+   * :mod:`pyTooling.Exceptions`: common bases :exc:`~pyTooling.Exceptions.UnknownKindError` (an element is of a kind,
+     which isn't expected at its place) and :exc:`~pyTooling.Exceptions.AmbiguousError` (several elements match, where
+     exactly one is expected).
+   * :mod:`pyTooling.Exceptions`: common base :exc:`~pyTooling.Exceptions.InvalidOperationError`, a :exc:`RuntimeError`:
+     an operation isn't valid for an object. Copying an origin (:class:`~pyTooling.Cartesian2D.Origin2D`,
+     :class:`~pyTooling.Cartesian3D.Origin3D`) raises it (was a plain :exc:`RuntimeError`).
+
+   .. rubric:: Changes
+
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: an operator (``+``, ``-``, ``+=``, ``-=``, ``==``,
+     ``!=``) of a point, vector, offset or bounding box with an unsupported operand raises
+     ``TypeError("Second operand is not supported by + operator.")`` with the supported types in a note, like ``*`` and
+     the comparisons of bounding boxes (was ``"Parameter 'other' is not of type ..."``).
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: coordinates, offsets, sizes and segment end points
+     are CamelCase properties (:attr:`~pyTooling.Cartesian2D.Point2D.X`,
+     :attr:`~pyTooling.Cartesian2D.Offset2D.XOffset`, :attr:`~pyTooling.Cartesian2D.Size2D.Width`,
+     :attr:`~pyTooling.Cartesian2D.Segment2D.Start`, ...). Constructors and setters check their values: ``None``
+     raises :exc:`ValueError`, a wrong type :exc:`TypeError`. A trapezium's
+     :attr:`Points <pyTooling.Cartesian2D.Shapes.Polygon.Points>` and
+     :attr:`Segments <pyTooling.Cartesian2D.Shapes.Polygon.Segments>` are read-only. The lower-case names (``x``,
+     ``points``, ...) stay as deprecated aliases until v11.0.0.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: shapes are created by :class:`~pyTooling.MetaClasses.ExtendedType` and use
+     slots, so a derived class can use slots too. :class:`~pyTooling.Cartesian2D.Shapes.Shape` is abstract.
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` is a
+     :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with four corners, and so are a rectangle and a square: they
+     inherit the polygon's members. A corner that is ``None`` or not a point raises the polygon's error, naming
+     parameter ``points`` (was ``p00`` ... ``p10``).
+   * ⚠️ :mod:`pyTooling.Cartesian2D`, :mod:`pyTooling.Cartesian3D`: parameter ``copyPoints`` of
+     :class:`~pyTooling.Cartesian2D.Segment2D` and :class:`~pyTooling.Cartesian3D.Segment3D` is keyword-only.
+   * :mod:`pyTooling.Cartesian2D`, :mod:`pyTooling.Cartesian3D`: :class:`~pyTooling.Cartesian2D.Segment2D` and
+     :class:`~pyTooling.Cartesian3D.Segment3D` are abstract; a straight segment is a
+     :class:`~pyTooling.Cartesian2D.LineSegment2D` / :class:`~pyTooling.Cartesian3D.LineSegment3D`.
+
+   .. rubric:: Bug Fixes
+
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a trapezium with crossing edges, or with two consecutive corners at the
+     same point, was accepted. It raises :exc:`~pyTooling.Cartesian2D.CrossingEdgesError` now, also for a rectangle
+     or square, which raised a :exc:`ValueError` for these corners before.
+   * :mod:`pyTooling.Tracing`: an OTLP timestamp in the hour repeated at the end of daylight saving time was read
+     back one hour early.
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: adding an offset or a tuple to an origin
+     (``Origin2D() + Offset2D(1, 1)``) raised :exc:`TypeError`, as the new point was created as an origin. It creates
+     a :class:`~pyTooling.Cartesian2D.Point2D`/:class:`~pyTooling.Cartesian3D.Point3D` now, like ``origin - offset``.
+
+
 .. topic:: :gh:`v10.1.1 - 29.10.2026 <pyTooling/pyTooling/releases/v10.1.1>`
 
    .. rubric:: Bug Fixes
