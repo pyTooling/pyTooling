@@ -402,6 +402,29 @@ class EmptyError(Exception):
 
 
 @export
+class UnknownKindError(Exception):
+	"""
+	The exception is raised when an element is of a kind, which a data structure or an operation doesn't expect at its
+	place.
+
+	It's a common base: a package's own exception derives from it and from the package's base-exception, e.g.
+	``class UnknownSymbolKindError(VHDLModelException, UnknownKindError)`` in pyVHDLModel. It has no initializer of its
+	own, so the package's base-exception decides how the message is stored.
+	"""
+
+
+@export
+class AmbiguousError(Exception):
+	"""
+	The exception is raised when several elements match, where exactly one is expected.
+
+	It's a common base: a package's own exception derives from it and from the package's base-exception, e.g.
+	``class AmbiguousTopLevelError(VHDLModelException, AmbiguousError)`` in pyVHDLModel. It has no initializer of its
+	own, so the package's base-exception decides how the message is stored.
+	"""
+
+
+@export
 class InvalidOperationError(RuntimeError):
 	"""
 	The exception is raised when an operation isn't valid for an object.
