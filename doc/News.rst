@@ -96,7 +96,8 @@ Version 10.x (2026)
      :class:`~pyTooling.Cartesian2D.Drawing.QuadraticBezierSegment2D` and
      :class:`~pyTooling.Cartesian2D.Drawing.CubicBezierSegment2D`, drawn with a ``Stroke``.
    * :mod:`pyTooling.Cartesian2D.Drawing`: a :class:`~pyTooling.Cartesian2D.Drawing.Text` of one or more lines, aligned
-     horizontally and anchored vertically at its position, with an estimated bounding box.
+     horizontally and anchored vertically at its position, with an estimated bounding box. Its content, font,
+     alignment, anchor and line height are assignable; its glyphs are black by default.
    * :mod:`pyTooling.Cartesian3D`: every element mirrors at a plane through an edge or the center of its bounding box
      with ``MirrorX(plane, offset)``, ``MirrorY(plane, offset)`` and ``MirrorZ(plane, offset)``, named by the
      coordinate they flip.

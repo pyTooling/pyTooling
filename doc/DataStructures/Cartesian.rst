@@ -1506,8 +1506,9 @@ A :class:`~pyTooling.Cartesian2D.Drawing.Text` is an element of one or more line
 :attr:`~pyTooling.Cartesian2D.Drawing.Text.Position`, so it groups, moves and aligns like a shape. Newlines in its
 :attr:`~pyTooling.Cartesian2D.Drawing.Text.Content` separate the lines, which
 :attr:`~pyTooling.Cartesian2D.Drawing.Text.Lines` returns; a text without a newline has one line. The glyphs are drawn
-with the text's fill, an outline around them with its stroke. The text owns its position point, like a circle owns its
-center. Like every element, it takes a ``value`` and ``keyValuePairs``.
+with the text's fill, black (``Fill(RGBAColor(0, 0, 0))``) by default; ``fill=None`` makes them transparent. An outline
+around them is drawn with its stroke, none by default. The text owns its position point, like a circle owns its center.
+Like every element, it takes a ``value`` and ``keyValuePairs``.
 
 * :attr:`~pyTooling.Cartesian2D.Drawing.Text.Alignment` - a :class:`~pyTooling.Cartesian2D.Drawing.TextAlignment`:
   every line starts (``Left``, the default), is centered (``Center``) or ends (``Right``) at the position's
@@ -1517,6 +1518,13 @@ center. Like every element, it takes a ``value`` and ``keyValuePairs``.
   first line (the default, as in SVG) or its ``Bottom``.
 * :attr:`~pyTooling.Cartesian2D.Drawing.Text.LineHeight` - the distance of two baselines as a factor of the font size,
   ``1.2`` by default.
+
+:attr:`~pyTooling.Cartesian2D.Drawing.Text.Content`, :attr:`~pyTooling.Cartesian2D.Drawing.Text.Font`,
+:attr:`~pyTooling.Cartesian2D.Drawing.Text.Alignment`, :attr:`~pyTooling.Cartesian2D.Drawing.Text.Anchor` and
+:attr:`~pyTooling.Cartesian2D.Drawing.Text.LineHeight` are properties with a setter, like ``Stroke`` and ``Fill``. An
+assigned value is checked like the constructor's parameter: ``None`` raises :exc:`ValueError`, a value of another type
+:exc:`TypeError`, a line height that isn't positive :exc:`ValueError`. The lines, the line count and the bounding box
+follow every assignment.
 
 Top and bottom are those of the :ref:`canvas <STRUCT/Cartesian2D/Canvas2D>` holding the text: with the y-axis pointing
 down, the top of a text has its smallest y-coordinate. Without a canvas, the y-axis points up.
@@ -1541,6 +1549,12 @@ anchor stay.
 
    label.Lines                        # ('clock', 'reset')
    label.BoundingBox                  # BoundingBox2D(5.0, 10, 35.0, 32.0)
+   label.Fill                         # Fill(RGBAColor(0, 0, 0, 1.0))
+
+   label.Content = "clock\nreset\nenable"
+   label.Anchor =  VerticalAnchor.Bottom
+   label.LineCount                    # 3
+   label.BoundingBox                  # BoundingBox2D(2.0, -24.0, 38.0, 10.0)
 
 .. attention::
 
