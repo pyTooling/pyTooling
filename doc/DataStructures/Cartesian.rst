@@ -42,8 +42,8 @@ Features
   center.
 * Shapes validated on construction: a :class:`~pyTooling.Cartesian2D.Shapes.Polygon` with any number of corners, the
   four-cornered :class:`~pyTooling.Cartesian2D.Shapes.Trapezium` narrowed down to a
-  :class:`~pyTooling.Cartesian2D.Shapes.Square`, a :class:`~pyTooling.Cartesian2D.Shapes.Circle` and an axis-aligned
-  :class:`~pyTooling.Cartesian2D.Shapes.Ellipse`.
+  :class:`~pyTooling.Cartesian2D.Shapes.Square`, a :class:`~pyTooling.Cartesian2D.Shapes.Circle` and an
+  :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` along any direction.
 * **Closed shapes measured** - every :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D`, like a polygon or a circle,
   reports the area it encloses and its perimeter, an ellipse an approximate one; a circle its diameter too.
 * **Bounding boxes** - every shape and segment reports the smallest axis-aligned
@@ -409,11 +409,9 @@ different groups are mirrored at the same line:
 * At an oblique line ``nx * x + ny * y = d``, every absolute point ``(x, y)`` moves by
   ``-2 * (nx * x + ny * y - d)`` times the normal. Segments mirror their end points and the points defining their
   curve, an arc reverses its direction. Shapes mirror their corners or their center, so a rectangle stays a rectangle.
-  A group mirrors its offset like a point, and its children at the line through the group's origin with the same
-  normal. A text mirrors its position only.
-* An :ref:`ellipse <STRUCT/Cartesian2D/Ellipse>` is axis-aligned, an oblique line would rotate it: mirroring an
-  ellipse, or a group holding one, at an oblique line raises :exc:`~pyTooling.Exceptions.InvalidOperationError`, before
-  anything is mirrored.
+  An :ref:`ellipse <STRUCT/Cartesian2D/Ellipse>` mirrors the direction of its first axis too, so an oblique line
+  rotates it. A group mirrors its offset like a point, and its children at the line through the group's origin with the
+  same normal. A text mirrors its position only.
 
 .. code-block:: Python
 
@@ -446,7 +444,9 @@ Mirroring at the diagonal ``x = y`` swaps the coordinates, up to rounding:
    axle =     Group2D(Offset2D(10, 20), (wheel, ))
 
    axle.MirrorAt(diagonal)            # axle.Offset is (20, 10), wheel.Center is (2, 1)
-   Ellipse(Point2D(1, 2), 3, 2).MirrorAt(diagonal)   # raises InvalidOperationError
+
+   egg = Ellipse(Point2D(1, 2), 3, 2)
+   egg.MirrorAt(diagonal)             # egg.Center is (2, 1), egg.Direction is (0, 1)
 
 Like a :ref:`style <STRUCT/Cartesian2D/Drawing>`, a line is a **value**: its properties are read-only, it compares
 with ``==`` and ``!=`` and is hashable. Equality is geometric - two lines are equal, if their normals and distances
@@ -928,10 +928,11 @@ EllipticalGeometry2D
 :ref:`circle <STRUCT/Cartesian2D/Circle>` and an :ref:`ellipse <STRUCT/Cartesian2D/Ellipse>` derive from it. It holds
 the :attr:`~pyTooling.Cartesian2D.Shapes.EllipticalGeometry2D.Center`, a :class:`~pyTooling.Cartesian2D.Point2D`. The
 center is copied by default; with ``copyPoints=False``, the given point is kept, and a point owned by another element
-raises :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError`. Moving or mirroring the shape moves or mirrors its center.
+raises :exc:`~pyTooling.Cartesian2D.AlreadyOwnedError`. Moving or mirroring the shape moves or mirrors its center; an
+ellipse mirrors its direction too.
 
 The radii are fields of the derived classes, and so are the bounding box, the area and the perimeter computed from
-them: a circle has one radius, an ellipse two, and neither class derives from the other. Instantiating
+them: a circle has one radius, an ellipse two and a direction, and neither class derives from the other. Instantiating
 :class:`~pyTooling.Cartesian2D.Shapes.EllipticalGeometry2D` raises :exc:`~pyTooling.MetaClasses.AbstractClassError`.
 
 .. code-block:: Python
@@ -1020,11 +1021,21 @@ Ellipse
 
 An :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` is placed by its
 :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Center`, a :class:`~pyTooling.Cartesian2D.Point2D`, and sized by two
-radii, SVG's ``rx`` and ``ry``: :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.RadiusX` in x-direction and
-:attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.RadiusY` in y-direction, each a positive :class:`int` or :class:`float`.
-Its axes are parallel to the coordinate axes; an ellipse can't be rotated, nor mirrored at an oblique line. The center
-is copied by default;
-``copyPoints=False`` keeps the given point instead. The ellipse owns its center.
+radii along two perpendicular axes: :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.FirstRadius` and
+:attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.SecondRadius`, each a positive :class:`int` or :class:`float`. The
+keyword-only parameter ``direction``, an :class:`~pyTooling.Cartesian2D.Offset2D` of any length but 0, points along the
+first axis; the second axis is turned by +90 degrees (counterclockwise). Without a direction, the first axis points in
+x-direction, ``(1, 0)``, and the ellipse is axis-aligned, like SVG's ``<ellipse>`` with ``rx`` and ``ry``. The center
+is copied by default; ``copyPoints=False`` keeps the given point instead. The ellipse owns its center.
+
+Three read-only properties describe its axes:
+
+* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Direction` - the direction of the first axis, of length 1. A given
+  direction is normalized, unless its length is 1 already: ``(0, 1)`` stays an integer offset;
+* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.FirstAxis` - a new offset from the center to the end of the first axis,
+  the direction scaled by the first radius;
+* :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.SecondAxis` - a new offset from the center to the end of the second
+  axis, the direction turned by +90 degrees and scaled by the second radius.
 
 An ellipse is a closed shape, an :ref:`EllipticalGeometry2D <STRUCT/Cartesian2D/EllipticalGeometry2D>` like a
 circle, measured by two read-only properties:
@@ -1033,18 +1044,39 @@ circle, measured by two read-only properties:
 * :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.Perimeter` - the length of its outline (circumference), a
   :class:`float`. It is Ramanujan's second approximation: exact for equal radii, otherwise less than 0.04 % too small.
 
+Its :attr:`~pyTooling.Cartesian2D.Shapes.Ellipse.BoundingBox` is the smallest axis-aligned box around the rotated
+ellipse: with the semi-axes ``u`` and ``v``, it reaches ``sqrt(ux ** 2 + vx ** 2)`` from the center in x-direction and
+``sqrt(uy ** 2 + vy ** 2)`` in y-direction. Its coordinates are floats, also for an axis-aligned ellipse.
+
 .. code-block:: Python
 
-   from pyTooling.Cartesian2D        import Point2D
+   from pyTooling.Cartesian2D        import Point2D, Offset2D
    from pyTooling.Cartesian2D.Shapes import Ellipse
 
    egg = Ellipse(Point2D(10, 5), 3, 2)
-   egg.BoundingBox                    # BoundingBox2D(7, 3, 13, 7)
+   egg.BoundingBox                    # BoundingBox2D(7.0, 3.0, 13.0, 7.0)
    egg.Area                           # 18.849...
    egg.Perimeter                      # 15.865...
 
-A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D` or a radius that isn't a number raises
-:exc:`TypeError`; a radius of 0 or below raises :exc:`ValueError`. Equal radii are accepted: such an ellipse is a
+   tilted = Ellipse(Point2D(0, 0), 3, 2, direction=Offset2D(3, 4))
+   tilted.Direction                   # (0.6, 0.8)
+   tilted.FirstAxis                   # (1.8, 2.4), up to rounding
+   tilted.SecondAxis                  # (-1.6, 1.2)
+   tilted.BoundingBox                 # BoundingBox2D(-2.408..., -2.683..., 2.408..., 2.683...)
+
+Moving an ellipse moves its center. Mirroring mirrors its center as a point and its direction as a vector, the radii
+stay: :meth:`~pyTooling.Cartesian2D.Element2D.MirrorX` negates the direction's x-component,
+:meth:`~pyTooling.Cartesian2D.Element2D.MirrorY` its y-component, and an oblique
+:ref:`line <STRUCT/Cartesian2D/Line2D>` rotates the ellipse.
+
+.. code-block:: Python
+
+   tilted.MirrorX()
+   tilted.Direction                   # (-0.6, 0.8)
+
+A center that isn't a :class:`~pyTooling.Cartesian2D.Point2D`, a radius that isn't a number or a direction that isn't
+an :class:`~pyTooling.Cartesian2D.Offset2D` raises :exc:`TypeError`; a radius of 0 or below or a direction ``(0, 0)``
+raises :exc:`ValueError`. Equal radii are accepted: such an ellipse is a
 circle, but not a :class:`~pyTooling.Cartesian2D.Shapes.Circle` object.
 
 .. seealso::
