@@ -438,8 +438,7 @@ The classmethods create a line from what is at hand:
      - Through a point, perpendicular to a normal; a zero normal raises :exc:`ValueError`.
 
 The points are taken in **absolute coordinates**, relative to the origin: a point inside a group is converted, like the
-start point of a :ref:`ray <STRUCT/Cartesian2D/Ray2D>`. The classmethods return a
-:class:`~pyTooling.Cartesian2D.Line2D`, also when called on a derived class.
+start point of a :ref:`ray <STRUCT/Cartesian2D/Ray2D>`.
 
 .. list-table::
    :header-rows: 1
@@ -483,6 +482,23 @@ an integer:
 edge or the center of an element's absolute bounding box, named by an :class:`~pyTooling.Cartesian2D.Alignment2D`
 (``MinX``, ``CenterX`` or ``MaxX``); :meth:`HorizontalLine2D.FromElement
 <pyTooling.Cartesian2D.HorizontalLine2D.FromElement>` takes ``MinY``, ``CenterY`` or ``MaxY``.
+
+Called on :class:`~pyTooling.Cartesian2D.VerticalLine2D` or :class:`~pyTooling.Cartesian2D.HorizontalLine2D`, the
+classmethods ``FromPoints``, ``FromPointAndDirection`` and ``FromPointAndNormal`` return that class and keep the
+coordinate as given. Points with different coordinates, or a direction or normal that doesn't fit the line, raise
+:exc:`ValueError`:
+
+.. code-block:: Python
+
+   from pyTooling.Cartesian2D import Point2D, Vector2D, VerticalLine2D, HorizontalLine2D
+
+   VerticalLine2D.FromPoints(Point2D(5, 0), Point2D(5, 3))                # VerticalLine2D(5)
+   HorizontalLine2D.FromPointAndDirection(Point2D(1, 7), Vector2D(2, 0))  # HorizontalLine2D(7)
+   VerticalLine2D.FromPointAndNormal(Point2D(4, 1), Vector2D(-1, 0))      # VerticalLine2D(4)
+
+``VerticalLine2D.FromPoints(Point2D(5, 0), Point2D(6, 3))`` raises :exc:`ValueError`, as the points have different
+x-coordinates; :meth:`Line2D.FromPoints <pyTooling.Cartesian2D.Line2D.FromPoints>` creates the oblique line through
+them.
 
 :meth:`~pyTooling.Cartesian2D.Element2D.MirrorAt` mirrors an element at a line in the element's frame, so elements of
 different groups are mirrored at the same line:
