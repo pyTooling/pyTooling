@@ -2280,8 +2280,8 @@ class Text(Element2D[Coordinate], StyleMixin, Generic[Coordinate]):
 
 	The lines are separated by newlines in :attr:`Content`. Each line is aligned at the position's x-coordinate by
 	:attr:`Alignment`, and :attr:`Anchor` names the vertical point of the text at the position's y-coordinate.
-	Consecutive baselines are :attr:`LineHeight` times the font size apart. The glyphs are drawn with :attr:`Fill`, an
-	outline around them with :attr:`Stroke`.
+	Consecutive baselines are :attr:`LineHeight` times the font size apart. The glyphs are drawn with :attr:`Fill`, black
+	by default, an outline around them with :attr:`Stroke`.
 
 	Top and bottom are those of the canvas holding the text: with the y-axis pointing down, the top of a text has its
 	smallest y-coordinate. Without a canvas, the y-axis points up. Mirroring moves the position only: the glyphs aren't
@@ -2310,7 +2310,7 @@ class Text(Element2D[Coordinate], StyleMixin, Generic[Coordinate]):
 		anchor:        VerticalAnchor = VerticalAnchor.Baseline,
 		lineHeight:    float = 1.2,
 		stroke:        Nullable[Stroke] = None,
-		fill:          Nullable[Fill] = None,
+		fill:          Nullable[Fill] = Fill(RGBAColor(0, 0, 0)),
 		value:         Any = None,
 		keyValuePairs: Nullable[Mapping[Hashable, Any]] = None,
 		parent:        Nullable[Union[Group2D[Coordinate], Canvas2D[Coordinate]]] = None
@@ -2329,7 +2329,8 @@ class Text(Element2D[Coordinate], StyleMixin, Generic[Coordinate]):
 		                           ``VerticalAnchor.Baseline``.
 		:param lineHeight:         Optional, distance of two baselines, as a factor of the font size. Default: ``1.2``.
 		:param stroke:             Optional, style of the glyphs' outline. Default: ``None``, no outline.
-		:param fill:               Optional, style of the glyphs. Default: ``None``, transparent.
+		:param fill:               Optional, style of the glyphs, or ``None`` for transparent glyphs. Default:
+		                           ``Fill(RGBAColor(0, 0, 0))``, black.
 		:param value:              Optional, value of the text. Default: ``None``.
 		:param keyValuePairs:      Optional, mapping (dictionary) of key-value-pairs. Default: ``None``.
 		:param parent:             Optional, the group or canvas the text is added to. Default: ``None``, no parent.
@@ -2438,14 +2439,27 @@ class Text(Element2D[Coordinate], StyleMixin, Generic[Coordinate]):
 		"""
 		return self._position
 
-	@readonly
+	@property
 	def Content(self) -> str:
 		"""
-		Read-only property to access the text (:attr:`_content`).
+		Property to access the text (:attr:`_content`).
 
-		:returns: The text, lines separated by newlines.
+		:returns:           The text, lines separated by newlines.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not of type :class:`str`.
 		"""
 		return self._content
+
+	@Content.setter
+	def Content(self, content: str) -> None:
+		if content is None:
+			raise ValueError("Parameter 'content' is None.")
+		elif not isinstance(content, str):
+			ex = TypeError("Parameter 'content' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(content)}'.")
+			raise ex
+
+		self._content = content
 
 	@readonly
 	def Lines(self) -> tuple[str, ...]:
@@ -2467,41 +2481,98 @@ class Text(Element2D[Coordinate], StyleMixin, Generic[Coordinate]):
 		"""
 		return self._content.count("\n") + 1
 
-	@readonly
+	@property
 	def Font(self) -> Font:
 		"""
-		Read-only property to access the font of the text (:attr:`_font`).
+		Property to access the font of the text (:attr:`_font`).
 
-		:returns: The text's font.
+		:returns:           The text's font.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not of type :class:`Font`.
 		"""
 		return self._font
 
-	@readonly
+	@Font.setter
+	def Font(self, font: Font) -> None:
+		if font is None:
+			raise ValueError("Parameter 'font' is None.")
+		elif not isinstance(font, Font):
+			ex = TypeError("Parameter 'font' is not of type 'Font'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(font)}'.")
+			raise ex
+
+		self._font = font
+
+	@property
 	def Alignment(self) -> TextAlignment:
 		"""
-		Read-only property to access the horizontal alignment of the lines at the position (:attr:`_alignment`).
+		Property to access the horizontal alignment of the lines at the position (:attr:`_alignment`).
 
-		:returns: The lines' alignment.
+		:returns:           The lines' alignment.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not of type :class:`TextAlignment`.
 		"""
 		return self._alignment
 
-	@readonly
+	@Alignment.setter
+	def Alignment(self, alignment: TextAlignment) -> None:
+		if alignment is None:
+			raise ValueError("Parameter 'alignment' is None.")
+		elif not isinstance(alignment, TextAlignment):
+			ex = TypeError("Parameter 'alignment' is not of type 'TextAlignment'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
+			raise ex
+
+		self._alignment = alignment
+
+	@property
 	def Anchor(self) -> VerticalAnchor:
 		"""
-		Read-only property to access the vertical point of the text at the position (:attr:`_anchor`).
+		Property to access the vertical point of the text at the position (:attr:`_anchor`).
 
-		:returns: The text's vertical anchor.
+		:returns:           The text's vertical anchor.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not of type :class:`VerticalAnchor`.
 		"""
 		return self._anchor
 
-	@readonly
+	@Anchor.setter
+	def Anchor(self, anchor: VerticalAnchor) -> None:
+		if anchor is None:
+			raise ValueError("Parameter 'anchor' is None.")
+		elif not isinstance(anchor, VerticalAnchor):
+			ex = TypeError("Parameter 'anchor' is not of type 'VerticalAnchor'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(anchor)}'.")
+			raise ex
+
+		self._anchor = anchor
+
+	@property
 	def LineHeight(self) -> float:
 		"""
-		Read-only property to access the distance of two baselines (:attr:`_lineHeight`).
+		Property to access the distance of two baselines (:attr:`_lineHeight`).
 
-		:returns: The distance of two baselines, as a factor of the font size.
+		:returns:           The distance of two baselines, as a factor of the font size.
+		:raises ValueError: If ``None`` is assigned.
+		:raises TypeError:  If an assigned value is not of type :class:`float` or :class:`int`.
+		:raises ValueError: If an assigned value isn't positive.
 		"""
 		return self._lineHeight
+
+	@LineHeight.setter
+	def LineHeight(self, lineHeight: float) -> None:
+		if lineHeight is None:
+			raise ValueError("Parameter 'lineHeight' is None.")
+		elif not isinstance(lineHeight, (int, float)):
+			ex = TypeError("Parameter 'lineHeight' is not of type 'float' or 'int'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(lineHeight)}'.")
+			raise ex
+		elif lineHeight <= 0:
+			ex = ValueError("Parameter 'lineHeight' isn't positive.")
+			ex.add_note(f"Got value '{lineHeight}'.")
+			raise ex
+
+		self._lineHeight = lineHeight
 
 	@readonly
 	def BoundingBox(self) -> BoundingBox2D[float]:
