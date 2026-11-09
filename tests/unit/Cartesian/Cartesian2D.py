@@ -912,6 +912,24 @@ class Comparison(Testcase):
 
 
 class PointArithmetic(Testcase):
+	def test_Origin_Plus_Offset(self) -> None:
+		"""Adding to an origin creates a new point; the origin stays."""
+		origin = Origin2D()
+
+		newPoint = origin + Offset2D(1, 2)
+
+		self.assertIs(Point2D, type(newPoint))
+		self.assertEqual(1, newPoint.X)
+		self.assertEqual(2, newPoint.Y)
+		self.assertTupleEqual((0, 0), origin.ToTuple())
+
+	def test_Origin_Plus_Tuple(self) -> None:
+		newPoint = Origin2D() + (1, 2)
+
+		self.assertIs(Point2D, type(newPoint))
+		self.assertEqual(1, newPoint.X)
+		self.assertEqual(2, newPoint.Y)
+
 	def test_Point_Plus_Point(self) -> None:
 		point1 = Point2D(1, 2)
 		point2 = Point2D(2, 3)

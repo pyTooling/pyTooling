@@ -389,13 +389,13 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector3D):
-			return self.__class__(
+			return Point3D(
 				self._x + other._xOffset,
 				self._y + other._yOffset,
 				self._z + other._zOffset
 			)
 		elif isinstance(other, tuple):
-			return self.__class__(
+			return Point3D(
 				self._x + other[0],
 				self._y + other[1],
 				self._z + other[2]
