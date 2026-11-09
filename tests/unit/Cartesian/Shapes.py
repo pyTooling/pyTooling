@@ -40,7 +40,7 @@ from pyTooling.Cartesian2D        import Point2D, Offset2D, Size2D, BoundingBox2
                                          Line2D, VerticalLine2D, HorizontalLine2D, \
                                          AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
                                          NotInSameFrameError, CrossingEdgesError, Cartesian2DError
-from pyTooling.Cartesian2D.Shapes import Shape, Geometry2D, EllipticalGeometry2D, Polygon, PolyLine, Trapezium, \
+from pyTooling.Cartesian2D.Shapes import Shape, Geometry2D, EllipticalGeometry2D, Polygon, Polyline, Trapezium, \
                                          Rectangle, Square, Circle, Ellipse, Path
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection
 from pyTooling.Exceptions         import InvalidOperationError
@@ -96,8 +96,8 @@ class Instantiation(Testcase):
 		self.assertIsInstance(Square(Point2D(1, 1), Point2D(3, 1), Point2D(3, 3), Point2D(1, 3)), Polygon)
 		self.assertFalse(issubclass(Path, Geometry2D))
 		self.assertTrue(issubclass(Path, Shape))
-		self.assertTrue(issubclass(PolyLine, Path))
-		self.assertFalse(issubclass(PolyLine, Geometry2D))
+		self.assertTrue(issubclass(Polyline, Path))
+		self.assertFalse(issubclass(Polyline, Geometry2D))
 		self.assertIsInstance(Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))), Geometry2D)
 		self.assertIsInstance(Circle(Point2D(1, 2), 3), Geometry2D)
 		self.assertIsInstance(Ellipse(Point2D(1, 2), 3, 2), Geometry2D)
@@ -191,80 +191,80 @@ class Instantiation(Testcase):
 		self.assertEqual("Parameter 'copyPoints' is not of type 'bool'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
-	def test_PolyLine(self) -> None:
+	def test_Polyline(self) -> None:
 		point0 = Point2D(0, 0)
 		point1 = Point2D(4, 0)
 		point2 = Point2D(2, 3)
 
-		polyline = PolyLine((point0, point1, point2))
+		polyline = Polyline((point0, point1, point2))
 
 		self.assertIsInstance(polyline, Shape)
 		self.assertEqual(3, len(polyline.Points))
 		self.assertEqual(2, len(polyline.Segments))
 
-	def test_PolyLine_TwoPoints(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)))
+	def test_Polyline_TwoPoints(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)))
 
 		self.assertEqual(2, len(polyline.Points))
 		self.assertEqual(1, len(polyline.Segments))
 
-	def test_PolyLine_Generator(self) -> None:
+	def test_Polyline_Generator(self) -> None:
 		"""The points are consumed from any iterable, also from a generator."""
-		polyline = PolyLine(Point2D(x, y) for x, y in ((0, 0), (4, 0), (2, 3)))
+		polyline = Polyline(Point2D(x, y) for x, y in ((0, 0), (4, 0), (2, 3)))
 
 		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in polyline.Points))
 
-	def test_PolyLine_None(self) -> None:
+	def test_Polyline_None(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = PolyLine(None)
+			_ = Polyline(None)
 
 		self.assertEqual("Parameter 'points' is None.", str(context.exception))
 
-	def test_PolyLine_int(self) -> None:
+	def test_Polyline_int(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = PolyLine(2)
+			_ = Polyline(2)
 
 		self.assertEqual("Parameter 'points' is not iterable.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
-	def test_PolyLine_NoneElement(self) -> None:
+	def test_Polyline_NoneElement(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = PolyLine((Point2D(0, 0), None))
+			_ = Polyline((Point2D(0, 0), None))
 
 		self.assertEqual("An element of parameter 'points' is None.", str(context.exception))
 
-	def test_PolyLine_strElement(self) -> None:
+	def test_Polyline_strElement(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = PolyLine((Point2D(0, 0), "4, 0"))
+			_ = Polyline((Point2D(0, 0), "4, 0"))
 
 		self.assertEqual("An element of parameter 'points' is not of type 'Point2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'str'."], context.exception.__notes__)
 
-	def test_PolyLine_OnePoint(self) -> None:
+	def test_Polyline_OnePoint(self) -> None:
 		with self.assertRaises(NotEnoughCornersError) as context:
-			_ = PolyLine((Point2D(0, 0), ))
+			_ = Polyline((Point2D(0, 0), ))
 
-		self.assertEqual("PolyLine has fewer than 2 points.", str(context.exception))
+		self.assertEqual("Polyline has fewer than 2 points.", str(context.exception))
 		self.assertListEqual(["Got 1 points."], context.exception.__notes__)
 		self.assertIsInstance(context.exception.__cause__, ValueError)
 		self.assertEqual("Parameter 'points' has fewer than 2 points.", str(context.exception.__cause__))
 
-	def test_PolyLine_Empty(self) -> None:
+	def test_Polyline_Empty(self) -> None:
 		with self.assertRaises(NotEnoughCornersError) as context:
-			_ = PolyLine(())
+			_ = Polyline(())
 
-		self.assertEqual("PolyLine has fewer than 2 points.", str(context.exception))
+		self.assertEqual("Polyline has fewer than 2 points.", str(context.exception))
 		self.assertListEqual(["Got 0 points."], context.exception.__notes__)
 
-	def test_PolyLine_copyPointsNone(self) -> None:
+	def test_Polyline_copyPointsNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), copyPoints=None)
+			_ = Polyline((Point2D(0, 0), Point2D(4, 0)), copyPoints=None)
 
 		self.assertEqual("Parameter 'copyPoints' is None.", str(context.exception))
 
-	def test_PolyLine_copyPointsInt(self) -> None:
+	def test_Polyline_copyPointsInt(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), copyPoints=1)
+			_ = Polyline((Point2D(0, 0), Point2D(4, 0)), copyPoints=1)
 
 		self.assertEqual("Parameter 'copyPoints' is not of type 'bool'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
@@ -1111,7 +1111,7 @@ class Slots(Testcase):
 	"""A class derived from a shape with ``slots=True`` gets its own slots and no instance dictionary."""
 
 	def test_Shapes(self) -> None:
-		for shapeClass in (Shape, Polygon, PolyLine, Trapezium, Rectangle, Square, EllipticalGeometry2D, Circle, Ellipse):
+		for shapeClass in (Shape, Polygon, Polyline, Trapezium, Rectangle, Square, EllipticalGeometry2D, Circle, Ellipse):
 			self.assertIsInstance(shapeClass, ExtendedType)
 			self.assertNotIn("__dict__", dir(shapeClass))
 
@@ -1135,17 +1135,17 @@ class Slots(Testcase):
 		self.assertFalse(hasattr(polygon, "__dict__"))
 		self.assertEqual("triangle", polygon._label)
 
-	def test_PolyLine(self) -> None:
-		class LabeledPolyLine(PolyLine, metaclass=ExtendedType, slots=True):
+	def test_Polyline(self) -> None:
+		class LabeledPolyline(Polyline, metaclass=ExtendedType, slots=True):
 			_label: str
 
 			def __init__(self, points: tuple[Point2D, ...], label: str) -> None:
 				super().__init__(points)
 				self._label = label
 
-		polyline = LabeledPolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), "path")
+		polyline = LabeledPolyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), "path")
 
-		self.assertTupleEqual(("_label", ), LabeledPolyLine.__slots__)
+		self.assertTupleEqual(("_label", ), LabeledPolyline.__slots__)
 		self.assertFalse(hasattr(polyline, "__dict__"))
 		self.assertEqual("path", polyline._label)
 
@@ -1258,22 +1258,22 @@ class Corners(Testcase):
 		for given, corner in zip(points, polygon.Points):
 			self.assertIs(given, corner)
 
-	def test_PolyLine(self) -> None:
+	def test_Polyline(self) -> None:
 		points = (Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5))
 
-		polyline = PolyLine(points)
+		polyline = Polyline(points)
 
 		for point in polyline.Points:
 			self.assertIsInstance(point, Point2D)
 
 		self.assertTupleEqual(((0, 0), (4, 0), (5, 3), (2, 5)), tuple(point.ToTuple() for point in polyline.Points))
 
-	def test_PolyLine_Copy(self) -> None:
+	def test_Polyline_Copy(self) -> None:
 		"""The points are copies: moving a given point afterwards doesn't change the polyline."""
 		point0 = Point2D(0, 0)
 		point1 = Point2D(4, 0)
 
-		polyline = PolyLine((point0, point1))
+		polyline = Polyline((point0, point1))
 		point0 += (5, 5)
 
 		for given, vertex in zip((point0, point1), polyline.Points):
@@ -1282,11 +1282,11 @@ class Corners(Testcase):
 		self.assertTupleEqual((5, 5), point0.ToTuple())
 		self.assertTupleEqual((0, 0), polyline.Points[0].ToTuple())
 
-	def test_PolyLine_Reference(self) -> None:
+	def test_Polyline_Reference(self) -> None:
 		"""With ``copyPoints=False``, the points are the given points."""
 		points = (Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))
 
-		polyline = PolyLine(points, copyPoints=False)
+		polyline = Polyline(points, copyPoints=False)
 
 		for given, vertex in zip(points, polyline.Points):
 			self.assertIs(given, vertex)
@@ -1389,10 +1389,10 @@ class Edges(Testcase):
 			self.assertIs(polygon.Points[index], segment.Start)
 			self.assertIs(polygon.Points[(index + 1) % 4], segment.End)
 
-	def test_PolyLine(self) -> None:
+	def test_Polyline(self) -> None:
 		points = (Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5))
 
-		polyline = PolyLine(points)
+		polyline = Polyline(points)
 
 		for segment in polyline.Segments:
 			self.assertIsInstance(segment, LineSegment2D)
@@ -1406,19 +1406,19 @@ class Edges(Testcase):
 			tuple(segment.ToTuple() for segment in polyline.Segments)
 		)
 
-	def test_PolyLine_SharedPoints(self) -> None:
+	def test_Polyline_SharedPoints(self) -> None:
 		"""Each edge ends in the point the next edge starts in, and both are the polyline's point object."""
 		points = (Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5))
 
-		polyline = PolyLine(points)
+		polyline = Polyline(points)
 
 		for index, segment in enumerate(polyline.Segments):
 			self.assertIs(polyline.Points[index], segment.Start)
 			self.assertIs(polyline.Points[index + 1], segment.End)
 
-	def test_PolyLine_Open(self) -> None:
+	def test_Polyline_Open(self) -> None:
 		"""No edge connects the last point back to the first one."""
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 
 		self.assertIs(polyline.Points[0], polyline.Segments[0].Start)
 		self.assertIs(polyline.Points[-1], polyline.Segments[-1].End)
@@ -1478,8 +1478,8 @@ class Properties(Testcase):
 
 		self.assertIs(segments, trapezium.Segments)
 
-	def test_PolyLine_Points(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)))
+	def test_Polyline_Points(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)))
 		points =   polyline.Points
 
 		with self.assertRaises(AttributeError):
@@ -1487,8 +1487,8 @@ class Properties(Testcase):
 
 		self.assertIs(points, polyline.Points)
 
-	def test_PolyLine_Segments(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)))
+	def test_Polyline_Segments(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)))
 		segments = polyline.Segments
 
 		with self.assertRaises(AttributeError):
@@ -1733,15 +1733,15 @@ class Measurements(Testcase):
 		self.assertEqual(4.0, square.Area)
 		self.assertEqual(8.0, square.Perimeter)
 
-	def test_PolyLine_Length(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(3, 4), Point2D(3, 0), Point2D(1, 0)))
+	def test_Polyline_Length(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(3, 4), Point2D(3, 0), Point2D(1, 0)))
 
 		self.assertEqual(11.0, polyline.Length)
 		self.assertIsInstance(polyline.Length, float)
 
-	def test_PolyLine_Length_Moved(self) -> None:
+	def test_Polyline_Length_Moved(self) -> None:
 		"""The length is computed on every access: it follows a moved point."""
-		polyline = PolyLine((Point2D(0, 0), Point2D(3, 0)))
+		polyline = Polyline((Point2D(0, 0), Point2D(3, 0)))
 		vertex =   polyline.Points[1]
 
 		vertex += (0, 4)
@@ -1801,17 +1801,17 @@ class Bounds(Testcase):
 
 		self.assertTupleEqual((0, 0, 4, 5), polygon.BoundingBox.ToTuple())
 
-	def test_PolyLine(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, -1), Point2D(5, 3), Point2D(-2, 5)))
+	def test_Polyline(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, -1), Point2D(5, 3), Point2D(-2, 5)))
 
 		box = polyline.BoundingBox
 
 		self.assertIs(BoundingBox2D, type(box))
 		self.assertTupleEqual((-2, -1, 5, 5), box.ToTuple())
 
-	def test_PolyLine_Line(self) -> None:
+	def test_Polyline_Line(self) -> None:
 		"""A horizontal polyline has a bounding box without height."""
-		polyline = PolyLine((Point2D(0, 1), Point2D(4, 1)))
+		polyline = Polyline((Point2D(0, 1), Point2D(4, 1)))
 
 		self.assertTupleEqual((0, 1, 4, 1), polyline.BoundingBox.ToTuple())
 
@@ -1907,8 +1907,8 @@ class Moving(Testcase):
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
 
-	def test_PolyLine(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+	def test_Polyline(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 		vertices = polyline.Points
 
 		polyline.Move(Offset2D(1, 2))
@@ -1919,16 +1919,16 @@ class Moving(Testcase):
 		self.assertTupleEqual(((1, 2), (5, 2), (3, 5)), tuple(point.ToTuple() for point in polyline.Points))
 		self.assertTupleEqual(((5, 2), (3, 5)), polyline.Segments[1].ToTuple())
 
-	def test_PolyLine_None(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)))
+	def test_Polyline_None(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)))
 
 		with self.assertRaises(ValueError) as context:
 			polyline.Move(None)
 
 		self.assertEqual("Parameter 'offset' is None.", str(context.exception))
 
-	def test_PolyLine_tuple(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)))
+	def test_Polyline_tuple(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)))
 
 		with self.assertRaises(TypeError) as context:
 			polyline.Move((1, 2))
@@ -1937,9 +1937,9 @@ class Moving(Testcase):
 		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
 		self.assertTupleEqual(((0, 0), (4, 0)), tuple(point.ToTuple() for point in polyline.Points))
 
-	def test_PolyLine_Edge(self) -> None:
+	def test_Polyline_Edge(self) -> None:
 		"""Moving an edge moves the polyline's points it references."""
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 
 		polyline.Segments[1].Move(Offset2D(0, -1))
 
@@ -2108,24 +2108,24 @@ class Mirroring(Testcase):
 		self.assertListEqual(["Got value 'Alignment2D.MinY'."], context.exception.__notes__)
 		self.assertTupleEqual(((0, 0), (4, 1), (2, 3)), tuple(point.ToTuple() for point in polygon.Points))
 
-	def test_PolyLine_MirrorY(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+	def test_Polyline_MirrorY(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
 		polyline.MirrorY(Alignment2D.MaxY)
 
 		self.assertTupleEqual(((0, 6), (4, 5), (2, 3)), tuple(point.ToTuple() for point in polyline.Points))
 		self.assertTupleEqual(((0, 6), (4, 5)), polyline.Segments[0].ToTuple())
 
-	def test_PolyLine_MirrorY_Default(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+	def test_Polyline_MirrorY_Default(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
 		polyline.MirrorY()
 
 		self.assertTupleEqual(((0, 3), (4, 2), (2, 0)), tuple(point.ToTuple() for point in polyline.Points))
 		self.assertEqual(BoundingBox2D(0, 0, 4, 3), polyline.BoundingBox)
 
-	def test_PolyLine_MirrorY_AxisNone(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+	def test_Polyline_MirrorY_AxisNone(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
 		with self.assertRaises(ValueError) as context:
 			polyline.MirrorY(None)
@@ -2133,32 +2133,32 @@ class Mirroring(Testcase):
 		self.assertEqual("Parameter 'axis' is None.", str(context.exception))
 		self.assertTupleEqual(((0, 0), (4, 1), (2, 3)), tuple(point.ToTuple() for point in polyline.Points))
 
-	def test_PolyLine_MirrorX(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+	def test_Polyline_MirrorX(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
 		polyline.MirrorX(Alignment2D.MinX, 1)
 
 		self.assertTupleEqual(((2, 0), (-2, 1), (0, 3)), tuple(point.ToTuple() for point in polyline.Points))
 		self.assertTupleEqual(((-2, 1), (0, 3)), polyline.Segments[1].ToTuple())
 
-	def test_PolyLine_MirrorX_Default(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+	def test_Polyline_MirrorX_Default(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
 		polyline.MirrorX()
 
 		self.assertTupleEqual(((4, 0), (0, 1), (2, 3)), tuple(point.ToTuple() for point in polyline.Points))
 		self.assertEqual(BoundingBox2D(0, 0, 4, 3), polyline.BoundingBox)
 
-	def test_PolyLine_MirrorX_Edge(self) -> None:
+	def test_Polyline_MirrorX_Edge(self) -> None:
 		"""An edge mirrors the polyline's points it references."""
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
 		polyline.Segments[1].MirrorX(Alignment2D.MaxX)
 
 		self.assertTupleEqual(((0, 0), (4, 1), (6, 3)), tuple(point.ToTuple() for point in polyline.Points))
 
-	def test_PolyLine_MirrorX_AxisMinY(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+	def test_Polyline_MirrorX_AxisMinY(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
 		with self.assertRaises(ValueError) as context:
 			polyline.MirrorX(Alignment2D.MinY)
@@ -2405,10 +2405,10 @@ class Ownership(Testcase):
 		self.assertEqual("An element of parameter 'points' is given twice.", str(context.exception.__cause__))
 		self.assertIsNone(point.Parent)
 
-	def test_PolyLine(self) -> None:
+	def test_Polyline(self) -> None:
 		points = (Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))
 
-		polyline = PolyLine(points)
+		polyline = Polyline(points)
 
 		self.assertIsNone(polyline.Frame)
 		for point in points:
@@ -2417,29 +2417,29 @@ class Ownership(Testcase):
 		for vertex in polyline.Points:
 			self.assertIs(polyline, vertex.Parent)
 
-	def test_PolyLine_Edges(self) -> None:
+	def test_Polyline_Edges(self) -> None:
 		"""The edges are views: their parent is the polyline, which owns the points."""
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 
 		for segment in polyline.Segments:
 			self.assertIs(polyline, segment.Parent)
 			self.assertIs(polyline, segment.Start.Parent)
 			self.assertIs(polyline, segment.End.Parent)
 
-	def test_PolyLine_Reference(self) -> None:
+	def test_Polyline_Reference(self) -> None:
 		points = (Point2D(0, 0), Point2D(4, 0), Point2D(2, 3))
 
-		polyline = PolyLine(points, copyPoints=False)
+		polyline = Polyline(points, copyPoints=False)
 
 		for point in points:
 			self.assertIs(polyline, point.Parent)
 
-	def test_PolyLine_Owned(self) -> None:
+	def test_Polyline_Owned(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 		point0 =  Point2D(5, 5)
 
 		with self.assertRaises(AlreadyOwnedError) as context:
-			_ = PolyLine((point0, polygon.Points[1]), copyPoints=False)
+			_ = Polyline((point0, polygon.Points[1]), copyPoints=False)
 
 		self.assertEqual("Point is owned by another element already.", str(context.exception))
 		self.assertListEqual(
@@ -2451,20 +2451,20 @@ class Ownership(Testcase):
 		self.assertIs(polygon, polygon.Points[1].Parent)
 		self.assertIsNone(point0.Parent)
 
-	def test_PolyLine_Owned_Copy(self) -> None:
+	def test_Polyline_Owned_Copy(self) -> None:
 		"""Owned points are fine to copy."""
 		circle = Circle(Point2D(1, 1), 1)
 
-		polyline = PolyLine((Point2D(4, 0), circle.Center))
+		polyline = Polyline((Point2D(4, 0), circle.Center))
 
 		self.assertIs(circle, circle.Center.Parent)
 		self.assertIs(polyline, polyline.Points[1].Parent)
 
-	def test_PolyLine_Twice(self) -> None:
+	def test_Polyline_Twice(self) -> None:
 		point = Point2D(0, 0)
 
 		with self.assertRaises(DuplicatePointError) as context:
-			_ = PolyLine((point, Point2D(4, 0), point), copyPoints=False)
+			_ = Polyline((point, Point2D(4, 0), point), copyPoints=False)
 
 		self.assertEqual("Point is given twice.", str(context.exception))
 		self.assertListEqual(
@@ -2475,23 +2475,23 @@ class Ownership(Testcase):
 		self.assertEqual("An element of parameter 'points' is given twice.", str(context.exception.__cause__))
 		self.assertIsNone(point.Parent)
 
-	def test_PolyLine_Copy(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+	def test_Polyline_Copy(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 
-		newPolyLine = polyline.Copy()
+		newPolyline = polyline.Copy()
 
-		for vertex in newPolyLine.Points:
-			self.assertIs(newPolyLine, vertex.Parent)
+		for vertex in newPolyline.Points:
+			self.assertIs(newPolyline, vertex.Parent)
 
 		for vertex in polyline.Points:
 			self.assertIs(polyline, vertex.Parent)
 
-	def test_PolyLine_copyPointsPositional(self) -> None:
+	def test_Polyline_copyPointsPositional(self) -> None:
 		with self.assertRaises(TypeError):
-			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), False)
+			_ = Polyline((Point2D(0, 0), Point2D(4, 0)), False)
 
-	def test_PolyLine_Edge_Start(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)))
+	def test_Polyline_Edge_Start(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)))
 		edge =     polyline.Segments[0]
 		start =    edge.Start
 
@@ -2500,7 +2500,7 @@ class Ownership(Testcase):
 
 		self.assertEqual("Segment doesn't own its start point.", str(context.exception))
 		self.assertListEqual(
-			["The segment is an edge of PolyLine((0, 0), (4, 0)), which owns the point."],
+			["The segment is an edge of Polyline((0, 0), (4, 0)), which owns the point."],
 			context.exception.__notes__
 		)
 		self.assertIs(start, edge.Start)
@@ -2773,10 +2773,10 @@ class Hashing(Testcase):
 			Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 		}))
 
-	def test_PolyLine(self) -> None:
+	def test_Polyline(self) -> None:
 		self.assertEqual(2, len({
-			PolyLine((Point2D(0, 0), Point2D(4, 0))),
-			PolyLine((Point2D(0, 0), Point2D(4, 0)))
+			Polyline((Point2D(0, 0), Point2D(4, 0))),
+			Polyline((Point2D(0, 0), Point2D(4, 0)))
 		}))
 
 	def test_Trapezium(self) -> None:
@@ -2954,54 +2954,54 @@ class Copy(Testcase):
 
 		self.assertTupleEqual((polygon, ), group.Children)
 
-	def test_PolyLine(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5)))
+	def test_Polyline(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5)))
 
-		newPolyLine = polyline.Copy()
-		movedVertex = newPolyLine.Points[0]
+		newPolyline = polyline.Copy()
+		movedVertex = newPolyline.Points[0]
 		movedVertex += (1, 1)
 
-		self.assertIs(PolyLine, type(newPolyLine))
-		self.assertIsNot(polyline, newPolyLine)
-		for vertex, newVertex in zip(polyline.Points, newPolyLine.Points):
+		self.assertIs(Polyline, type(newPolyline))
+		self.assertIsNot(polyline, newPolyline)
+		for vertex, newVertex in zip(polyline.Points, newPolyline.Points):
 			self.assertIsNot(vertex, newVertex)
 
-		self.assertEqual(3, len(newPolyLine.Segments))
+		self.assertEqual(3, len(newPolyline.Segments))
 		self.assertTupleEqual((0, 0), polyline.Points[0].ToTuple())
-		self.assertTupleEqual((1, 1), newPolyLine.Points[0].ToTuple())
+		self.assertTupleEqual((1, 1), newPolyline.Points[0].ToTuple())
 
-	def test_PolyLine_SharedPoints(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5)))
+	def test_Polyline_SharedPoints(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(5, 3), Point2D(2, 5)))
 
-		newPolyLine = polyline.Copy()
+		newPolyline = polyline.Copy()
 
-		points = newPolyLine.Points
-		for index, segment in enumerate(newPolyLine.Segments):
+		points = newPolyline.Points
+		for index, segment in enumerate(newPolyline.Segments):
 			self.assertIs(points[index], segment.Start)
 			self.assertIs(points[index + 1], segment.End)
 
-	def test_PolyLine_copy(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+	def test_Polyline_copy(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 
-		newPolyLine = copy(polyline)
+		newPolyline = copy(polyline)
 
-		self.assertIs(PolyLine, type(newPolyLine))
-		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in newPolyLine.Points))
-		for vertex, newVertex in zip(polyline.Points, newPolyLine.Points):
+		self.assertIs(Polyline, type(newPolyline))
+		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in newPolyline.Points))
+		for vertex, newVertex in zip(polyline.Points, newPolyline.Points):
 			self.assertIsNot(vertex, newVertex)
 
-	def test_PolyLine_deepcopy(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+	def test_Polyline_deepcopy(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 
-		newPolyLine = deepcopy(polyline)
+		newPolyline = deepcopy(polyline)
 
-		self.assertIs(PolyLine, type(newPolyLine))
-		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in newPolyLine.Points))
-		for vertex, newVertex in zip(polyline.Points, newPolyLine.Points):
+		self.assertIs(Polyline, type(newPolyline))
+		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in newPolyline.Points))
+		for vertex, newVertex in zip(polyline.Points, newPolyline.Points):
 			self.assertIsNot(vertex, newVertex)
 
-		points = newPolyLine.Points
-		for index, segment in enumerate(newPolyLine.Segments):
+		points = newPolyline.Points
+		for index, segment in enumerate(newPolyline.Segments):
 			self.assertIs(points[index], segment.Start)
 			self.assertIs(points[index + 1], segment.End)
 
@@ -3299,13 +3299,13 @@ class Representation(Testcase):
 
 		self.assertEqual("((0, 0) → (4, 0) → (2, 3) → (0, 0))", str(polygon))
 
-	def test_PolyLine_repr(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+	def test_Polyline_repr(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 
-		self.assertEqual("PolyLine((0, 0), (4, 0), (2, 3))", repr(polyline))
+		self.assertEqual("Polyline((0, 0), (4, 0), (2, 3))", repr(polyline))
 
-	def test_PolyLine_str(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+	def test_Polyline_str(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 
 		self.assertEqual("((0, 0) → (4, 0) → (2, 3))", str(polyline))
 
@@ -3421,38 +3421,38 @@ class ElementData(Testcase):
 		self.assertListEqual([1, 2], newPolygon.Value)
 		self.assertIsNot(polygon["nets"], newPolygon["nets"])
 
-	def test_PolyLine(self) -> None:
+	def test_Polyline(self) -> None:
 		value =    object()
 		pairs =    {"layer": 1}
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), value=value, keyValuePairs=pairs)
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), value=value, keyValuePairs=pairs)
 
 		self.assertIs(value, polyline.Value)
 		self.assertEqual(1, polyline["layer"])
 		self.assertIsNot(pairs, polyline._dict)
 
-	def test_PolyLine_Default(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)))
+	def test_Polyline_Default(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)))
 
 		self.assertIsNone(polyline.Value)
 		self.assertEqual(0, len(polyline))
 
-	def test_PolyLine_keyValuePairsInt(self) -> None:
+	def test_Polyline_keyValuePairsInt(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), keyValuePairs=1)
+			_ = Polyline((Point2D(0, 0), Point2D(4, 0)), keyValuePairs=1)
 
 		self.assertEqual("Parameter 'keyValuePairs' is not a mapping ('dict', ...).", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
-	def test_PolyLine_Value(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), value=1)
+	def test_Polyline_Value(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)), value=1)
 
 		polyline.Value = "wire"
 
 		self.assertEqual("wire", polyline.Value)
 
-	def test_PolyLine_Pairs(self) -> None:
+	def test_Polyline_Pairs(self) -> None:
 		"""The dictionary syntax addresses the key-value-pairs, not the points."""
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 
 		polyline["layer"] = 1
 
@@ -3465,40 +3465,40 @@ class ElementData(Testcase):
 
 		self.assertNotIn("layer", polyline)
 
-	def test_PolyLine_Copy(self) -> None:
+	def test_Polyline_Copy(self) -> None:
 		value =    [1, 2]
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), value=value, keyValuePairs={"layer": 1})
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)), value=value, keyValuePairs={"layer": 1})
 
-		newPolyLine =          polyline.Copy()
-		newPolyLine["layer"] = 2
+		newPolyline =          polyline.Copy()
+		newPolyline["layer"] = 2
 
-		self.assertIs(value, newPolyLine.Value)
+		self.assertIs(value, newPolyline.Value)
 		self.assertEqual(1, polyline["layer"])
-		self.assertEqual(2, newPolyLine["layer"])
+		self.assertEqual(2, newPolyline["layer"])
 
-	def test_PolyLine_copy(self) -> None:
+	def test_Polyline_copy(self) -> None:
 		value =    [1, 2]
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), value=value, keyValuePairs={"layer": 1})
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)), value=value, keyValuePairs={"layer": 1})
 
-		newPolyLine = copy(polyline)
+		newPolyline = copy(polyline)
 
-		self.assertIs(value, newPolyLine.Value)
-		self.assertEqual(1, newPolyLine["layer"])
-		self.assertIsNot(polyline._dict, newPolyLine._dict)
+		self.assertIs(value, newPolyline.Value)
+		self.assertEqual(1, newPolyline["layer"])
+		self.assertIsNot(polyline._dict, newPolyline._dict)
 
-	def test_PolyLine_deepcopy(self) -> None:
+	def test_Polyline_deepcopy(self) -> None:
 		value =    [1, 2]
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), value=value, keyValuePairs={"nets": ["a"]})
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)), value=value, keyValuePairs={"nets": ["a"]})
 
-		newPolyLine = deepcopy(polyline)
+		newPolyline = deepcopy(polyline)
 
-		self.assertIsNot(value, newPolyLine.Value)
-		self.assertListEqual([1, 2], newPolyLine.Value)
-		self.assertIsNot(polyline["nets"], newPolyLine["nets"])
+		self.assertIsNot(value, newPolyline.Value)
+		self.assertListEqual([1, 2], newPolyline.Value)
+		self.assertIsNot(polyline["nets"], newPolyline["nets"])
 
-	def test_PolyLine_Edges(self) -> None:
+	def test_Polyline_Edges(self) -> None:
 		"""The edges of a polyline carry no value and no key-value-pairs of their own."""
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), value=1, keyValuePairs={"layer": 1})
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), value=1, keyValuePairs={"layer": 1})
 
 		for segment in polyline.Segments:
 			self.assertIsNone(segment.Value)
@@ -4398,8 +4398,8 @@ class ObliqueMirroring(Testcase):
 		self.assertAlmostEqual(6, path.Segments[2].ControlPoint.X)
 		self.assertAlmostEqual(2, path.Segments[2].ControlPoint.Y)
 
-	def test_PolyLine(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+	def test_Polyline(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 
 		polyline.MirrorAt(Line2D.FromPoints(Point2D(0, 0), Point2D(1, 1)))
 
@@ -4540,10 +4540,10 @@ class PathRepresentation(Testcase):
 		)
 
 
-class ClosedPolyLine(Testcase):
+class ClosedPolyline(Testcase):
 	def test_Closed(self) -> None:
 		"""The last point connects back to the first one; the first and last edge share it."""
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
 
 		self.assertTrue(polyline.IsClosed)
 		self.assertEqual(3, len(polyline.Points))
@@ -4554,7 +4554,7 @@ class ClosedPolyLine(Testcase):
 		self.assertEqual(BoundingBox2D(0, 0, 4, 3), polyline.BoundingBox)
 
 	def test_Open(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)))
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)))
 
 		self.assertFalse(polyline.IsClosed)
 		self.assertEqual(2, len(polyline.Segments))
@@ -4562,7 +4562,7 @@ class ClosedPolyLine(Testcase):
 
 	def test_Closed_TwoPoints(self) -> None:
 		with self.assertRaises(NotEnoughCornersError) as context:
-			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), closed=True)
+			_ = Polyline((Point2D(0, 0), Point2D(4, 0)), closed=True)
 
 		self.assertEqual("Closed polyline has fewer than 3 points.", str(context.exception))
 		self.assertListEqual(["Got 2 points."], context.exception.__notes__)
@@ -4573,20 +4573,20 @@ class ClosedPolyLine(Testcase):
 
 	def test_ClosedNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
-			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), closed=None)
+			_ = Polyline((Point2D(0, 0), Point2D(4, 0)), closed=None)
 
 		self.assertEqual("Parameter 'closed' is None.", str(context.exception))
 
 	def test_ClosedInt(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), closed=1)
+			_ = Polyline((Point2D(0, 0), Point2D(4, 0)), closed=1)
 
 		self.assertEqual("Parameter 'closed' is not of type 'bool'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
 	def test_Move(self) -> None:
 		"""The shared point moves once."""
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
 
 		polyline.Move(Offset2D(1, 1))
 
@@ -4594,37 +4594,37 @@ class ClosedPolyLine(Testcase):
 		self.assertTupleEqual(((5, 4), (1, 1)), polyline.Segments[2].ToTuple())
 
 	def test_MirrorX(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
 
 		polyline.MirrorX(Alignment2D.MinX)
 
 		self.assertTupleEqual(((0, 0), (-4, 0), (-4, 3)), tuple(point.ToTuple() for point in polyline.Points))
 
 	def test_Copy(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True, value=1, keyValuePairs={"a": 1})
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True, value=1, keyValuePairs={"a": 1})
 
-		for newPolyLine in (polyline.Copy(), copy(polyline), deepcopy(polyline)):
-			self.assertIs(PolyLine, type(newPolyLine))
-			self.assertTrue(newPolyLine.IsClosed)
-			self.assertIsNot(polyline.Points[0], newPolyLine.Points[0])
-			self.assertIs(newPolyLine.Points[0], newPolyLine.Segments[2].End)
-			self.assertEqual(1, newPolyLine.Value)
-			self.assertEqual(1, newPolyLine["a"])
+		for newPolyline in (polyline.Copy(), copy(polyline), deepcopy(polyline)):
+			self.assertIs(Polyline, type(newPolyline))
+			self.assertTrue(newPolyline.IsClosed)
+			self.assertIsNot(polyline.Points[0], newPolyline.Points[0])
+			self.assertIs(newPolyline.Points[0], newPolyline.Segments[2].End)
+			self.assertEqual(1, newPolyline.Value)
+			self.assertEqual(1, newPolyline["a"])
 
 	def test_repr(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
 
-		self.assertEqual("PolyLine((0, 0), (4, 0), (4, 3), closed=True)", repr(polyline))
+		self.assertEqual("Polyline((0, 0), (4, 0), (4, 3), closed=True)", repr(polyline))
 
 	def test_str(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True)
 
 		self.assertEqual("((0, 0) → (4, 0) → (4, 3) → (0, 0))", str(polyline))
 
 
 class Conversions(Testcase):
-	def test_PolyLine_ToPolygon(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True, value=1, keyValuePairs={"a": 1})
+	def test_Polyline_ToPolygon(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)), closed=True, value=1, keyValuePairs={"a": 1})
 
 		polygon = polyline.ToPolygon()
 
@@ -4636,68 +4636,68 @@ class Conversions(Testcase):
 		self.assertEqual(1, polygon["a"])
 		self.assertEqual(6.0, polygon.Area)
 
-	def test_PolyLine_ToPolygon_Open(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)))
+	def test_Polyline_ToPolygon_Open(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(4, 3)))
 
 		with self.assertRaises(InvalidOperationError) as context:
 			_ = polyline.ToPolygon()
 
-		self.assertEqual("PolyLine is open.", str(context.exception))
+		self.assertEqual("Polyline is open.", str(context.exception))
 		self.assertListEqual(["Only a closed path encloses an area."], context.exception.__notes__)
 
-	def test_PolyLine_ToPolygon_Crossing(self) -> None:
+	def test_Polyline_ToPolygon_Crossing(self) -> None:
 		"""A polyline may cross itself, a polygon may not."""
-		polyline = PolyLine((Point2D(0, 0), Point2D(2, 2), Point2D(2, 0), Point2D(0, 2)), closed=True)
+		polyline = Polyline((Point2D(0, 0), Point2D(2, 2), Point2D(2, 0), Point2D(0, 2)), closed=True)
 
 		with self.assertRaises(CrossingEdgesError):
 			_ = polyline.ToPolygon()
 
-	def test_Polygon_ToPolyLine(self) -> None:
+	def test_Polygon_ToPolyline(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), value=1)
 
-		polyline = polygon.ToPolyLine()
+		polyline = polygon.ToPolyline()
 
-		self.assertIs(PolyLine, type(polyline))
+		self.assertIs(Polyline, type(polyline))
 		self.assertTrue(polyline.IsClosed)
 		self.assertTupleEqual(((0, 0), (4, 0), (2, 3)), tuple(point.ToTuple() for point in polyline.Points))
 		self.assertIsNot(polygon.Points[0], polyline.Points[0])
 		self.assertEqual(1, polyline.Value)
 		self.assertTrue(isclose(polygon.Perimeter, polyline.Length))
 
-	def test_Rectangle_ToPolyLine(self) -> None:
+	def test_Rectangle_ToPolyline(self) -> None:
 		rectangle = Rectangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 2), Point2D(0, 2))
 
-		polyline = rectangle.ToPolyLine()
+		polyline = rectangle.ToPolyline()
 
-		self.assertEqual("PolyLine((0, 0), (4, 0), (4, 2), (0, 2), closed=True)", repr(polyline))
+		self.assertEqual("Polyline((0, 0), (4, 0), (4, 2), (0, 2), closed=True)", repr(polyline))
 
-	def test_Path_ToPolyLine(self) -> None:
+	def test_Path_ToPolyline(self) -> None:
 		path = Path((LineSegment2D(Point2D(0, 0), Point2D(4, 0)), LineSegment2D(Point2D(4, 0), Point2D(4, 3))), value=1)
 
-		polyline = path.ToPolyLine()
+		polyline = path.ToPolyline()
 
-		self.assertIs(PolyLine, type(polyline))
+		self.assertIs(Polyline, type(polyline))
 		self.assertFalse(polyline.IsClosed)
 		self.assertTupleEqual(((0, 0), (4, 0), (4, 3)), tuple(point.ToTuple() for point in polyline.Points))
 		self.assertEqual(1, polyline.Value)
 
-	def test_Path_ToPolyLine_Closed(self) -> None:
+	def test_Path_ToPolyline_Closed(self) -> None:
 		path = Path((
 			LineSegment2D(Point2D(0, 0), Point2D(4, 0)),
 			LineSegment2D(Point2D(4, 0), Point2D(4, 3)),
 			LineSegment2D(Point2D(4, 3), Point2D(0, 0))
 		), closed=True)
 
-		polyline = path.ToPolyLine()
+		polyline = path.ToPolyline()
 
 		self.assertTrue(polyline.IsClosed)
 		self.assertEqual(3, len(polyline.Points))
 
-	def test_Path_ToPolyLine_Curve(self) -> None:
+	def test_Path_ToPolyline_Curve(self) -> None:
 		path = openPath()
 
 		with self.assertRaises(InvalidOperationError) as context:
-			_ = path.ToPolyLine()
+			_ = path.ToPolyline()
 
 		self.assertEqual("Path has a segment, which isn't a line segment.", str(context.exception))
 		self.assertListEqual(

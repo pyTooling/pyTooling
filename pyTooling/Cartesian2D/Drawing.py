@@ -2122,9 +2122,9 @@ class Path(Shapes.Path[Coordinate], StyleMixin, Generic[Coordinate]):
 
 
 @export
-class PolyLine(Shapes.PolyLine[Coordinate], StyleMixin, Generic[Coordinate]):
+class Polyline(Shapes.Polyline[Coordinate], StyleMixin, Generic[Coordinate]):
 	"""
-	A drawable polyline: a :class:`pyTooling.Cartesian2D.Shapes.PolyLine` drawn with a :class:`Stroke`, and with a
+	A drawable polyline: a :class:`pyTooling.Cartesian2D.Shapes.Polyline` drawn with a :class:`Stroke`, and with a
 	:class:`Fill`, if it is closed.
 
 	An open polyline has no area, so it has no fill.

@@ -249,7 +249,7 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 
 		self.Parent = parent
 
-	def ToPolyLine(self) -> PolyLine[Coordinate]:
+	def ToPolyline(self) -> Polyline[Coordinate]:
 		"""
 		Create a new closed polyline with the corners of this polygon as its points.
 
@@ -258,7 +258,7 @@ class Polygon(Geometry2D[Coordinate], Generic[Coordinate]):
 
 		:returns: A new closed polyline.
 		"""
-		return PolyLine(self._points, closed=True, value=self._value, keyValuePairs=self._dict)
+		return Polyline(self._points, closed=True, value=self._value, keyValuePairs=self._dict)
 
 	def Copy(self) -> Self:
 		"""
@@ -1843,7 +1843,7 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 		for segment in self._segments:
 			segment._MirrorInnerAt(normal, distance)
 
-	def ToPolyLine(self) -> PolyLine[Coordinate]:
+	def ToPolyline(self) -> Polyline[Coordinate]:
 		"""
 		Create a new polyline with the joints of this path as its points.
 
@@ -1861,7 +1861,7 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 				ex.add_note("A curved segment can't be converted without an approximation.")
 				raise ex
 
-		return PolyLine(self._points, closed=self._closed, value=self._value, keyValuePairs=self._dict)
+		return Polyline(self._points, closed=self._closed, value=self._value, keyValuePairs=self._dict)
 
 	def ToPolygon(self) -> Polygon[Coordinate]:
 		"""
@@ -1946,7 +1946,7 @@ class Path(Shape[Coordinate], Generic[Coordinate]):
 
 
 @export
-class PolyLine(Path[Coordinate], Generic[Coordinate]):
+class Polyline(Path[Coordinate], Generic[Coordinate]):
 	"""
 	A polyline is a path of line segments, connecting two or more points (vertices) by straight edges.
 
@@ -2053,7 +2053,7 @@ class PolyLine(Path[Coordinate], Generic[Coordinate]):
 				pointList.append(point)
 
 		if len(pointList) < 2:
-			ex = NotEnoughCornersError("PolyLine has fewer than 2 points.")
+			ex = NotEnoughCornersError("Polyline has fewer than 2 points.")
 			ex.add_note(f"Got {len(pointList)} points.")
 			raise ex from ValueError("Parameter 'points' has fewer than 2 points.")
 		elif closed and len(pointList) < 3:
@@ -2107,7 +2107,7 @@ class PolyLine(Path[Coordinate], Generic[Coordinate]):
 		:returns: The string representation of the polyline, its points, and ``closed=True`` for a closed polyline.
 		"""
 		points = ", ".join(str(point) for point in self._points)
-		return f"PolyLine({points}, closed=True)" if self._closed else f"PolyLine({points})"
+		return f"Polyline({points}, closed=True)" if self._closed else f"Polyline({points})"
 
 	def __str__(self) -> str:
 		"""
