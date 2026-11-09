@@ -43,7 +43,7 @@ from pyTooling.Cartesian2D.Groups  import Group2D, Canvas2D, YAxisDirection
 from pyTooling.Cartesian2D.Drawing import TextAlignment, VerticalAnchor, LineStyle, Color, RGBAColor, Stroke, Fill, \
                                           FontStyle, Font, StrokeMixin, StyleMixin, LineSegment2D, ArcSegment2D, \
                                           QuadraticBezierSegment2D, CubicBezierSegment2D, Polygon, Trapezium, \
-                                          Rectangle, Square, Circle, Ellipse, Path, PolyLine, Text
+                                          Rectangle, Square, Circle, Ellipse, Path, Polyline, Text
 from pyTooling.MetaClasses         import ExtendedType, AbstractClassError
 from pyTooling.Testing             import Testcase
 
@@ -771,26 +771,26 @@ class Drawables(Testcase):
 		self.assertIsNone(path.Fill)
 		self.assertFalse(path.IsClosed)
 
-	def test_PolyLine(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), closed=True, stroke=STROKE, fill=FILL)
+	def test_Polyline(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), closed=True, stroke=STROKE, fill=FILL)
 
-		self.assertIsInstance(polyline, Shapes.PolyLine)
+		self.assertIsInstance(polyline, Shapes.Polyline)
 		self.assertNotIsInstance(polyline, Path)
 		self.assertIsInstance(polyline, StyleMixin)
 		self.assertIs(STROKE, polyline.Stroke)
 		self.assertIs(FILL, polyline.Fill)
 		self.assertEqual(3, len(polyline.Segments))
 
-	def test_PolyLine_Open(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE)
+	def test_Polyline_Open(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE)
 
 		self.assertIs(STROKE, polyline.Stroke)
 		self.assertIsNone(polyline.Fill)
 		self.assertEqual(1, len(polyline.Segments))
 
-	def test_PolyLine_copyPoints(self) -> None:
+	def test_Polyline_copyPoints(self) -> None:
 		points =   (Point2D(0, 0), Point2D(4, 0))
-		polyline = PolyLine(points, copyPoints=False, stroke=STROKE)
+		polyline = Polyline(points, copyPoints=False, stroke=STROKE)
 
 		self.assertTupleEqual(points, polyline.Points)
 		for point in points:
@@ -844,7 +844,7 @@ class Drawables(Testcase):
 	def test_Slots(self) -> None:
 		for drawableClass in (
 			LineSegment2D, ArcSegment2D, QuadraticBezierSegment2D, CubicBezierSegment2D, Polygon, Trapezium, Rectangle,
-			Square, Circle, Ellipse, Path, PolyLine
+			Square, Circle, Ellipse, Path, Polyline
 		):
 			self.assertIsInstance(drawableClass, ExtendedType)
 			self.assertNotIn("__dict__", dir(drawableClass))
@@ -959,17 +959,17 @@ class StyleParameters(Testcase):
 		self.assertEqual("Parameter 'fill' is given, while 'closed' is False.", str(context.exception))
 		self.assertListEqual(["Only a closed path encloses an area."], context.exception.__notes__)
 
-	def test_PolyLine_StrokeInt(self) -> None:
+	def test_Polyline_StrokeInt(self) -> None:
 		with self.assertRaises(TypeError) as context:
-			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), stroke=1)
+			_ = Polyline((Point2D(0, 0), Point2D(4, 0)), stroke=1)
 
 		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
-	def test_PolyLine_FillOpen(self) -> None:
+	def test_Polyline_FillOpen(self) -> None:
 		"""An open polyline has no area, so it has no fill."""
 		with self.assertRaises(ValueError) as context:
-			_ = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), fill=FILL)
+			_ = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), fill=FILL)
 
 		self.assertEqual("Parameter 'fill' is given, while 'closed' is False.", str(context.exception))
 		self.assertListEqual(["Only a closed polyline encloses an area."], context.exception.__notes__)
@@ -1067,15 +1067,15 @@ class StyleProperties(Testcase):
 		self.assertEqual("Parameter 'fill' is not of type 'Fill'.", str(context.exception))
 		self.assertListEqual(["Got type 'pyTooling.Cartesian2D.Drawing.Stroke'."], context.exception.__notes__)
 
-	def test_Fill_PolyLine(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), closed=True, fill=FILL)
+	def test_Fill_Polyline(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), closed=True, fill=FILL)
 
 		polyline.Fill = None
 
 		self.assertIsNone(polyline.Fill)
 
-	def test_Fill_PolyLineOpen(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)))
+	def test_Fill_PolylineOpen(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)))
 
 		with self.assertRaises(ValueError) as context:
 			polyline.Fill = FILL
@@ -1084,8 +1084,8 @@ class StyleProperties(Testcase):
 		self.assertListEqual(["Only a closed polyline encloses an area."], context.exception.__notes__)
 		self.assertIsNone(polyline.Fill)
 
-	def test_Fill_PolyLineOpenInt(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)))
+	def test_Fill_PolylineOpenInt(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)))
 
 		with self.assertRaises(TypeError) as context:
 			polyline.Fill = 1
@@ -1420,19 +1420,19 @@ class Parents(Testcase):
 		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 
-	def test_PolyLine(self) -> None:
+	def test_Polyline(self) -> None:
 		group =    Group2D()
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE, parent=group)
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE, parent=group)
 
 		self.assertIs(group, polyline.Parent)
 		self.assertTupleEqual((polyline, ), group.Children)
 
-	def test_PolyLine_Int(self) -> None:
+	def test_Polyline_Int(self) -> None:
 		"""A wrong parent leaves the given points free."""
 		points = (Point2D(0, 0), Point2D(4, 0))
 
 		with self.assertRaises(TypeError) as context:
-			_ = PolyLine(points, copyPoints=False, parent=1)
+			_ = Polyline(points, copyPoints=False, parent=1)
 
 		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
@@ -1459,25 +1459,25 @@ class Parents(Testcase):
 
 		self.assertTupleEqual((), group.Children)
 
-	def test_FailingStyle_PolyLine(self) -> None:
+	def test_FailingStyle_Polyline(self) -> None:
 		"""A fill of an open polyline leaves nothing registered and the given points free."""
 		group =  Group2D()
 		points = (Point2D(0, 0), Point2D(4, 0))
 
 		with self.assertRaises(ValueError) as context:
-			_ = PolyLine(points, copyPoints=False, fill=FILL, parent=group)
+			_ = Polyline(points, copyPoints=False, fill=FILL, parent=group)
 
 		self.assertEqual("Parameter 'fill' is given, while 'closed' is False.", str(context.exception))
 		self.assertTupleEqual((), group.Children)
 		for point in points:
 			self.assertIsNone(point.Parent)
 
-	def test_FailingStyle_PolyLineStroke(self) -> None:
+	def test_FailingStyle_PolylineStroke(self) -> None:
 		group =  Group2D()
 		points = (Point2D(0, 0), Point2D(4, 0))
 
 		with self.assertRaises(TypeError) as context:
-			_ = PolyLine(points, copyPoints=False, stroke=1, parent=group)
+			_ = Polyline(points, copyPoints=False, stroke=1, parent=group)
 
 		self.assertEqual("Parameter 'stroke' is not of type 'Stroke'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
@@ -1852,36 +1852,36 @@ class Copies(Testcase):
 		self.assertIs(STROKE, newPath.Stroke)
 		self.assertIs(FILL, newPath.Fill)
 
-	def test_PolyLine(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), closed=True, stroke=STROKE, fill=FILL)
+	def test_Polyline(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), closed=True, stroke=STROKE, fill=FILL)
 
-		newPolyLine = polyline.Copy()
+		newPolyline = polyline.Copy()
 
-		self.assertIs(PolyLine, type(newPolyLine))
-		self.assertIsNot(polyline.Points[0], newPolyLine.Points[0])
-		self.assertTrue(newPolyLine.IsClosed)
-		self.assertIs(STROKE, newPolyLine.Stroke)
-		self.assertIs(FILL, newPolyLine.Fill)
+		self.assertIs(Polyline, type(newPolyline))
+		self.assertIsNot(polyline.Points[0], newPolyline.Points[0])
+		self.assertTrue(newPolyline.IsClosed)
+		self.assertIs(STROKE, newPolyline.Stroke)
+		self.assertIs(FILL, newPolyline.Fill)
 
-	def test_PolyLine_copy(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE)
+	def test_Polyline_copy(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE)
 
-		newPolyLine = copy(polyline)
+		newPolyline = copy(polyline)
 
-		self.assertIs(PolyLine, type(newPolyLine))
-		self.assertIs(STROKE, newPolyLine.Stroke)
+		self.assertIs(Polyline, type(newPolyline))
+		self.assertIs(STROKE, newPolyline.Stroke)
 
-	def test_PolyLine_deepcopy(self) -> None:
+	def test_Polyline_deepcopy(self) -> None:
 		value =    [1, 2]
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE, value=value)
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE, value=value)
 
-		newPolyLine = deepcopy(polyline)
+		newPolyline = deepcopy(polyline)
 
-		self.assertIs(PolyLine, type(newPolyLine))
-		self.assertIsNot(polyline.Points[0], newPolyLine.Points[0])
-		self.assertIsNot(value, newPolyLine.Value)
-		self.assertListEqual(value, newPolyLine.Value)
-		self.assertIs(STROKE, newPolyLine.Stroke)
+		self.assertIs(Polyline, type(newPolyline))
+		self.assertIsNot(polyline.Points[0], newPolyline.Points[0])
+		self.assertIsNot(value, newPolyline.Value)
+		self.assertListEqual(value, newPolyline.Value)
+		self.assertIs(STROKE, newPolyline.Stroke)
 
 
 class PathEdges(Testcase):
@@ -2239,16 +2239,16 @@ class ElementData(Testcase):
 		self.assertEqual(1, path["layer"])
 		self.assertEqual(2, newPath["layer"])
 
-	def test_PolyLine_Copy(self) -> None:
+	def test_Polyline_Copy(self) -> None:
 		value =    [1, 2]
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE, value=value, keyValuePairs={"layer": 1})
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0)), stroke=STROKE, value=value, keyValuePairs={"layer": 1})
 
-		newPolyLine =          polyline.Copy()
-		newPolyLine["layer"] = 2
+		newPolyline =          polyline.Copy()
+		newPolyline["layer"] = 2
 
-		self.assertIs(value, newPolyLine.Value)
+		self.assertIs(value, newPolyline.Value)
 		self.assertEqual(1, polyline["layer"])
-		self.assertEqual(2, newPolyLine["layer"])
+		self.assertEqual(2, newPolyline["layer"])
 
 MONOSPACE = Font("monospace", 10)
 """A 10 point monospace font: a character is 6 points wide, a line 10 points high, the next baseline 12 points below."""

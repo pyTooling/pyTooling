@@ -38,7 +38,7 @@ from pyTooling.Cartesian2D        import Base2D, Point2D, Offset2D, Size2D, Boun
                                          Line2D, VerticalLine2D, HorizontalLine2D, Segment2D, LineSegment2D, \
                                          AlreadyOwnedError, DuplicatePointError, NotEnoughCornersError, NotOwnedError, \
                                          NotInSameFrameError, GroupCycleError
-from pyTooling.Cartesian2D.Shapes import Polygon, PolyLine, Trapezium, Rectangle, Square, Circle, Ellipse
+from pyTooling.Cartesian2D.Shapes import Polygon, Polyline, Trapezium, Rectangle, Square, Circle, Ellipse
 from pyTooling.Cartesian2D.Groups import Group2D, Canvas2D, YAxisDirection, EmptyGroupError
 from pyTooling.Exceptions         import EmptyError
 from pyTooling.MetaClasses        import AbstractClassError
@@ -356,9 +356,9 @@ class Membership(Testcase):
 			self.assertIs(polygon, edge.Parent)
 			self.assertIs(group, edge.Frame)
 
-	def test_PolyLine(self) -> None:
+	def test_Polyline(self) -> None:
 		"""A polyline in a group: its points and edges are in the group's frame."""
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 		group =    Group2D(children=(polyline, ))
 
 		self.assertIs(group, polyline.Frame)
@@ -369,8 +369,8 @@ class Membership(Testcase):
 			self.assertIs(polyline, edge.Parent)
 			self.assertIs(group, edge.Frame)
 
-	def test_PolyLine_Edge(self) -> None:
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
+	def test_Polyline_Edge(self) -> None:
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)))
 		edge =     polyline.Segments[1]
 
 		with self.assertRaises(AlreadyOwnedError) as context:
@@ -378,7 +378,7 @@ class Membership(Testcase):
 
 		self.assertEqual("Element is owned by another element already.", str(context.exception))
 		self.assertListEqual(
-			["Got LineSegment2D((4, 0), (2, 3)) owned by PolyLine((0, 0), (4, 0), (2, 3))."],
+			["Got LineSegment2D((4, 0), (2, 3)) owned by Polyline((0, 0), (4, 0), (2, 3))."],
 			context.exception.__notes__
 		)
 		self.assertEqual("Parameter 'parent' can't replace the shape of an edge.", str(context.exception.__cause__))
@@ -489,36 +489,36 @@ class ParentParameter(Testcase):
 
 		self.assertTupleEqual((), group.Children)
 
-	def test_PolyLine(self) -> None:
+	def test_Polyline(self) -> None:
 		group = Group2D()
 
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=group)
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=group)
 
 		self.assertIs(group, polyline.Parent)
 		self.assertTupleEqual((polyline, ), group.Children)
 		self.assertIs(group, polyline.Points[0].Frame)
 		self.assertIs(group, polyline.Segments[0].Frame)
 
-	def test_PolyLine_Int(self) -> None:
+	def test_Polyline_Int(self) -> None:
 		"""A wrong parent is found before the polyline takes the given points."""
 		points = (Point2D(0, 0), Point2D(4, 0))
 
 		with self.assertRaises(TypeError) as context:
-			_ = PolyLine(points, copyPoints=False, parent=1)
+			_ = Polyline(points, copyPoints=False, parent=1)
 
 		self.assertEqual("Parameter 'parent' is not of type 'Group2D' or 'Canvas2D'.", str(context.exception))
 		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
 		self.assertIsNone(points[0].Parent)
 
-	def test_PolyLine_Positional(self) -> None:
+	def test_Polyline_Positional(self) -> None:
 		with self.assertRaises(TypeError):
-			_ = PolyLine((Point2D(0, 0), Point2D(4, 0)), Group2D())
+			_ = Polyline((Point2D(0, 0), Point2D(4, 0)), Group2D())
 
-	def test_PolyLine_Failing(self) -> None:
+	def test_Polyline_Failing(self) -> None:
 		group = Group2D()
 
 		with self.assertRaises(NotEnoughCornersError):
-			_ = PolyLine((Point2D(0, 0), ), parent=group)
+			_ = Polyline((Point2D(0, 0), ), parent=group)
 
 		self.assertTupleEqual((), group.Children)
 
@@ -1278,10 +1278,10 @@ class CanvasParentParameter(Testcase):
 		self.assertTupleEqual((polygon, ), canvas.Children)
 		self.assertIs(canvas, polygon.Points[0].Frame)
 
-	def test_PolyLine(self) -> None:
+	def test_Polyline(self) -> None:
 		canvas = Canvas2D()
 
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=canvas)
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=canvas)
 
 		self.assertIs(canvas, polyline.Parent)
 		self.assertTupleEqual((polyline, ), canvas.Children)
@@ -1489,9 +1489,9 @@ class Mirroring(Testcase):
 		self.assertEqual("Group2D has no children.", str(context.exception))
 		self.assertTupleEqual((1, 2), group.Offset.ToTuple())
 
-	def test_MirrorY_PolyLine(self) -> None:
+	def test_MirrorY_Polyline(self) -> None:
 		"""A polyline in a group is mirrored at the group's origin, its edges along."""
-		polyline = PolyLine((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
+		polyline = Polyline((Point2D(0, 0), Point2D(4, 1), Point2D(2, 3)))
 		group =    Group2D(Offset2D(10, 20), (polyline, ))
 
 		group.MirrorY(Alignment2D.MinY)
