@@ -1488,8 +1488,25 @@ class VectorComparison(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Vector3D(1, 2, 3) == 2
 
-		self.assertEqual("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.", str(context.exception))
-		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertEqual("Second operand is not supported by == operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'int'.", "Supported types for second operand: BaseVector3D, tuple"],
+			context.exception.__notes__
+		)
+
+	def test_NotEqual(self) -> None:
+		self.assertFalse(Vector3D(1, 2, 3) != Offset3D(1, 2, 3))
+		self.assertTrue(Vector3D(1, 2, 3) != (4, 2, 3))
+
+	def test_NotEqual_int(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			_ = Vector3D(1, 2, 3) != 2
+
+		self.assertEqual("Second operand is not supported by != operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'int'.", "Supported types for second operand: BaseVector3D, tuple"],
+			context.exception.__notes__
+		)
 
 	def test_Hash(self) -> None:
 		self.assertEqual(hash(Vector3D(1, 2, 3)), hash(Vector3D(1.0, 2.0, 3.0)))
@@ -1532,8 +1549,11 @@ class VectorArithmetic(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Vector3D(1, 2, 3) + 2
 
-		self.assertEqual("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.", str(context.exception))
-		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertEqual("Second operand is not supported by + operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'int'.", "Supported types for second operand: BaseVector3D, tuple"],
+			context.exception.__notes__
+		)
 
 	def test_Minus_Tuple(self) -> None:
 		result = Vector3D(1, 2, 3) - (2, 3, 4)
@@ -1656,8 +1676,11 @@ class VectorArithmetic(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = Point3D(1, 2, 3) - 2
 
-		self.assertEqual("Parameter 'other' is not of type 'Point3D' or 'BaseVector3D'.", str(context.exception))
-		self.assertListEqual(["Got type 'int'."], context.exception.__notes__)
+		self.assertEqual("Second operand is not supported by - operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'int'.", "Supported types for second operand: Point3D, BaseVector3D"],
+			context.exception.__notes__
+		)
 
 	def test_Point_InplacePlus_Vector(self) -> None:
 		point =    Point3D(1, 2, 3)
@@ -2006,8 +2029,11 @@ class Bounds(Testcase):
 		with self.assertRaises(TypeError) as context:
 			_ = box + (10, -2, 1)
 
-		self.assertEqual("Parameter 'other' is not of type 'BaseVector3D'.", str(context.exception))
-		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
+		self.assertEqual("Second operand is not supported by + operator.", str(context.exception))
+		self.assertListEqual(
+			["Got type 'tuple'.", "Supported types for second operand: BaseVector3D"],
+			context.exception.__notes__
+		)
 
 	def test_Copy(self) -> None:
 		box = BoundingBox3D(1, 2, 3, 4, 6, 8)

@@ -546,7 +546,7 @@ class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 
 		:param other:      A 2D-vector as :class:`Vector2D`, :class:`Offset2D` or tuple.
 		:returns:          A new 2D-point shifted by the 2D-vector.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector2D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector2D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector2D):
 			return self.__class__(
@@ -559,8 +559,9 @@ class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 				self._y + other[1]
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector2D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by + operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector2D, tuple")
 			raise ex
 
 	def __iadd__(self, other: Any) -> Self:
@@ -569,7 +570,7 @@ class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 
 		:param other:      A 2D-vector as :class:`Vector2D`, :class:`Offset2D` or tuple.
 		:returns:          This 2D-point.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector2D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector2D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector2D):
 			self._x += other._xOffset
@@ -578,8 +579,9 @@ class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 			self.X += other[0]
 			self.Y += other[1]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector2D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by += operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector2D, tuple")
 			raise ex
 
 		return self
@@ -592,8 +594,8 @@ class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 		                             :class:`Offset2D`.
 		:returns:                    A new 2D-offset representing the distance between these two points, or a new 2D-point
 		                             shifted back by the 2D-vector.
-		:raises TypeError:           If parameter 'other' is not of type :class:`Point2D` or :class:`BaseVector2D`.
-		:raises NotInSameFrameError: If parameter 'other' is in another frame than this point. |br|
+		:raises TypeError:           If the second operand is not of type :class:`Point2D` or :class:`BaseVector2D`.
+		:raises NotInSameFrameError: If the second operand is in another frame than this point. |br|
 		                             Subtract the points' :attr:`Absolute` positions instead.
 		"""
 		if isinstance(other, Point2D):
@@ -601,7 +603,7 @@ class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 				ex = NotInSameFrameError("Points are in different frames.")
 				ex.add_note(f"Got points {self} and {other}.")
 				ex.add_note("Subtract the points' 'Absolute' positions instead.")
-				raise ex from ValueError("Parameter 'other' is in another frame.")
+				raise ex from ValueError("Second operand is in another frame.")
 
 			return Offset2D(
 				self._x - other._x,
@@ -613,8 +615,9 @@ class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 				self._y - other._yOffset
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'Point2D' or 'BaseVector2D'.")
+			ex = TypeError("Second operand is not supported by - operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Point2D, BaseVector2D")
 			raise ex
 
 	def __isub__(self, other: Any) -> Self:
@@ -623,7 +626,7 @@ class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 
 		:param other:      A 2D-vector as :class:`Vector2D`, :class:`Offset2D` or tuple.
 		:returns:          This 2D-point.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector2D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector2D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector2D):
 			self._x -= other._xOffset
@@ -632,8 +635,9 @@ class Point2D(Base2D[Coordinate], Generic[Coordinate]):
 			self.X -= other[0]
 			self.Y -= other[1]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector2D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by -= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector2D, tuple")
 			raise ex
 
 		return self
@@ -1224,15 +1228,16 @@ class BaseVector2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both 2D-vectors are equal.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector2D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector2D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector2D):
 			return self._xOffset == other._xOffset and self._yOffset == other._yOffset
 		elif isinstance(other, tuple):
 			return self._xOffset == other[0] and self._yOffset == other[1]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector2D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector2D, tuple")
 			raise ex
 
 	def __ne__(self, other: Any) -> bool:
@@ -1241,9 +1246,17 @@ class BaseVector2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both 2D-vectors are unequal.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector2D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector2D` or :class:`tuple`.
 		"""
-		return not self.__eq__(other)
+		if isinstance(other, BaseVector2D):
+			return self._xOffset != other._xOffset or self._yOffset != other._yOffset
+		elif isinstance(other, tuple):
+			return self._xOffset != other[0] or self._yOffset != other[1]
+		else:
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector2D, tuple")
+			raise ex
 
 	def __neg__(self) -> Self:
 		"""
@@ -1262,7 +1275,7 @@ class BaseVector2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 2D-vector as :class:`Vector2D`, :class:`Offset2D` or tuple.
 		:returns:          A new 2D-vector extended by the 2D-vector, of this vector's class.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector2D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector2D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector2D):
 			return self.__class__(
@@ -1275,8 +1288,9 @@ class BaseVector2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				self._yOffset + other[1]
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector2D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by + operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector2D, tuple")
 			raise ex
 
 	def __sub__(self, other: Any) -> Self:
@@ -1285,7 +1299,7 @@ class BaseVector2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 2D-vector as :class:`Vector2D`, :class:`Offset2D` or tuple.
 		:returns:          A new 2D-vector reduced by the 2D-vector, of this vector's class.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector2D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector2D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector2D):
 			return self.__class__(
@@ -1298,8 +1312,9 @@ class BaseVector2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				self._yOffset - other[1]
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector2D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by - operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector2D, tuple")
 			raise ex
 
 	def __mul__(self, other: Any) -> Self:
@@ -1505,7 +1520,7 @@ class Offset2D(BaseVector2D[Coordinate], Generic[Coordinate]):
 
 		:param other:      A 2D-vector as :class:`Vector2D`, :class:`Offset2D` or tuple.
 		:returns:          This 2D-offset.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector2D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector2D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector2D):
 			self._xOffset += other._xOffset
@@ -1514,8 +1529,9 @@ class Offset2D(BaseVector2D[Coordinate], Generic[Coordinate]):
 			self.XOffset += other[0]
 			self.YOffset += other[1]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector2D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by += operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector2D, tuple")
 			raise ex
 
 		return self
@@ -1526,7 +1542,7 @@ class Offset2D(BaseVector2D[Coordinate], Generic[Coordinate]):
 
 		:param other:      A 2D-vector as :class:`Vector2D`, :class:`Offset2D` or tuple.
 		:returns:          This 2D-offset.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector2D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector2D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector2D):
 			self._xOffset -= other._xOffset
@@ -1535,8 +1551,9 @@ class Offset2D(BaseVector2D[Coordinate], Generic[Coordinate]):
 			self.XOffset -= other[0]
 			self.YOffset -= other[1]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector2D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by -= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector2D, tuple")
 			raise ex
 
 		return self
@@ -1999,11 +2016,12 @@ class BoundingBox2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 2D-vector as :class:`Vector2D` or :class:`Offset2D`.
 		:returns:          A new bounding box shifted by the 2D-vector.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector2D`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector2D`.
 		"""
 		if not isinstance(other, BaseVector2D):
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector2D'.")
+			ex = TypeError("Second operand is not supported by + operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector2D")
 			raise ex
 
 		return self.__class__(
