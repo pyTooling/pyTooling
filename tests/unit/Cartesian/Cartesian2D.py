@@ -2409,12 +2409,11 @@ class Lines(Testcase):
 		self.assertEqual(VerticalLine2D(5), line)
 
 	def test_FromPoints_Derived(self) -> None:
-		"""A derived class creates a line of its own class."""
+		"""A derived class creates a general line."""
 		line = VerticalLine2D.FromPoints(Point2D(5, 0), Point2D(5, 3))
 
-		self.assertIs(VerticalLine2D, type(line))
-		self.assertIs(int, type(line.X))
-		self.assertEqual(Line2D.FromPoints(Point2D(5, 0), Point2D(5, 3)), line)
+		self.assertIs(Line2D, type(line))
+		self.assertEqual(VerticalLine2D(5), line)
 
 	def test_FromPoints_FirstNone(self) -> None:
 		with self.assertRaises(ValueError) as context:
@@ -3109,159 +3108,6 @@ class LineVectors(Testcase):
 
 		self.assertEqual("Parameter 'direction' is a zero vector.", str(context.exception))
 		self.assertListEqual(["Got vector (0, 0).", "A ray needs a direction."], context.exception.__notes__)
-
-
-class VerticalLineClassmethods(Testcase):
-	def test_FromPoints(self) -> None:
-		line = VerticalLine2D.FromPoints(Point2D(5, 0), Point2D(5, 3))
-
-		self.assertIs(VerticalLine2D, type(line))
-		self.assertIs(int, type(line.X))
-		self.assertEqual(5, line.X)
-
-	def test_FromPoints_Absolute(self) -> None:
-		first = Point2D(1, 0)
-		Group2D(Offset2D(4, 0), (LineSegment2D(first, Point2D(1, 1), copyPoints=False), ))
-
-		line = VerticalLine2D.FromPoints(first, Point2D(5, 3))
-
-		self.assertEqual(VerticalLine2D(5), line)
-
-	def test_FromPoints_DifferentX(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			VerticalLine2D.FromPoints(Point2D(5, 0), Point2D(6, 3))
-
-		self.assertEqual("Parameters 'first' and 'second' have different x-coordinates.", str(context.exception))
-		self.assertListEqual(
-			[
-				"Got points (5, 0) and (6, 3), at (5, 0) and (6, 3) in absolute coordinates.",
-				"Use 'Line2D.FromPoints' for a line in any direction."
-			],
-			context.exception.__notes__
-		)
-
-	def test_FromPoints_SamePosition(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			VerticalLine2D.FromPoints(Point2D(5, 0), Point2D(5, 0))
-
-		self.assertEqual("Parameters 'first' and 'second' are at the same position.", str(context.exception))
-
-	def test_FromPoints_SecondNone(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			VerticalLine2D.FromPoints(Point2D(5, 0), None)
-
-		self.assertEqual("Parameter 'second' is None.", str(context.exception))
-
-	def test_FromPointAndDirection(self) -> None:
-		line = VerticalLine2D.FromPointAndDirection(Point2D(5, 1), Vector2D(0, -2))
-
-		self.assertIs(VerticalLine2D, type(line))
-		self.assertIs(int, type(line.X))
-		self.assertEqual(5, line.X)
-
-	def test_FromPointAndDirection_NotVertical(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			VerticalLine2D.FromPointAndDirection(Point2D(5, 1), Offset2D(1, 2))
-
-		self.assertEqual("Parameter 'direction' isn't vertical.", str(context.exception))
-		self.assertListEqual(
-			["Got vector (1, 2).", "Use 'Line2D.FromPointAndDirection' for a line in any direction."],
-			context.exception.__notes__
-		)
-
-	def test_FromPointAndDirection_Zero(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			VerticalLine2D.FromPointAndDirection(Point2D(5, 1), Vector2D(0, 0))
-
-		self.assertEqual("Parameter 'direction' is a zero vector.", str(context.exception))
-		self.assertListEqual(["Got vector (0, 0).", "A line needs a direction."], context.exception.__notes__)
-
-	def test_FromPointAndNormal(self) -> None:
-		line = VerticalLine2D.FromPointAndNormal(Point2D(4, 1), Offset2D(-3, 0))
-
-		self.assertIs(VerticalLine2D, type(line))
-		self.assertIs(int, type(line.X))
-		self.assertEqual(4, line.X)
-
-	def test_FromPointAndNormal_NotHorizontal(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			VerticalLine2D.FromPointAndNormal(Point2D(4, 1), Vector2D(1, 1))
-
-		self.assertEqual("Parameter 'normal' isn't horizontal.", str(context.exception))
-		self.assertListEqual(
-			["Got vector (1, 1).", "Use 'Line2D.FromPointAndNormal' for a line in any direction."],
-			context.exception.__notes__
-		)
-
-	def test_FromPointAndNormal_Tuple(self) -> None:
-		with self.assertRaises(TypeError) as context:
-			VerticalLine2D.FromPointAndNormal(Point2D(4, 1), (1, 0))
-
-		self.assertEqual("Parameter 'normal' is not of type 'BaseVector2D'.", str(context.exception))
-		self.assertListEqual(["Got type 'tuple'."], context.exception.__notes__)
-
-
-class HorizontalLineClassmethods(Testcase):
-	def test_FromPoints(self) -> None:
-		line = HorizontalLine2D.FromPoints(Point2D(0, 5), Point2D(3, 5))
-
-		self.assertIs(HorizontalLine2D, type(line))
-		self.assertIs(int, type(line.Y))
-		self.assertEqual(5, line.Y)
-
-	def test_FromPoints_DifferentY(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			HorizontalLine2D.FromPoints(Point2D(0, 5), Point2D(3, 6))
-
-		self.assertEqual("Parameters 'first' and 'second' have different y-coordinates.", str(context.exception))
-		self.assertListEqual(
-			[
-				"Got points (0, 5) and (3, 6), at (0, 5) and (3, 6) in absolute coordinates.",
-				"Use 'Line2D.FromPoints' for a line in any direction."
-			],
-			context.exception.__notes__
-		)
-
-	def test_FromPointAndDirection(self) -> None:
-		line = HorizontalLine2D.FromPointAndDirection(Point2D(1, 7), Vector2D(-2, 0))
-
-		self.assertIs(HorizontalLine2D, type(line))
-		self.assertIs(int, type(line.Y))
-		self.assertEqual(7, line.Y)
-
-	def test_FromPointAndDirection_NotHorizontal(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			HorizontalLine2D.FromPointAndDirection(Point2D(1, 7), Vector2D(0, 1))
-
-		self.assertEqual("Parameter 'direction' isn't horizontal.", str(context.exception))
-		self.assertListEqual(
-			["Got vector (0, 1).", "Use 'Line2D.FromPointAndDirection' for a line in any direction."],
-			context.exception.__notes__
-		)
-
-	def test_FromPointAndNormal(self) -> None:
-		line = HorizontalLine2D.FromPointAndNormal(Point2D(1, 7), Vector2D(0, 2))
-
-		self.assertIs(HorizontalLine2D, type(line))
-		self.assertIs(int, type(line.Y))
-		self.assertEqual(7, line.Y)
-
-	def test_FromPointAndNormal_NotVertical(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			HorizontalLine2D.FromPointAndNormal(Point2D(1, 7), Vector2D(1, 0))
-
-		self.assertEqual("Parameter 'normal' isn't vertical.", str(context.exception))
-		self.assertListEqual(
-			["Got vector (1, 0).", "Use 'Line2D.FromPointAndNormal' for a line in any direction."],
-			context.exception.__notes__
-		)
-
-	def test_FromPointAndNormal_Zero(self) -> None:
-		with self.assertRaises(ValueError) as context:
-			HorizontalLine2D.FromPointAndNormal(Point2D(1, 7), Offset2D(0, 0))
-
-		self.assertEqual("Parameter 'normal' is a zero vector.", str(context.exception))
-		self.assertListEqual(["Got vector (0, 0).", "A line needs a normal direction."], context.exception.__notes__)
 
 
 class Rays(Testcase):

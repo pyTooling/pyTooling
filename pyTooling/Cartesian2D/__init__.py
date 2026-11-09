@@ -2181,7 +2181,7 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param first:       A first point of the line.
 		:param second:      A second point of the line.
-		:returns:           A new :class:`Line2D`.
+		:returns:           A new line, a :class:`Line2D` also if called on a derived class.
 		:raises ValueError: If parameter 'first' is None.
 		:raises TypeError:  If parameter 'first' is not of type :class:`Point2D`.
 		:raises ValueError: If parameter 'second' is None.
@@ -2222,7 +2222,7 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param point:       A point of the line.
 		:param direction:   The direction of the line.
-		:returns:           A new :class:`Line2D`.
+		:returns:           A new line, a :class:`Line2D` also if called on a derived class.
 		:raises ValueError: If parameter 'point' is None.
 		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
 		:raises ValueError: If parameter 'direction' is None.
@@ -2264,7 +2264,7 @@ class Line2D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param point:       A point of the line.
 		:param normal:      A normal of the line, perpendicular to it.
-		:returns:           A new :class:`Line2D`.
+		:returns:           A new line, a :class:`Line2D` also if called on a derived class.
 		:raises ValueError: If parameter 'point' is None.
 		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
 		:raises ValueError: If parameter 'normal' is None.
@@ -2557,144 +2557,6 @@ class VerticalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 		self._distance = x + 0
 
 	@classmethod
-	def FromPoints(cls, first: Point2D[Coordinate], second: Point2D[Coordinate]) -> Self:
-		"""
-		Create the vertical line through two points with the same x-coordinate.
-
-		The points are taken in absolute coordinates: a point inside a group is converted. The line keeps the
-		x-coordinate as given, so an integer stays an integer.
-
-		:param first:       A first point of the line.
-		:param second:      A second point of the line.
-		:returns:           A new vertical line.
-		:raises ValueError: If parameter 'first' is None.
-		:raises TypeError:  If parameter 'first' is not of type :class:`Point2D`.
-		:raises ValueError: If parameter 'second' is None.
-		:raises TypeError:  If parameter 'second' is not of type :class:`Point2D`.
-		:raises ValueError: If parameters 'first' and 'second' are at the same position. |br|
-		                    Two points at the same position don't define a line.
-		:raises ValueError: If parameters 'first' and 'second' have different x-coordinates. |br|
-		                    Use :meth:`Line2D.FromPoints` for a line in any direction.
-		"""
-		for name, point in (
-			("first",  first),
-			("second", second)
-		):
-			if point is None:
-				raise ValueError(f"Parameter '{name}' is None.")
-			elif not isinstance(point, Point2D):
-				ex = TypeError(f"Parameter '{name}' is not of type 'Point2D'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
-				raise ex
-
-		start = first.Absolute
-		end =   second.Absolute
-		if start._x == end._x and start._y == end._y:
-			ex = ValueError("Parameters 'first' and 'second' are at the same position.")
-			ex.add_note(f"Got points {first} and {second}, both at {start} in absolute coordinates.")
-			ex.add_note("Two points at the same position don't define a line.")
-			raise ex
-		elif start._x != end._x:
-			ex = ValueError("Parameters 'first' and 'second' have different x-coordinates.")
-			ex.add_note(f"Got points {first} and {second}, at {start} and {end} in absolute coordinates.")
-			ex.add_note("Use 'Line2D.FromPoints' for a line in any direction.")
-			raise ex
-
-		return cls(start._x)
-
-	@classmethod
-	def FromPointAndDirection(cls, point: Point2D[Coordinate], direction: BaseVector2D[Coordinate]) -> Self:
-		"""
-		Create the vertical line through a point in a vertical direction.
-
-		The point is taken in absolute coordinates: a point inside a group is converted. The line keeps the point's
-		x-coordinate as given, so an integer stays an integer.
-
-		:param point:       A point of the line.
-		:param direction:   The direction of the line, like ``(0, 1)``.
-		:returns:           A new vertical line.
-		:raises ValueError: If parameter 'point' is None.
-		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
-		:raises ValueError: If parameter 'direction' is None.
-		:raises TypeError:  If parameter 'direction' is not of type :class:`BaseVector2D`.
-		:raises ValueError: If parameter 'direction' is a zero vector. |br|
-		                    A line needs a direction.
-		:raises ValueError: If parameter 'direction' isn't vertical. |br|
-		                    Use :meth:`Line2D.FromPointAndDirection` for a line in any direction.
-		"""
-		if point is None:
-			raise ValueError("Parameter 'point' is None.")
-		elif not isinstance(point, Point2D):
-			ex = TypeError("Parameter 'point' is not of type 'Point2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
-			raise ex
-
-		if direction is None:
-			raise ValueError("Parameter 'direction' is None.")
-		elif not isinstance(direction, BaseVector2D):
-			ex = TypeError("Parameter 'direction' is not of type 'BaseVector2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
-			raise ex
-		elif direction._xOffset == 0 and direction._yOffset == 0:
-			ex = ValueError("Parameter 'direction' is a zero vector.")
-			ex.add_note(f"Got vector {direction}.")
-			ex.add_note("A line needs a direction.")
-			raise ex
-		elif direction._xOffset != 0:
-			ex = ValueError("Parameter 'direction' isn't vertical.")
-			ex.add_note(f"Got vector {direction}.")
-			ex.add_note("Use 'Line2D.FromPointAndDirection' for a line in any direction.")
-			raise ex
-
-		return cls(point.Absolute._x)
-
-	@classmethod
-	def FromPointAndNormal(cls, point: Point2D[Coordinate], normal: BaseVector2D[Coordinate]) -> Self:
-		"""
-		Create the vertical line through a point, perpendicular to a horizontal normal.
-
-		The point is taken in absolute coordinates: a point inside a group is converted. The line keeps the point's
-		x-coordinate as given, so an integer stays an integer.
-
-		:param point:       A point of the line.
-		:param normal:      A normal of the line, like ``(1, 0)``.
-		:returns:           A new vertical line.
-		:raises ValueError: If parameter 'point' is None.
-		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
-		:raises ValueError: If parameter 'normal' is None.
-		:raises TypeError:  If parameter 'normal' is not of type :class:`BaseVector2D`.
-		:raises ValueError: If parameter 'normal' is a zero vector. |br|
-		                    A line needs a normal direction.
-		:raises ValueError: If parameter 'normal' isn't horizontal. |br|
-		                    Use :meth:`Line2D.FromPointAndNormal` for a line in any direction.
-		"""
-		if point is None:
-			raise ValueError("Parameter 'point' is None.")
-		elif not isinstance(point, Point2D):
-			ex = TypeError("Parameter 'point' is not of type 'Point2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
-			raise ex
-
-		if normal is None:
-			raise ValueError("Parameter 'normal' is None.")
-		elif not isinstance(normal, BaseVector2D):
-			ex = TypeError("Parameter 'normal' is not of type 'BaseVector2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
-			raise ex
-		elif normal._xOffset == 0 and normal._yOffset == 0:
-			ex = ValueError("Parameter 'normal' is a zero vector.")
-			ex.add_note(f"Got vector {normal}.")
-			ex.add_note("A line needs a normal direction.")
-			raise ex
-		elif normal._yOffset != 0:
-			ex = ValueError("Parameter 'normal' isn't horizontal.")
-			ex.add_note(f"Got vector {normal}.")
-			ex.add_note("Use 'Line2D.FromPointAndNormal' for a line in any direction.")
-			raise ex
-
-		return cls(point.Absolute._x)
-
-	@classmethod
 	def FromElement(cls, element: Element2D[Coordinate], alignment: Alignment2D) -> Self:
 		"""
 		Create the vertical line through an edge or the center of an element's absolute bounding box.
@@ -2793,144 +2655,6 @@ class HorizontalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 			raise ex
 
 		self._distance = y + 0
-
-	@classmethod
-	def FromPoints(cls, first: Point2D[Coordinate], second: Point2D[Coordinate]) -> Self:
-		"""
-		Create the horizontal line through two points with the same y-coordinate.
-
-		The points are taken in absolute coordinates: a point inside a group is converted. The line keeps the
-		y-coordinate as given, so an integer stays an integer.
-
-		:param first:       A first point of the line.
-		:param second:      A second point of the line.
-		:returns:           A new horizontal line.
-		:raises ValueError: If parameter 'first' is None.
-		:raises TypeError:  If parameter 'first' is not of type :class:`Point2D`.
-		:raises ValueError: If parameter 'second' is None.
-		:raises TypeError:  If parameter 'second' is not of type :class:`Point2D`.
-		:raises ValueError: If parameters 'first' and 'second' are at the same position. |br|
-		                    Two points at the same position don't define a line.
-		:raises ValueError: If parameters 'first' and 'second' have different y-coordinates. |br|
-		                    Use :meth:`Line2D.FromPoints` for a line in any direction.
-		"""
-		for name, point in (
-			("first",  first),
-			("second", second)
-		):
-			if point is None:
-				raise ValueError(f"Parameter '{name}' is None.")
-			elif not isinstance(point, Point2D):
-				ex = TypeError(f"Parameter '{name}' is not of type 'Point2D'.")
-				ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
-				raise ex
-
-		start = first.Absolute
-		end =   second.Absolute
-		if start._x == end._x and start._y == end._y:
-			ex = ValueError("Parameters 'first' and 'second' are at the same position.")
-			ex.add_note(f"Got points {first} and {second}, both at {start} in absolute coordinates.")
-			ex.add_note("Two points at the same position don't define a line.")
-			raise ex
-		elif start._y != end._y:
-			ex = ValueError("Parameters 'first' and 'second' have different y-coordinates.")
-			ex.add_note(f"Got points {first} and {second}, at {start} and {end} in absolute coordinates.")
-			ex.add_note("Use 'Line2D.FromPoints' for a line in any direction.")
-			raise ex
-
-		return cls(start._y)
-
-	@classmethod
-	def FromPointAndDirection(cls, point: Point2D[Coordinate], direction: BaseVector2D[Coordinate]) -> Self:
-		"""
-		Create the horizontal line through a point in a horizontal direction.
-
-		The point is taken in absolute coordinates: a point inside a group is converted. The line keeps the point's
-		y-coordinate as given, so an integer stays an integer.
-
-		:param point:       A point of the line.
-		:param direction:   The direction of the line, like ``(1, 0)``.
-		:returns:           A new horizontal line.
-		:raises ValueError: If parameter 'point' is None.
-		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
-		:raises ValueError: If parameter 'direction' is None.
-		:raises TypeError:  If parameter 'direction' is not of type :class:`BaseVector2D`.
-		:raises ValueError: If parameter 'direction' is a zero vector. |br|
-		                    A line needs a direction.
-		:raises ValueError: If parameter 'direction' isn't horizontal. |br|
-		                    Use :meth:`Line2D.FromPointAndDirection` for a line in any direction.
-		"""
-		if point is None:
-			raise ValueError("Parameter 'point' is None.")
-		elif not isinstance(point, Point2D):
-			ex = TypeError("Parameter 'point' is not of type 'Point2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
-			raise ex
-
-		if direction is None:
-			raise ValueError("Parameter 'direction' is None.")
-		elif not isinstance(direction, BaseVector2D):
-			ex = TypeError("Parameter 'direction' is not of type 'BaseVector2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(direction)}'.")
-			raise ex
-		elif direction._xOffset == 0 and direction._yOffset == 0:
-			ex = ValueError("Parameter 'direction' is a zero vector.")
-			ex.add_note(f"Got vector {direction}.")
-			ex.add_note("A line needs a direction.")
-			raise ex
-		elif direction._yOffset != 0:
-			ex = ValueError("Parameter 'direction' isn't horizontal.")
-			ex.add_note(f"Got vector {direction}.")
-			ex.add_note("Use 'Line2D.FromPointAndDirection' for a line in any direction.")
-			raise ex
-
-		return cls(point.Absolute._y)
-
-	@classmethod
-	def FromPointAndNormal(cls, point: Point2D[Coordinate], normal: BaseVector2D[Coordinate]) -> Self:
-		"""
-		Create the horizontal line through a point, perpendicular to a vertical normal.
-
-		The point is taken in absolute coordinates: a point inside a group is converted. The line keeps the point's
-		y-coordinate as given, so an integer stays an integer.
-
-		:param point:       A point of the line.
-		:param normal:      A normal of the line, like ``(0, 1)``.
-		:returns:           A new horizontal line.
-		:raises ValueError: If parameter 'point' is None.
-		:raises TypeError:  If parameter 'point' is not of type :class:`Point2D`.
-		:raises ValueError: If parameter 'normal' is None.
-		:raises TypeError:  If parameter 'normal' is not of type :class:`BaseVector2D`.
-		:raises ValueError: If parameter 'normal' is a zero vector. |br|
-		                    A line needs a normal direction.
-		:raises ValueError: If parameter 'normal' isn't vertical. |br|
-		                    Use :meth:`Line2D.FromPointAndNormal` for a line in any direction.
-		"""
-		if point is None:
-			raise ValueError("Parameter 'point' is None.")
-		elif not isinstance(point, Point2D):
-			ex = TypeError("Parameter 'point' is not of type 'Point2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(point)}'.")
-			raise ex
-
-		if normal is None:
-			raise ValueError("Parameter 'normal' is None.")
-		elif not isinstance(normal, BaseVector2D):
-			ex = TypeError("Parameter 'normal' is not of type 'BaseVector2D'.")
-			ex.add_note(f"Got type '{getFullyQualifiedName(normal)}'.")
-			raise ex
-		elif normal._xOffset == 0 and normal._yOffset == 0:
-			ex = ValueError("Parameter 'normal' is a zero vector.")
-			ex.add_note(f"Got vector {normal}.")
-			ex.add_note("A line needs a normal direction.")
-			raise ex
-		elif normal._xOffset != 0:
-			ex = ValueError("Parameter 'normal' isn't vertical.")
-			ex.add_note(f"Got vector {normal}.")
-			ex.add_note("Use 'Line2D.FromPointAndNormal' for a line in any direction.")
-			raise ex
-
-		return cls(point.Absolute._y)
 
 	@classmethod
 	def FromElement(cls, element: Element2D[Coordinate], alignment: Alignment2D) -> Self:
