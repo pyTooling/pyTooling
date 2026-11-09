@@ -52,7 +52,7 @@ from pyTooling.Decorators         import export, readonly
 from pyTooling.Exceptions         import EmptyError
 from pyTooling.MetaClasses        import ExtendedType
 from pyTooling.Common             import getFullyQualifiedName
-from pyTooling.Cartesian2D        import Coordinate, Base2D, BaseVector2D, Offset2D, Size2D, BoundingBox2D, \
+from pyTooling.Cartesian2D        import Coordinate, Base2D, BaseVector2D, Vector2D, Offset2D, Size2D, BoundingBox2D, \
                                          Alignment2D, Element2D, Segment2D, Cartesian2DError, AlreadyOwnedError, \
                                          GroupCycleError, NotOwnedError, NotInSameFrameError
 from pyTooling.Cartesian2D.Shapes import Shape
@@ -476,7 +476,7 @@ class Group2D(Element2D[Coordinate], Container2DMixin, Generic[Coordinate]):
 		for child in self._children:
 			child._MirrorX(0)
 
-	def _MirrorAt(self, normal: Offset2D[float], distance: float) -> None:
+	def _MirrorAt(self, normal: Vector2D[float], distance: float) -> None:
 		"""
 		Mirror the group at a line by mirroring its :attr:`Offset` like a point (inplace).
 

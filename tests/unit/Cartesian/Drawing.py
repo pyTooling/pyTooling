@@ -34,8 +34,9 @@ Unit tests for :mod:`pyTooling.Cartesian2D.Drawing` - colors, strokes, fills, fo
 from copy                          import copy, deepcopy
 from math                          import isclose
 
-from pyTooling.Cartesian2D         import Point2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, SweepDirection, \
-                                          Line2D, Shapes, AlreadyOwnedError, LineSegment2D as GeometricLineSegment2D, \
+from pyTooling.Cartesian2D         import Point2D, Vector2D, Offset2D, Size2D, BoundingBox2D, Alignment2D, \
+                                          SweepDirection, Line2D, Shapes, AlreadyOwnedError, \
+                                          LineSegment2D as GeometricLineSegment2D, \
                                           ArcSegment2D as GeometricArcSegment2D, \
                                           QuadraticBezierSegment2D as GeometricQuadraticBezierSegment2D, \
                                           CubicBezierSegment2D as GeometricCubicBezierSegment2D
@@ -737,13 +738,19 @@ class Drawables(Testcase):
 		self.assertIs(STROKE, ellipse.Stroke)
 		self.assertEqual(BoundingBox2D(-1, -1, 3, 5), ellipse.BoundingBox)
 
+	def test_Ellipse_DirectionVector(self) -> None:
+		ellipse = Ellipse(Point2D(1, 2), 3, 2, direction=Vector2D(0, 2), stroke=STROKE)
+
+		self.assertIs(Vector2D, type(ellipse.Direction))
+		self.assertTupleEqual((0.0, 1.0), ellipse.Direction.ToTuple())
+
 	def test_Ellipse_DirectionZero(self) -> None:
 		with self.assertRaises(ValueError) as context:
 			_ = Ellipse(Point2D(1, 2), 3, 2, direction=Offset2D(0, 0), fill=FILL)
 
-		self.assertEqual("Parameter 'direction' is a zero offset.", str(context.exception))
+		self.assertEqual("Parameter 'direction' is a zero vector.", str(context.exception))
 		self.assertListEqual(
-			["Got offset (0, 0).", "An ellipse needs a direction of its first axis."],
+			["Got vector (0, 0).", "An ellipse needs a direction of its first axis."],
 			context.exception.__notes__
 		)
 
