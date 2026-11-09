@@ -36,7 +36,7 @@ Features
 * **Curved segments** - a circular :class:`~pyTooling.Cartesian2D.ArcSegment2D` around a center, reporting its
   radius, angles and length, and quadratic and cubic Bezier curves, with exact bounding boxes.
 * **Paths** - a :class:`~pyTooling.Cartesian2D.Shapes.Path` chains line segments, arcs and Bezier curves, open or
-  closed, like SVG's ``<path>``; a :class:`~pyTooling.Cartesian2D.Shapes.PolyLine` is a path of line segments, built
+  closed, like SVG's ``<path>``; a :class:`~pyTooling.Cartesian2D.Shapes.Polyline` is a path of line segments, built
   from points. Paths, polylines and polygons convert into each other, where no approximation is needed.
 * **Shapes placed by their corners**, so a shape is positioned by the points it is built from - a circle by its
   center.
@@ -757,7 +757,7 @@ is the one above it with one more constraint**. The constraint is checked in the
 is an object of that shape. A polygon, a circle and an ellipse stand beside that chain. The closed shapes derive from
 :ref:`Geometry2D <STRUCT/Cartesian2D/Geometry2D>`, a circle and an ellipse through
 :ref:`EllipticalGeometry2D <STRUCT/Cartesian2D/EllipticalGeometry2D>`, which holds their center; a
-:ref:`path <STRUCT/Cartesian2D/Path>` and a :ref:`polyline <STRUCT/Cartesian2D/PolyLine>`, a path of line segments, are
+:ref:`path <STRUCT/Cartesian2D/Path>` and a :ref:`polyline <STRUCT/Cartesian2D/Polyline>`, a path of line segments, are
 shapes, but no geometries.
 
 
@@ -851,7 +851,7 @@ place later aren't checked again.
 
    :ref:`STRUCT/Cartesian2D/Geometry2D`
       |rarr| Its base-class, the base-class of the closed 2-dimensional shapes.
-   :ref:`STRUCT/Cartesian2D/PolyLine`
+   :ref:`STRUCT/Cartesian2D/Polyline`
       |rarr| A path of line segments, built from points like a polygon.
    :ref:`STRUCT/Cartesian2D/Trapezium`
       |rarr| The polygon with exactly four corners, given as four parameters.
@@ -1154,12 +1154,12 @@ raise :exc:`~pyTooling.Exceptions.InvalidOperationError`.
       |rarr| The closed shape of straight edges, built from its corners.
 
 
-.. _STRUCT/Cartesian2D/PolyLine:
+.. _STRUCT/Cartesian2D/Polyline:
 
-PolyLine
+Polyline
 ========
 
-A :class:`~pyTooling.Cartesian2D.Shapes.PolyLine` is a :ref:`path <STRUCT/Cartesian2D/Path>` of line segments, like
+A :class:`~pyTooling.Cartesian2D.Shapes.Polyline` is a :ref:`path <STRUCT/Cartesian2D/Path>` of line segments, like
 SVG's ``<polyline>``. It is built from two or more points instead of segments, given as one iterable of
 :class:`~pyTooling.Cartesian2D.Point2D` in drawing order: every edge is a :class:`~pyTooling.Cartesian2D.LineSegment2D`
 between two consecutive points, and consecutive edges share their point. With ``closed=True``, an edge connects the
@@ -1173,13 +1173,13 @@ default; ``copyPoints=False`` keeps the given points instead, as for a polygon.
 .. code-block:: Python
 
    from pyTooling.Cartesian2D        import Point2D
-   from pyTooling.Cartesian2D.Shapes import PolyLine
+   from pyTooling.Cartesian2D.Shapes import Polyline
 
-   zigzag = PolyLine((Point2D(0, 0), Point2D(3, 4), Point2D(6, 0)))
+   zigzag = Polyline((Point2D(0, 0), Point2D(3, 4), Point2D(6, 0)))
    str(zigzag)                        # ((0, 0) → (3, 4) → (6, 0))
    zigzag.Length                      # 10.0
 
-   wedge = PolyLine((Point2D(0, 0), Point2D(3, 4), Point2D(6, 0)), closed=True)
+   wedge = Polyline((Point2D(0, 0), Point2D(3, 4), Point2D(6, 0)), closed=True)
    len(wedge.Segments)                # 3
    wedge.Length                       # 16.0
 
@@ -1190,11 +1190,11 @@ edges may cross each other.
 Paths, polylines and polygons convert into each other, where no approximation is needed. Each conversion copies the
 points, references the same value and copies the key-value-pairs shallowly:
 
-* :meth:`~pyTooling.Cartesian2D.Shapes.Path.ToPolyLine` - a path of line segments becomes a polyline, open or closed
+* :meth:`~pyTooling.Cartesian2D.Shapes.Path.ToPolyline` - a path of line segments becomes a polyline, open or closed
   like the path; a polyline inherits it, a copy;
 * :meth:`~pyTooling.Cartesian2D.Shapes.Path.ToPolygon` - a closed path of line segments, a closed polyline too,
   becomes a polygon, which checks its edges for crossings;
-* :meth:`~pyTooling.Cartesian2D.Shapes.Polygon.ToPolyLine` - a polygon, and so a trapezium, rectangle or square,
+* :meth:`~pyTooling.Cartesian2D.Shapes.Polygon.ToPolyline` - a polygon, and so a trapezium, rectangle or square,
   becomes a closed polyline.
 
 An open path or polyline encloses no area: :meth:`~pyTooling.Cartesian2D.Shapes.Path.ToPolygon` raises
@@ -1454,7 +1454,7 @@ checked, measured, moved, mirrored and grouped like one. :mod:`~pyTooling.Cartes
 :class:`~pyTooling.Cartesian2D.Drawing.Polygon`, :class:`~pyTooling.Cartesian2D.Drawing.Trapezium`,
 :class:`~pyTooling.Cartesian2D.Drawing.Rectangle`, :class:`~pyTooling.Cartesian2D.Drawing.Square`,
 :class:`~pyTooling.Cartesian2D.Drawing.Circle`, :class:`~pyTooling.Cartesian2D.Drawing.Ellipse`,
-:class:`~pyTooling.Cartesian2D.Drawing.Path` and :class:`~pyTooling.Cartesian2D.Drawing.PolyLine`, and the drawable
+:class:`~pyTooling.Cartesian2D.Drawing.Path` and :class:`~pyTooling.Cartesian2D.Drawing.Polyline`, and the drawable
 segments :class:`~pyTooling.Cartesian2D.Drawing.LineSegment2D`, :class:`~pyTooling.Cartesian2D.Drawing.ArcSegment2D`,
 :class:`~pyTooling.Cartesian2D.Drawing.QuadraticBezierSegment2D` and
 :class:`~pyTooling.Cartesian2D.Drawing.CubicBezierSegment2D`.
@@ -1476,14 +1476,14 @@ key-value-pairs deeply.
 .. code-block:: Python
 
    from pyTooling.Cartesian2D         import Point2D
-   from pyTooling.Cartesian2D.Drawing import Circle, Fill, PolyLine, Rectangle, RGBAColor, Stroke
+   from pyTooling.Cartesian2D.Drawing import Circle, Fill, Polyline, Rectangle, RGBAColor, Stroke
    from pyTooling.Cartesian2D.Groups  import Canvas2D, YAxisDirection
 
    outline = Stroke(1, RGBAColor(0, 0, 0))
    canvas =  Canvas2D(YAxisDirection.Down)
    box =     Rectangle(Point2D(0, 0), Point2D(40, 0), Point2D(40, 20), Point2D(0, 20), stroke=outline, parent=canvas)
    dot =     Circle(Point2D(40, 10), 3, stroke=outline, fill=Fill(RGBAColor(255, 255, 255)), parent=canvas)
-   wire =    PolyLine((Point2D(40, 10), Point2D(60, 10), Point2D(60, 30)), stroke=outline, parent=canvas)
+   wire =    Polyline((Point2D(40, 10), Point2D(60, 10), Point2D(60, 30)), stroke=outline, parent=canvas)
 
    box.Fill = Fill(RGBAColor.Parse("#ffffe0"))
    dot.BoundingBox                    # BoundingBox2D(37, 7, 43, 13)

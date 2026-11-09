@@ -20,7 +20,7 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D.Shapes`: closed shapes derive from the abstract
      :class:`~pyTooling.Cartesian2D.Shapes.Geometry2D` and report their ``Area`` and ``Perimeter``; a polygon and a
      trapezium compute both from their corners.
-   * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.PolyLine` is a path of line
+   * :mod:`pyTooling.Cartesian2D.Shapes`: a :class:`~pyTooling.Cartesian2D.Shapes.Polyline` is a path of line
      segments, built from two or more points, open or closed.
    * :mod:`pyTooling.Cartesian2D.Shapes`: an :class:`~pyTooling.Cartesian2D.Shapes.Ellipse` by center, two radii and
      the direction of its first axis (default ``(1, 0)``, axis-aligned), a
@@ -30,9 +30,9 @@ Version 10.x (2026)
      :class:`~pyTooling.Cartesian2D.Shapes.EllipticalGeometry2D`, which owns, moves and mirrors their center; neither
      derives from the other.
    * :mod:`pyTooling.Cartesian2D.Shapes`: conversions without approximation:
-     :meth:`Path.ToPolyLine() <pyTooling.Cartesian2D.Shapes.Path.ToPolyLine>` and
+     :meth:`Path.ToPolyline() <pyTooling.Cartesian2D.Shapes.Path.ToPolyline>` and
      :meth:`Path.ToPolygon() <pyTooling.Cartesian2D.Shapes.Path.ToPolygon>` for a path of line segments (a polyline
-     too), :meth:`Polygon.ToPolyLine() <pyTooling.Cartesian2D.Shapes.Polygon.ToPolyLine>` for a polygon and its
+     too), :meth:`Polygon.ToPolyline() <pyTooling.Cartesian2D.Shapes.Polygon.ToPolyline>` for a polygon and its
      derived shapes.
    * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: points, offsets, sizes, segments and shapes support
      :func:`copy.copy` and :func:`copy.deepcopy`, and segments and shapes have a ``Copy()`` method. A copy shares no
@@ -90,7 +90,7 @@ Version 10.x (2026)
    * :mod:`pyTooling.Cartesian2D.Drawing`: drawable shapes with the names of their geometry classes (``Polygon``,
      ``Trapezium``, ``Rectangle``, ``Square``, ``Circle``, ``LineSegment2D``), drawn with a ``Stroke`` and a ``Fill``.
    * :mod:`pyTooling.Cartesian2D.Drawing`: a drawable :class:`~pyTooling.Cartesian2D.Drawing.Ellipse`,
-     :class:`~pyTooling.Cartesian2D.Drawing.Path` and :class:`~pyTooling.Cartesian2D.Drawing.PolyLine`; an open path or
+     :class:`~pyTooling.Cartesian2D.Drawing.Path` and :class:`~pyTooling.Cartesian2D.Drawing.Polyline`; an open path or
      polyline has a stroke only, a closed one a fill too.
    * :mod:`pyTooling.Cartesian2D.Drawing`: drawable segments :class:`~pyTooling.Cartesian2D.Drawing.ArcSegment2D`,
      :class:`~pyTooling.Cartesian2D.Drawing.QuadraticBezierSegment2D` and
