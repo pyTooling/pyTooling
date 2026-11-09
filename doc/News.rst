@@ -130,8 +130,7 @@ Version 10.x (2026)
      :meth:`~pyTooling.Cartesian2D.Line2D.FromPointAndNormal`. It computes the signed distance of a point, projects a
      point onto the line and intersects a :class:`~pyTooling.Cartesian2D.Ray2D`. Lines compare geometrically:
      ``VerticalLine2D(5) == Line2D(Offset2D(1, 0), 5)``. The normal is an immutable
-     :class:`~pyTooling.Cartesian2D.Vector2D`. Called on :class:`~pyTooling.Cartesian2D.VerticalLine2D` or
-     :class:`~pyTooling.Cartesian2D.HorizontalLine2D`, the classmethods return that class with the coordinate as given.
+     :class:`~pyTooling.Cartesian2D.Vector2D`.
    * :mod:`pyTooling.Cartesian3D`: a general :class:`~pyTooling.Cartesian3D.Plane3D` in Hesse normal form, created from
      a normal and a distance or by :meth:`~pyTooling.Cartesian3D.Plane3D.FromPoints`,
      :meth:`~pyTooling.Cartesian3D.Plane3D.FromPointAndSpanningVectors` and
