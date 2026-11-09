@@ -386,7 +386,7 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 
 		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
 		:returns:          A new 3D-point shifted by the 3D-vector.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector3D):
 			return Point3D(
@@ -401,8 +401,9 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 				self._z + other[2]
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by + operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector3D, tuple")
 			raise ex
 
 	def __iadd__(self, other: Any) -> Self:
@@ -411,7 +412,7 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 
 		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
 		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector3D):
 			self._x += other._xOffset
@@ -422,8 +423,9 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 			self.Y += other[1]
 			self.Z += other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by += operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector3D, tuple")
 			raise ex
 
 		return self
@@ -436,8 +438,8 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 		                             :class:`Offset3D`.
 		:returns:                    A new 3D-offset representing the distance between these two points, or a new 3D-point
 		                             shifted back by the 3D-vector.
-		:raises TypeError:           If parameter 'other' is not of type :class:`Point3D` or :class:`BaseVector3D`.
-		:raises NotInSameFrameError: If parameter 'other' is in another frame than this point. |br|
+		:raises TypeError:           If the second operand is not of type :class:`Point3D` or :class:`BaseVector3D`.
+		:raises NotInSameFrameError: If the second operand is in another frame than this point. |br|
 		                             Subtract the points' :attr:`Absolute` positions instead.
 		"""
 		if isinstance(other, Point3D):
@@ -445,7 +447,7 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 				ex = NotInSameFrameError("Points are in different frames.")
 				ex.add_note(f"Got points {self} and {other}.")
 				ex.add_note("Subtract the points' 'Absolute' positions instead.")
-				raise ex from ValueError("Parameter 'other' is in another frame.")
+				raise ex from ValueError("Second operand is in another frame.")
 
 			return Offset3D(
 				self._x - other._x,
@@ -459,8 +461,9 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 				self._z - other._zOffset
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'Point3D' or 'BaseVector3D'.")
+			ex = TypeError("Second operand is not supported by - operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: Point3D, BaseVector3D")
 			raise ex
 
 	def __isub__(self, other: Any) -> Self:
@@ -469,7 +472,7 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 
 		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
 		:returns:          This 3D-point.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector3D):
 			self._x -= other._xOffset
@@ -480,8 +483,9 @@ class Point3D(Base3D[Coordinate], Generic[Coordinate]):
 			self.Y -= other[1]
 			self.Z -= other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by -= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector3D, tuple")
 			raise ex
 
 		return self
@@ -1167,15 +1171,16 @@ class BaseVector3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both 3D-vectors are equal.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector3D):
 			return self._xOffset == other._xOffset and self._yOffset == other._yOffset and self._zOffset == other._zOffset
 		elif isinstance(other, tuple):
 			return self._xOffset == other[0] and self._yOffset == other[1] and self._zOffset == other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by == operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector3D, tuple")
 			raise ex
 
 	def __ne__(self, other: Any) -> bool:
@@ -1184,9 +1189,17 @@ class BaseVector3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      Parameter to compare against.
 		:returns:          ``True``, if both 3D-vectors are unequal.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
-		return not self.__eq__(other)
+		if isinstance(other, BaseVector3D):
+			return self._xOffset != other._xOffset or self._yOffset != other._yOffset or self._zOffset != other._zOffset
+		elif isinstance(other, tuple):
+			return self._xOffset != other[0] or self._yOffset != other[1] or self._zOffset != other[2]
+		else:
+			ex = TypeError("Second operand is not supported by != operator.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector3D, tuple")
+			raise ex
 
 	def __neg__(self) -> Self:
 		"""
@@ -1206,7 +1219,7 @@ class BaseVector3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
 		:returns:          A new 3D-vector extended by the 3D-vector, of this vector's class.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector3D):
 			return self.__class__(
@@ -1221,8 +1234,9 @@ class BaseVector3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				self._zOffset + other[2]
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by + operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector3D, tuple")
 			raise ex
 
 	def __sub__(self, other: Any) -> Self:
@@ -1231,7 +1245,7 @@ class BaseVector3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
 		:returns:          A new 3D-vector reduced by the 3D-vector, of this vector's class.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector3D):
 			return self.__class__(
@@ -1246,8 +1260,9 @@ class BaseVector3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 				self._zOffset - other[2]
 			)
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by - operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector3D, tuple")
 			raise ex
 
 	def __mul__(self, other: Any) -> Self:
@@ -1484,7 +1499,7 @@ class Offset3D(BaseVector3D[Coordinate], Generic[Coordinate]):
 
 		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
 		:returns:          This 3D-offset.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector3D):
 			self._xOffset += other._xOffset
@@ -1495,8 +1510,9 @@ class Offset3D(BaseVector3D[Coordinate], Generic[Coordinate]):
 			self.YOffset += other[1]
 			self.ZOffset += other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by += operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector3D, tuple")
 			raise ex
 
 		return self
@@ -1507,7 +1523,7 @@ class Offset3D(BaseVector3D[Coordinate], Generic[Coordinate]):
 
 		:param other:      A 3D-vector as :class:`Vector3D`, :class:`Offset3D` or tuple.
 		:returns:          This 3D-offset.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D` or :class:`tuple`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector3D` or :class:`tuple`.
 		"""
 		if isinstance(other, BaseVector3D):
 			self._xOffset -= other._xOffset
@@ -1518,8 +1534,9 @@ class Offset3D(BaseVector3D[Coordinate], Generic[Coordinate]):
 			self.YOffset -= other[1]
 			self.ZOffset -= other[2]
 		else:
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D' or 'tuple'.")
+			ex = TypeError("Second operand is not supported by -= operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector3D, tuple")
 			raise ex
 
 		return self
@@ -2067,11 +2084,12 @@ class BoundingBox3D(Generic[Coordinate], metaclass=ExtendedType, slots=True):
 
 		:param other:      A 3D-vector as :class:`Vector3D` or :class:`Offset3D`.
 		:returns:          A new bounding box shifted by the 3D-vector.
-		:raises TypeError: If parameter 'other' is not of type :class:`BaseVector3D`.
+		:raises TypeError: If the second operand is not of type :class:`BaseVector3D`.
 		"""
 		if not isinstance(other, BaseVector3D):
-			ex = TypeError("Parameter 'other' is not of type 'BaseVector3D'.")
+			ex = TypeError("Second operand is not supported by + operator.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(other)}'.")
+			ex.add_note("Supported types for second operand: BaseVector3D")
 			raise ex
 
 		return self.__class__(

@@ -155,6 +155,10 @@ Version 10.x (2026)
 
    .. rubric:: Changes
 
+   * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: an operator (``+``, ``-``, ``+=``, ``-=``, ``==``,
+     ``!=``) of a point, vector, offset or bounding box with an unsupported operand raises
+     ``TypeError("Second operand is not supported by + operator.")`` with the supported types in a note, like ``*`` and
+     the comparisons of bounding boxes (was ``"Parameter 'other' is not of type ..."``).
    * :mod:`pyTooling.Cartesian2D` and :mod:`pyTooling.Cartesian3D`: coordinates, offsets, sizes and segment end points
      are CamelCase properties (:attr:`~pyTooling.Cartesian2D.Point2D.X`,
      :attr:`~pyTooling.Cartesian2D.Offset2D.XOffset`, :attr:`~pyTooling.Cartesian2D.Size2D.Width`,

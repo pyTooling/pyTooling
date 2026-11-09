@@ -490,7 +490,7 @@ class Frames(Testcase):
 			["Got points (4, 5, 6) and (1, 1, 1).", "Subtract the points' 'Absolute' positions instead."],
 			context.exception.__notes__
 		)
-		self.assertEqual("Parameter 'other' is in another frame.", str(context.exception.__cause__))
+		self.assertEqual("Second operand is in another frame.", str(context.exception.__cause__))
 
 	def test_Point_Minus_Point_Absolute(self) -> None:
 		line1 = LineSegment3D(Point3D(1, 1, 1), Point3D(2, 2, 2))

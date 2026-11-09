@@ -2905,7 +2905,7 @@ class Frames(Testcase):
 			context.exception.__notes__
 		)
 		self.assertIsInstance(context.exception.__cause__, ValueError)
-		self.assertEqual("Parameter 'other' is in another frame.", str(context.exception.__cause__))
+		self.assertEqual("Second operand is in another frame.", str(context.exception.__cause__))
 
 	def test_Point_Minus_Point_NoFrame(self) -> None:
 		polygon = Polygon((Point2D(0, 0), Point2D(4, 0), Point2D(2, 3)), parent=Group2D())
