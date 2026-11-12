@@ -44,6 +44,8 @@ A common set of missing exceptions in Python.
       |rarr| The exceptions raised for a class that violates the meta-class' rules.
 """
 from typing               import ClassVar, Iterable, Any, Optional as Nullable
+
+from pyTooling.Common     import getFullyQualifiedName
 from pyTooling.Decorators import export, readonly
 
 
@@ -228,7 +230,8 @@ class MissingDependencyError(ToolingException, ImportError):
 
 	The exception is a :exc:`ToolingException` and an :exc:`ImportError`: a caller guarding an optional import catches
 	:exc:`ImportError`, a caller handling pyTooling's own errors catches :exc:`ToolingException`. It carries the missing
-	package and the extra as :attr:`Dependency` and :attr:`Extra`; :attr:`ImportError.name` is the missing package too.
+	package, the extra and the package providing the extra as :attr:`Dependency`, :attr:`Extra` and :attr:`Package`;
+	:attr:`ImportError.name` is the missing package too.
 
 	.. admonition:: ``example.py``
 
@@ -238,36 +241,71 @@ class MissingDependencyError(ToolingException, ImportError):
 	        from ruamel.yaml import YAML
 	      except ImportError as ex:
 	        raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
+
+	A package building on pyTooling raises it for its own optional dependencies too. It names itself as the package
+	providing the extra, e.g. ``VHDLDomain`` with its extra ``diagram``:
+
+	.. admonition:: ``example.py``
+
+	   .. code-block:: python
+
+	      try:
+	        from matplotlib import pyplot
+	      except ImportError as ex:
+	        raise MissingDependencyError(dependency="matplotlib", extra="diagram", package="VHDLDomain") from ex
 	"""
 
 	EXIT_CODE:   ClassVar[int] = 242  #: Exit code an application should use when an optional dependency is missing.
 
 	_dependency: str            #: Field storing the name of the package that is not installed.
-	_extra:      Nullable[str]  #: Field storing the name of the pyTooling extra installing that package.
+	_extra:      Nullable[str]  #: Field storing the name of the extra installing that package.
+	_package:    str            #: Field storing the name of the package providing the extra.
 
-	def __init__(self, message: Nullable[str] = None, /, *, dependency: str, extra: Nullable[str] = None) -> None:
+	def __init__(
+		self,
+		message:    Nullable[str] = None,
+		/, *,
+		dependency: str,
+		extra:      Nullable[str] = None,
+		package:    str = "pyTooling"
+	) -> None:
 		"""
 		Initialize a new missing-dependency error and attach the installation hint as a note.
 
-		:param message:    Optional, the exception message. |br|
-		                   When omitted, it is derived from ``dependency`` - every raising site says the same thing, so
-		                   there is nothing for the caller to add.
-		:param dependency: Name of the package that is not installed.
-		:param extra:      Optional, name of the pyTooling extra installing that package. |br|
-		                   When given, the note offers ``pyTooling[<extra>]`` next to the package itself.
+		:param message:     Optional, the exception message. |br|
+		                    When omitted, it is derived from ``dependency`` - every raising site says the same thing, so
+		                    there is nothing for the caller to add.
+		:param dependency:  Name of the package that is not installed.
+		:param extra:       Optional, name of the extra installing that package. |br|
+		                    When given, the note offers ``<package>[<extra>]`` next to the package itself.
+		:param package:     Optional, name of the package providing the extra. Default: ``"pyTooling"``. |br|
+		                    A package building on pyTooling passes its own name for its own extras.
+		:raises ValueError: If parameter 'package' is None.
+		:raises TypeError:  If parameter 'package' is not of type :class:`str`.
+		:raises ValueError: If parameter 'package' is empty.
 		"""
 		super().__init__(
 			message if message is not None else f"Optional dependency '{dependency}' not installed.",
 			name=dependency
 		)
 
+		if package is None:
+			raise ValueError("Parameter 'package' is None.")
+		elif not isinstance(package, str):
+			ex = TypeError("Parameter 'package' is not of type 'str'.")
+			ex.add_note(f"Got type '{getFullyQualifiedName(package)}'.")
+			raise ex
+		elif package == "":
+			raise ValueError("Parameter 'package' is empty.")
+
 		self._dependency = dependency
-		self._extra = extra
+		self._extra =      extra
+		self._package =    package
 
 		if extra is None:
 			self.add_note(f"Install '{dependency}'.")
 		else:
-			self.add_note(f"Either install pyTooling with extra 'pyTooling[{extra}]' or install '{dependency}' directly.")
+			self.add_note(f"Either install {package} with extra '{package}[{extra}]' or install '{dependency}' directly.")
 
 	@readonly
 	def Dependency(self) -> str:
@@ -281,11 +319,20 @@ class MissingDependencyError(ToolingException, ImportError):
 	@readonly
 	def Extra(self) -> Nullable[str]:
 		"""
-		Read-only property to access the name of the pyTooling extra installing the package (:attr:`_extra`).
+		Read-only property to access the name of the extra installing the package (:attr:`_extra`).
 
 		:returns: Name of the extra, or ``None`` if the package has no extra of its own.
 		"""
 		return self._extra
+
+	@readonly
+	def Package(self) -> str:
+		"""
+		Read-only property to access the name of the package providing the extra (:attr:`_package`).
+
+		:returns: Name of the package providing the extra.
+		"""
+		return self._package
 
 	@readonly
 	def InstallCommands(self) -> tuple[str, ...]:
@@ -303,7 +350,7 @@ class MissingDependencyError(ToolingException, ImportError):
 			return (f"pip install {self._dependency}", )
 
 		return (
-			f"pip install pyTooling[{self._extra}]",
+			f"pip install {self._package}[{self._extra}]",
 			f"pip install {self._dependency}"
 		)
 
