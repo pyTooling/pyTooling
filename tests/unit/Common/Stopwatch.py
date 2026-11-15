@@ -139,8 +139,9 @@ class Operations(Testcase):
 		sleep(self.DELAY)  # 500 ms
 		diff = sw.Stop()
 
-		print(f"Duration for 'sleep({self.DELAY:0.3f})': {diff:0.6f} us")
-		self.assertLessEqual(diff, self.DELAY * self.INACCURACY)
+		self.assertIs(Duration, type(diff))
+		print(f"Duration for 'sleep({self.DELAY:0.3f})': {diff:%s.%U} s")
+		self.assertLessEqual(diff, timedelta(seconds=self.DELAY * self.INACCURACY))
 
 		self.assertFalse(sw.HasSplitTimes)
 		self.assertFalse(sw.IsStarted)
@@ -164,11 +165,11 @@ class Operations(Testcase):
 		diff2 = sw.Stop()
 		total = sw.DurationInSeconds
 
-		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {diff1:0.6f} us")
-		self.assertLessEqual(diff1, self.DELAY * self.INACCURACY)
+		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {diff1:%s.%U} s")
+		self.assertLessEqual(diff1, timedelta(seconds=self.DELAY * self.INACCURACY))
 
-		print(f"Duration for '1st pause({self.PAUSE:0.3f})': {diff2:0.6f} us")
-		self.assertLessEqual(diff2, self.PAUSE * self.INACCURACY)
+		print(f"Duration for '1st pause({self.PAUSE:0.3f})': {diff2:%s.%U} s")
+		self.assertLessEqual(diff2, timedelta(seconds=self.PAUSE * self.INACCURACY))
 
 		print(f"Duration for '1x sleep({self.DELAY:0.3f}) + 1x pause({self.PAUSE:0.3f})': {total:0.6f} us")
 		self.assertLessEqual(total, (1 * self.DELAY + 1 * self.PAUSE) * self.INACCURACY)
@@ -193,14 +194,14 @@ class Operations(Testcase):
 		diff3 = sw.Stop()
 		total = sw.DurationInSeconds
 
-		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {diff1:0.6f} us")
-		self.assertLessEqual(diff1, self.DELAY * self.INACCURACY)
+		print(f"Duration for '1st sleep({self.DELAY:0.3f})': {diff1:%s.%U} s")
+		self.assertLessEqual(diff1, timedelta(seconds=self.DELAY * self.INACCURACY))
 
-		print(f"Duration for '1st pause({self.PAUSE:0.3f})': {diff2:0.6f} us")
-		self.assertLessEqual(diff2, self.PAUSE * self.INACCURACY)
+		print(f"Duration for '1st pause({self.PAUSE:0.3f})': {diff2:%s.%U} s")
+		self.assertLessEqual(diff2, timedelta(seconds=self.PAUSE * self.INACCURACY))
 
-		print(f"Duration for '2nd sleep({self.DELAY:0.3f})': {diff3:0.6f} us")
-		self.assertLessEqual(diff3, self.DELAY * self.INACCURACY)
+		print(f"Duration for '2nd sleep({self.DELAY:0.3f})': {diff3:%s.%U} s")
+		self.assertLessEqual(diff3, timedelta(seconds=self.DELAY * self.INACCURACY))
 
 		print(f"Duration for '2x sleep({self.DELAY:0.3f}) + 1x pause({self.PAUSE:0.3f})': {total:0.6f} us")
 		self.assertLessEqual(total, (2 * self.DELAY + 1 * self.PAUSE) * self.INACCURACY)
@@ -216,6 +217,7 @@ class Operations(Testcase):
 		self.assertTupleEqual(seq[1], sw[1])
 		self.assertTupleEqual(seq[2], sw[2])
 		self.assertTupleEqual(seq, tuple(sw))
+		self.assertIs(Duration, type(sw[0][0]))
 
 
 class Formatting(Testcase):
@@ -604,6 +606,8 @@ class Durations(Testcase):
 		self.assertEqual(timedelta(), sw.Duration)
 		self.assertEqual(timedelta(), sw.Activity)
 		self.assertEqual(timedelta(), sw.Inactivity)
+		self.assertEqual(0, sw.ActivityInNanoseconds)
+		self.assertEqual(0, sw.InactivityInNanoseconds)
 
 	def test_Timedelta(self) -> None:
 		"""Duration, Activity and Inactivity are timedeltas of the same measurement as their ...InSeconds floats."""
@@ -630,6 +634,38 @@ class Durations(Testcase):
 		self.assertIs(Duration, type(sw.Activity))
 		self.assertIs(Duration, type(sw.Inactivity))
 		self.assertRegex(f"{sw.Duration:%H:%M:%S.%U}", r"^00:00:\d{2}\.\d{6}$")
+
+	def test_ActivityAndInactivity_Nanoseconds(self) -> None:
+		"""Split times are kept in nanoseconds, so activity and inactivity add up to the duration exactly."""
+		sw = Stopwatch(started=True)
+		sleep(0.01)
+		sw.Pause()
+		sleep(0.01)
+		sw.Resume()
+		sleep(0.01)
+		sw.Stop()
+
+		self.assertIsInstance(sw.ActivityInNanoseconds, int)
+		self.assertIsInstance(sw.InactivityInNanoseconds, int)
+		self.assertEqual(sw.DurationInNanoseconds, sw.ActivityInNanoseconds + sw.InactivityInNanoseconds)
+		self.assertEqual(sw.Duration, sw.Activity + sw.Inactivity)
+		self.assertEqual(sw.ActivityInNanoseconds, sw.Activity.total_nanoseconds())
+		self.assertEqual(sw.ActivityInNanoseconds / 1e9, sw.ActivityInSeconds)
+
+	def test_SplitTimes_Duration(self) -> None:
+		"""Split times are durations, also the return values of the operations."""
+		sw = Stopwatch(started=True)
+
+		split =  sw.Split()
+		pause =  sw.Pause()
+		resume = sw.Resume()
+		stop =   sw.Stop()
+
+		self.assertIs(Duration, type(split))
+		self.assertIs(Duration, type(pause))
+		self.assertIs(Duration, type(resume))
+		self.assertIs(Duration, type(stop))
+		self.assertTupleEqual(((split, True), (pause, True), (resume, False), (stop, True)), tuple(sw))
 
 	def test_Timedelta_StoppedIsCached(self) -> None:
 		"""A stopped stopwatch converts its duration once; a running one on every access."""
