@@ -1127,7 +1127,7 @@ class URL(URI):
 				raise error from ex
 
 			if host is None:
-				if user is not None or port is not None or (scheme != Protocols.FILE and scheme != Protocols.UNIX):
+				if user is not None or port is not None or (scheme is not Protocols.FILE and scheme is not Protocols.UNIX):
 					ex = URLError(f"Missing host when parsing URL {url!r}.")
 					ex.add_note("Only a 'file' or 'unix' URL may leave the host empty, e.g. 'file:///etc/hosts'.")
 					raise ex
