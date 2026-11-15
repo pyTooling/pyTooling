@@ -1290,7 +1290,7 @@ class Stopwatch(SlottedObject):
 		elif self._resumeTime is not None:    # pause or stop
 			if self._preferPause:
 				self._pauseTime = perf_counter_ns()
-				diff = self._pauseTime - self._resumeTime
+				diff =            self._pauseTime - self._resumeTime
 				self._splits.append((diff, True))
 				self._resumeTime = None
 			else:
