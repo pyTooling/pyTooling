@@ -262,7 +262,7 @@ class PlotlyRenderer(Renderer[Figure]):
 		bars:  dict[tuple[bool, str], dict[str, list[Any]]] = {}
 		lines: dict[bool, dict[str, list[Any]]] =            {}
 		for position, row in enumerate(rows):
-			if row.Kind in (SpanKind.Pipeline, SpanKind.Workflow):
+			if (kind := row.Kind) == SpanKind.Pipeline or kind == SpanKind.Workflow:
 				for bar in row.Bars:
 					line = lines.setdefault(bar.IsRunning, {"x": [], "y": [], "customdata": []})
 					hover = self._Hover(row, bar)

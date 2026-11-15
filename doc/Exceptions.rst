@@ -261,6 +261,19 @@ dependency raises this exception, and it carries what to install and which extra
    except ImportError as ex:  # pragma: no cover
      raise MissingDependencyError(dependency="ruamel.yaml", extra="yaml") from ex
 
+The extra is ``pyTooling``'s by default. A package building on pyTooling raises the exception for its own optional
+dependencies too and names itself with parameter ``package``, so the note offers ``VHDLDomain[diagram]`` instead of
+``pyTooling[diagram]``:
+
+.. code-block:: Python
+
+   from pyTooling.Exceptions import MissingDependencyError
+
+   try:
+     from matplotlib import pyplot
+   except ImportError as ex:  # pragma: no cover
+     raise MissingDependencyError(dependency="matplotlib", extra="diagram", package="VHDLDomain") from ex
+
 :class:`~pyTooling.TerminalUI.TerminalApplication` prints it with
 :meth:`~pyTooling.TerminalUI.TerminalBaseApplication.PrintMissingDependencyError`, which names the package and
 the command that installs it — and, unlike the other exception printers, does *not* invite a bug report, because

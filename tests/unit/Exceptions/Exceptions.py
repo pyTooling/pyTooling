@@ -247,3 +247,52 @@ class MissingDependency(Testcase):
 
 		self.assertEqual("ruamel.yaml", ex.name)
 		self.assertEqual("Optional dependency 'ruamel.yaml' not installed.", ex.msg)
+
+	def test_Package_Default(self) -> None:
+		"""Without parameter 'package', the note names pyTooling's extra."""
+		ex = MissingDependencyError(dependency="colorama", extra="terminal")
+
+		self.assertEqual("pyTooling", ex.Package)
+		self.assertEqual(
+			["Either install pyTooling with extra 'pyTooling[terminal]' or install 'colorama' directly."],
+			ex.__notes__
+		)
+		self.assertEqual(("pip install pyTooling[terminal]", "pip install colorama"), ex.InstallCommands)
+
+	def test_Package(self) -> None:
+		"""A package building on pyTooling names itself as the package providing the extra."""
+		ex = MissingDependencyError(dependency="matplotlib", extra="diagram", package="VHDLDomain")
+
+		self.assertEqual("VHDLDomain", ex.Package)
+		self.assertEqual("Optional dependency 'matplotlib' not installed.", str(ex))
+		self.assertEqual(
+			["Either install VHDLDomain with extra 'VHDLDomain[diagram]' or install 'matplotlib' directly."],
+			ex.__notes__
+		)
+		self.assertEqual(("pip install VHDLDomain[diagram]", "pip install matplotlib"), ex.InstallCommands)
+
+	def test_Package_WithoutExtra(self) -> None:
+		ex = MissingDependencyError(dependency="matplotlib", package="VHDLDomain")
+
+		self.assertEqual("VHDLDomain", ex.Package)
+		self.assertEqual(["Install 'matplotlib'."], ex.__notes__)
+		self.assertEqual(("pip install matplotlib", ), ex.InstallCommands)
+
+	def test_Package_None(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			MissingDependencyError(dependency="matplotlib", extra="diagram", package=None)
+
+		self.assertEqual("Parameter 'package' is None.", str(context.exception))
+
+	def test_Package_Type(self) -> None:
+		with self.assertRaises(TypeError) as context:
+			MissingDependencyError(dependency="matplotlib", extra="diagram", package=42)
+
+		self.assertEqual("Parameter 'package' is not of type 'str'.", str(context.exception))
+		self.assertEqual(["Got type 'int'."], context.exception.__notes__)
+
+	def test_Package_Empty(self) -> None:
+		with self.assertRaises(ValueError) as context:
+			MissingDependencyError(dependency="matplotlib", extra="diagram", package="")
+
+		self.assertEqual("Parameter 'package' is empty.", str(context.exception))
