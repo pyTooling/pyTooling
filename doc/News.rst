@@ -10,6 +10,25 @@ release.
 Version 10.x (2026)
 *******************
 
+.. topic:: :gh:`v10.4.0 - unreleased <pyTooling/pyTooling/releases/v10.4.0>`
+
+   .. rubric:: Changes
+
+   * ⚠️ :class:`~pyTooling.Stopwatch.Stopwatch` keeps its split times in nanoseconds and returns them as
+     :class:`~pyTooling.Stopwatch.Duration`: :meth:`~pyTooling.Stopwatch.Stopwatch.Split`,
+     :meth:`~pyTooling.Stopwatch.Stopwatch.Pause`, :meth:`~pyTooling.Stopwatch.Stopwatch.Resume` and
+     :meth:`~pyTooling.Stopwatch.Stopwatch.Stop` return a :class:`~pyTooling.Stopwatch.Duration`, indexing and
+     iterating yield ``(Duration, bool)`` tuples.
+
+   .. rubric:: Breaking Changes
+
+   * ⚠️ :class:`~pyTooling.Stopwatch.Stopwatch` split times are :class:`~pyTooling.Stopwatch.Duration` instead of
+     :class:`float` seconds. Use :meth:`~datetime.timedelta.total_seconds` where a number is needed, or a
+     :class:`~pyTooling.Stopwatch.Duration` format specification (``f"{sw.Stop():%s.%L}"``); a :class:`float`
+     format specification like ``:.3f`` renders ``.3f`` as text. Summing split times needs a start value:
+     ``sum(..., Duration())``.
+
+
 .. topic:: :gh:`v10.3.0 - 15.11.2026 <pyTooling/pyTooling/releases/v10.3.0>`
 
    .. rubric:: New Features
