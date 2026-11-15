@@ -856,7 +856,7 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 			ex = TypeError("Parameter 'axis' is not of type 'Alignment2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(axis)}'.")
 			raise ex
-		elif axis not in (Alignment2D.MinX, Alignment2D.CenterX, Alignment2D.MaxX):
+		elif axis != Alignment2D.MinX and axis != Alignment2D.CenterX and axis != Alignment2D.MaxX:
 			ex = ValueError("Parameter 'axis' is not Alignment2D.MinX, Alignment2D.CenterX or Alignment2D.MaxX.")
 			ex.add_note(f"Got value '{axis}'.")
 			raise ex
@@ -922,7 +922,7 @@ class Element2D(Base2D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 			ex = TypeError("Parameter 'axis' is not of type 'Alignment2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(axis)}'.")
 			raise ex
-		elif axis not in (Alignment2D.MinY, Alignment2D.CenterY, Alignment2D.MaxY):
+		elif axis != Alignment2D.MinY and axis != Alignment2D.CenterY and axis != Alignment2D.MaxY:
 			ex = ValueError("Parameter 'axis' is not Alignment2D.MinY, Alignment2D.CenterY or Alignment2D.MaxY.")
 			ex.add_note(f"Got value '{axis}'.")
 			raise ex
@@ -2743,7 +2743,7 @@ class VerticalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 			ex = TypeError("Parameter 'alignment' is not of type 'Alignment2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
 			raise ex
-		elif alignment not in (Alignment2D.MinX, Alignment2D.CenterX, Alignment2D.MaxX):
+		elif alignment != Alignment2D.MinX and alignment != Alignment2D.CenterX and alignment != Alignment2D.MaxX:
 			ex = ValueError("Parameter 'alignment' is not Alignment2D.MinX, Alignment2D.CenterX or Alignment2D.MaxX.")
 			ex.add_note(f"Got value '{alignment}'.")
 			ex.add_note("Use 'HorizontalLine2D.FromElement' for the other alignments.")
@@ -2981,7 +2981,7 @@ class HorizontalLine2D(Line2D[Coordinate], Generic[Coordinate]):
 			ex = TypeError("Parameter 'alignment' is not of type 'Alignment2D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
 			raise ex
-		elif alignment not in (Alignment2D.MinY, Alignment2D.CenterY, Alignment2D.MaxY):
+		elif alignment != Alignment2D.MinY and alignment != Alignment2D.CenterY and alignment != Alignment2D.MaxY:
 			ex = ValueError("Parameter 'alignment' is not Alignment2D.MinY, Alignment2D.CenterY or Alignment2D.MaxY.")
 			ex.add_note(f"Got value '{alignment}'.")
 			ex.add_note("Use 'VerticalLine2D.FromElement' for the other alignments.")

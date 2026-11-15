@@ -699,7 +699,7 @@ class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 			ex = TypeError("Parameter 'plane' is not of type 'Alignment3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(plane)}'.")
 			raise ex
-		elif plane not in (Alignment3D.MinX, Alignment3D.CenterX, Alignment3D.MaxX):
+		elif plane != Alignment3D.MinX and plane != Alignment3D.CenterX and plane != Alignment3D.MaxX:
 			ex = ValueError("Parameter 'plane' is not Alignment3D.MinX, Alignment3D.CenterX or Alignment3D.MaxX.")
 			ex.add_note(f"Got value '{plane}'.")
 			raise ex
@@ -766,7 +766,7 @@ class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 			ex = TypeError("Parameter 'plane' is not of type 'Alignment3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(plane)}'.")
 			raise ex
-		elif plane not in (Alignment3D.MinY, Alignment3D.CenterY, Alignment3D.MaxY):
+		elif plane != Alignment3D.MinY and plane != Alignment3D.CenterY and plane != Alignment3D.MaxY:
 			ex = ValueError("Parameter 'plane' is not Alignment3D.MinY, Alignment3D.CenterY or Alignment3D.MaxY.")
 			ex.add_note(f"Got value '{plane}'.")
 			raise ex
@@ -834,7 +834,7 @@ class Element3D(Base3D[Coordinate], KeyValuePairsMixin, Generic[Coordinate]):
 			ex = TypeError("Parameter 'plane' is not of type 'Alignment3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(plane)}'.")
 			raise ex
-		elif plane not in (Alignment3D.MinZ, Alignment3D.CenterZ, Alignment3D.MaxZ):
+		elif plane != Alignment3D.MinZ and plane != Alignment3D.CenterZ and plane != Alignment3D.MaxZ:
 			ex = ValueError("Parameter 'plane' is not Alignment3D.MinZ, Alignment3D.CenterZ or Alignment3D.MaxZ.")
 			ex.add_note(f"Got value '{plane}'.")
 			raise ex
@@ -2886,7 +2886,7 @@ class YZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 			ex = TypeError("Parameter 'alignment' is not of type 'Alignment3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
 			raise ex
-		elif alignment not in (Alignment3D.MinX, Alignment3D.CenterX, Alignment3D.MaxX):
+		elif alignment != Alignment3D.MinX and alignment != Alignment3D.CenterX and alignment != Alignment3D.MaxX:
 			ex = ValueError("Parameter 'alignment' is not Alignment3D.MinX, Alignment3D.CenterX or Alignment3D.MaxX.")
 			ex.add_note(f"Got value '{alignment}'.")
 			ex.add_note("Use 'XZPlane3D.FromElement' or 'XYPlane3D.FromElement' for the other alignments.")
@@ -3151,7 +3151,7 @@ class XZPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 			ex = TypeError("Parameter 'alignment' is not of type 'Alignment3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
 			raise ex
-		elif alignment not in (Alignment3D.MinY, Alignment3D.CenterY, Alignment3D.MaxY):
+		elif alignment != Alignment3D.MinY and alignment != Alignment3D.CenterY and alignment != Alignment3D.MaxY:
 			ex = ValueError("Parameter 'alignment' is not Alignment3D.MinY, Alignment3D.CenterY or Alignment3D.MaxY.")
 			ex.add_note(f"Got value '{alignment}'.")
 			ex.add_note("Use 'YZPlane3D.FromElement' or 'XYPlane3D.FromElement' for the other alignments.")
@@ -3416,7 +3416,7 @@ class XYPlane3D(Plane3D[Coordinate], Generic[Coordinate]):
 			ex = TypeError("Parameter 'alignment' is not of type 'Alignment3D'.")
 			ex.add_note(f"Got type '{getFullyQualifiedName(alignment)}'.")
 			raise ex
-		elif alignment not in (Alignment3D.MinZ, Alignment3D.CenterZ, Alignment3D.MaxZ):
+		elif alignment != Alignment3D.MinZ and alignment != Alignment3D.CenterZ and alignment != Alignment3D.MaxZ:
 			ex = ValueError("Parameter 'alignment' is not Alignment3D.MinZ, Alignment3D.CenterZ or Alignment3D.MaxZ.")
 			ex.add_note(f"Got value '{alignment}'.")
 			ex.add_note("Use 'YZPlane3D.FromElement' or 'XZPlane3D.FromElement' for the other alignments.")

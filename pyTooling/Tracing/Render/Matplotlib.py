@@ -373,7 +373,7 @@ class MatplotlibRenderer(Renderer[Figure]):
 			hasQueued = False
 			hasLines = False
 			for position, row in enumerate(rows):
-				if row.Kind in (SpanKind.Pipeline, SpanKind.Workflow):
+				if (kind := row.Kind) == SpanKind.Pipeline or kind == SpanKind.Workflow:
 					for bar in row.Bars:
 						hasLines = True
 						style = "dashed" if bar.IsRunning else "solid"
