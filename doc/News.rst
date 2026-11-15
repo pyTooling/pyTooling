@@ -10,6 +10,15 @@ release.
 Version 10.x (2026)
 *******************
 
+.. topic:: :gh:`v10.3.0 - unreleased <pyTooling/pyTooling/releases/v10.3.0>`
+
+   .. rubric:: New Features
+
+   * :exc:`~pyTooling.Exceptions.MissingDependencyError` names the package providing the extra with the keyword-only
+     parameter ``package`` (default ``pyTooling``), so a package building on pyTooling offers its own extra, e.g.
+     ``VHDLDomain[diagram]``, in the note and in :attr:`~pyTooling.Exceptions.MissingDependencyError.InstallCommands`.
+
+
 .. topic:: :gh:`v10.2.0 - 09.11.2026 <pyTooling/pyTooling/releases/v10.2.0>`
 
    .. rubric:: New Features
